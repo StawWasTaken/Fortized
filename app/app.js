@@ -48705,9 +48705,13 @@ function _fsNewPopShow(btn) {
     pop.innerHTML = `
       <span class="fs-newpop-art" style="background-image:url('${col.coverImg || ''}')"></span>
       <span class="fs-newpop-in">
-        <span class="fs-newpop-k">New collection</span>${logo}
         <span class="fs-cb-thumbs fs-newpop-thumbs">${thumbs}</span>
-        <span class="fs-newpop-cta">${items.length} item${items.length === 1 ? '' : 's'} · open the Fortshop</span>
+        <span class="fs-newpop-tx">
+          <span class="fs-newpop-k">New collection</span>
+          ${logo}
+          ${col.tagline ? `<span class="fs-newpop-s">${escapeHTML(col.tagline)}</span>` : ''}
+          <span class="fs-newpop-cta">${items.length} item${items.length === 1 ? '' : 's'} · open the Fortshop</span>
+        </span>
       </span>`;
     document.body.appendChild(pop);
     _fsNewPopEl = pop;
@@ -49364,7 +49368,7 @@ function _fsOpenRedeem() {
           <div class="fs-redeem-err" id="fs-redeem-err"></div>
           <div class="fs-redeem-note"><i class="fa-solid fa-shield-halved"></i><span>One use per account, and a quick Lifecheck so we know you're human.</span></div>
         </div>
-        <div class="fs-redeem-art"><img src="${art}" alt="" draggable="false" onerror="this.closest('.fs-redeem-art')?.remove()"></div>
+        <div class="fs-redeem-art"><span class="fs-redeem-card"><img src="${art}" alt="" draggable="false" onerror="this.closest('.fs-redeem-art')?.remove()"></span></div>
       </div>
       <div class="fs-redeem-acts">
         <button class="fs-btn" onclick="document.getElementById('fs-redeem-modal')?.remove()">Cancel</button>

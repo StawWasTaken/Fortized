@@ -66,6 +66,44 @@ All six items the user asked for. CSS lives in ONE appended block at the END of
   Onyx glyphs + collection art are CDN-blind in-sandbox — verified via Playwright
   plainviews with local assets only.
 
+## 🟢 ROUND 3 (`2026fix489`, same branch)
+- **🐞 THE 3D BUTTONS WERE BROKEN AT THE SOURCE — this is why nothing matched
+  Radiance.** Three global rules were dismantling the press:
+  1. `.btn-a:hover,.btn-primary:hover,…{box-shadow:0 6px 18px rgba(0,0,0,.28)}`
+     (TACTILE PASS 1, styles.css ~14879) lands AFTER
+     `.btn-a:hover{box-shadow:0 5px 0 0 var(--ink)}` at **equal specificity**, so
+     hovering REPLACED the hard ink edge with a soft blur.
+  2. `.btn-a:active,…{transform:translateY(1px) scale(.975)!important}` (~14874)
+     overrode `.btn-a:active{transform:translateY(3px)}` — clicking **shrank**
+     the button instead of pressing it down.
+  3. Clicking also FOCUSES, and `:where(input,textarea,select,button,…):focus
+     {box-shadow:none!important}` (~13733, plus `*:focus{box-shadow:none}` ~24)
+     **stripped the ink edge entirely on press**. Edge gone + shrunk = the flat,
+     "goes square when you click it" look the user hates.
+  All three are unwound in the appended `A2` block for the 3D family
+  (`.btn-a/.btn-g/.btn-green/.btn-d/.rad-cta` + `.fs-btn` and every variant).
+  ⚠️ The `!important`s there exist ONLY to answer the `!important`s above.
+- **ONE BUTTON RECIPE, verified.** rest `0 4px 0 0 var(--ink)` · hover
+  `translateY(-1px)` + `0 5px` · press `translateY(3px)` + `0 1px` · border
+  `2px solid var(--ink)` · **radius `var(--radius-md)` pinned across every
+  state** so a press can never square a button off. Earlier passes had invented
+  10px radii, `0 3px` edges and 2px presses — unwound. Round icon controls
+  (`.fr-act`) stay `border-radius:50%` in every state. Confirmed identical
+  computed values on `.btn-a` and 9 variants (fs-btn, np-actions, npv-mark,
+  fs-trade-tab, fr-act, fs-card-buy, fs-tb-change, qst-qbtn, fs-cb-btn) via CDP
+  `CSS.forcePseudoState`.
+- **NEW hover card is HORIZONTAL now** (Discord-shaped, our own treatment):
+  thumb stack left, collection right (eyebrow · logo · tagline · CTA). The cover
+  dissolves **left→right** (13-stop `color-mix` ramp in `var(--channel)`, fully
+  opaque by 76%) so the art lives behind the thumbs and the text sits on clean
+  surface. **372×136**.
+- **Onyx card hovers like a real gift card**: `.fs-redeem-art` gets
+  `perspective:1000px`, the new `.fs-redeem-card` wrapper tilts
+  (`rotateX(5deg) rotateY(-9deg)` + lift + 1.03 scale) and a sheen sweeps across
+  it. ⚠️ The sheen animates **`background-position`, not a translated layer**, so
+  nothing needs clipping and the card keeps its 3D drop edge. Reduced-motion
+  falls back to a plain lift.
+
 ## 🟥 NEXT TASK — STAFF CONSOLE, REBUILT FROM SCRATCH (user, verbatim intent)
 The user's words: the staff console (topbar icon + its card) **"needs to be
 COMPLETELY REWORKED ALMOST FROM SCRATCH — IT'S A FREAKING MESS."**

@@ -17149,3 +17149,147 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .fs-redeem .fs-redeem-in:focus{border-color:var(--border)!important;box-shadow:none!important;border-width:1px;}
 .fs-redeem .fs-redeem-in::placeholder{color:rgba(255,255,255,.15);letter-spacing:normal;
   text-transform:none;font-weight:400;}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ROUND 3 (2026fix489) — one button recipe, the horizontal NEW card, and the
+   Onyx card's gift-card hover.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── A. ONE 3D BUTTON RECIPE — the Radiance/.btn-a one, everywhere ──
+   .btn-a is the reference: radius var(--radius-md), 2px --ink edge,
+   box-shadow 0 4px 0 0 --ink, lift 1px on hover (edge grows to 5px), press
+   3px down (edge shrinks to 1px). Only the COLOUR varies. Earlier passes
+   invented 10px radii, 0 3px edges and 2px presses — those are unwound here.
+   The radius is pinned across every state so a press can never square a
+   button off. */
+.fs-btn,.fs-btn:hover,.fs-btn:active,.fs-btn:focus,.fs-btn:focus-visible,
+.qst-qbtn.fs-btn,.npv-mark.fs-btn,.np-actions .fs-btn,.fs-tb-change,
+.fs-card-buy,.fs-card-gift,.fs-tradebtn,.fs-cb-btn,
+.fs-trade-tab,.fs-trade-tab:hover,.fs-trade-tab:active{
+  border-radius:var(--radius-md);}
+.fs-btn,.qst-qbtn.fs-btn,.npv-mark.fs-btn,.np-actions .fs-btn,.fs-tb-change,
+.fs-card-buy,.fs-card-gift,.fs-tradebtn,.fs-cb-btn,.fs-trade-tab{
+  border:2px solid var(--ink);box-shadow:0 4px 0 0 var(--ink);
+  transition:transform .12s ease,box-shadow .12s ease,filter .15s,background .15s,color .15s,border-color .15s;}
+.fs-btn:hover,.qst-qbtn.fs-btn:hover,.npv-mark.fs-btn:hover,.np-actions .fs-btn:hover,
+.fs-tb-change:hover,.fs-card-buy:hover,.fs-card-gift:hover,.fs-tradebtn:hover,
+.fs-cb-btn:hover,.fs-trade-tab:hover{
+  transform:translateY(-1px);box-shadow:0 5px 0 0 var(--ink);filter:brightness(1.05);}
+.fs-btn:active,.qst-qbtn.fs-btn:active,.npv-mark.fs-btn:active,.np-actions .fs-btn:active,
+.fs-tb-change:active,.fs-card-buy:active,.fs-card-gift:active,.fs-tradebtn:active,
+.fs-cb-btn:active,.fs-trade-tab:active{
+  transform:translateY(3px);box-shadow:0 1px 0 0 var(--ink);filter:brightness(.97);
+  transition-duration:.08s;}
+/* Disabled keeps its real face, just faded — never a repaint, never a press. */
+.fs-btn:disabled,.fs-btn:disabled:hover,.fs-btn:disabled:active{
+  transform:none;box-shadow:0 4px 0 0 var(--ink);filter:none;}
+
+/* Round icon controls stay ROUND — a press must never square them. */
+.fr-act,.fr-act:hover,.fr-act:active{border-radius:50%;}
+.fr-act{border:2px solid var(--ink);box-shadow:0 4px 0 0 var(--ink);}
+.fr-act:hover{transform:translateY(-1px);box-shadow:0 5px 0 0 var(--ink);}
+.fr-act:active{transform:translateY(3px);box-shadow:0 1px 0 0 var(--ink);transition-duration:.08s;}
+.fs-tb-friend-go{border-radius:50%;}
+.fs-tb-swap{border-radius:50%;}
+
+/* ── B. NEW hover card — horizontal: thumb stack left, the collection right ──
+   Discord-inspired in shape only. The cover is still ours: it dissolves
+   ACROSS the card (left→right) so the art lives behind the thumbs and the
+   text sits on clean surface. */
+.fs-newpop{width:372px;}
+.fs-newpop-art{inset:0;height:auto;border-radius:16px;}
+.fs-newpop-art::before{background:linear-gradient(to bottom,rgba(0,0,0,.3) 0%,rgba(0,0,0,.12) 45%,rgba(0,0,0,.05) 100%);}
+.fs-newpop-art::after{
+  background:linear-gradient(to right,
+    color-mix(in srgb, var(--channel), transparent 100%) 0%,
+    color-mix(in srgb, var(--channel), transparent 98%) 8%,
+    color-mix(in srgb, var(--channel), transparent 93%) 15%,
+    color-mix(in srgb, var(--channel), transparent 85%) 21%,
+    color-mix(in srgb, var(--channel), transparent 74%) 27%,
+    color-mix(in srgb, var(--channel), transparent 61%) 33%,
+    color-mix(in srgb, var(--channel), transparent 48%) 39%,
+    color-mix(in srgb, var(--channel), transparent 35%) 45%,
+    color-mix(in srgb, var(--channel), transparent 24%) 51%,
+    color-mix(in srgb, var(--channel), transparent 15%) 57%,
+    color-mix(in srgb, var(--channel), transparent 8%)  63%,
+    color-mix(in srgb, var(--channel), transparent 3%)  69%,
+    var(--channel) 76%);}
+.fs-newpop-in{display:flex;align-items:center;gap:15px;padding:14px 16px 14px 14px;}
+.fs-newpop-thumbs{margin-top:0;flex-shrink:0;justify-content:flex-start;}
+.fs-newpop-thumbs .fs-cb-thumb{width:54px;height:74px;border-radius:9px;margin-left:-18px;}
+.fs-newpop-thumbs .fs-cb-thumb .fs-pv-av{width:32px;height:32px;}
+.fs-newpop-tx{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;}
+.fs-newpop-tx .fs-newpop-logo{margin-top:7px;max-height:24px;max-width:88%;}
+.fs-newpop-tx .fs-newpop-t{margin-top:5px;font-size:16px;}
+.fs-newpop-s{display:block;margin-top:7px;font-size:12px;line-height:1.45;color:var(--muted-light);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.fs-newpop-tx .fs-newpop-cta{margin-top:9px;text-align:left;}
+
+/* ── C. Onyx card: a real gift card when you hover it ──
+   Tilts into the light and a sheen sweeps across the plastic. The sheen is a
+   moving background-position (not a translated layer) so nothing has to be
+   clipped — the card keeps its 3D drop edge. */
+.fs-redeem-art{perspective:1000px;}
+.fs-redeem-card{position:relative;display:block;width:100%;
+  transition:transform .45s var(--ease-out);will-change:transform;}
+.fs-redeem-card img{display:block;transition:box-shadow .45s var(--ease-out);}
+.fs-redeem-art:hover .fs-redeem-card{transform:rotateX(5deg) rotateY(-9deg) translateY(-5px) scale(1.03);}
+.fs-redeem-art:hover .fs-redeem-card img{box-shadow:0 14px 0 0 var(--ink),0 26px 40px rgba(0,0,0,.5);}
+.fs-redeem-card::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;
+  border-radius:6.6% / 11.5%;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.30) 47%,
+    rgba(255,255,255,.07) 55%,transparent 64%);
+  background-size:260% 100%;background-position:130% 0;}
+.fs-redeem-art:hover .fs-redeem-card::after{opacity:1;animation:fsCardSheen .95s var(--ease-out);}
+@keyframes fsCardSheen{from{background-position:130% 0;}to{background-position:-40% 0;}}
+@media (prefers-reduced-motion: reduce){
+  .fs-redeem-art:hover .fs-redeem-card{transform:translateY(-3px);}
+  .fs-redeem-art:hover .fs-redeem-card::after{animation:none;opacity:0;}
+}
+
+/* ── A2. The 3D press, repaired at the source ──
+   Two rules in TACTILE PASS 1 were quietly breaking the app's own 3D buttons,
+   which is why the Fortshop/inbox/trade/friends buttons never matched Radiance:
+     • `.btn-a:hover,…{box-shadow:0 6px 18px rgba(0,0,0,.28)}` lands AFTER
+       `.btn-a:hover{box-shadow:0 5px 0 0 var(--ink)}` at equal specificity, so
+       hovering REPLACED the hard ink edge with a soft blur — the button lost
+       its 3D shape.
+     • `.btn-a:active,…{transform:translateY(1px) scale(.975)!important}`
+       overrode `.btn-a:active{transform:translateY(3px)}`, so clicking SHRANK
+       the button instead of pressing it down. Edge gone + shrunk = the flat,
+       squared-off look.
+   Both are unwound here for the 3D family so every button in the app presses
+   the same way: down 3px, edge 4px → 1px, radius never changes. */
+.btn-a,.btn-g,.btn-green,.btn-d,.rad-cta,
+.btn-a:hover,.btn-g:hover,.btn-green:hover,.btn-d:hover,.rad-cta:hover,
+.btn-a:active,.btn-g:active,.btn-green:active,.btn-d:active,.rad-cta:active,
+.btn-a:focus,.btn-g:focus,.btn-green:focus,.btn-green:focus,.rad-cta:focus,
+.fs-btn:focus,.fs-btn:focus-visible,.fr-act:focus,.fs-trade-tab:focus{
+  border-radius:var(--radius-md);}
+.btn-a:hover,.btn-g:hover,.btn-green:hover,.btn-d:hover,.rad-cta:hover{
+  transform:translateY(-1px)!important;box-shadow:0 5px 0 0 var(--ink)!important;}
+.btn-a:active,.btn-g:active,.btn-green:active,.btn-d:active,.rad-cta:active{
+  transform:translateY(3px)!important;box-shadow:0 1px 0 0 var(--ink)!important;}
+/* Clicking a button also FOCUSES it, and two global resets strip box-shadow on
+   focus — `*:focus{box-shadow:none}` (styles.css ~24) and the `:where(button…)
+   :focus{box-shadow:none !important}` reset (~13733). The second is
+   !important, so the ink edge vanished the instant you pressed any button:
+   that is the flat, squared-off click the design never wanted. !important here
+   exists only to answer that !important. */
+.btn-a:focus,.btn-g:focus,.btn-green:focus,.btn-d:focus,.rad-cta:focus,
+.fs-btn:focus,.fr-act:focus,.fs-trade-tab:focus,.fs-card-buy:focus,.fs-card-gift:focus,
+.fs-tb-change:focus,.fs-tradebtn:focus,.fs-cb-btn:focus,.qst-qbtn:focus{
+  box-shadow:0 4px 0 0 var(--ink)!important;}
+.btn-a:focus:hover,.btn-g:focus:hover,.btn-green:focus:hover,.btn-d:focus:hover,.rad-cta:focus:hover,
+.fs-btn:focus:hover,.fr-act:focus:hover,.fs-trade-tab:focus:hover,.fs-card-buy:focus:hover,
+.fs-card-gift:focus:hover,.fs-tb-change:focus:hover,.fs-tradebtn:focus:hover,
+.fs-cb-btn:focus:hover,.qst-qbtn:focus:hover{box-shadow:0 5px 0 0 var(--ink)!important;}
+.btn-a:focus:active,.btn-g:focus:active,.btn-green:focus:active,.btn-d:focus:active,.rad-cta:focus:active,
+.fs-btn:focus:active,.fr-act:focus:active,.fs-trade-tab:focus:active,.fs-card-buy:focus:active,
+.fs-card-gift:focus:active,.fs-tb-change:focus:active,.fs-tradebtn:focus:active,
+.fs-cb-btn:focus:active,.qst-qbtn:focus:active{box-shadow:0 1px 0 0 var(--ink)!important;}
+/* A disabled button must never pick up a pressed edge from the rules above. */
+.fs-btn:disabled,.fs-btn:disabled:hover,.fs-btn:disabled:active,.fs-btn:disabled:focus,
+.btn-a:disabled,.btn-g:disabled,.btn-green:disabled,.rad-cta:disabled{
+  box-shadow:0 4px 0 0 var(--ink)!important;transform:none!important;}
+.fr-act:focus,.fr-act:focus:hover,.fr-act:focus:active{border-radius:50%;}

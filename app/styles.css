@@ -16913,23 +16913,25 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 
 /* ── 1. Onyx card art: the 3D frame must be as round as the card ──
    The artwork already carries its own corner radius (128px on a 2419×1393
-   bitmap), so a squarer ink frame cut visibly across the card's transparent
-   corners. Percentage radii track the image at every rendered size:
-   128/2419 = 5.3% horizontally, 128/1393 = 9.2% vertically — a true circle. */
-.fs-redeem-art img{border-radius:5.3% / 9.2%;}
+   bitmap), so a squarer frame cut visibly across the card's transparent
+   corners. Percentage radii track the image at every rendered size; the
+   measured match is 5.3% / 9.2% (128/2419 h, 128/1393 v) and we sit a touch
+   above it so the frame reads as fully round rather than merely correct. */
+.fs-redeem-art img{border-radius:6.6% / 11.5%;}
 
 /* ── 2. NEW hover card — the Featured hero treatment, shrunk ──
-   The cover is a layer BEHIND the content that dissolves into the card, and
-   the item tiles ride up over its tail so they sit between the art and the raw
-   card background, exactly like the featured collection row. */
+   The cover is a layer BEHIND the content that dissolves into the card, and the
+   products reuse the SAME tilted thumb stack as the "More collections" banners
+   (.fs-cb-thumbs), which is far more compact than a grid. */
 /* No overflow:hidden here — the tooltip arrow lives outside the box. The art
-   layer rounds its own top corners instead. */
-.fs-newpop{width:336px;border-radius:18px;border:2px solid var(--ink);}
+   layer rounds its own top corners instead. Strokes use --border, the app's
+   card stroke; --ink is for the 3D button edge only. */
+.fs-newpop{width:300px;border-radius:18px;border:2px solid var(--border);}
 .fs-newpop[data-place="right"]::after,.fs-newpop[data-place="left"]::after{
   width:12px;height:12px;margin-top:-6px;border:0;}
-.fs-newpop[data-place="right"]::after{left:-6px;border-left:2px solid var(--ink);border-bottom:2px solid var(--ink);}
-.fs-newpop[data-place="left"]::after{right:-6px;border-right:2px solid var(--ink);border-top:2px solid var(--ink);}
-.fs-newpop-art{position:absolute;left:0;right:0;top:0;height:186px;pointer-events:none;overflow:hidden;
+.fs-newpop[data-place="right"]::after{left:-6px;border-left:2px solid var(--border);border-bottom:2px solid var(--border);}
+.fs-newpop[data-place="left"]::after{right:-6px;border-right:2px solid var(--border);border-top:2px solid var(--border);}
+.fs-newpop-art{position:absolute;left:0;right:0;top:0;height:132px;pointer-events:none;overflow:hidden;
   border-radius:16px 16px 0 0;background-size:cover;background-position:center;background-color:#0d1016;}
 /* A gentle top scrim keeps the eyebrow + mark legible on light covers. */
 .fs-newpop-art::before{content:'';position:absolute;inset:0;
@@ -16953,24 +16955,23 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
     color-mix(in srgb, var(--channel), transparent 8%)  90%,
     color-mix(in srgb, var(--channel), transparent 3%)  95%,
     var(--channel) 100%);}
-.fs-newpop-in{position:relative;z-index:1;display:block;padding:15px 15px 14px;}
-.fs-newpop-head{display:flex;flex-direction:column;align-items:flex-start;gap:9px;height:104px;}
+.fs-newpop-in{position:relative;z-index:1;display:block;padding:14px 15px 13px;}
 .fs-newpop-k{display:block;font-family:var(--font-display);font-size:9.5px;font-weight:800;letter-spacing:.14em;
   text-transform:uppercase;color:var(--accent);}
-.fs-newpop-logo{max-height:30px;max-width:64%;width:auto;object-fit:contain;object-position:left center;
-  display:block;align-self:flex-start;filter:drop-shadow(0 3px 10px rgba(0,0,0,.55));}
-.fs-newpop-t{display:block;font-family:var(--font-display);font-weight:700;font-size:19px;color:#fff;
+.fs-newpop-logo{max-height:28px;max-width:62%;width:auto;object-fit:contain;object-position:left center;
+  display:block;margin-top:8px;filter:drop-shadow(0 3px 10px rgba(0,0,0,.55));}
+.fs-newpop-t{display:block;margin-top:6px;font-family:var(--font-display);font-weight:700;font-size:18px;color:#fff;
   text-shadow:0 2px 12px rgba(0,0,0,.6);}
-.fs-newpop-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:0;}
-.fs-newpop-th{position:relative;display:block;aspect-ratio:1.5;border-radius:13px;overflow:hidden;
-  background:var(--panel2);border:2px solid var(--ink);box-shadow:0 5px 14px rgba(0,0,0,.42);}
-.fs-newpop-thin{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  transform:scale(.6);transform-origin:center;pointer-events:none;}
-.fs-newpop-cta{display:block;margin-top:12px;text-align:center;font-family:var(--font-display);font-size:10px;
+/* The exact "More collections" thumb stack, scaled down. */
+.fs-newpop-thumbs{display:flex;padding:0;margin-top:16px;justify-content:center;}
+.fs-newpop-thumbs .fs-cb-thumb{width:64px;height:86px;border-radius:10px;margin-left:-20px;}
+.fs-newpop-thumbs .fs-cb-thumb:first-child{margin-left:0;}
+.fs-newpop-thumbs .fs-cb-thumb .fs-pv-av{width:38px;height:38px;}
+.fs-newpop-cta{display:block;margin-top:13px;text-align:center;font-family:var(--font-display);font-size:10px;
   font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);}
 
 /* ── 3. Inbox, on the card language ── */
-.notif-panel-v2{border:2px solid var(--ink);border-radius:20px;}
+.notif-panel-v2{border:2px solid var(--border);border-radius:20px;}
 .notif-panel-v2 .npv-header{padding:18px 56px 13px 20px;}
 /* Close button = the same bare × the purchase/redeem cards use. */
 .notif-panel-v2 .npv-x{position:absolute;top:12px;right:16px;width:auto;height:auto;padding:4px;
@@ -17053,7 +17054,7 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
   font-weight:700;font-size:13.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fs-tb-party-tx .rad-onyx-ic{width:13px;height:13px;flex-shrink:0;}
 .fs-tb-swap{width:34px;height:34px;flex-shrink:0;border-radius:11px;display:inline-flex;align-items:center;
-  justify-content:center;background:var(--accent);color:#13161d;font-size:13px;border:2px solid var(--ink);}
+  justify-content:center;background:var(--accent);color:#13161d;font-size:13px;}
 .fs-tb-change{flex-shrink:0;padding:7px 13px;font-size:11.5px;box-shadow:0 3px 0 0 var(--ink);}
 .fs-tb-change:hover{box-shadow:0 4px 0 0 var(--ink);}
 .fs-tb-change:active{box-shadow:0 1px 0 0 var(--ink);}
@@ -17103,8 +17104,8 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
   transition:transform .12s ease,box-shadow .12s ease,background .15s,color .15s,border-color .15s;}
 .fr-act:hover{transform:translateY(-1px);box-shadow:0 4px 0 0 var(--ink);background:var(--panel2);color:#fff;}
 .fr-act:active{transform:translateY(2px);box-shadow:0 1px 0 0 var(--ink);}
-.fr-act--accept:hover{background:linear-gradient(135deg,#4fe08a,#3ecf6e);color:#04240f;border-color:var(--ink);}
-.fr-act--danger:hover{background:rgba(255,0,51,.18);color:var(--red);border-color:var(--ink);}
+.fr-act--accept:hover{background:linear-gradient(135deg,#4fe08a,#3ecf6e);color:#04240f;border-color:var(--border);}
+.fr-act--danger:hover{background:rgba(255,0,51,.18);color:var(--red);border-color:var(--border);}
 .fr-empty{padding:26px 24px 34px;min-height:auto;}
 .fr-empty img{width:132px;margin-bottom:12px;opacity:1;}
 .fr-empty-cta{display:flex;justify-content:center;margin-top:14px;}
@@ -17136,3 +17137,15 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
   .fr-row,.qst-qcard{animation:none;}
   .qst-step.is-current .qst-step-dot{animation:none;}
 }
+
+/* ── Redeem: the code field is just the app's standard text input ──
+   .settings-input (Display Name / Pronouns / email) is the component; the old
+   bespoke oversized letter-spaced box with its yellow focus ring is gone. The
+   !important here only exists to unwind the previous rule's own !important. */
+.fs-redeem .fs-redeem-in,.fs-redeem .fs-redeem-in:focus,.fs-redeem .fs-redeem-in:focus-visible{
+  width:100%;padding:11px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.06);
+  background:rgba(0,0,0,.2);color:#fff;font-family:var(--font-ui);font-size:14px;font-weight:600;
+  letter-spacing:.07em;text-transform:uppercase;box-sizing:border-box;}
+.fs-redeem .fs-redeem-in:focus{border-color:var(--border)!important;box-shadow:none!important;border-width:1px;}
+.fs-redeem .fs-redeem-in::placeholder{color:rgba(255,255,255,.15);letter-spacing:normal;
+  text-transform:none;font-weight:400;}

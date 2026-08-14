@@ -9,16 +9,30 @@ All six items the user asked for. CSS lives in ONE appended block at the END of
   radii that track the image at any rendered size: `.fs-redeem-art img
   {border-radius:5.3% / 9.2%}` (128/2419 h, 128/1393 v = a true circle).
   Verified computed 18.55px × 18.7px at the live 350px column.
-- **NEW hover card rebuilt as the Featured hero, shrunk** (`_fsNewPopShow`).
-  The cover is now a layer BEHIND the content (`.fs-newpop-art`, 186px) that
-  dissolves into the card via the same **15-stop smoothstep `color-mix` ramp**
-  the page hero uses — in `var(--channel)`, landing fully opaque exactly at the
-  art's bottom edge, so no band and no grey pass-through. The 2×2 item tiles
-  start at y≈119 and ride up over the fade's tail, sitting **between the cover
-  and the raw card background** exactly like the featured row. Simplified:
-  tagline + per-item name labels dropped, logo 34px→30px, card now **336×364**
-  (was tall). ⚠️ `overflow:hidden` must stay OFF `.fs-newpop` — the tooltip
-  arrow lives outside the box; `.fs-newpop-art` rounds its own top corners.
+- **NEW hover card rebuilt** (`_fsNewPopShow`). The cover is a layer BEHIND the
+  content (`.fs-newpop-art`, 132px) that dissolves into the card via the same
+  **15-stop smoothstep `color-mix` ramp** the page hero uses — in
+  `var(--channel)`, landing fully opaque exactly at the art's bottom edge, so no
+  band and no grey pass-through. The products **reuse the "More collections"
+  tilted thumb stack verbatim** (`.fs-cb-thumbs`/`.fs-cb-thumb` from
+  `_fsColBanner`, scaled to 64×86) — a 2×2 grid was tried first and ate far too
+  much space. Card is now **300×204** (was a tall column). Hover delay
+  **220ms→650ms** so brushing past the rail can't pop it.
+  ⚠️ `overflow:hidden` must stay OFF `.fs-newpop` — the tooltip arrow lives
+  outside the box; `.fs-newpop-art` rounds its own top corners.
+- **🎨 STROKE RULE (the user corrected this):** thick card/panel strokes are
+  **`var(--border)`, never `var(--ink)`**. `--ink` is ONLY the 3D *button* edge
+  (`.fs-btn`'s `border:2px solid var(--ink)` + `box-shadow:0 4px 0 0 var(--ink)`)
+  and `.fr-act`'s shadow. Fixed on `.fs-newpop` (+ its arrow), `.notif-panel-v2`,
+  `.fs-tb-swap`, `.fr-act--accept/--danger:hover`. **Reuse the existing design
+  language — do not invent new treatments.**
+- **Redeem code field is now the app's standard `.settings-input`** (the same
+  component as Display Name / Pronouns), not a bespoke oversized letter-spaced
+  box with a yellow focus ring. Placeholder is "Type or paste your code" — it
+  must never show a real code.
+- **Two new Onyx codes** in `_FS_CODES`: `2026STARTER` = 226 Onyx, expires
+  2026-12-31; `ONYX4FREE` = 140 Onyx, never expires. Both once-per-account.
+  New `expires` field + `_fsCodeExpired(def)`, checked in `_fsRedeemCode`.
 - **Inbox on the card language.** Close button is now the bare `ftz-close-btn
   ftz-ac-x` the purchase/redeem cards use (absolutely positioned; header gained
   `padding-right:56px`). Mark-all-read + every row action are `.fs-btn` 3D
@@ -51,6 +65,31 @@ All six items the user asked for. CSS lives in ONE appended block at the END of
   art's corners); the inbox; New trade both steps; Friends + Quests entrances.
   Onyx glyphs + collection art are CDN-blind in-sandbox — verified via Playwright
   plainviews with local assets only.
+
+## 🟥 NEXT TASK — STAFF CONSOLE, REBUILT FROM SCRATCH (user, verbatim intent)
+The user's words: the staff console (topbar icon + its card) **"needs to be
+COMPLETELY REWORKED ALMOST FROM SCRATCH — IT'S A FREAKING MESS."**
+- **Do NOT work off what's there.** Keep the same *ideas / feature set*, but when
+  the new card opens it must read as a **brand new thing**. Build fresh; don't
+  patch the existing `.sc-*` surfaces.
+- **Inspire it off the SETTINGS card** (`#modal-settings`, `.settings-modal`) —
+  its shell, nav and rhythm are the reference.
+- **Close-button convention (applies app-wide from now on):**
+  • **Big cards** → `.settings-close`
+    (`#modal-settings > .modal.settings-modal > button.settings-close`).
+  • **Small cards** → `.ftz-close-btn.ftz-ac-x`
+    (`#fs-item-modal > .ftz-confirm-card.fs-di > .fs-di-right > button.ftz-close-btn.ftz-ac-x.fs-di-x`).
+- **New feature to include: Onyx code management.** Staff must be able to see
+  **every Onyx card code that is active and until when**, and **revoke, create
+  and edit** them. Today codes are hardcoded in `_FS_CODES` (app.js, near
+  `_fsOpenRedeem`) with `{onyx, label, once, expires}` + `_fsCodeExpired()` —
+  that needs to become a real backed store the console reads and writes.
+- Existing feature set to carry over (see the older "Staff console redesign"
+  notes further down): Command Center, Users + inspect drawer, User Lookup,
+  Moderation (ban/warn/suspend/Onyx/Radiance action cards), Reports, Bans,
+  Suspensions, Bastions, Ad Emplacements, Content Review, Feedback, Economy,
+  Statistics, Audit, Global Monitor (the self-contained world map,
+  `renderStaffWorldMap` + `app/world-map-data.js` — that part is good, keep it).
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
 - **🔒 HARDENING — still open, and needed before trading is genuinely safe.**

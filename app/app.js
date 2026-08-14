@@ -48691,13 +48691,12 @@ function _fsNewPopShow(btn) {
   _fsNewPopT = setTimeout(() => {
     _fsNewPopHide();
     // Always the FEATURED collection: its cover, its mark, its actual products.
-    // Same depth treatment as the Featured hero — the cover is a layer BEHIND
-    // the content that dissolves into the card, and the item tiles ride up over
-    // the bottom of it, sitting between the art and the raw card background.
+    // The cover is a layer BEHIND the content that dissolves into the card, and
+    // the products reuse the SAME tilted thumb stack as the "More collections"
+    // banners (.fs-cb-thumbs) — compact, and one language across the shop.
     const col = _fsFeaturedCol(); if (!col) return;
-    const items = _fsColItems(col).slice(0, 4);
-    const thumbs = items.map(it => `<span class="fs-newpop-th">
-        <span class="fs-newpop-thin">${_fsPreview(it)}</span></span>`).join('');
+    const items = _fsColItems(col);
+    const thumbs = items.slice(0, 3).map(it => `<span class="fs-cb-thumb">${_fsPreview(it)}</span>`).join('');
     const logo = col.logoImg
       ? `<img class="fs-newpop-logo" src="${col.logoImg}" alt="${escapeHTML(col.name)}" onerror="this.remove()">`
       : `<span class="fs-newpop-t">${escapeHTML(col.name)}</span>`;
@@ -48706,8 +48705,8 @@ function _fsNewPopShow(btn) {
     pop.innerHTML = `
       <span class="fs-newpop-art" style="background-image:url('${col.coverImg || ''}')"></span>
       <span class="fs-newpop-in">
-        <span class="fs-newpop-head"><span class="fs-newpop-k">New collection</span>${logo}</span>
-        <span class="fs-newpop-grid">${thumbs}</span>
+        <span class="fs-newpop-k">New collection</span>${logo}
+        <span class="fs-cb-thumbs fs-newpop-thumbs">${thumbs}</span>
         <span class="fs-newpop-cta">${items.length} item${items.length === 1 ? '' : 's'} · open the Fortshop</span>
       </span>`;
     document.body.appendChild(pop);
@@ -48726,7 +48725,9 @@ function _fsNewPopShow(btn) {
     pop.style.left = left + 'px';
     pop.style.top = top + 'px';
     requestAnimationFrame(() => pop.classList.add('visible'));
-  }, 220);
+    // Deliberately long: brushing past the rail on the way somewhere else must
+    // not pop the card. Only a real, settled hover opens it.
+  }, 650);
 }
 function _fsNewPopHide() {
   clearTimeout(_fsNewPopT);
@@ -49326,9 +49327,17 @@ function _fsTxRender() {
 
 // ── Redeem Onyx codes ──
 // FORTGIFT26 is the launch code and stays valid forever.
+// `expires` is an ISO instant; a code without one never expires.
+// TODO (staff console): these move into a real table so staff can create,
+// edit and revoke codes instead of shipping them in the bundle.
 const _FS_CODES = {
-  FORTGIFT26: { onyx: 100, label: 'Launch gift', once: true },
+  FORTGIFT26:    { onyx: 100, label: 'Launch gift',  once: true },
+  '2026STARTER': { onyx: 226, label: 'Starter gift', once: true, expires: '2026-12-31T23:59:59.999Z' },
+  ONYX4FREE:     { onyx: 140, label: 'Free Onyx',    once: true },
 };
+function _fsCodeExpired(def) {
+  return !!(def && def.expires && Date.now() > new Date(def.expires).getTime());
+}
 // Card art lives at the web root, NOT under /Icons — pointing at /Icons is what
 // made the art silently self-remove via the onerror guard.
 const _FS_ONYX_CARDS = ['/OnyxCard1.png', '/OnyxCard2.png'];
@@ -49349,7 +49358,7 @@ function _fsOpenRedeem() {
             <div class="ftz-ac-sub">Got a gift, promo or event code? Cash it in here.</div>
           </div>
           <label class="fs-redeem-lb" for="fs-code-in">Your code</label>
-          <input id="fs-code-in" class="fs-redeem-in" type="text" placeholder="Enter your code" autocomplete="off" spellcheck="false"
+          <input id="fs-code-in" class="settings-input fs-redeem-in" type="text" placeholder="Type or paste your code" autocomplete="off" spellcheck="false"
                  oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');document.getElementById('fs-redeem-go').disabled=!this.value.trim()"
                  onkeydown="if(event.key==='Enter'&&!document.getElementById('fs-redeem-go').disabled)document.getElementById('fs-redeem-go').click()">
           <div class="fs-redeem-err" id="fs-redeem-err"></div>
@@ -49375,6 +49384,7 @@ async function _fsRedeemCode() {
   if (err) { err.textContent = ''; err.classList.remove('show'); }
   const def = _FS_CODES[code];
   if (!def) { fail('That code isn’t valid.'); return; }
+  if (_fsCodeExpired(def)) { fail('That code has expired.'); return; }
   const used = Array.isArray(CU?.redeemedCodes) ? CU.redeemedCodes : [];
   if (def.once && used.includes(code)) { fail('You’ve already redeemed this code.'); return; }
   // Always gate redemption behind Lifecheck — codes are the obvious bot target.

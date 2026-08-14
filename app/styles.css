@@ -16903,3 +16903,236 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .fs-trade-sum-s > span{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-display);
   font-weight:700;font-size:13px;color:var(--text);}
 .fs-trade-sum-s .rad-onyx-ic{width:13px;height:13px;}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   UI POLISH PASS (2026fix488)
+   Onyx card frame · NEW hover card · Inbox on the card language · the New
+   trade table · Friends + Quests (thick strokes, 3D buttons, Heroic Search,
+   small satisfying entrances).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Onyx card art: the 3D frame must be as round as the card ──
+   The artwork already carries its own corner radius (128px on a 2419×1393
+   bitmap), so a squarer ink frame cut visibly across the card's transparent
+   corners. Percentage radii track the image at every rendered size:
+   128/2419 = 5.3% horizontally, 128/1393 = 9.2% vertically — a true circle. */
+.fs-redeem-art img{border-radius:5.3% / 9.2%;}
+
+/* ── 2. NEW hover card — the Featured hero treatment, shrunk ──
+   The cover is a layer BEHIND the content that dissolves into the card, and
+   the item tiles ride up over its tail so they sit between the art and the raw
+   card background, exactly like the featured collection row. */
+/* No overflow:hidden here — the tooltip arrow lives outside the box. The art
+   layer rounds its own top corners instead. */
+.fs-newpop{width:336px;border-radius:18px;border:2px solid var(--ink);}
+.fs-newpop[data-place="right"]::after,.fs-newpop[data-place="left"]::after{
+  width:12px;height:12px;margin-top:-6px;border:0;}
+.fs-newpop[data-place="right"]::after{left:-6px;border-left:2px solid var(--ink);border-bottom:2px solid var(--ink);}
+.fs-newpop[data-place="left"]::after{right:-6px;border-right:2px solid var(--ink);border-top:2px solid var(--ink);}
+.fs-newpop-art{position:absolute;left:0;right:0;top:0;height:186px;pointer-events:none;overflow:hidden;
+  border-radius:16px 16px 0 0;background-size:cover;background-position:center;background-color:#0d1016;}
+/* A gentle top scrim keeps the eyebrow + mark legible on light covers. */
+.fs-newpop-art::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(0,0,0,.24) 0%,rgba(0,0,0,.1) 34%,rgba(0,0,0,0) 60%);}
+/* The dissolve. Same 15-stop smoothstep ramp as the page hero, in the card's
+   own surface colour, so the art melts into the card with no band and no grey
+   pass-through — and lands fully opaque exactly at the art's bottom edge. */
+.fs-newpop-art::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(to bottom,
+    color-mix(in srgb, var(--channel), transparent 100%) 0%,
+    color-mix(in srgb, var(--channel), transparent 99.5%) 12%,
+    color-mix(in srgb, var(--channel), transparent 98%) 22%,
+    color-mix(in srgb, var(--channel), transparent 95%) 31%,
+    color-mix(in srgb, var(--channel), transparent 89%) 40%,
+    color-mix(in srgb, var(--channel), transparent 81%) 48%,
+    color-mix(in srgb, var(--channel), transparent 70%) 56%,
+    color-mix(in srgb, var(--channel), transparent 57%) 63%,
+    color-mix(in srgb, var(--channel), transparent 42%) 70%,
+    color-mix(in srgb, var(--channel), transparent 28%) 77%,
+    color-mix(in srgb, var(--channel), transparent 17%) 84%,
+    color-mix(in srgb, var(--channel), transparent 8%)  90%,
+    color-mix(in srgb, var(--channel), transparent 3%)  95%,
+    var(--channel) 100%);}
+.fs-newpop-in{position:relative;z-index:1;display:block;padding:15px 15px 14px;}
+.fs-newpop-head{display:flex;flex-direction:column;align-items:flex-start;gap:9px;height:104px;}
+.fs-newpop-k{display:block;font-family:var(--font-display);font-size:9.5px;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);}
+.fs-newpop-logo{max-height:30px;max-width:64%;width:auto;object-fit:contain;object-position:left center;
+  display:block;align-self:flex-start;filter:drop-shadow(0 3px 10px rgba(0,0,0,.55));}
+.fs-newpop-t{display:block;font-family:var(--font-display);font-weight:700;font-size:19px;color:#fff;
+  text-shadow:0 2px 12px rgba(0,0,0,.6);}
+.fs-newpop-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:0;}
+.fs-newpop-th{position:relative;display:block;aspect-ratio:1.5;border-radius:13px;overflow:hidden;
+  background:var(--panel2);border:2px solid var(--ink);box-shadow:0 5px 14px rgba(0,0,0,.42);}
+.fs-newpop-thin{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  transform:scale(.6);transform-origin:center;pointer-events:none;}
+.fs-newpop-cta{display:block;margin-top:12px;text-align:center;font-family:var(--font-display);font-size:10px;
+  font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);}
+
+/* ── 3. Inbox, on the card language ── */
+.notif-panel-v2{border:2px solid var(--ink);border-radius:20px;}
+.notif-panel-v2 .npv-header{padding:18px 56px 13px 20px;}
+/* Close button = the same bare × the purchase/redeem cards use. */
+.notif-panel-v2 .npv-x{position:absolute;top:12px;right:16px;width:auto;height:auto;padding:4px;
+  background:none;border:0;border-radius:0;font-size:24px;line-height:1;color:rgba(255,255,255,.3);}
+.notif-panel-v2 .npv-x:hover{background:none;color:rgba(255,255,255,.6);}
+.notif-panel-v2 .npv-x:active{color:rgba(255,255,255,.8);}
+.npv-mark.fs-btn{font-size:11px;font-weight:700;padding:7px 13px;border-radius:10px;
+  box-shadow:0 3px 0 0 var(--ink);color:var(--text);}
+.npv-mark.fs-btn:hover{background:var(--panel2);border-color:var(--ink);color:var(--accent);box-shadow:0 4px 0 0 var(--ink);}
+.npv-mark.fs-btn:active{transform:translateY(2px);box-shadow:0 1px 0 0 var(--ink);}
+.notif-panel-v2 .npv-tab{border:2px solid transparent;border-radius:11px;transition:background .13s,color .13s,border-color .13s,transform .1s;}
+.notif-panel-v2 .npv-tab:active{transform:translateY(1px);}
+.notif-panel-v2 .npv-tab.active{border-color:rgba(255,249,62,.34);}
+/* Rows read as real cards: thick stroke, lift on hover. */
+.np-item{border:2px solid var(--border);background:var(--panel);
+  transition:transform .16s var(--ease-out),background .16s,border-color .16s,box-shadow .16s;}
+.np-item:hover{transform:translateY(-2px);border-color:var(--muted);box-shadow:0 12px 26px rgba(0,0,0,.34);}
+.np-item:active{transform:translateY(0);}
+.np-item.unread{border-color:rgba(255,249,62,.32);}
+.np-item.unread:hover{border-color:rgba(255,249,62,.6);}
+/* Actions = the 3D button family. Accept is green everywhere (affirmative),
+   the rest are the neutral face. */
+.np-actions .fs-btn{font-size:11.5px;font-weight:700;padding:7px 14px;border-radius:10px;
+  box-shadow:0 3px 0 0 var(--ink);border:2px solid var(--ink);}
+.np-actions .fs-btn:hover{transform:translateY(-1px);box-shadow:0 4px 0 0 var(--ink);filter:brightness(1.04);}
+.np-actions .fs-btn:active{transform:translateY(2px);box-shadow:0 1px 0 0 var(--ink);filter:none;}
+.np-actions .np-accept,.np-actions .np-accept:hover{
+  background:linear-gradient(135deg,#4fe08a,#3ecf6e);color:#04240f;}
+.np-actions .np-decline,.np-actions .np-ghost,
+.np-actions .np-decline:hover,.np-actions .np-ghost:hover{background:var(--panel);color:var(--text);border-color:var(--ink);}
+.np-actions .np-decline:hover{color:var(--red);}
+.np-tr{border-width:2px;border-radius:13px;}
+
+/* ── 4. Trades — tabs, the friend picker, and the offer table ── */
+.fs-trade{max-width:820px!important;}
+.fs-trade-tabs{gap:8px;padding:2px 22px 8px;}
+.fs-trade-tab{border:2px solid var(--border);background:var(--panel);border-radius:12px;
+  box-shadow:0 3px 0 0 var(--ink);
+  transition:transform .12s ease,box-shadow .12s ease,background .15s,color .15s,border-color .15s;}
+.fs-trade-tab:hover{transform:translateY(-1px);background:var(--panel2);box-shadow:0 4px 0 0 var(--ink);}
+.fs-trade-tab:active{transform:translateY(2px);box-shadow:0 1px 0 0 var(--ink);}
+.fs-trade-tab.active{background:linear-gradient(135deg,#fff93e,#ffd23e);color:#1a1400;border-color:var(--ink);}
+.fs-trade-tab.active:hover{background:linear-gradient(135deg,#fff93e,#ffd23e);filter:brightness(1.05);}
+
+/* Step 1 — who */
+.fs-tb-lead{margin-bottom:13px;}
+.fs-tb-lead-t{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--text);}
+.fs-tb-lead-s{font-size:12.5px;color:var(--muted-light);margin-top:3px;line-height:1.45;}
+.fs-trade-friends{gap:8px;max-height:320px;padding:2px;}
+.fs-tb-friend{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px;
+  border-radius:14px;border:2px solid var(--border);background:var(--panel);color:var(--text);
+  cursor:pointer;font-family:inherit;
+  transition:transform .15s var(--ease-out),background .15s,border-color .15s,box-shadow .15s;}
+.fs-tb-friend:hover{transform:translateY(-2px);border-color:var(--muted);background:var(--panel2);
+  box-shadow:0 12px 24px rgba(0,0,0,.34);}
+.fs-tb-friend:active{transform:translateY(0);}
+.fs-tb-friend-av{flex-shrink:0;display:inline-flex;}
+.fs-tb-friend-av > *{border-radius:50%;overflow:hidden;}
+.fs-tb-friend-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+.fs-tb-friend .fs-trade-fn{font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fs-tb-friend-s{font-size:11px;color:var(--muted);}
+.fs-tb-friend-go{width:30px;height:30px;flex-shrink:0;border-radius:10px;display:inline-flex;align-items:center;
+  justify-content:center;background:rgba(255,255,255,.05);color:var(--muted);font-size:11px;
+  transition:background .15s,color .15s,transform .15s var(--ease-out);}
+.fs-tb-friend:hover .fs-tb-friend-go{background:var(--accent);color:#13161d;transform:translateX(3px);}
+
+/* Step 2 — the offer table. The parties strip doubles as the live summary. */
+.fs-tb-parties{display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:16px;
+  border-radius:16px;border:2px solid var(--border);background:var(--panel2);}
+.fs-tb-party{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+.fs-tb-party--them{flex-direction:row-reverse;text-align:right;}
+.fs-tb-party--them .fs-tb-party-tx{align-items:flex-end;}
+.fs-tb-party-av{flex-shrink:0;display:inline-flex;}
+.fs-tb-party-av > *{border-radius:50%;overflow:hidden;}
+.fs-tb-party-tx{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.fs-tb-party-tx b{font-family:var(--font-display);font-size:9px;font-weight:800;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.fs-tb-party-tx > span{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-display);
+  font-weight:700;font-size:13.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fs-tb-party-tx .rad-onyx-ic{width:13px;height:13px;flex-shrink:0;}
+.fs-tb-swap{width:34px;height:34px;flex-shrink:0;border-radius:11px;display:inline-flex;align-items:center;
+  justify-content:center;background:var(--accent);color:#13161d;font-size:13px;border:2px solid var(--ink);}
+.fs-tb-change{flex-shrink:0;padding:7px 13px;font-size:11.5px;box-shadow:0 3px 0 0 var(--ink);}
+.fs-tb-change:hover{box-shadow:0 4px 0 0 var(--ink);}
+.fs-tb-change:active{box-shadow:0 1px 0 0 var(--ink);}
+.fs-tb-panel{display:flex;flex-direction:column;min-width:0;border-radius:16px;border:2px solid var(--border);
+  background:var(--panel);padding:13px 13px 14px;}
+.fs-tb-ph{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
+.fs-tb-pt{font-family:var(--font-display);font-weight:800;font-size:11.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted);}
+.fs-tb-pn{min-width:20px;height:20px;padding:0 6px;border-radius:100px;background:var(--accent);color:#13161d;
+  font-family:var(--font-display);font-weight:800;font-size:10.5px;display:inline-flex;align-items:center;justify-content:center;}
+.fs-tb-panel .fs-trade-onyxin{border:2px solid var(--border);border-radius:12px;margin-bottom:6px;
+  transition:border-color .14s;}
+.fs-tb-panel .fs-trade-onyxin:focus-within{border-color:var(--accent);}
+.fs-tb-onyxlb{font-family:var(--font-display);font-size:9.5px;font-weight:800;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--muted);flex-shrink:0;}
+.fs-tb-hint{font-size:10.5px;color:var(--muted);margin:0 0 10px;padding-left:3px;}
+.fs-tb-hint b{color:var(--text);font-family:var(--font-display);}
+.fs-tb .fs-trade-item{border-width:2px;transition:transform .14s var(--ease-out),border-color .14s,box-shadow .14s;}
+.fs-tb .fs-trade-item:hover{transform:translateY(-3px);box-shadow:0 9px 20px rgba(0,0,0,.36);}
+.fs-tb .fs-trade-item:active{transform:translateY(-1px);}
+.fs-tb .fs-trade-item.is-on{border-color:var(--accent);}
+.fs-tb .ftz-nf{padding:16px 10px 20px;}
+.fs-trade-foot{margin-top:18px;}
+.fs-trade-foot .fs-btn{flex:1;}
+@media(max-width:720px){
+  .fs-trade-cols{grid-template-columns:1fr;}
+  .fs-tb-parties{flex-wrap:wrap;}
+  .fs-tb-change{width:100%;}
+}
+
+/* ── 5. Friends — card rows, 3D controls, Heroic Search ── */
+.fr-search input{height:40px;border-radius:13px;border-width:2px;}
+.fr-search input:focus{border-color:var(--accent);background:rgba(0,0,0,.28);}
+.fr-sec{font-size:11px;letter-spacing:.14em;padding:16px 12px 8px;}
+.fr-row{margin-bottom:7px;padding:10px 13px;border:2px solid var(--border);border-radius:14px;
+  background:rgba(255,255,255,.018);
+  transition:transform .15s var(--ease-out),background .15s,border-color .15s,box-shadow .15s;
+  /* backwards (not both) so the finished animation can't pin transform:none
+     and swallow the hover lift. */
+  animation:frRowIn .3s var(--ease-out) backwards;animation-delay:calc(var(--i,0)*26ms);}
+.fr-row:hover{transform:translateY(-2px);background:var(--panel);border-color:var(--muted);
+  box-shadow:0 12px 24px rgba(0,0,0,.3);}
+.fr-row:active{transform:translateY(0);}
+@keyframes frRowIn{from{opacity:0;transform:translateY(9px);}to{opacity:1;transform:none;}}
+.fr-act{width:36px;height:36px;border-radius:12px;border:2px solid var(--border);background:var(--panel);
+  box-shadow:0 3px 0 0 var(--ink);
+  transition:transform .12s ease,box-shadow .12s ease,background .15s,color .15s,border-color .15s;}
+.fr-act:hover{transform:translateY(-1px);box-shadow:0 4px 0 0 var(--ink);background:var(--panel2);color:#fff;}
+.fr-act:active{transform:translateY(2px);box-shadow:0 1px 0 0 var(--ink);}
+.fr-act--accept:hover{background:linear-gradient(135deg,#4fe08a,#3ecf6e);color:#04240f;border-color:var(--ink);}
+.fr-act--danger:hover{background:rgba(255,0,51,.18);color:var(--red);border-color:var(--ink);}
+.fr-empty{padding:26px 24px 34px;min-height:auto;}
+.fr-empty img{width:132px;margin-bottom:12px;opacity:1;}
+.fr-empty-cta{display:flex;justify-content:center;margin-top:14px;}
+#fr-no-results{padding-top:6px;}
+
+/* ── 6. Quests — thicker card strokes, staggered entrance, no coloured glows ── */
+.qst-qcard{border-width:2.5px;animation:qstCardIn .34s var(--ease-out) backwards;
+  animation-delay:calc(var(--i,0)*45ms);}
+@keyframes qstCardIn{from{opacity:0;transform:translateY(14px) scale(.985);}to{opacity:1;transform:none;}}
+.qst-qcard:active{transform:translateY(-2px) scale(.995);}
+/* Progress reads as a real bar, not a hairline. */
+.qst-prog-bar{height:8px;background:rgba(255,255,255,.09);border:1px solid rgba(0,0,0,.3);}
+.qst-prog-txt{font-size:11.5px;color:var(--text);}
+.qst-banner{border-width:2px;border-color:rgba(255,255,255,.12);}
+/* The accent glow on the rank ladder + crest violated the no-coloured-glow
+   rule; depth now comes from a neutral shadow only. */
+.qst-ladder-fill{box-shadow:none;}
+.qst-crest{box-shadow:0 12px 30px rgba(0,0,0,.45);border-width:2px;}
+.qst-bstat{border-width:2px;}
+.qst-step-dot{border-width:2.5px;}
+.qst-step.is-current .qst-step-dot{animation:qstStepBeat 2.8s ease-in-out infinite;}
+@keyframes qstStepBeat{0%,100%{transform:scale(1.16);}50%{transform:scale(1.24);}}
+.qst-bounty{border-width:2px;border-radius:16px;
+  transition:transform .16s var(--ease-out),border-color .16s,box-shadow .16s;}
+.qst-bounty:hover{transform:translateY(-2px);border-color:var(--muted);box-shadow:0 14px 30px rgba(0,0,0,.34);}
+.qst-page .ftz-nf{padding:46px 22px 54px;}
+
+@media (prefers-reduced-motion: reduce){
+  .fr-row,.qst-qcard{animation:none;}
+  .qst-step.is-current .qst-step-dot{animation:none;}
+}

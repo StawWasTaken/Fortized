@@ -27312,8 +27312,8 @@ async function toggleNotifPanel() {
     <div class="npv-header">
       <span style="color:inherit;display:inline-flex;"><svg width="18" height="18" viewBox="0 0 512 512" fill="currentColor"><path d="M91.8 32C59.9 32 32.9 55.4 28.4 86.9L.6 281.2c-.4 3-.6 6-.6 9.1L0 416c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-125.7c0-3-.2-6.1-.6-9.1L483.6 86.9C479.1 55.4 452.1 32 420.2 32L91.8 32zm0 64l328.5 0 27.4 192-59.9 0c-12.1 0-23.2 6.8-28.6 17.7l-14.3 28.6c-5.4 10.8-16.5 17.7-28.6 17.7l-120.4 0c-12.1 0-23.2-6.8-28.6-17.7l-14.3-28.6c-5.4-10.8-16.5-17.7-28.6-17.7L64.3 288 91.8 96z"/></svg></span>
       <h3>${_t('notif.inbox')}</h3>
-      <button class="npv-mark" onclick="markAllRead()">${_t('notif.mark_all')}</button>
-      <button class="npv-x" aria-label="Close" onclick="_closeEl('notif-panel-v2');_closeEl('notif-panel-v2-overlay');notifPanelOpen=false">&times;</button>
+      <button class="fs-btn npv-mark" onclick="markAllRead()">${_t('notif.mark_all')}</button>
+      <button class="ftz-close-btn ftz-ac-x npv-x" aria-label="Close" onclick="_closeEl('notif-panel-v2');_closeEl('notif-panel-v2-overlay');notifPanelOpen=false">&times;</button>
     </div>
     <div class="npv-tabs" id="npv-tabs">
       <button class="npv-tab${_notifTabFilter === 'all' ? ' active' : ''}" onclick="_setNotifTab('all',this)">${_t('notif.tab.all')}</button>
@@ -27501,7 +27501,7 @@ async function buildNotifList() {
     const _stillPending = n.type==='friend_request' && !_alreadyFriends && (CU?.friendRequestsReceived||[]).includes(n.from);
     let actions = '';
     if (_stillPending) {
-      actions = '<div class="np-actions"><button class="np-accept" onclick="event.stopPropagation();acceptFriend(\''+escapeHTML(n.from||'')+'\');buildNotifList()"><i class="fa-solid fa-user-check" aria-hidden="true"></i> Accept</button></div>';
+      actions = '<div class="np-actions"><button class="fs-btn fs-btn--primary np-accept" onclick="event.stopPropagation();acceptFriend(\''+escapeHTML(n.from||'')+'\');buildNotifList()"><i class="fa-solid fa-user-check" aria-hidden="true"></i> Accept</button></div>';
     } else if (n.type==='friend_request' && _alreadyFriends) {
       actions = '<div class="np-actions"><span style="font-size:11px;color:var(--green);font-weight:600;"><i class="fa-solid fa-user-group" aria-hidden="true"></i> Friends</span></div>';
     } else if ((n.type === 'trade_offer' || n.type === 'trade') && n.data?.tradeId) {
@@ -27509,9 +27509,9 @@ async function buildNotifList() {
       const live = _fsTrades('in').some(t => t.id === n.data.tradeId && t.status === 'pending');
       actions = live
         ? `<div class="np-actions">
-             <button class="np-accept" onclick="event.stopPropagation();_fsTradeRespond('${n.data.tradeId}',true)">Accept</button>
-             <button class="np-decline" onclick="event.stopPropagation();_fsTradeRespond('${n.data.tradeId}',false);setTimeout(buildNotifList,300)">Decline</button>
-             <button class="np-ghost" onclick="event.stopPropagation();toggleNotifPanel();_fsOpenTrade('in')">View trade</button>
+             <button class="fs-btn fs-btn--primary np-accept" onclick="event.stopPropagation();_fsTradeRespond('${n.data.tradeId}',true)">Accept</button>
+             <button class="fs-btn np-decline" onclick="event.stopPropagation();_fsTradeRespond('${n.data.tradeId}',false);setTimeout(buildNotifList,300)">Decline</button>
+             <button class="fs-btn np-ghost" onclick="event.stopPropagation();toggleNotifPanel();_fsOpenTrade('in')">View trade</button>
            </div>`
         : '<div class="np-actions"><span class="np-done">Already answered</span></div>';
     } else if (n.type === 'trade_offer' && n.data) {
@@ -27520,7 +27520,7 @@ async function buildNotifList() {
       const payload = encodeURIComponent(JSON.stringify(offer));
       actions = expired
         ? '<div class="np-actions"><span style="font-size:11px;color:var(--red);font-weight:700;">Expired</span></div>'
-        : `<div class="np-actions"><button class="np-accept" onclick="event.stopPropagation();_handleTradeAccept('${payload}');buildNotifList()">Accept</button><button class="np-decline" onclick="event.stopPropagation();_handleTradeDecline('${payload}');buildNotifList()">Decline</button></div>`;
+        : `<div class="np-actions"><button class="fs-btn fs-btn--primary np-accept" onclick="event.stopPropagation();_handleTradeAccept('${payload}');buildNotifList()">Accept</button><button class="fs-btn np-decline" onclick="event.stopPropagation();_handleTradeDecline('${payload}');buildNotifList()">Decline</button></div>`;
     }
     // Use user's actual profile picture for personal notifications
     const _nu = _notifUsers[n.from];
@@ -48690,22 +48690,23 @@ function _fsNewPopShow(btn) {
   if (!btn || !_fsShopHasNew()) return;
   _fsNewPopT = setTimeout(() => {
     _fsNewPopHide();
-    // Always the FEATURED collection: its products, its name, its tagline.
+    // Always the FEATURED collection: its cover, its mark, its actual products.
+    // Same depth treatment as the Featured hero — the cover is a layer BEHIND
+    // the content that dissolves into the card, and the item tiles ride up over
+    // the bottom of it, sitting between the art and the raw card background.
     const col = _fsFeaturedCol(); if (!col) return;
     const items = _fsColItems(col).slice(0, 4);
-    const thumbs = items.map(it => `<span class="fs-newpop-th" style="--c:${col.accent || 'var(--accent)'}">
-        <span class="fs-newpop-thin">${_fsPreview(it)}</span>
-        <span class="fs-newpop-thn">${escapeHTML(it.name)}</span></span>`).join('');
+    const thumbs = items.map(it => `<span class="fs-newpop-th">
+        <span class="fs-newpop-thin">${_fsPreview(it)}</span></span>`).join('');
     const logo = col.logoImg
       ? `<img class="fs-newpop-logo" src="${col.logoImg}" alt="${escapeHTML(col.name)}" onerror="this.remove()">`
       : `<span class="fs-newpop-t">${escapeHTML(col.name)}</span>`;
     const pop = document.createElement('div');
     pop.className = 'fs-newpop';
     pop.innerHTML = `
-      <span class="fs-newpop-hero" style="background-image:url('${col.coverImg || ''}')">
-        <span class="fs-newpop-k">New collection</span>${logo}</span>
-      <span class="fs-newpop-b">
-        <span class="fs-newpop-s">${escapeHTML(col.tagline || '')}</span>
+      <span class="fs-newpop-art" style="background-image:url('${col.coverImg || ''}')"></span>
+      <span class="fs-newpop-in">
+        <span class="fs-newpop-head"><span class="fs-newpop-k">New collection</span>${logo}</span>
         <span class="fs-newpop-grid">${thumbs}</span>
         <span class="fs-newpop-cta">${items.length} item${items.length === 1 ? '' : 's'} · open the Fortshop</span>
       </span>`;
@@ -48927,54 +48928,74 @@ function _fsTradeBuilder() {
   const d = _fsTradeDraft();
   const friends = (CU?.friends || []).map(f => (f.username || f)).filter(Boolean);
   const CHK = '<svg viewBox="0 0 448 512" width="12" height="12" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
+  // ── Step 1: pick the other side ──
   if (!d.to) {
     const rows = friends.length
-      ? friends.map(n => `<div class="nm-row fs-trade-friend" onclick="_fsTradePick('${escapeHTML(n).replace(/'/g, "\\'")}')">
-          <span class="fs-trade-av">${buildAvatarHTML(_pfpCache[n] || null, n, 32)}</span>
-          <span class="fs-trade-fn">${escapeHTML(n)}</span>
-          <i class="fa-solid fa-chevron-right fs-trade-go"></i>
-        </div>`).join('')
-      : _ftzNotFound('No friends to trade with', 'Add a friend first, or search for someone by username.');
+      ? friends.map(n => `<button class="fs-tb-friend fs-trade-friend" onclick="_fsTradePick('${escapeHTML(n).replace(/'/g, "\\'")}')">
+          <span class="fs-tb-friend-av">${buildAvatarHTML(_pfpCache[n] || null, n, 36)}</span>
+          <span class="fs-tb-friend-tx"><span class="fs-trade-fn">${escapeHTML(n)}</span><span class="fs-tb-friend-s">Open the offer table</span></span>
+          <span class="fs-tb-friend-go"><i class="fa-solid fa-arrow-right"></i></span>
+        </button>`).join('')
+      : _ftzNotFound('No friends to trade with', 'Add a friend first — trades only travel between people who know each other.', { compact: true });
     return `<div class="fs-trade-step">
-      <div class="fs-trade-h">Who are you trading with?</div>
+      <div class="fs-tb-lead">
+        <div class="fs-tb-lead-t">Who are you trading with?</div>
+        <div class="fs-tb-lead-s">Pick someone, then lay out what each side puts on the table.</div>
+      </div>
       <div class="fs-search fs-trade-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.2" y2="16.2"/></svg><input id="fs-trade-find" placeholder="Search by username" oninput="_fsTradeFilter(this.value)"></div>
       <div class="fs-trade-friends" id="fs-trade-friends">${rows}</div>
+      <div id="fs-trade-nores" style="display:none;"></div>
     </div>`;
   }
+
+  // ── Step 2: the offer table ──
   const owned = _fsCatalogue().filter(_fsIsOwned);
   const wanted = _fsCatalogue().filter(a => !_fsIsOwned(a));
   const grid = (list, side) => list.length
-    ? `<div class="fs-trade-grid">${list.map(it => `<button class="fs-trade-item${d[side].includes(it.id) ? ' is-on' : ''}" onclick="_fsTradeToggleItem('${side}','${it.id}')">
+    ? `<div class="fs-trade-grid">${list.map(it => `<button class="fs-trade-item${d[side].includes(it.id) ? ' is-on' : ''}" onclick="_fsTradeToggleItem('${side}','${it.id}')" title="${escapeHTML(it.name)}">
         <span class="fs-trade-item-art">${_fsPreview(it)}</span>
         <span class="fs-trade-item-n">${escapeHTML(it.name)}</span>
         ${d[side].includes(it.id) ? `<span class="fs-trade-tick">${CHK}</span>` : ''}
       </button>`).join('')}</div>`
-    : `<div class="fs-trade-empty">${side === 'give' ? 'You don’t own anything tradeable yet.' : 'Nothing left to ask for — you own it all.'}</div>`;
-  return `<div class="fs-trade-step">
-    <div class="fs-trade-with">
-      <span>Trading with <b>${escapeHTML(d.to)}</b></span>
-      <button class="fs-clear" onclick="window._fsDraft.to=null;_fsTradeRender()"><i class="fa-solid fa-xmark"></i> Change</button>
+    : _ftzNotFound(side === 'give' ? 'Nothing to offer yet' : 'Nothing left to want',
+        side === 'give' ? 'You don’t own anything tradeable — grab something from the Fortshop first.' : 'You already own every item in the shop.',
+        { compact: true });
+  const count = (onyx, ids) => (onyx > 0 ? 1 : 0) + ids.length;
+  const pill = (onyx, ids) => { const n = count(onyx, ids); return n ? `<span class="fs-tb-pn">${n}</span>` : ''; };
+  const bal = +CU?.onyx || 0;
+
+  // The parties strip doubles as the live summary — one glance tells you what
+  // each side is putting up, so the footer stays clean.
+  const panel = (side, title, list, onyxVal, hint) => `
+    <section class="fs-tb-panel fs-tb-panel--${side}">
+      <header class="fs-tb-ph"><span class="fs-tb-pt">${title}</span>${pill(onyxVal, d[side])}</header>
+      <label class="fs-trade-onyxin">${_FS_ONYX_IC}
+        <input type="number" min="0" value="${onyxVal || ''}" oninput="_fsTradeSetOnyx('${side}',this.value)" placeholder="0" aria-label="${title} Onyx">
+        <span class="fs-tb-onyxlb">Onyx</span></label>
+      <div class="fs-tb-hint">${hint}</div>
+      ${grid(list, side)}
+    </section>`;
+
+  return `<div class="fs-trade-step fs-tb">
+    <div class="fs-tb-parties">
+      <span class="fs-tb-party">
+        <span class="fs-tb-party-av">${buildAvatarHTML(CU?.pfp || null, CU?.displayName || CU?.username || 'You', 40)}</span>
+        <span class="fs-tb-party-tx"><b>You give</b>${_fsTradeSumTxt(d.giveOnyx, d.give)}</span>
+      </span>
+      <span class="fs-tb-swap"><i class="fa-solid fa-right-left"></i></span>
+      <span class="fs-tb-party fs-tb-party--them">
+        <span class="fs-tb-party-av">${buildAvatarHTML(_pfpCache[d.to] || null, d.to, 40)}</span>
+        <span class="fs-tb-party-tx"><b>${escapeHTML(d.to)} gives</b>${_fsTradeSumTxt(d.getOnyx, d.get)}</span>
+      </span>
+      <button class="fs-btn fs-tb-change" onclick="window._fsDraft.to=null;_fsTradeRender()" title="Trade with someone else"><i class="fa-solid fa-arrow-rotate-left"></i> Change</button>
     </div>
     <div class="fs-trade-cols">
-      <div class="fs-trade-col">
-        <div class="fs-trade-h">You give</div>
-        <label class="fs-trade-onyxin">${_FS_ONYX_IC}<input type="number" min="0" value="${d.giveOnyx}" oninput="_fsTradeSetOnyx('give',this.value)" placeholder="0"></label>
-        ${grid(owned, 'give')}
-      </div>
-      <div class="fs-trade-col">
-        <div class="fs-trade-h">You get</div>
-        <label class="fs-trade-onyxin">${_FS_ONYX_IC}<input type="number" min="0" value="${d.getOnyx}" oninput="_fsTradeSetOnyx('get',this.value)" placeholder="0"></label>
-        ${grid(wanted, 'get')}
-      </div>
-    </div>
-    <div class="fs-trade-sum">
-      <span class="fs-trade-sum-s"><b>You give</b>${_fsTradeSumTxt(d.giveOnyx, d.give)}</span>
-      <i class="fa-solid fa-right-left"></i>
-      <span class="fs-trade-sum-s"><b>You get</b>${_fsTradeSumTxt(d.getOnyx, d.get)}</span>
+      ${panel('give', 'You give', owned, d.giveOnyx, `Your balance: <b>${_ftzCompactNum(bal)}</b>`)}
+      ${panel('get', 'You get', wanted, d.getOnyx, 'Ask for anything they own')}
     </div>
     <div class="fs-trade-foot">
       <button class="fs-btn" onclick="document.getElementById('fs-trade-modal')?.remove();_fsTradeReset()">Cancel</button>
-      <button class="fs-btn fs-btn--primary" ${(!d.giveOnyx && !d.give.length && !d.getOnyx && !d.get.length) ? 'disabled' : ''} onclick="_fsSendTrade()">Send trade request</button>
+      <button class="fs-btn fs-btn--primary" ${(!d.giveOnyx && !d.give.length && !d.getOnyx && !d.get.length) ? 'disabled' : ''} onclick="_fsSendTrade()"><i class="fa-solid fa-paper-plane"></i> Send trade request</button>
     </div>
   </div>`;
 }
@@ -48987,10 +49008,17 @@ function _fsTradeSumTxt(onyx, ids) {
 }
 function _fsTradeFilter(q) {
   q = (q || '').toLowerCase();
+  let shown = 0;
   document.querySelectorAll('#fs-trade-friends .fs-trade-friend').forEach(r => {
     const n = r.querySelector('.fs-trade-fn')?.textContent?.toLowerCase() || '';
-    r.style.display = n.includes(q) ? '' : 'none';
+    const hit = n.includes(q);
+    r.style.display = hit ? '' : 'none';
+    if (hit) shown++;
   });
+  // Searching into nothing gets the same Heroic Search dead end as everywhere else.
+  const nr = document.getElementById('fs-trade-nores'); if (!nr) return;
+  if (shown || !q) { nr.style.display = 'none'; nr.innerHTML = ''; }
+  else { nr.style.display = ''; nr.innerHTML = _ftzNotFound('No friend by that name', '', { compact: true }); }
 }
 
 async function _fsSendTrade() {
@@ -49788,7 +49816,7 @@ function renderAtelierTab(tab) {
 
     // Discord-style quest card — banner + logo + attribution + time limit +
     // Onyx reward (real image) + Accept button. Tactile like the Radiance perks.
-    const qCard = (q) => {
+    const qCard = (q, qi) => {
       const pct = q.goal ? Math.round(q.goal.cur / q.goal.target * 100) : 0;
       const by = (q.by || 'Fortized').replace(/^@/, '');
       const banner = q.banner || DEF_BANNER;
@@ -49815,7 +49843,7 @@ function renderAtelierTab(tab) {
             : q.accepted
               ? `<span class="qst-qwait"><i class="fa-solid fa-hourglass-half"></i> In progress</span><button class="qst-qcancel" onclick="cancelQuest('${q.id}')" title="Cancel quest"><i class="fa-solid fa-xmark"></i></button>`
               : `<button class="fs-btn fs-btn--primary qst-qbtn qst-qbtn--accept" onclick="acceptQuest('${q.id}')">Accept Quest</button>`;
-      return `<div class="qst-qcard${q.done ? ' is-done' : ''}">
+      return `<div class="qst-qcard${q.done ? ' is-done' : ''}" style="--i:${qi || 0};">
         <div class="qst-qcard-banner" style="background-image:url('${banner}');">
           ${timePill}
           <span class="qst-qcard-logo${q.logo ? '' : ' qst-qcard-logo--word'}">${logoInner}</span>
@@ -49870,7 +49898,7 @@ function renderAtelierTab(tab) {
       const done = cat.filter(q => q.done);
       body = done.length
         ? `<div class="qst-qgrid">${done.map(qCard).join('')}</div>`
-        : `<div class="qst-empty"><i class="fa-solid fa-scroll"></i><div class="qst-empty-t">Nothing claimed yet</div><div class="qst-empty-s">Complete quests in the Available tab and they’ll appear here.</div></div>`;
+        : _ftzNotFound('Nothing claimed yet', 'Finish a quest in the Available tab and it earns its place here.');
     } else if (qtab === 'bounties') {
       // Discord-style "Bounties incoming" row: icon + title + inline Learn More.
       // Bounties glyph rendered as a colour overlay (CSS mask tinted to the
@@ -49888,7 +49916,7 @@ function renderAtelierTab(tab) {
       const aWeekly  = cat.filter(q => q.tier === 'weekly'  && !q.done);
       const aJourney = cat.filter(q => q.tier === 'journey' && !q.done);
       if (!(aDaily.length + aWeekly.length + aJourney.length)) {
-        body = `<div class="qst-empty"><i class="fa-solid fa-feather-pointed"></i><div class="qst-empty-t">All caught up</div><div class="qst-empty-s">You’ve claimed every quest available. New ones arrive with each reset.</div></div>`;
+        body = _ftzNotFound('All caught up', 'You’ve claimed every quest available. New ones arrive with each reset.');
       } else {
         body =
           (aDaily.length   ? `${groupLabel('Daily')}<div class="qst-qgrid">${aDaily.map(qCard).join('')}</div>` : '') +
@@ -62271,10 +62299,22 @@ function setFriendsTab(tab, btn) {
 // Live-filter the visible friend rows by display name / username.
 function _frFilter(q) {
   q = (q || '').trim().toLowerCase();
-  document.querySelectorAll('#fr-list .fr-row').forEach(row => {
+  const list = document.getElementById('fr-list'); if (!list) return;
+  let shown = 0, total = 0;
+  list.querySelectorAll('.fr-row').forEach(row => {
     const hay = (row.dataset.name || '') + ' ' + (row.dataset.username || '');
-    row.style.display = (!q || hay.includes(q)) ? '' : 'none';
+    const hit = !q || hay.includes(q);
+    row.style.display = hit ? '' : 'none';
+    total++; if (hit) shown++;
   });
+  // Searching into nothing gets the Heroic Search knight, not a blank page.
+  let nr = document.getElementById('fr-no-results');
+  if (q && total && !shown) {
+    if (!nr) { nr = document.createElement('div'); nr.id = 'fr-no-results'; list.appendChild(nr); }
+    nr.innerHTML = _ftzNotFound('No friend by that name', '', { compact: true });
+  } else if (nr) nr.remove();
+  // Section headers only make sense while their rows are visible.
+  list.querySelectorAll('.fr-sec').forEach(s => { s.style.display = (q && !shown) ? 'none' : ''; });
 }
 
 // Toggle the Active Now slide-over (narrow windows only).
@@ -62312,13 +62352,12 @@ function _frSkeletons(n) {
   return h;
 }
 
-// Joyster-flavoured empty state (Joyster now lives only in empty states).
+// Heroic Search empty state — the same knight every other dead end in the app
+// uses, so Friends stops speaking its own dialect.
 function _frEmpty(title, body, cta) {
   return `<div class="fr-empty">
-    <img src="/Joyster.png" onerror="this.onerror=null;this.src='/JoysterPoint.png';" alt="">
-    <h3>${escapeHTML(title)}</h3>
-    <p>${escapeHTML(body)}</p>
-    ${cta || ''}
+    ${_ftzNotFound(title, body)}
+    ${cta ? `<div class="fr-empty-cta">${cta}</div>` : ''}
   </div>`;
 }
 
@@ -62341,11 +62380,11 @@ function _frNameStyle(u) {
   return s;
 }
 
-function _frRowHTML(u, prof) {
+function _frRowHTML(u, prof, idx) {
   const dn = u.displayName || u.username;
   const un = escapeHTML(u.username);
   const ns = _frNameStyle(prof || u._u);
-  return `<div class="fr-row" data-username="${un}" data-name="${escapeHTML(String(dn).toLowerCase())}" onclick="openDMView('${un}')" oncontextmenu="_frRowMenu(event,'${un}')">
+  return `<div class="fr-row" style="--i:${Math.min(idx || 0, 14)};" data-username="${un}" data-name="${escapeHTML(String(dn).toLowerCase())}" onclick="openDMView('${un}')" oncontextmenu="_frRowMenu(event,'${un}')">
     <div class="fr-av"><div class="fa">${buildAvatarHTML(u.pfp || null, dn, 40)}</div><span class="fr-dot">${FtzStatus.dotSvg(u.status, 15)}</span></div>
     <div class="fr-meta"><span class="fr-name"${ns ? ` style="${ns}"` : ''}>${escapeHTML(dn)}</span><span class="fr-sub">${_frSubline(u)}</span></div>
     <div class="fr-actions">
@@ -62387,8 +62426,8 @@ async function renderFriendsView(tab) {
 
   const friends = CU?.friends || [];
   if (!friends.length) {
-    list.innerHTML = _frEmpty('No friends yet', "Add someone by their username and start a conversation — Joyster's rooting for you.",
-      `<button class="btn-a fr-add-btn" onclick="setFriendsTab('add')" style="margin:0 auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add Friend</span></button>`);
+    list.innerHTML = _frEmpty('No friends yet', 'Add someone by their username and start a conversation.',
+      `<button class="fs-btn fs-btn--primary" onclick="setFriendsTab('add')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add Friend</span></button>`);
     return;
   }
 
@@ -62414,13 +62453,13 @@ async function renderFriendsView(tab) {
   const shown = tab === 'online' ? rows.filter(r => FtzStatus.isPresent(r.status)) : rows;
   if (!shown.length) {
     list.innerHTML = _frEmpty(tab === 'online' ? "No one's online" : 'No friends yet',
-      tab === 'online' ? "None of your friends are around right now. Joyster says: go touch grass, then come back!" : 'Add someone by their username to get started.',
-      tab === 'online' ? `<button class="fr-reqbtn fr-reqbtn--ghost" onclick="setFriendsTab('all',document.getElementById('ftab-all'))">View all friends</button>` : '');
+      tab === 'online' ? 'None of your friends are around right now — go touch grass, then come back.' : 'Add someone by their username to get started.',
+      tab === 'online' ? `<button class="fs-btn" onclick="setFriendsTab('all',document.getElementById('ftab-all'))">View all friends</button>` : '');
     return;
   }
 
   shown.sort((a, b) => (FtzStatus.isPresent(b.status) ? 1 : 0) - (FtzStatus.isPresent(a.status) ? 1 : 0) || String(a.displayName || '').localeCompare(String(b.displayName || '')));
-  list.innerHTML = `<div class="fr-sec">${tab === 'online' ? 'Online' : 'All friends'} — ${shown.length}</div>` + shown.map(r => _frRowHTML(r, r._u)).join('');
+  list.innerHTML = `<div class="fr-sec">${tab === 'online' ? 'Online' : 'All friends'} — ${shown.length}</div>` + shown.map((r, i) => _frRowHTML(r, r._u, i)).join('');
 
   const sv = document.getElementById('fr-search');
   if (sv && sv.value) _frFilter(sv.value);
@@ -62430,7 +62469,7 @@ async function _frRenderPending(list) {
   const incoming = CU?.friendRequestsReceived || [];
   const outgoing = CU?.friendRequestsSent || [];
   if (!incoming.length && !outgoing.length) {
-    list.innerHTML = _frEmpty('No pending requests', "When someone sends you a friend request, it'll show up here.", '');
+    list.innerHTML = _frEmpty('No pending requests', 'When someone sends you a friend request, it lands here.', '');
     return;
   }
   list.innerHTML = `<div class="fr-sec">Pending — …</div>` + _frSkeletons(Math.min(incoming.length + outgoing.length, 6));
@@ -62443,7 +62482,7 @@ async function _frRenderPending(list) {
     const ns = _frNameStyle(u);
     const actions = kind === 'in'
       ? `<button class="fr-act fr-act--accept" title="Accept" onclick="event.stopPropagation();acceptFriend('${un}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button><button class="fr-act fr-act--danger" title="Ignore" onclick="event.stopPropagation();ignoreFriendRequest('${un}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`
-      : `<button class="fr-reqbtn fr-reqbtn--ghost" onclick="event.stopPropagation();cancelFriendRequestTo('${un}')">Cancel</button>`;
+      : `<button class="fs-btn fr-reqbtn--ghost" onclick="event.stopPropagation();cancelFriendRequestTo('${un}')">Cancel</button>`;
     return `<div class="fr-row" data-username="${un}" data-name="${escapeHTML(String(dn).toLowerCase())}" onclick="viewUserProfile('${un}')">
       <div class="fr-av"><div class="fa">${buildAvatarHTML(u.pfp || null, dn, 40)}</div></div>
       <div class="fr-meta"><span class="fr-name"${ns ? ` style="${ns}"` : ''}>${escapeHTML(dn)}</span><span class="fr-sub">${kind === 'in' ? 'Incoming friend request' : 'Outgoing friend request'}</span></div>

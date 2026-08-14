@@ -1,5 +1,57 @@
 # Fortized — working notes for Claude
 
+## 🟢 SHIPPED THIS SESSION — UI polish pass (`2026fix488`, branch `claude/ui-polish-redesigns-xf43er`)
+All six items the user asked for. CSS lives in ONE appended block at the END of
+`app/styles.css` ("UI POLISH PASS (2026fix488)").
+- **🐞 ONYX CARD 3D FRAME WAS SQUARER THAN THE ART.** `OnyxCard1/2.png` bake in
+  their own 128px radius on a 2419×1393 bitmap, so the ink frame's flat 14px
+  radius cut across the card's transparent corners. Fixed with **percentage**
+  radii that track the image at any rendered size: `.fs-redeem-art img
+  {border-radius:5.3% / 9.2%}` (128/2419 h, 128/1393 v = a true circle).
+  Verified computed 18.55px × 18.7px at the live 350px column.
+- **NEW hover card rebuilt as the Featured hero, shrunk** (`_fsNewPopShow`).
+  The cover is now a layer BEHIND the content (`.fs-newpop-art`, 186px) that
+  dissolves into the card via the same **15-stop smoothstep `color-mix` ramp**
+  the page hero uses — in `var(--channel)`, landing fully opaque exactly at the
+  art's bottom edge, so no band and no grey pass-through. The 2×2 item tiles
+  start at y≈119 and ride up over the fade's tail, sitting **between the cover
+  and the raw card background** exactly like the featured row. Simplified:
+  tagline + per-item name labels dropped, logo 34px→30px, card now **336×364**
+  (was tall). ⚠️ `overflow:hidden` must stay OFF `.fs-newpop` — the tooltip
+  arrow lives outside the box; `.fs-newpop-art` rounds its own top corners.
+- **Inbox on the card language.** Close button is now the bare `ftz-close-btn
+  ftz-ac-x` the purchase/redeem cards use (absolutely positioned; header gained
+  `padding-right:56px`). Mark-all-read + every row action are `.fs-btn` 3D
+  buttons (Accept is green everywhere = affirmative). Rows are real cards: 2px
+  stroke, panel fill, hover lift. Panel border 2px ink, radius 20px.
+- **"New trade" redesigned** (`_fsTradeBuilder`). Step 1 = a lead line + search
+  + friend **cards** (avatar, name, "Open the offer table", arrow chip that
+  slides on hover) and a Heroic Search dead end when the search matches nothing
+  (`_fsTradeFilter` now renders `#fs-trade-nores`). Step 2 = a real **offer
+  table**: a parties strip (your avatar · swap glyph · their avatar) that
+  doubles as the live give/get summary, then two thick-stroke panels with a
+  count pill, a labelled Onyx field (`focus-within` accent), a balance hint, and
+  the item grid. Empty sides use Heroic Search. Tabs are 3D now.
+- **Friends polished**: rows are thick-stroke cards with a staggered entrance
+  (`--i` + `frRowIn`), `.fr-act` controls are 3D squircles, search field 2px,
+  and **every empty state is Heroic Search** — `_frEmpty` now wraps
+  `_ftzNotFound` (Joyster retired from Friends) — plus a no-search-results
+  knight in `_frFilter`.
+- **Quests polished**: 2.5px card strokes + staggered `qstCardIn` entrance,
+  progress bar 5px→8px, banner/crest/stat strokes thickened, bounty card lifts.
+  Both `qst-empty` blocks replaced with `_ftzNotFound`. **Stripped two coloured
+  glows** per the standing rule: `.qst-ladder-fill`'s `0 0 12px rgba(255,249,62,.5)`
+  and `.qst-crest`'s inset accent glow.
+- ⚠️ **ANIMATION GOTCHA (don't regress):** the entrance animations use
+  `animation-fill-mode:backwards`, NOT `both`. `both`/`forwards` keeps the final
+  keyframe (`transform:none`) applied forever, which silently swallows the
+  `:hover` lift on `.fr-row` / `.qst-qcard`.
+- ⚠️ **LIVE-VERIFY:** hover the Fortshop rail (card square, cover dissolving,
+  tiles over the fade, arrow aimed at the row); open Redeem (frame hugs the card
+  art's corners); the inbox; New trade both steps; Friends + Quests entrances.
+  Onyx glyphs + collection art are CDN-blind in-sandbox — verified via Playwright
+  plainviews with local assets only.
+
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
 - **🔒 HARDENING — still open, and needed before trading is genuinely safe.**
   Full write-up + SQL in `docs/trading-server.md` ("Hardening").

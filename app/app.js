@@ -48702,6 +48702,9 @@ function _fsNewPopShow(btn) {
       : `<span class="fs-newpop-t">${escapeHTML(col.name)}</span>`;
     const pop = document.createElement('div');
     pop.className = 'fs-newpop';
+    // The arrow is painted with the cover too (see styles) so it continues the
+    // art instead of punching a hole of raw card background into it.
+    if (col.coverImg) pop.style.setProperty('--fs-cover', `url('${col.coverImg}')`);
     pop.innerHTML = `
       <span class="fs-newpop-art" style="background-image:url('${col.coverImg || ''}')"></span>
       <span class="fs-newpop-in">
@@ -49386,8 +49389,10 @@ function _fsOpenRedeem() {
 // relying on a CSS transition. A transition re-times itself on every mousemove,
 // which is what makes cursor-tracked tilts feel rubbery and laggy; easing per
 // frame stays glued to the pointer and still settles softly when you leave.
-// The specular highlight tracks the pointer too (--gx/--gy), so the gloss reads
-// as light moving across plastic.
+// The specular is derived from the CARD's own rotation, not from the pointer:
+// the light source is fixed in the room, so as the card turns, the reflection
+// sweeps across it — that's what sells it as a physical object. (Pinning the
+// highlight to the cursor instead makes it read as a torch you're carrying.)
 function _fsWireCardTilt(scope) {
   const art = scope && scope.querySelector('.fs-redeem-art');
   const card = art && art.querySelector('.fs-redeem-card');
@@ -49395,19 +49400,21 @@ function _fsWireCardTilt(scope) {
   try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch {}
   card.classList.add('is-tilt');           // hands the hover effect to JS
   const MAX_Y = 12, MAX_X = 8;             // degrees of lean
-  let tRX = 0, tRY = 0, tGX = 50, tGY = 50, tOn = 0;   // targets
-  let rX = 0, rY = 0, gX = 50, gY = 50, on = 0;        // current
+  let tRX = 0, tRY = 0, tOn = 0;           // targets
+  let rX = 0, rY = 0, on = 0;              // current
   let raf = 0, hovering = false;
   const step = () => {
     const k = 0.15;
     rX += (tRX - rX) * k; rY += (tRY - rY) * k;
-    gX += (tGX - gX) * k; gY += (tGY - gY) * k;
     on += (tOn - on) * k;
     card.style.transform =
       `rotateX(${rX.toFixed(3)}deg) rotateY(${rY.toFixed(3)}deg) `
       + `translateY(${(on * -6).toFixed(2)}px) scale(${(1 + on * 0.03).toFixed(4)})`;
-    card.style.setProperty('--gx', gX.toFixed(2) + '%');
-    card.style.setProperty('--gy', gY.toFixed(2) + '%');
+    // rotateY > 0 swings the right edge away, so the face still square-on to the
+    // light is the LEFT one — the highlight slides opposite the lean. Likewise
+    // rotateX > 0 tips the top back, pushing the reflection down.
+    card.style.setProperty('--gx', (50 - (rY / MAX_Y) * 40).toFixed(2) + '%');
+    card.style.setProperty('--gy', (50 + (rX / MAX_X) * 40).toFixed(2) + '%');
     card.style.setProperty('--sheen', on.toFixed(3));
     const settled = Math.abs(tRX - rX) < .02 && Math.abs(tRY - rY) < .02 && Math.abs(tOn - on) < .003;
     if (hovering || !settled) { raf = requestAnimationFrame(step); return; }
@@ -49421,11 +49428,10 @@ function _fsWireCardTilt(scope) {
     const py = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
     tRY = (px - .5) * 2 * MAX_Y;    // cursor right → card leans right
     tRX = -(py - .5) * 2 * MAX_X;   // cursor down  → top edge tips away
-    tGX = px * 100; tGY = py * 100;
     kick();
   });
   art.addEventListener('pointerleave', () => {
-    hovering = false; tRX = 0; tRY = 0; tOn = 0; tGX = 50; tGY = 50; kick();
+    hovering = false; tRX = 0; tRY = 0; tOn = 0; kick();
   });
 }
 async function _fsRedeemCode() {

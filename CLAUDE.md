@@ -132,6 +132,23 @@ All six items the user asked for. CSS lives in ONE appended block at the END of
   `.ftz-modal-foot`, a 3D `.fs-btn--primary`, and the **`knight_angry`** emoji
   art (`/fortized emojis/knight_angry.png`) instead of the emoji.
 
+## 🟢 ROUND 5 (`2026fix491`, same branch)
+- **NEW hover card arrow is BACK** — the earlier problem was never the arrow
+  itself, it was that the arrow painted raw `var(--channel)` against the
+  collection cover and read as a notch cut out of the art. It now carries the
+  cover: `_fsNewPopShow` sets `--fs-cover` on the popup and the `::after` paints
+  `linear-gradient(scrim), var(--fs-cover)` at `cover / left center`, with
+  `var(--channel)` underneath as the fallback for a collection with no cover.
+- **Onyx card sheen is anchored to the ROOM, not the cursor.** `--gx/--gy` are
+  now derived from the card's own eased rotation
+  (`gx = 50 - rY/MAX_Y*40`, `gy = 50 + rX/MAX_X*40`) instead of pointer
+  position, so a fixed light reflects off the card as it turns — verified:
+  cursor right → card leans right → highlight slides to 22.7%; cursor left →
+  77%. ⚠️ Deriving from the ALREADY-EASED angles means the light keeps tracking
+  through the settle-back too, with no second lerp. The gradient was widened to
+  a soft ellipse (`72% 118%`) — a tight dot reads as a cursor glow, a broad band
+  reads as a lit surface.
+
 ## 🟥 NEXT TASK — STAFF CONSOLE, REBUILT FROM SCRATCH (user, verbatim intent)
 The user's words: the staff console (topbar icon + its card) **"needs to be
 COMPLETELY REWORKED ALMOST FROM SCRATCH — IT'S A FREAKING MESS."**

@@ -17347,3 +17347,32 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
   background:rgba(0,0,0,.14);}
 .fs-rl .fs-rl-foot .fs-btn{min-width:190px;}
 @media (prefers-reduced-motion: reduce){.fs-rl-art img{animation:none;}}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ROUND 5 (2026fix491) — the NEW card keeps its arrow, and the Onyx card's
+   light is anchored to the room instead of the cursor.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Arrow, restored ──
+   It read as a notch cut out of the art because it painted raw var(--channel)
+   against the collection cover. It now carries the cover itself (--fs-cover,
+   set by _fsNewPopShow) plus the same soft top scrim, so it continues the art;
+   var(--channel) stays underneath as the fallback for a collection with no
+   cover image. */
+.fs-newpop::after,.fs-newpop[data-place="right"]::after,.fs-newpop[data-place="left"]::after{
+  display:block;
+  background-color:var(--channel);
+  background-image:linear-gradient(rgba(0,0,0,.16),rgba(0,0,0,.16)),var(--fs-cover,none);
+  background-size:auto,cover;
+  background-position:center,left center;
+  background-repeat:no-repeat,no-repeat;}
+.fs-newpop[data-place="right"]::after{left:-6px;border-left:2px solid var(--border);border-bottom:2px solid var(--border);}
+.fs-newpop[data-place="left"]::after{right:-6px;border-right:2px solid var(--border);border-top:2px solid var(--border);}
+
+/* ── Onyx card sheen: a fixed light, not a torch ──
+   --gx/--gy are now derived from the card's own rotation (see _fsWireCardTilt),
+   so the reflection sweeps as the card turns. Widened into a soft ellipse —
+   a tight dot reads as a cursor glow, a broad band reads as a lit surface. */
+.fs-redeem-card::after{
+  background:radial-gradient(72% 118% at var(--gx,50%) var(--gy,50%),
+    rgba(255,255,255,.24) 0%,rgba(255,255,255,.09) 34%,rgba(255,255,255,0) 66%);}

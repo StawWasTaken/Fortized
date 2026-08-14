@@ -54,6 +54,15 @@ Go to <https://swiftaw.com/lifecheck/keys> and create a key:
   are matched automatically, so `www.fortized.com` is already covered. Leave
   it empty to allow any domain. Add `localhost` if you want local testing.
 
+  **Hostnames only — not URLs.** The allow-list is compared against the
+  embedding page's `location.hostname`, which is bare (`fortized.com`). An
+  entry pasted as `https://fortized.com` matched nothing and rejected every
+  request, and the widget's error looked identical to a bad key. The dashboard
+  now strips the scheme for you, and the SQL migration
+  `supabase/migrations/2026-08-14-lifecheck-domain-normalisation.sql` (Swiftaw
+  repo) normalises both at match time and in the stored rows — run it once in
+  the Supabase SQL editor if it hasn't been applied.
+
 You get back a `lc_site_…` (public) and a `lc_secret_…` (private) pair.
 
 ### 2. Set the env vars on Render

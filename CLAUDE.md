@@ -323,12 +323,24 @@
     real cause; `lifecheck.js` exposes `error-callback` / `lifecheck:error` /
     `data-lifecheck-error` (BUILD bumped); docs fixed + `data-error-callback`
     documented.
-  **⚠️ USER ACTION (nothing works until this is done):** create a key at
-  swiftaw.com/lifecheck/keys with domain `fortized.com`, then set
-  `SWIFTAW_LIFECHECK_SITEKEY` (`lc_site_…`) and `SWIFTAW_LIFECHECK_SECRET`
-  (`lc_secret_…`) on Render. Verify `GET /api/lifecheck/health` →
-  `{configured:true, sitekey:"lc_site_…"}`. Gate points: quest-onyx claim
-  (sometimes), password/email change, security-key removal, Onyx code redeem.
+  • **🐞 THIRD BUG — DOMAIN ALLOW-LIST STORED FULL URLs.** The user's real key
+    registered `https://www.fortized.com, https://fortized.com`; keys.html
+    stored the input verbatim, but `lifecheck_issue_token` compares against the
+    embedding page's `location.hostname` (bare `fortized.com`) → no match →
+    NULL token → the SAME "can't verify" error as a missing key. PROVEN against
+    the real row on a local Postgres 16: old fn rejected `fortized.com`, new fn
+    issues a token, `evil.com` still rejected, bare/any-domain keys unaffected.
+    Fixed in 3 layers: `normDomain()` in keys.html (strips scheme/userinfo/
+    port/path, lowercases) + form hint; the RPC normalises entries at match
+    time; one-time cleanup UPDATE. Migration (idempotent, user must run once):
+    `supabase/migrations/2026-08-14-lifecheck-domain-normalisation.sql`.
+  **⚠️ USER ACTION:** key created (`lc_site_5cdc2b67…`) + Render envs set. Still
+  to do: run the domain-normalisation migration in the Supabase SQL editor, and
+  **ROTATE THE SECRET** — `lc_secret_…` was shared in a screenshot, so it must
+  be treated as compromised (delete the key, create a new pair, update Render).
+  Verify `GET /api/lifecheck/health` → `{configured:true, sitekey:"lc_site_…"}`.
+  Gate points: quest-onyx claim (sometimes), password/email change,
+  security-key removal, Onyx code redeem.
 - **Emoji cross-bastion visibility** (picker Phase 3 remainder): bastion emojis
   send as `:name:` → render as text for non-members. Needs an egress-safe light
   token (`[FTZEMOJI:name|bastionId]`, no base64) + async per-viewer URL resolution

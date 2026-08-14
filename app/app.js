@@ -5356,7 +5356,7 @@ function onOnyxCtxMenu(ev) {
     { icon: giftIcon, label: 'Redeem Onyx Codes', hint: 'Codes',  action: () => _fsOpenRedeem() },
   ];
   if (typeof showCtxMenu === 'function') {
-    showCtxMenu(ev.clientX, ev.clientY, [{ label: 'Onyx', items }], { cls: 'ctx-menu--wallet' });
+    showCtxMenu(ev.clientX, ev.clientY, [{ label: 'Onyx', items }]);
   }
 }
 
@@ -5597,7 +5597,7 @@ function onStreakCtxMenu(ev) {
   if (typeof showCtxMenu === 'function') {
     showCtxMenu(ev.clientX, ev.clientY, [
       { label: streak > 0 ? `${_ftzCompactNum(streak)}-day streak` : 'Daily streak', items },
-    ], { cls: 'ctx-menu--wallet' });
+    ]);
   }
 }
 
@@ -27312,24 +27312,48 @@ async function toggleNotifPanel() {
     <div class="npv-header">
       <span style="color:inherit;display:inline-flex;"><svg width="18" height="18" viewBox="0 0 512 512" fill="currentColor"><path d="M91.8 32C59.9 32 32.9 55.4 28.4 86.9L.6 281.2c-.4 3-.6 6-.6 9.1L0 416c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-125.7c0-3-.2-6.1-.6-9.1L483.6 86.9C479.1 55.4 452.1 32 420.2 32L91.8 32zm0 64l328.5 0 27.4 192-59.9 0c-12.1 0-23.2 6.8-28.6 17.7l-14.3 28.6c-5.4 10.8-16.5 17.7-28.6 17.7l-120.4 0c-12.1 0-23.2-6.8-28.6-17.7l-14.3-28.6c-5.4-10.8-16.5-17.7-28.6-17.7L64.3 288 91.8 96z"/></svg></span>
       <h3>${_t('notif.inbox')}</h3>
-      <button onclick="markAllRead()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-size:11px;font-weight:600;padding:5px 12px;cursor:pointer;transition:all .12s;">${_t('notif.mark_all')}</button>
-      <button onclick="_closeEl('notif-panel-v2');_closeEl('notif-panel-v2-overlay');notifPanelOpen=false" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
+      <button class="npv-mark" onclick="markAllRead()">${_t('notif.mark_all')}</button>
+      <button class="npv-x" aria-label="Close" onclick="_closeEl('notif-panel-v2');_closeEl('notif-panel-v2-overlay');notifPanelOpen=false">&times;</button>
     </div>
     <div class="npv-tabs" id="npv-tabs">
-      <button class="npv-tab active" onclick="_setNotifTab('all',this)">${_t('notif.tab.all')}</button>
-      <button class="npv-tab" onclick="_setNotifTab('unread',this)">${_t('notif.tab.unread')}</button>
-      <button class="npv-tab" onclick="_setNotifTab('mentions',this)">${_t('notif.tab.mentions')}</button>
-      <button class="npv-tab" onclick="_setNotifTab('friends',this)">${_t('notif.tab.friends')}</button>
+      <button class="npv-tab${_notifTabFilter === 'all' ? ' active' : ''}" onclick="_setNotifTab('all',this)">${_t('notif.tab.all')}</button>
+      <button class="npv-tab${_notifTabFilter === 'unread' ? ' active' : ''}" onclick="_setNotifTab('unread',this)">${_t('notif.tab.unread')}<span class="npv-tab-n" id="npv-n-unread"></span></button>
+      <button class="npv-tab${_notifTabFilter === 'mentions' ? ' active' : ''}" onclick="_setNotifTab('mentions',this)">${_t('notif.tab.mentions')}<span class="npv-tab-n" id="npv-n-mentions"></span></button>
+      <button class="npv-tab${_notifTabFilter === 'friends' ? ' active' : ''}" onclick="_setNotifTab('friends',this)">${_t('notif.tab.friends')}</button>
     </div>
-    <div class="npv-list" id="np-list-v2"><div style="text-align:center;padding:30px;display:flex;flex-direction:column;align-items:center;gap:8px;"><div class="skeleton skeleton-text" style="width:80%;height:14px;"></div><div class="skeleton skeleton-text" style="width:60%;height:14px;"></div><div class="skeleton skeleton-text" style="width:40%;height:14px;"></div></div></div>`;
+    <div class="npv-list" id="np-list-v2">${_npSkeleton()}</div>`;
   document.body.appendChild(panel);
   await buildNotifList();
+}
+// Skeleton rows that mirror the real row shape (avatar + two lines), so the
+// list doesn't visibly re-lay-out when the data lands.
+function _npSkeleton() {
+  return '<div class="np-skel-wrap">' + Array.from({ length: 4 }, () =>
+    '<div class="np-skel"><div class="skeleton np-skel-av"></div>'
+    + '<div class="np-skel-tx"><div class="skeleton skeleton-text np-skel-l1"></div>'
+    + '<div class="skeleton skeleton-text np-skel-l2"></div></div></div>').join('') + '</div>';
+}
+// The two sides of a trade, as the recipient sees them.
+function _npTradeSwap(d) {
+  const side = (onyx, names) => {
+    const bits = [];
+    if (onyx) bits.push(`<span class="np-tr-onyx">${_FS_ONYX_IC}${_ftzCompactNum(onyx)}</span>`);
+    (names || []).forEach(n => bits.push(`<span class="np-tr-chip">${escapeHTML(n)}</span>`));
+    return bits.length ? bits.join('') : '<span class="np-tr-none">nothing</span>';
+  };
+  return `<span class="np-tr">
+    <span class="np-tr-col"><span class="np-tr-lb">You get</span><span class="np-tr-items">${side(d.theyGiveOnyx, d.theyGive)}</span></span>
+    <i class="fa-solid fa-right-left np-tr-ar" aria-hidden="true"></i>
+    <span class="np-tr-col"><span class="np-tr-lb">You give</span><span class="np-tr-items">${side(d.youGiveOnyx, d.youGive)}</span></span>
+  </span>`;
 }
 let _notifTabFilter = 'all';
 function _setNotifTab(tab, btn) {
   _notifTabFilter = tab;
   document.querySelectorAll('.npv-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
+  const list = document.getElementById('np-list-v2');
+  if (list) list.innerHTML = _npSkeleton();
   buildNotifList();
 }
 
@@ -27366,15 +27390,29 @@ async function buildNotifList() {
   // Sort by time descending
   notifs.sort((a,b) => new Date(b.time||0) - new Date(a.time||0));
 
+  // Live counts on the tabs, computed before the tab filter narrows the list.
+  const _setTabN = (id, n) => {
+    const el = document.getElementById(id); if (!el) return;
+    el.textContent = n > 99 ? '99+' : String(n);
+    el.style.display = n ? '' : 'none';
+  };
+  _setTabN('npv-n-unread', notifs.filter(n => !n.read).length);
+  _setTabN('npv-n-mentions', notifs.filter(n => n.type === 'mention' && !n.read).length);
+
   // Apply tab filter
   if (_notifTabFilter === 'unread') notifs = notifs.filter(n => !n.read);
   else if (_notifTabFilter === 'mentions') notifs = notifs.filter(n => n.type === 'mention');
   else if (_notifTabFilter === 'friends') notifs = notifs.filter(n => n.type === 'friend_request' || n.type === 'friend_accept');
 
   if(!notifs.length){
-    list.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:10px;">'
-      +'<i class="fa-solid fa-bell-slash" style="font-size:28px;color:rgba(255,255,255,.15);" aria-hidden="true"></i>'
-      +'<div style="font-size:13px;color:var(--muted);text-align:center;">'+_t('notif.empty.title')+'<br><span style="font-size:11.5px;opacity:.6;">'+_t('notif.empty.body')+'</span></div></div>';
+    // Heroic Search empty state — same knight as every other dead end.
+    const t = _notifTabFilter === 'unread'   ? ['All caught up', 'Nothing unread. Enjoy the quiet.']
+            : _notifTabFilter === 'mentions' ? ['No mentions', 'Nobody has called your name yet.']
+            : _notifTabFilter === 'friends'  ? ['No friend news', 'Requests and new friends land here.']
+            : [_t('notif.empty.title'), _t('notif.empty.body')];
+    list.innerHTML = (typeof _ftzNotFound === 'function')
+      ? _ftzNotFound(t[0], t[1], { compact: true })
+      : '<div style="padding:40px 20px;text-align:center;color:var(--muted);">' + t[0] + '</div>';
     return;
   }
   // Per-type Font Awesome glyphs — one family for the whole inbox.
@@ -27386,14 +27424,17 @@ async function buildNotifList() {
     bastion:        'fa-chess-rook',
     call:           'fa-phone',
     support_ticket: 'fa-file-lines',
+    trade:          'fa-right-left',
     trade_offer:    'fa-right-left',
-    trade_accepted: 'fa-right-left',
-    trade_declined: 'fa-right-left',
+    trade_accepted: 'fa-circle-check',
+    trade_declined: 'fa-circle-xmark',
+    trade_cancelled:'fa-circle-xmark',
   };
   const colors = {
     friend_request:'#60a5fa', friend_accept:'#3ecf6e', dm:'#a78bfa',
     mention:'#ffd93e', bastion:'var(--accent)', call:'#3ecf6e', support_ticket:'#38bdf8',
-    trade_offer:'#f472b6', trade_accepted:'#3ecf6e', trade_declined:'#ff0033',
+    trade:'var(--accent)', trade_offer:'var(--accent)', trade_accepted:'#3ecf6e',
+    trade_declined:'#ff0033', trade_cancelled:'#ff0033',
   };
   // Pre-fetch user pfps for notifications that have a 'from' user
   const _notifUsers = {};
@@ -27438,17 +27479,24 @@ async function buildNotifList() {
       const st = n.data?.status==='closed'?'<span style="color:var(--green);">Closed</span>':'<span style="color:#38bdf8;">Open</span>';
       text='<strong>Support Ticket</strong>: '+escapeHTML((n.data?.subject||'').slice(0,50))+' — '+st;
     }
-    else if(n.type==='trade_offer') {
+    else if(n.type==='trade_offer' || n.type==='trade') {
       const offer = n.data || {};
-      const expired = offer.expires_at && Date.now() > offer.expires_at;
-      const countdown = offer.expires_at
-        ? (expired ? '<span style="color:var(--red);">Expired</span>' : `<span class="np-trade-countdown" data-expires="${offer.expires_at}">${_formatTradeCountdown(offer.expires_at)}</span>`)
-        : '';
-      text = `<strong>${escapeHTML(offer.from_display || n.from || 'Someone')}</strong> sent you a trade offer${countdown ? ` · ${countdown}` : ''}`;
+      if (offer.tradeId) {
+        // Fortshop trade — show the actual swap, not just "sent you an offer".
+        text = '<strong>'+escapeHTML(offer.from_display || n.from || 'Someone')+'</strong> wants to trade'
+          + _npTradeSwap(offer);
+      } else {
+        const expired = offer.expires_at && Date.now() > offer.expires_at;
+        const countdown = offer.expires_at
+          ? (expired ? '<span style="color:var(--red);">Expired</span>' : `<span class="np-trade-countdown" data-expires="${offer.expires_at}">${_formatTradeCountdown(offer.expires_at)}</span>`)
+          : '';
+        text = `<strong>${escapeHTML(offer.from_display || n.from || 'Someone')}</strong> sent you a trade offer${countdown ? ` · ${countdown}` : ''}`;
+      }
     }
-    else if(n.type==='trade_accepted') text='<strong>'+escapeHTML(n.from||'')+'</strong> accepted your trade offer';
+    else if(n.type==='trade_accepted') text='<strong>'+escapeHTML(n.from||'')+'</strong> accepted your trade — check your inventory';
     else if(n.type==='trade_declined') text=(n.data?.reason==='expired'?'Your trade offer expired':'<strong>'+escapeHTML(n.from||'')+'</strong> declined your trade offer');
-    else text='New notification';
+    else if(n.type==='trade_cancelled') text='<strong>'+escapeHTML(n.from||'')+'</strong> cancelled their trade offer';
+    else text=escapeHTML(n.text||'')||'New notification';
     const _alreadyFriends = n.type==='friend_request' && (CU?.friends||[]).includes(n.from);
     const _stillPending = n.type==='friend_request' && !_alreadyFriends && (CU?.friendRequestsReceived||[]).includes(n.from);
     let actions = '';
@@ -27456,6 +27504,16 @@ async function buildNotifList() {
       actions = '<div class="np-actions"><button class="np-accept" onclick="event.stopPropagation();acceptFriend(\''+escapeHTML(n.from||'')+'\');buildNotifList()"><i class="fa-solid fa-user-check" aria-hidden="true"></i> Accept</button></div>';
     } else if (n.type==='friend_request' && _alreadyFriends) {
       actions = '<div class="np-actions"><span style="font-size:11px;color:var(--green);font-weight:600;"><i class="fa-solid fa-user-group" aria-hidden="true"></i> Friends</span></div>';
+    } else if ((n.type === 'trade_offer' || n.type === 'trade') && n.data?.tradeId) {
+      // Answer straight from the inbox, or open the trade hub for the detail.
+      const live = _fsTrades('in').some(t => t.id === n.data.tradeId && t.status === 'pending');
+      actions = live
+        ? `<div class="np-actions">
+             <button class="np-accept" onclick="event.stopPropagation();_fsTradeRespond('${n.data.tradeId}',true)">Accept</button>
+             <button class="np-decline" onclick="event.stopPropagation();_fsTradeRespond('${n.data.tradeId}',false);setTimeout(buildNotifList,300)">Decline</button>
+             <button class="np-ghost" onclick="event.stopPropagation();toggleNotifPanel();_fsOpenTrade('in')">View trade</button>
+           </div>`
+        : '<div class="np-actions"><span class="np-done">Already answered</span></div>';
     } else if (n.type === 'trade_offer' && n.data) {
       const offer = n.data;
       const expired = offer.expires_at && Date.now() > offer.expires_at;
@@ -27488,9 +27546,9 @@ async function buildNotifList() {
   }).join('');
   } catch(err) {
     console.error('[inbox] buildNotifList error:', err);
-    list.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:10px;">'
-      +'<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 0, 51,.3)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
-      +'<div style="font-size:13px;color:var(--muted);text-align:center;">Something went wrong<br><span style="font-size:11.5px;opacity:.6;">Try closing and reopening your inbox</span></div></div>';
+    list.innerHTML = (typeof _ftzNotFound === 'function')
+      ? _ftzNotFound('That didn’t load', 'Close the inbox and open it again — we’ll try afresh.', { compact: true })
+      : '<div style="padding:40px 20px;text-align:center;color:var(--muted);">Something went wrong</div>';
   }
 }
 
@@ -48560,11 +48618,12 @@ function _fsSyncTradeBadge() {
 // A drop counts as "new" until you next open the Fortshop. Trades reuse the
 // same capsule so the rail speaks one language.
 function _fsShopNewKey() { return 'ftz_shop_seen_' + (CU?.username || 'anon'); }
+// A NEW capsule means "there's a collection you haven't seen". Trade requests
+// are a NOTIFICATION, not a drop — they get the yellow count badge instead.
 function _fsShopHasNew() {
   try {
     const col = _fsFeaturedCol(); if (!col) return false;
-    const pending = _fsPendingTradeCount();
-    return pending > 0 || localStorage.getItem(_fsShopNewKey()) !== col.id;
+    return localStorage.getItem(_fsShopNewKey()) !== col.id;
   } catch { return false; }
 }
 function _fsMarkShopSeen() {
@@ -48573,8 +48632,11 @@ function _fsMarkShopSeen() {
   try { _fsNewPopHide(); } catch {}
 }
 function _fsShopNewHTML() {
-  if (!_fsShopHasNew()) return '';
-  return '<span class="dm-nav-new">NEW</span>';
+  const pending = _fsPendingTradeCount();
+  const capsule = _fsShopHasNew() ? '<span class="dm-nav-new">NEW</span>' : '';
+  // Trade count sits right beside the capsule, same yellow badge as Quests.
+  const badge = pending ? `<span class="dm-nav-qbadge dm-nav-qbadge--inline" id="fs-nav-trade-badge">${pending > 9 ? '9+' : pending}</span>` : '';
+  return (capsule || badge) ? `<span class="dm-nav-tail">${capsule}${badge}</span>` : '';
 }
 // The preview card is PORTALLED to <body> and positioned like a tooltip.
 // Living inside the rail meant the sidebar's stacking context painted it behind
@@ -48585,14 +48647,25 @@ function _fsNewPopShow(btn) {
   if (!btn || !_fsShopHasNew()) return;
   _fsNewPopT = setTimeout(() => {
     _fsNewPopHide();
-    const col = _fsFeaturedCol();
-    const pending = _fsPendingTradeCount();
-    const title = pending ? `${pending} trade request${pending === 1 ? '' : 's'}` : escapeHTML(col?.name || 'New drop');
-    const sub = pending ? 'Someone wants to trade with you. Take a look.' : 'A new collection just landed in the Fortshop.';
-    const cover = col?.coverImg ? `<span class="fs-newpop-art" style="background-image:url('${col.coverImg}')"></span>` : '';
+    // Always the FEATURED collection: its products, its name, its tagline.
+    const col = _fsFeaturedCol(); if (!col) return;
+    const items = _fsColItems(col).slice(0, 4);
+    const thumbs = items.map(it => `<span class="fs-newpop-th" style="--c:${col.accent || 'var(--accent)'}">
+        <span class="fs-newpop-thin">${_fsPreview(it)}</span>
+        <span class="fs-newpop-thn">${escapeHTML(it.name)}</span></span>`).join('');
+    const logo = col.logoImg
+      ? `<img class="fs-newpop-logo" src="${col.logoImg}" alt="${escapeHTML(col.name)}" onerror="this.remove()">`
+      : `<span class="fs-newpop-t">${escapeHTML(col.name)}</span>`;
     const pop = document.createElement('div');
     pop.className = 'fs-newpop';
-    pop.innerHTML = `${cover}<span class="fs-newpop-b"><span class="fs-newpop-k">${pending ? 'Trades' : 'New drop'}</span><span class="fs-newpop-t">${title}</span><span class="fs-newpop-s">${escapeHTML(sub)}</span></span>`;
+    pop.innerHTML = `
+      <span class="fs-newpop-hero" style="background-image:url('${col.coverImg || ''}')">
+        <span class="fs-newpop-k">New collection</span>${logo}</span>
+      <span class="fs-newpop-b">
+        <span class="fs-newpop-s">${escapeHTML(col.tagline || '')}</span>
+        <span class="fs-newpop-grid">${thumbs}</span>
+        <span class="fs-newpop-cta">${items.length} item${items.length === 1 ? '' : 's'} · open the Fortshop</span>
+      </span>`;
     document.body.appendChild(pop);
     _fsNewPopEl = pop;
     const r = btn.getBoundingClientRect();
@@ -48615,6 +48688,16 @@ function _fsNewPopHide() {
   clearTimeout(_fsNewPopT);
   if (_fsNewPopEl) { _fsNewPopEl.remove(); _fsNewPopEl = null; }
   document.querySelectorAll('body > .fs-newpop').forEach(p => p.remove());
+}
+// Inbox payload for a trade. Item NAMES are resolved at send time so the
+// recipient's inbox never has to hit the catalogue to draw the row.
+function _fsTradeNotifData(t, fromDisplay) {
+  const names = ids => (ids || []).map(id => _fsCatalogue().find(a => a.id === id)?.name).filter(Boolean);
+  return {
+    tradeId: t.id, from_display: fromDisplay || t.from || '',
+    theyGiveOnyx: t.theyGiveOnyx || 0, theyGive: names(t.theyGive),
+    youGiveOnyx: t.youGiveOnyx || 0,  youGive: names(t.youGive),
+  };
 }
 function _fsTradePolicy(u) { return (u && u.tradePolicy) || 'friends'; }
 function _fsTrades(dir) { const k = dir === 'out' ? 'tradesOutgoing' : 'tradesIncoming'; return Array.isArray(CU?.[k]) ? CU[k] : []; }
@@ -48697,8 +48780,13 @@ function _fsTradeList(list, dir) {
       (ids || []).forEach(id => { const it = _fsCatalogue().find(a => a.id === id); if (it) parts.push(`<span class="fs-trade-chip">${escapeHTML(it.name)}</span>`); });
       return parts.length ? parts.join('') : '<span class="fs-trade-none">nothing</span>';
     };
+    const when = t.at ? (typeof timeAgoHTML === 'function' ? timeAgoHTML(new Date(t.at).toISOString()) : '') : '';
     return `<div class="fs-trade-row">
-      <div class="fs-trade-who"><i class="fa-solid fa-right-left"></i> ${dir === 'in' ? `<b>${who}</b> offers` : `You offered <b>${who}</b>`}</div>
+      <div class="fs-trade-who">
+        <span class="fs-trade-av">${buildAvatarHTML(_pfpCache[t.with] || null, t.with || '?', 30)}</span>
+        <span class="fs-trade-whotx">${dir === 'in' ? `<b>${who}</b> offers you a trade` : `You offered <b>${who}</b> a trade`}</span>
+        ${when ? `<span class="fs-trade-when">${when}</span>` : ''}
+      </div>
       <div class="fs-trade-sides">
         <div class="fs-trade-side"><span class="fs-trade-lb">${dir === 'in' ? 'They give' : 'You give'}</span><div class="fs-trade-items">${sum(t.theyGiveOnyx, t.theyGive)}</div></div>
         <i class="fa-solid fa-arrow-right fs-trade-arrow"></i>
@@ -48721,7 +48809,7 @@ function _fsTradeBuilder() {
   if (!d.to) {
     const rows = friends.length
       ? friends.map(n => `<div class="nm-row fs-trade-friend" onclick="_fsTradePick('${escapeHTML(n).replace(/'/g, "\\'")}')">
-          <span class="nm-check"></span>
+          <span class="fs-trade-av">${buildAvatarHTML(_pfpCache[n] || null, n, 32)}</span>
           <span class="fs-trade-fn">${escapeHTML(n)}</span>
           <i class="fa-solid fa-chevron-right fs-trade-go"></i>
         </div>`).join('')
@@ -48758,11 +48846,23 @@ function _fsTradeBuilder() {
         ${grid(wanted, 'get')}
       </div>
     </div>
+    <div class="fs-trade-sum">
+      <span class="fs-trade-sum-s"><b>You give</b>${_fsTradeSumTxt(d.giveOnyx, d.give)}</span>
+      <i class="fa-solid fa-right-left"></i>
+      <span class="fs-trade-sum-s"><b>You get</b>${_fsTradeSumTxt(d.getOnyx, d.get)}</span>
+    </div>
     <div class="fs-trade-foot">
       <button class="fs-btn" onclick="document.getElementById('fs-trade-modal')?.remove();_fsTradeReset()">Cancel</button>
-      <button class="fs-btn fs-btn--primary" onclick="_fsSendTrade()">Send trade request</button>
+      <button class="fs-btn fs-btn--primary" ${(!d.giveOnyx && !d.give.length && !d.getOnyx && !d.get.length) ? 'disabled' : ''} onclick="_fsSendTrade()">Send trade request</button>
     </div>
   </div>`;
+}
+// One-line "what's on the table" for the builder's summary bar.
+function _fsTradeSumTxt(onyx, ids) {
+  const bits = [];
+  if (onyx) bits.push(`${_FS_ONYX_IC}${_ftzCompactNum(onyx)}`);
+  if (ids && ids.length) bits.push(`${ids.length} item${ids.length === 1 ? '' : 's'}`);
+  return `<span>${bits.length ? bits.join(' · ') : 'nothing yet'}</span>`;
 }
 function _fsTradeFilter(q) {
   q = (q || '').toLowerCase();
@@ -48796,7 +48896,12 @@ async function _fsSendTrade() {
     const mirrored = { ...trade, with: CU.username, youGiveOnyx: trade.theyGiveOnyx, youGive: trade.theyGive, theyGiveOnyx: trade.youGiveOnyx, theyGive: trade.youGive };
     target.tradesIncoming = [...(target.tradesIncoming || []), mirrored];
     await FortizedSocial.saveUserObject(target, { fields: ['tradesIncoming'] });
-    FortizedSocial.addNotification?.(d.to, { type: 'trade', from: CU.username, text: `${CU.displayName || CU.username} sent you a trade request`, at: Date.now() });
+    // Carry a full summary so the inbox can render the offer without a lookup.
+    FortizedSocial.addNotification?.(d.to, {
+      type: 'trade_offer', from: CU.username, time: new Date().toISOString(), at: Date.now(),
+      text: `${CU.displayName || CU.username} sent you a trade request`,
+      data: _fsTradeNotifData(mirrored, CU.displayName || CU.username),
+    });
   } catch (e) { console.warn('[Trade] deliver failed', e); }
   toast('Trade request sent!', 'success');
   _fsTradeReset();

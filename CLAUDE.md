@@ -1,6 +1,46 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **SERVER-SIDE TRADING + inbox polish (`2026fix485`→`486`).**
+  • **`server.js` now owns trades**: `POST /api/session` (credentials →
+    HMAC-signed 12h token, password checked SERVER-side), `/api/trades/create`
+    · `/api/trades` · `/api/trades/respond` · `/api/trades/cancel` ·
+    `/api/trades/health`. Validates policy, balances and ownership on BOTH
+    sides at create AND settle time; rate-limited; `sbAdmin` uses
+    `SUPABASE_SERVICE_ROLE` when set (falls back to anon).
+  • **Settlement is one Postgres transaction** — `ftz_trade_settle` RPC
+    (SECURITY DEFINER) locks both user rows FOR UPDATE in alphabetical order
+    (deadlock-safe), re-verifies everything, moves Onyx + items via
+    `ftz_move_items` (union on receive so nothing duplicates), flips status.
+    Status-guarded updates make double-accept impossible.
+  • **Client**: `_fsTradeApiReady()` probes `/api/trades/health` ONCE; while
+    not ready the old local path stays live so a half-finished rollout can't
+    break trading. `_fsSendTrade`/`_fsSettleTrade`/`_fsTradeCancel` route
+    through the API; `_fsSyncTrades()` pulls the authoritative list into
+    `CU.tradesIncoming/Outgoing` on hub open.
+  • ⚠️ **USER ACTION — `docs/trading-server.md`**: set `SUPABASE_SERVICE_ROLE`
+    + `FTZ_SESSION_SECRET` on Render, run the SQL (trades table + RLS + the 2
+    functions), confirm `/api/trades/health` → `ready:true`.
+  • ⚠️ **HONEST LIMIT:** auth is still `user.password !== password` compared in
+    the BROWSER against an anon-key read, so `users` (incl. plaintext
+    passwords) is world-readable/writable with the shipped anon key. Until
+    passwords are hashed + RLS is on for `users`, the API can be bypassed by
+    writing Supabase directly. Server-authoritative ≠ tamper-proof yet.
+  • **Inbox polished**: Heroic Search empty states per tab, row-shaped
+    skeletons, live unread/mention tab counts, header+tabs on design tokens,
+    unread-dot GLOW REMOVED. `type:'trade'` notifications used to fall through
+    to "New notification" — senders now write `trade_offer` with a full
+    summary (`_fsTradeNotifData`) and the inbox draws the real swap
+    (`_npTradeSwap`) with inline Accept/Decline/View trade.
+  • **Trade card**: avatars in the friend picker + offer rows, relative time,
+    live give/get summary bar, send disabled while the trade is empty.
+  • **NEW capsule vs badge split**: NEW = unseen collection only; pending
+    trades get the yellow count badge (`.dm-nav-qbadge--inline`) beside it.
+    Hover card rebuilt — featured collection cover + logo + tagline + a 2×2
+    grid of its ACTUAL products. Redeem card art enlarged (350px column).
+  • Reverted the `.ctx-menu--wallet` skin — the Onyx/streak menus read as
+    normal context menus again. `.fs-btn:disabled` keeps its real face at
+    50% opacity instead of a muted repaint.
 - **WALLET MENUS + REDEEM CARD + NEW TOOLTIP fixes (`2026fix484`).**
   • **Onyx ctx menu trimmed** to the spec: Buy Onyx (hidden) · Earn Onyx →
     Quests · My Transactions · Redeem Onyx Codes. Removed the dead balance row

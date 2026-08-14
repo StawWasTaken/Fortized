@@ -48689,6 +48689,82 @@ function _fsNewPopHide() {
   if (_fsNewPopEl) { _fsNewPopEl.remove(); _fsNewPopEl = null; }
   document.querySelectorAll('body > .fs-newpop').forEach(p => p.remove());
 }
+// ══════════════════════════════════════════════════════════════════════════
+// TRADE TRANSPORT — server-authoritative when the backend is provisioned,
+// local otherwise. `/api/trades/health` decides, once per session; while it
+// reports not-ready the old client path keeps working so a half-finished
+// rollout can't break trading. See docs/trading-server.md.
+// ══════════════════════════════════════════════════════════════════════════
+let _fsTradeApi = null;          // null = unknown, true/false = probed
+const _FS_SESSION_KEY = 'ftz_trade_session';
+
+async function _fsTradeApiReady() {
+  if (_fsTradeApi !== null) return _fsTradeApi;
+  try {
+    const r = await fetch('/api/trades/health');
+    _fsTradeApi = r.ok && !!(await r.json()).ready;
+  } catch { _fsTradeApi = false; }
+  return _fsTradeApi;
+}
+function _fsSession() { try { return localStorage.getItem(_FS_SESSION_KEY) || ''; } catch { return ''; } }
+// A trade session is minted from the credentials the user signed in with.
+// We never keep the password — only the short-lived signed token comes back.
+async function _fsEnsureSession() {
+  if (_fsSession()) return true;
+  const pw = (typeof CU !== 'undefined' && CU?.password) || '';
+  if (!pw) return false;
+  try {
+    const r = await fetch('/api/session', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: CU.username, password: pw }),
+    });
+    if (!r.ok) return false;
+    const { session } = await r.json();
+    if (!session) return false;
+    try { localStorage.setItem(_FS_SESSION_KEY, session); } catch {}
+    return true;
+  } catch { return false; }
+}
+async function _fsTradeFetch(path, body) {
+  const opts = { method: body ? 'POST' : 'GET', headers: { 'X-Ftz-Session': _fsSession() } };
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  let r = await fetch(path, opts);
+  if (r.status === 401) {
+    // Token expired or the server restarted without FTZ_SESSION_SECRET set.
+    try { localStorage.removeItem(_FS_SESSION_KEY); } catch {}
+    if (await _fsEnsureSession()) {
+      opts.headers['X-Ftz-Session'] = _fsSession();
+      r = await fetch(path, opts);
+    }
+  }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || 'Trade request failed.');
+  return data;
+}
+// Server rows → the shape the trade UI already renders.
+function _fsTradeFromRow(t, dir) {
+  const mine = dir === 'in';
+  return {
+    id: t.id, with: mine ? t.from_user : t.to_user, status: t.status, at: new Date(t.created_at).getTime(),
+    youGiveOnyx:  mine ? t.to_onyx   : t.from_onyx,
+    youGive:      mine ? t.to_items  : t.from_items,
+    theyGiveOnyx: mine ? t.from_onyx : t.to_onyx,
+    theyGive:     mine ? t.from_items : t.to_items,
+  };
+}
+// Pull the authoritative list into CU so every existing reader (the hub, the
+// rail badge, the inbox) keeps working unchanged.
+async function _fsSyncTrades() {
+  if (!(await _fsTradeApiReady()) || !(await _fsEnsureSession())) return false;
+  try {
+    const { incoming, outgoing } = await _fsTradeFetch('/api/trades');
+    CU.tradesIncoming = (incoming || []).map(t => _fsTradeFromRow(t, 'in'));
+    CU.tradesOutgoing = (outgoing || []).map(t => _fsTradeFromRow(t, 'out'));
+    try { _fsSyncTradeBadge(); } catch {}
+    return true;
+  } catch (e) { console.warn('[Trade] sync failed', e); return false; }
+}
+
 // Inbox payload for a trade. Item NAMES are resolved at send time so the
 // recipient's inbox never has to hit the catalogue to draw the row.
 function _fsTradeNotifData(t, fromDisplay) {
@@ -48752,6 +48828,8 @@ function _fsOpenTrade(tab) {
   overlay.tabIndex = -1;
   overlay.addEventListener('keydown', e => { if (e.key === 'Escape') { overlay.remove(); _fsTradeReset(); } });
   _fsTradeRender();
+  // Opening the hub is the natural moment to reconcile with the server.
+  _fsSyncTrades().then(ok => { if (ok) _fsTradeRender(); });
   setTimeout(() => overlay.focus(), 0);
 }
 function _fsTradeRender() {
@@ -48879,6 +48957,30 @@ async function _fsSendTrade() {
   const getting = d.getOnyx > 0 || d.get.length;
   if (!giving && !getting) { toast('Add something to the trade first.', 'error'); return; }
   if (d.giveOnyx > (CU?.onyx || 0)) { toast('You don’t have that much Onyx.', 'error'); return; }
+  // Server-authoritative path: the server re-validates everything and is the
+  // only writer. The client never touches the other person's row.
+  if (await _fsTradeApiReady()) {
+    if (!(await _fsEnsureSession())) { toast('Sign in again to trade.', 'error'); return; }
+    try {
+      const { trade } = await _fsTradeFetch('/api/trades/create', {
+        to: d.to, giveOnyx: d.giveOnyx, getOnyx: d.getOnyx, give: d.give, get: d.get,
+      });
+      CU.tradesOutgoing = [...(CU.tradesOutgoing || []), _fsTradeFromRow(trade, 'out')];
+      try {
+        FortizedSocial.addNotification?.(d.to, {
+          type: 'trade_offer', from: CU.username, time: new Date().toISOString(), at: Date.now(),
+          text: `${CU.displayName || CU.username} sent you a trade request`,
+          data: _fsTradeNotifData(_fsTradeFromRow(trade, 'in'), CU.displayName || CU.username),
+        });
+      } catch {}
+      toast('Trade request sent!', 'success');
+      _fsTradeReset();
+      window._fsTradeTab = 'out';
+      _fsTradeRender();
+    } catch (e) { toast(e.message || 'Couldn’t send that trade.', 'error'); }
+    return;
+  }
+
   let target = null;
   try { target = await FortizedSocial.getUserByName(d.to, { noCache: true }); } catch {}
   if (!target) { toast('Couldn’t find that user.', 'error'); return; }
@@ -48925,6 +49027,26 @@ async function _fsTradeRespond(id, accept) {
   _fsSettleTrade(t, false);
 }
 async function _fsSettleTrade(t, accepted) {
+  // With the API live the swap happens inside one Postgres transaction; we
+  // just re-pull the authoritative state afterwards.
+  if (await _fsTradeApiReady()) {
+    try {
+      await _fsTradeFetch('/api/trades/respond', { id: t.id, accept: !!accepted });
+      if (accepted) { try { await refreshCU?.(); } catch {} }
+      await _fsSyncTrades();
+      if (typeof updateOnyxDisplay === 'function') updateOnyxDisplay();
+      toast(accepted ? 'Trade complete!' : 'Trade declined.', accepted ? 'success' : 'info');
+      try {
+        FortizedSocial.addNotification?.(t.with, {
+          type: accepted ? 'trade_accepted' : 'trade_declined', from: CU.username,
+          time: new Date().toISOString(), at: Date.now(),
+        });
+      } catch {}
+      _fsTradeRender();
+      try { renderAtelierTab('shop'); } catch {}
+    } catch (e) { toast(e.message || 'Couldn’t settle that trade.', 'error'); }
+    return;
+  }
   t.status = accepted ? 'accepted' : 'declined';
   if (accepted) {
     CU.onyx = (CU.onyx || 0) - (t.youGiveOnyx || 0) + (t.theyGiveOnyx || 0);
@@ -48947,6 +49069,15 @@ async function _fsSettleTrade(t, accepted) {
   try { renderAtelierTab('shop'); } catch {}
 }
 async function _fsTradeCancel(id) {
+  if (await _fsTradeApiReady()) {
+    try {
+      await _fsTradeFetch('/api/trades/cancel', { id });
+      await _fsSyncTrades();
+      toast('Trade request cancelled.', 'info');
+      _fsTradeRender();
+    } catch (e) { toast(e.message || 'Couldn’t cancel that trade.', 'error'); }
+    return;
+  }
   CU.tradesOutgoing = _fsTrades('out').filter(x => x.id !== id);
   try { await saveUser(true); } catch {}
   toast('Trade request cancelled.', 'info');

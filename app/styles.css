@@ -16720,8 +16720,8 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .fs-tx-net b.is-down{color:#ff6b7f;} .fs-tx-net b.is-down .rad-onyx-ic{color:#ff6b7f;}
 
 /* ══════════ REDEEM CODES ══════════ */
-.fs-redeem{max-width:660px!important;padding-bottom:18px;}
-.fs-redeem-split{display:grid;grid-template-columns:1fr 262px;gap:24px;padding:26px 26px 4px;align-items:stretch;}
+.fs-redeem{max-width:780px!important;padding-bottom:18px;}
+.fs-redeem-split{display:grid;grid-template-columns:1fr 350px;gap:26px;padding:26px 26px 4px;align-items:stretch;}
 .fs-redeem-main{min-width:0;display:flex;flex-direction:column;}
 .fs-redeem-hero{margin-bottom:18px;}
 .fs-redeem-hero .ftz-ac-title{font-size:22px;margin:0 0 6px;}

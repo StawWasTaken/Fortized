@@ -55,6 +55,266 @@ app.use((req, res, next) => {
   next();
 });
 
+// ══════════════════════════════════════════════════════════════════════════
+// TRADING — server-authoritative.
+//
+// The client is NEVER trusted with a trade. It may only ask; every check and
+// every balance/inventory move happens here, and the actual swap runs inside
+// one Postgres transaction (the `ftz_trade_settle` RPC) so a trade can never
+// half-apply, duplicate an item, or be replayed.
+//
+// Two things gate how safe this really is, and both need setting on the host:
+//   SUPABASE_SERVICE_ROLE — lets the server write rows the browser can't.
+//                           Without it we fall back to the anon key, which
+//                           means the client could still bypass us entirely.
+//   FTZ_SESSION_SECRET    — signs the session tokens below. Falls back to a
+//                           per-boot random value (tokens die on restart).
+// See docs/trading-server.md for the SQL and the rollout order.
+// ══════════════════════════════════════════════════════════════════════════
+const crypto = require('crypto');
+const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE || '';
+// Privileged client when the service role is configured; otherwise the same
+// anon client, so the endpoints still work (just without the extra teeth).
+const sbAdmin = SUPABASE_SERVICE_ROLE
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE, { auth: { persistSession: false } })
+  : sb;
+const FTZ_SESSION_SECRET = process.env.FTZ_SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const TRADE_SESSION_TTL_MS = 12 * 60 * 60 * 1000;   // 12h
+
+function _signSession(username, exp) {
+  return crypto.createHmac('sha256', FTZ_SESSION_SECRET)
+    .update(`${username}.${exp}`).digest('base64url');
+}
+function _issueSession(username) {
+  const exp = Date.now() + TRADE_SESSION_TTL_MS;
+  return `${Buffer.from(username).toString('base64url')}.${exp}.${_signSession(username, exp)}`;
+}
+// Returns the username the token proves, or null. Constant-time compare so the
+// signature can't be brute-forced a byte at a time.
+function _readSession(req) {
+  const raw = req.get('X-Ftz-Session') || (req.body && req.body.session) || '';
+  const parts = String(raw).split('.');
+  if (parts.length !== 3) return null;
+  let username;
+  try { username = Buffer.from(parts[0], 'base64url').toString('utf8'); } catch { return null; }
+  const exp = Number(parts[1]);
+  if (!username || !Number.isFinite(exp) || Date.now() > exp) return null;
+  const want = Buffer.from(_signSession(username, exp));
+  const got = Buffer.from(parts[2]);
+  if (want.length !== got.length || !crypto.timingSafeEqual(want, got)) return null;
+  return username;
+}
+
+// POST /api/session — exchange credentials for a short-lived trade session.
+// The password check happens HERE, so a trade can't be authorised by a client
+// that merely knows a username.
+app.post('/api/session', async (req, res) => {
+  const username = String(req.body?.username || '').trim().toLowerCase();
+  const password = String(req.body?.password || '');
+  if (!username || !password) return res.status(400).json({ error: 'username and password required' });
+  try {
+    const { data, error } = await sbAdmin.from('users')
+      .select('username,password').eq('username', username).maybeSingle();
+    if (error) throw error;
+    if (!data || data.password !== password) return res.status(401).json({ error: 'Invalid credentials.' });
+    res.json({ session: _issueSession(username), expiresIn: TRADE_SESSION_TTL_MS });
+  } catch (e) {
+    console.warn('[session] failed:', e.message);
+    res.status(503).json({ error: 'Session service unavailable.' });
+  }
+});
+
+const TRADE_MAX_ITEMS = 12;
+const TRADE_MAX_ONYX = 1_000_000;
+const _tradeRate = new Map();   // username → [timestamps]
+function _tradeRateOK(user, limit = 12, windowMs = 60_000) {
+  const now = Date.now();
+  const hits = (_tradeRate.get(user) || []).filter(t => now - t < windowMs);
+  hits.push(now);
+  _tradeRate.set(user, hits);
+  return hits.length <= limit;
+}
+
+function _tradeCanReceive(target, sender) {
+  const policy = target?.raw?.tradePolicy || target?.trade_policy || 'friends';
+  if (policy === 'nobody') return false;
+  if (policy === 'everyone') return true;
+  const friends = Array.isArray(target?.friends) ? target.friends : [];
+  const names = friends.map(f => String(f?.username || f || '').toLowerCase());
+  if (names.includes(String(sender).toLowerCase())) return true;
+  return false;   // 'bastion' needs a shared-bastion read; treated as friends-only for now
+}
+
+// Which column holds a given item kind. Kept in sync with the client catalogue.
+const TRADE_KIND_COL = { decoration: 'ownedDecorations', nameplate: 'ownedNameplates', appearance: 'unlockedAppearances' };
+function _ownedList(row, col) {
+  const v = (row?.raw && row.raw[col]) ?? row?.[col];
+  return Array.isArray(v) ? v : [];
+}
+// Every item a user actually holds, flattened. Ownership is verified against
+// this at BOTH create and settle time, so an item sold in between can't be traded.
+function _ownsAll(row, ids) {
+  const held = new Set([
+    ..._ownedList(row, 'ownedDecorations'),
+    ..._ownedList(row, 'ownedNameplates'),
+    ..._ownedList(row, 'unlockedAppearances'),
+  ]);
+  return (ids || []).every(id => held.has(id));
+}
+
+async function _tradeUser(username) {
+  const { data, error } = await sbAdmin.from('users')
+    .select('username,display_name,onyx,friends,raw').eq('username', String(username).toLowerCase()).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// POST /api/trades/create — validate and record an offer. Nothing moves yet.
+app.post('/api/trades/create', async (req, res) => {
+  const me = _readSession(req);
+  if (!me) return res.status(401).json({ error: 'Sign in again to trade.' });
+  if (!_tradeRateOK(me)) return res.status(429).json({ error: 'Slow down — too many trade requests.' });
+
+  const to = String(req.body?.to || '').trim().toLowerCase();
+  const giveOnyx = Math.floor(Number(req.body?.giveOnyx) || 0);
+  const getOnyx  = Math.floor(Number(req.body?.getOnyx) || 0);
+  const give = Array.isArray(req.body?.give) ? [...new Set(req.body.give.map(String))] : [];
+  const get  = Array.isArray(req.body?.get)  ? [...new Set(req.body.get.map(String))]  : [];
+
+  if (!to || to === me) return res.status(400).json({ error: 'Pick someone else to trade with.' });
+  if (giveOnyx < 0 || getOnyx < 0 || giveOnyx > TRADE_MAX_ONYX || getOnyx > TRADE_MAX_ONYX)
+    return res.status(400).json({ error: 'That Onyx amount is out of range.' });
+  if (give.length > TRADE_MAX_ITEMS || get.length > TRADE_MAX_ITEMS)
+    return res.status(400).json({ error: `Up to ${TRADE_MAX_ITEMS} items per side.` });
+  if (!giveOnyx && !getOnyx && !give.length && !get.length)
+    return res.status(400).json({ error: 'The trade is empty.' });
+
+  try {
+    const [sender, target] = await Promise.all([_tradeUser(me), _tradeUser(to)]);
+    if (!sender) return res.status(401).json({ error: 'Account not found.' });
+    if (!target) return res.status(404).json({ error: 'That user doesn’t exist.' });
+    if (!_tradeCanReceive(target, me)) return res.status(403).json({ error: 'They aren’t accepting trade requests from you.' });
+    if ((sender.onyx || 0) < giveOnyx) return res.status(400).json({ error: 'You don’t have that much Onyx.' });
+    if (!_ownsAll(sender, give)) return res.status(400).json({ error: 'You don’t own everything you’re offering.' });
+    if (!_ownsAll(target, get)) return res.status(400).json({ error: 'They don’t own everything you asked for.' });
+    if ((target.onyx || 0) < getOnyx) return res.status(400).json({ error: 'They don’t have that much Onyx.' });
+
+    const row = {
+      id: 'tr_' + crypto.randomBytes(9).toString('base64url'),
+      from_user: me, to_user: to, status: 'pending',
+      from_onyx: giveOnyx, to_onyx: getOnyx,
+      from_items: give, to_items: get,
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+    };
+    const { error } = await sbAdmin.from('trades').insert(row);
+    if (error) throw error;
+    res.json({ ok: true, trade: row });
+  } catch (e) {
+    console.warn('[trades/create] failed:', e.message);
+    res.status(503).json({ error: 'Couldn’t open that trade right now.', detail: e.message });
+  }
+});
+
+// GET /api/trades — everything pending in both directions, for the session user.
+app.get('/api/trades', async (req, res) => {
+  const me = _readSession(req);
+  if (!me) return res.status(401).json({ error: 'Sign in again to trade.' });
+  try {
+    const { data, error } = await sbAdmin.from('trades')
+      .select('*').or(`from_user.eq.${me},to_user.eq.${me}`)
+      .eq('status', 'pending').order('created_at', { ascending: false }).limit(100);
+    if (error) throw error;
+    const now = Date.now();
+    const live = (data || []).filter(t => !t.expires_at || new Date(t.expires_at).getTime() > now);
+    res.json({
+      incoming: live.filter(t => t.to_user === me),
+      outgoing: live.filter(t => t.from_user === me),
+    });
+  } catch (e) {
+    console.warn('[trades/list] failed:', e.message);
+    res.status(503).json({ error: 'Couldn’t load your trades.' });
+  }
+});
+
+// POST /api/trades/respond — accept or decline. Accepting runs the atomic RPC:
+// it re-checks balances and ownership inside the transaction, so a trade that
+// was valid a minute ago but isn't now fails cleanly instead of half-applying.
+app.post('/api/trades/respond', async (req, res) => {
+  const me = _readSession(req);
+  if (!me) return res.status(401).json({ error: 'Sign in again to trade.' });
+  if (!_tradeRateOK(me, 30)) return res.status(429).json({ error: 'Slow down.' });
+  const id = String(req.body?.id || '');
+  const accept = !!req.body?.accept;
+  if (!id) return res.status(400).json({ error: 'Missing trade id.' });
+  try {
+    const { data: trade, error: readErr } = await sbAdmin.from('trades').select('*').eq('id', id).maybeSingle();
+    if (readErr) throw readErr;
+    if (!trade) return res.status(404).json({ error: 'That trade no longer exists.' });
+    if (trade.to_user !== me) return res.status(403).json({ error: 'That trade isn’t yours to answer.' });
+    if (trade.status !== 'pending') return res.status(409).json({ error: 'That trade was already answered.' });
+    if (trade.expires_at && new Date(trade.expires_at).getTime() < Date.now()) {
+      await sbAdmin.from('trades').update({ status: 'expired' }).eq('id', id).eq('status', 'pending');
+      return res.status(409).json({ error: 'That trade expired.' });
+    }
+    if (!accept) {
+      // Guarded on status so two clicks can't both "win".
+      const { data, error } = await sbAdmin.from('trades')
+        .update({ status: 'declined', settled_at: new Date().toISOString() })
+        .eq('id', id).eq('status', 'pending').select();
+      if (error) throw error;
+      if (!data || !data.length) return res.status(409).json({ error: 'That trade was already answered.' });
+      return res.json({ ok: true, status: 'declined' });
+    }
+    const { data, error } = await sbAdmin.rpc('ftz_trade_settle', { p_trade_id: id, p_actor: me });
+    if (error) throw error;
+    const result = Array.isArray(data) ? data[0] : data;
+    if (!result || result.ok === false) return res.status(409).json({ error: result?.reason || 'The trade could no longer be settled.' });
+    res.json({ ok: true, status: 'accepted' });
+  } catch (e) {
+    console.warn('[trades/respond] failed:', e.message);
+    res.status(503).json({ error: 'Couldn’t settle that trade.', detail: e.message });
+  }
+});
+
+// POST /api/trades/cancel — the sender withdrawing their own offer.
+app.post('/api/trades/cancel', async (req, res) => {
+  const me = _readSession(req);
+  if (!me) return res.status(401).json({ error: 'Sign in again to trade.' });
+  const id = String(req.body?.id || '');
+  if (!id) return res.status(400).json({ error: 'Missing trade id.' });
+  try {
+    const { data, error } = await sbAdmin.from('trades')
+      .update({ status: 'cancelled', settled_at: new Date().toISOString() })
+      .eq('id', id).eq('from_user', me).eq('status', 'pending').select();
+    if (error) throw error;
+    if (!data || !data.length) return res.status(409).json({ error: 'That trade can’t be cancelled any more.' });
+    res.json({ ok: true });
+  } catch (e) {
+    console.warn('[trades/cancel] failed:', e.message);
+    res.status(503).json({ error: 'Couldn’t cancel that trade.' });
+  }
+});
+
+// GET /api/trades/health — is the server-authoritative path actually usable?
+// The client checks this to decide whether to use the API or stay local.
+app.get('/api/trades/health', async (_req, res) => {
+  const out = {
+    serviceRole: !!SUPABASE_SERVICE_ROLE,
+    sessionSecret: !!process.env.FTZ_SESSION_SECRET,
+    table: false, rpc: false,
+  };
+  try { const { error } = await sbAdmin.from('trades').select('id').limit(1); out.table = !error; } catch {}
+  try {
+    const { error } = await sbAdmin.rpc('ftz_trade_settle', { p_trade_id: '__probe__', p_actor: '__probe__' });
+    // A missing function 404s; anything else means the RPC exists and simply
+    // rejected the probe, which is exactly what we want to see.
+    out.rpc = !error || !/does not exist|not find/i.test(error.message || '');
+  } catch {}
+  out.ready = out.table && out.rpc;
+  res.json(out);
+});
+
 // ── Health check endpoint ─────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({

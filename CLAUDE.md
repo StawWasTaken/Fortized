@@ -1,6 +1,23 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **🔒 HARDENING — still open, and needed before trading is genuinely safe.**
+  Full write-up + SQL in `docs/trading-server.md` ("Hardening").
+  1. **Stop storing plaintext passwords.** Today `login()`
+     (`FortizedSocial-supabase.js` ~804) does `user.password !== password` in
+     the BROWSER, against a row read with the anon key, and `users.password`
+     is plaintext. Hash with bcrypt/argon2 and move the comparison
+     server-side — **`POST /api/session` (`server.js`) is already the right
+     shape for it**, it just needs to compare a hash instead of the raw value.
+     Needs a migration that hashes existing rows + a dual-read window so
+     nobody is locked out mid-rollout.
+  2. **Turn on RLS for `users`** so the anon key can't read or write arbitrary
+     rows. **This is the big one:** until it lands, the trade API can be
+     bypassed by writing `users` directly, and every password in the table is
+     readable by anyone holding the shipped anon key.
+  Until both land, the trading system is **server-authoritative — the honest
+  description — but NOT tamper-proof.** Don't describe it as "safe" to the
+  user or in any UI copy until #1 and #2 are done.
 - **SERVER-SIDE TRADING + inbox polish (`2026fix485`→`486`).**
   • **`server.js` now owns trades**: `POST /api/session` (credentials →
     HMAC-signed 12h token, password checked SERVER-side), `/api/trades/create`

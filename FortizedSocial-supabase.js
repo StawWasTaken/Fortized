@@ -2764,6 +2764,25 @@ const FortizedSocial = (() => {
     await _adminKVSet('staff', staff);
   }
 
+  // -- Onyx redeem codes --
+  // Lives in the existing `admin_kv` table, so the staff console can create,
+  // edit and revoke codes with NO schema change. The client redeem path merges
+  // this over the built-in codes shipped in the bundle, so a read failure
+  // (e.g. RLS blocking anon on admin_kv) degrades to the built-ins instead of
+  // breaking redemption outright.
+  async function adminGetOnyxCodes() {
+    return (await _adminKVGet('onyx_codes')) || {};
+  }
+  async function adminSaveOnyxCodes(codes) {
+    await _adminKVSet('onyx_codes', codes && typeof codes === 'object' ? codes : {});
+  }
+  // Read path for ordinary members — same row, but never cached as staff data
+  // and always failure-tolerant.
+  async function getOnyxCodes() {
+    try { return (await _adminKVGet('onyx_codes')) || {}; }
+    catch (_) { return {}; }
+  }
+
   // -- Audit Log --
   async function adminGetAuditLog() {
     return (await _adminKVGet('audit_log')) || [];
@@ -3334,6 +3353,7 @@ const FortizedSocial = (() => {
     adminForceLogout,
     adminGetNsfwQueue, adminSaveNsfwQueue,
     adminGetStaff, adminSaveStaff,
+    adminGetOnyxCodes, adminSaveOnyxCodes, getOnyxCodes,
     adminGetAuditLog, adminPushAuditLog,
     adminGetGlobalSettings, adminSaveGlobalSettings,
     adminGetNsfwBannedHashes, adminSaveNsfwBannedHashes,

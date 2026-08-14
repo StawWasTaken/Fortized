@@ -149,7 +149,64 @@ All six items the user asked for. CSS lives in ONE appended block at the END of
   a soft ellipse (`72% 118%`) — a tight dot reads as a cursor glow, a broad band
   reads as a lit surface.
 
-## 🟥 NEXT TASK — STAFF CONSOLE, REBUILT FROM SCRATCH (user, verbatim intent)
+## 🟢 STAFF CONSOLE — REBUILT FROM SCRATCH (`2026fix492`, same branch) ✅ DONE
+The user: it **"needs to be COMPLETELY REWORKED ALMOST FROM SCRATCH — IT'S A
+FREAKING MESS."** Built fresh in a **`.stf-*` namespace** that shares NOTHING
+with the old `.sc-*` surfaces — only the DATA layer (`FortizedSocial.admin*`)
+and `renderStaffWorldMap` are reused.
+- **Shell** (`app/index.html`, `#modal-staff-console`): `.modal.settings-modal
+  .stf-modal` + `.settings-close` (big card, per the convention) → `.stf-rail`
+  (brand + role · ⌘K jump button · sectioned nav · signed-in staff footer) +
+  `.stf-main` (sticky `.stf-head` with per-page title/lead/actions →
+  `.stf-scroll`). Nav spacing is tuned so **all 6 sections fit 820px with no
+  scroll** (measured: 640px content in a 639px box).
+- **16 pages**, `_STF_RENDER[id]`, routed by `_stfGo(id)` with a **render token**
+  (`_stfSeq`) so a slow fetch can't paint over a newer page: Command Center ·
+  Global Monitor · Users · Bastions · Reports · Content Review · Bans ·
+  Suspensions · Feedback · **Onyx Codes** · Economy · Ad Emplacements · Staff ·
+  System · Statistics · Audit Log.
+- **🎟️ NEW — Onyx code management.** Codes were hardcoded in the bundle, so a
+  new one meant a deploy and revoking was impossible. They now live in the
+  **existing `admin_kv` table** under `onyx_codes` — `adminGetOnyxCodes`/
+  `adminSaveOnyxCodes`/`getOnyxCodes` in `FortizedSocial-supabase.js`, **NO SQL
+  for the user to run**. The console lists every code with state (Active /
+  Scheduled / Expired / Revoked), amount, limit and expiry, and can **create,
+  edit, revoke and restore**. Built-ins are listed too, flagged `· built in`;
+  editing one writes an override into the store.
+  ⚠️ **Redeem merges, it doesn't replace:** `_fsAllCodes()` = `{..._FS_CODES,
+  ...stored}` behind a 2-min cache (`_fsInvalidateCodes()` on every write). If
+  the store can't be read — offline, or **RLS blocking anon on `admin_kv`** —
+  redemption quietly falls back to the built-ins instead of breaking. If
+  staff-made codes don't redeem live, that's the RLS policy to check.
+- **Own dossier drawer** (`_stfDossier`, `.stf-drawer`): avatar + flag pills,
+  ban/suspension alerts, Record facts, all six actions, warning history. It
+  stores `dataset.user` so `_stfRefresh()` repaints it after any action.
+- **Own action card** (`_stfAsk`) — a **Promise**, so callers `await` it and
+  read the fields back. Small card ⇒ `.ftz-close-btn.ftz-ac-x`. Fields:
+  text/number/textarea/select/date/duration + reason presets.
+  ⚠️ `.ftz-ac-card` sets `padding:0` (its hero/foot go edge to edge), so
+  `.stf-ask-h/-b/-note` each carry their OWN gutter — don't "tidy" that away.
+- **Moderation actions** rewritten as `_stfAct*` (ban/unban/warn/suspend/
+  unsuspend/logout/onyx/radiance): confirm → mutate → record violation →
+  notify the member → `logAudit` → refresh.
+- **Design**: 2px `var(--border)` strokes on `var(--panel)`, `--radius-lg`,
+  the ONE 3D button recipe (`.fs-btn`; `.stf-btn--danger/--good/--sm` change
+  only the FILL so a red button presses exactly like a yellow one), Heroic
+  Search on every empty state, `stfRowIn` entrances with **`backwards`** fill
+  mode, and **no glows anywhere**.
+- **Legacy**: `_openStaffConsole`→`_stfOpen`, `_closeStaffConsole`→`_stfClose`;
+  ⌘K opens `_stfPalette` when the console is open, `openStaffPalette` outside;
+  the old palette's tab entries route through `_STF_LEGACY_TAB` onto the new
+  pages. The old `_loadStaffPage`/`.sc-*` code is now unreferenced by the shell
+  (its `if(!main) return` guards make it inert) — **safe to delete in a later
+  pass**, kept for now so `adminInspectUser`/`adminActionUser` callers outside
+  the console keep working.
+- ⚠️ **LIVE-VERIFY:** FA icons + the Onyx/Radiance mask glyphs are CDN-blind in
+  the sandbox (verified via a Playwright plainview with stubbed app globals and
+  mock data). On deploy: every page loads with real data; create → redeem →
+  revoke an Onyx code end-to-end; the dossier actions; maintenance toggle.
+
+## 🟥 SUPERSEDED — original staff-console brief (kept for intent)
 The user's words: the staff console (topbar icon + its card) **"needs to be
 COMPLETELY REWORKED ALMOST FROM SCRATCH — IT'S A FREAKING MESS."**
 - **Do NOT work off what's there.** Keep the same *ideas / feature set*, but when

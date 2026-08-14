@@ -29645,19 +29645,17 @@ function tryOpenAdmin() {
   adminAuthed = true; _openStaffConsole();
 }
 
+// Entry point. The console itself was rebuilt from scratch (see the STAFF
+// CONSOLE block at the end of this file) — this just opens it.
 function _openStaffConsole() {
-  _syncAdminData();
   _adminPreviousView = _currentView;
-  adminTab = 'dashboard';
-  _renderStaffNav('dashboard');
-  _loadStaffPage('dashboard');
-  openModal('modal-staff-console');
+  _stfOpen();
 }
 
 function _closeStaffConsole() {
   if (_reportPollInterval) { clearInterval(_reportPollInterval); _reportPollInterval = null; }
   _teardownAdminLiveSync();
-  closeModal('modal-staff-console');
+  _stfClose();
 }
 
 // ── Admin Live Sync — periodic polling from Supabase ──
@@ -49334,13 +49332,27 @@ function _fsTxRender() {
 // ── Redeem Onyx codes ──
 // FORTGIFT26 is the launch code and stays valid forever.
 // `expires` is an ISO instant; a code without one never expires.
-// TODO (staff console): these move into a real table so staff can create,
-// edit and revoke codes instead of shipping them in the bundle.
+// These three are the BUILT-INS shipped in the bundle. Staff create, edit and
+// revoke codes from the console, which writes them to `admin_kv.onyx_codes`;
+// `_fsAllCodes()` merges that store OVER these. If the store can't be read
+// (offline, or RLS blocking anon on admin_kv) redemption quietly falls back to
+// the built-ins rather than failing outright.
 const _FS_CODES = {
   FORTGIFT26:    { onyx: 100, label: 'Launch gift',  once: true },
   '2026STARTER': { onyx: 226, label: 'Starter gift', once: true, expires: '2026-12-31T23:59:59.999Z' },
   ONYX4FREE:     { onyx: 140, label: 'Free Onyx',    once: true },
 };
+let _fsCodeCache = null, _fsCodeCacheAt = 0;
+const _FS_CODE_TTL = 120000;   // 2 min — a revoke takes effect within one redeem attempt
+function _fsInvalidateCodes() { _fsCodeCache = null; _fsCodeCacheAt = 0; }
+async function _fsAllCodes() {
+  if (_fsCodeCache && Date.now() - _fsCodeCacheAt < _FS_CODE_TTL) return _fsCodeCache;
+  let stored = {};
+  try { stored = (await FortizedSocial.getOnyxCodes?.()) || {}; } catch (_) {}
+  _fsCodeCache = { ..._FS_CODES, ...stored };
+  _fsCodeCacheAt = Date.now();
+  return _fsCodeCache;
+}
 function _fsCodeExpired(def) {
   return !!(def && def.expires && Date.now() > new Date(def.expires).getTime());
 }
@@ -49440,8 +49452,8 @@ async function _fsRedeemCode() {
   const code = (inp?.value || '').trim().toUpperCase();
   const fail = (m) => { if (err) { err.textContent = m; err.classList.add('show'); } };
   if (err) { err.textContent = ''; err.classList.remove('show'); }
-  const def = _FS_CODES[code];
-  if (!def) { fail('That code isn’t valid.'); return; }
+  const def = (await _fsAllCodes())[code];
+  if (!def || def.revoked) { fail('That code isn’t valid.'); return; }
   if (_fsCodeExpired(def)) { fail('That code has expired.'); return; }
   const used = Array.isArray(CU?.redeemedCodes) ? CU.redeemedCodes : [];
   if (def.once && used.includes(code)) { fail('You’ve already redeemed this code.'); return; }
@@ -65451,6 +65463,15 @@ function registerPaletteProvider(fn) {
   if (typeof fn === 'function') _staffPaletteProviders.push(fn);
 }
 
+// Legacy console tab id → the rebuilt console's page id.
+const _STF_LEGACY_TAB = {
+  dashboard: 'overview', live_ops: 'monitor', moderation: 'reports', members: 'users',
+  users: 'users', all_users: 'users', bastions: 'bastions', economy: 'economy',
+  broadcasts: 'ads', ads: 'ads', feedback: 'feedback', support_tickets: 'feedback',
+  system: 'system', staff: 'staff', reports: 'reports', bans: 'bans',
+  suspensions: 'suspensions', nsfw_queue: 'content', statistics: 'stats', audit: 'audit',
+};
+
 // Default provider: tabs + capability tooltip docs. Always available.
 registerPaletteProvider((q) => {
   const out = [];
@@ -65470,7 +65491,9 @@ registerPaletteProvider((q) => {
       label: t.label,
       hint: 'Console tab',
       score: _staffPaletteScore(q, t.label + ' ' + t.id),
-      run: () => { if (typeof _loadAdminPage === 'function') _loadAdminPage(t.id); },
+      // The console was rebuilt; route legacy tab ids onto its new pages so
+      // Cmd+K from outside the console still lands somewhere real.
+      run: () => { _openStaffConsole(); setTimeout(() => _stfGo(_STF_LEGACY_TAB[t.id] || 'overview'), 30); },
     });
   }
   // Capability listing for grep-from-keyboard
@@ -65582,7 +65605,9 @@ document.addEventListener('keydown', (e) => {
   if (!(e.metaKey || e.ctrlKey) || (e.key !== 'k' && e.key !== 'K')) return;
   if (!hasCap(STAFF_CAPS.CONSOLE_OPEN)) return;
   e.preventDefault();
-  openStaffPalette();
+  // Inside the console, ⌘K is the console's own jump palette.
+  if (document.getElementById('modal-staff-console')?.classList.contains('open')) _stfPalette();
+  else openStaffPalette();
 });
 
 // ── Action log surface ──────────────────────────────────────────────
@@ -66410,3 +66435,1685 @@ registerPaletteProvider((q) => {
 // the original admin panel header too (no UI change required —
 // the entry just exists in Cmd+K).
 
+
+// ════════════════════════════════════════════════════════════════════
+// STAFF CONSOLE — rebuilt from scratch (2026fix492)
+// ════════════════════════════════════════════════════════════════════
+// The old console (`.sc-*`) had grown into a pile of one-off surfaces with
+// their own colours, spacings and button shapes. This is a fresh build on the
+// app's OWN design language, not a reskin of it:
+//   · shell + nav rhythm mirror the SETTINGS card (big card ⇒ .settings-close)
+//   · every card is a 2px var(--border) stroke on var(--panel), radius-lg
+//   · every button is the one 3D recipe (.fs-btn), no invented variants
+//   · every empty state is Heroic Search (_ftzNotFound)
+//   · no coloured glows anywhere — status colour lives in text, dots and pills
+// Only the DATA layer is shared with the old console (FortizedSocial.admin*),
+// plus renderStaffWorldMap, which the user asked to keep as-is.
+// ════════════════════════════════════════════════════════════════════
+
+let _stfPage = 'overview';        // active page id
+let _stfSeq = 0;                  // render token — a slow page can't paint over a newer one
+let _stfTimer = null;             // per-page refresh interval
+const _stfCounts = {};            // nav attention pills, filled by the overview
+
+// ── Pages ──────────────────────────────────────────────────────────
+// `cap` gates visibility; `sa` marks superadmin-only. Order here IS the nav.
+const _STF_SECTIONS = [
+  { label: 'Overview', items: [
+    { id: 'overview',    icon: 'fa-gauge-high',         label: 'Command Center' },
+    { id: 'monitor',     icon: 'fa-earth-europe',       label: 'Global Monitor' },
+  ]},
+  { label: 'People', items: [
+    { id: 'users',       icon: 'fa-users',              label: 'Users' },
+    { id: 'bastions',    icon: 'fa-chess-rook',         label: 'Bastions' },
+  ]},
+  { label: 'Moderation', items: [
+    { id: 'reports',     icon: 'fa-flag',               label: 'Reports',      count: 'reports' },
+    { id: 'content',     icon: 'fa-image',              label: 'Content Review', count: 'content' },
+    { id: 'bans',        icon: 'fa-gavel',              label: 'Bans' },
+    { id: 'suspensions', icon: 'fa-hourglass-half',     label: 'Suspensions' },
+  ]},
+  { label: 'Support', items: [
+    { id: 'feedback',    icon: 'fa-comment-dots',       label: 'Feedback',     count: 'feedback' },
+  ]},
+  { label: 'Economy', items: [
+    { id: 'codes',       icon: 'fa-ticket',             label: 'Onyx Codes' },
+    { id: 'economy',     icon: 'fa-coins',              label: 'Economy',      cap: 'ECONOMY_VIEW' },
+    { id: 'ads',         icon: 'fa-bullhorn',           label: 'Ad Emplacements' },
+  ]},
+  { label: 'Platform', items: [
+    { id: 'staff',       icon: 'fa-user-shield',        label: 'Staff' },
+    { id: 'system',      icon: 'fa-sliders',            label: 'System',       cap: 'SYSTEM_MAINTENANCE' },
+    { id: 'stats',       icon: 'fa-chart-simple',       label: 'Statistics' },
+    { id: 'audit',       icon: 'fa-clock-rotate-left',  label: 'Audit Log' },
+  ]},
+];
+
+function _stfItem(id) {
+  for (const s of _STF_SECTIONS) { const i = s.items.find(x => x.id === id); if (i) return i; }
+  return null;
+}
+function _stfCanSee(item) {
+  if (item.sa && !isSuperAdmin()) return false;
+  if (item.cap) { try { return hasCap(STAFF_CAPS[item.cap]); } catch (_) { return true; } }
+  return true;
+}
+
+// ── Open / close ───────────────────────────────────────────────────
+function _stfOpen() {
+  _stfPage = 'overview';
+  _stfRenderBrand();
+  _stfRenderNav();
+  _stfRenderMe();
+  openModal('modal-staff-console');
+  _stfGo('overview');
+  // Warm the shared caches in the background — the first page paints from
+  // whatever is already cached rather than waiting on the network.
+  _syncAdminData().then(() => { if (_stfPage === 'overview') _stfGo('overview', true); }).catch(() => {});
+}
+
+function _stfClose() {
+  _stfStopTimer();
+  _stfDrawerClose();
+  document.getElementById('stf-ask')?.remove();
+  try { if (window._staffOpsTimer) { clearInterval(window._staffOpsTimer); window._staffOpsTimer = null; } } catch (_) {}
+  closeModal('modal-staff-console');
+}
+
+function _stfStopTimer() { if (_stfTimer) { clearInterval(_stfTimer); _stfTimer = null; } }
+
+// ── Rail ───────────────────────────────────────────────────────────
+function _stfRenderBrand() {
+  const el = document.getElementById('stf-brand'); if (!el) return;
+  const role = getStaffRole(CU.username) || 'staff';
+  el.innerHTML = `
+    <span class="stf-brand-mark"><i class="fas fa-shield-halved"></i></span>
+    <span class="stf-brand-tx">
+      <span class="stf-brand-t">Staff Console</span>
+      <span class="stf-brand-s">${escapeHTML(role === 'superadmin' ? 'Superadmin' : role === 'admin' ? 'Administrator' : 'Moderator')}</span>
+    </span>`;
+}
+
+function _stfRenderMe() {
+  const el = document.getElementById('stf-me'); if (!el) return;
+  el.innerHTML = `
+    <span class="stf-me-av">${buildAvatarHTML(CU.pfp, CU.displayName || CU.username, 30, CU.pfpCrop)}</span>
+    <span class="stf-me-tx">
+      <span class="stf-me-n">${escapeHTML(CU.displayName || CU.username)}</span>
+      <span class="stf-me-h">@${escapeHTML(CU.username)}</span>
+    </span>
+    <span class="stf-me-dot" title="Session active"></span>`;
+}
+
+function _stfRenderNav() {
+  const nav = document.getElementById('stf-nav'); if (!nav) return;
+  let html = '';
+  for (const sec of _STF_SECTIONS) {
+    const items = sec.items.filter(_stfCanSee);
+    if (!items.length) continue;
+    html += `<div class="stf-navsec">${escapeHTML(sec.label)}</div>`;
+    for (const it of items) {
+      const n = it.count ? (_stfCounts[it.count] || 0) : 0;
+      html += `<button class="stf-navi${_stfPage === it.id ? ' active' : ''}" data-page="${it.id}" onclick="_stfGo('${it.id}')">
+        <span class="stf-navi-ic"><i class="fas ${it.icon}"></i></span>
+        <span class="stf-navi-l">${escapeHTML(it.label)}</span>
+        ${n ? `<span class="stf-navi-n">${n > 99 ? '99+' : n}</span>` : ''}
+      </button>`;
+    }
+  }
+  nav.innerHTML = html;
+}
+
+// ── Routing ────────────────────────────────────────────────────────
+const _STF_RENDER = {};   // id → async (host) => void, filled below
+
+async function _stfGo(id, quiet) {
+  if (!_stfItem(id)) id = 'overview';
+  _stfStopTimer();
+  if (_stfPage !== id) _stfDrawerClose();
+  _stfPage = id;
+  _stfRenderNav();
+  const item = _stfItem(id);
+  const head = document.getElementById('stf-head');
+  const host = document.getElementById('stf-scroll');
+  if (!host) return;
+  if (head) head.innerHTML = _stfHeadHTML(item);
+  if (!quiet) host.innerHTML = _stfLoadingHTML();
+  host.scrollTop = 0;
+  const seq = ++_stfSeq;
+  try {
+    await (_STF_RENDER[id] || _STF_RENDER.overview)(host, seq);
+  } catch (e) {
+    console.warn('[Staff] page failed:', id, e);
+    if (seq === _stfSeq) host.innerHTML = `<div class="stf-wrap">${_ftzNotFound('That page did not load', 'Try again in a moment — the console kept your session.')}</div>`;
+  }
+}
+
+function _stfHeadHTML(item) {
+  const subs = {
+    overview: 'Everything that needs you, first.',
+    monitor: 'Where Fortized is being used, live.',
+    users: 'Find an account, read its record, act on it.',
+    bastions: 'Every bastion on the platform.',
+    reports: 'What members have flagged, oldest first.',
+    content: 'Media held back for a human call.',
+    bans: 'Accounts locked out of Fortized.',
+    suspensions: 'Temporary time-outs and when they lift.',
+    feedback: 'Support tickets and what members told us.',
+    codes: 'Every Onyx card code — create, edit, revoke.',
+    economy: 'Onyx in circulation and who holds it.',
+    ads: 'Every ad in rotation and how often it shows.',
+    staff: 'Who holds the keys.',
+    system: 'Platform switches. Handle with care.',
+    stats: 'The numbers behind the platform.',
+    audit: 'Every staff action, permanently recorded.',
+  };
+  return `<div class="stf-head-tx">
+      <h2 class="stf-head-t"><i class="fas ${item.icon}"></i>${escapeHTML(item.label)}</h2>
+      <p class="stf-head-s">${escapeHTML(subs[item.id] || '')}</p>
+    </div>
+    <div class="stf-head-act" id="stf-head-act"></div>`;
+}
+
+function _stfHeadAct(html) { const el = document.getElementById('stf-head-act'); if (el) el.innerHTML = html || ''; }
+
+// ── Shared building blocks ─────────────────────────────────────────
+function _stfLoadingHTML(rows) {
+  return `<div class="stf-wrap">${Array.from({ length: rows || 4 }, (_, i) =>
+    `<div class="stf-skel" style="--i:${i};"></div>`).join('')}</div>`;
+}
+
+// A card. `head` is optional; `pad` false lets rows sit flush to the stroke.
+function _stfCard(o) {
+  const c = o || {};
+  const head = c.title ? `<div class="stf-card-h">
+      ${c.icon ? `<span class="stf-card-ic"><i class="fas ${c.icon}"></i></span>` : ''}
+      <span class="stf-card-t">${escapeHTML(c.title)}</span>
+      ${c.meta ? `<span class="stf-card-m">${c.meta}</span>` : ''}
+    </div>` : '';
+  return `<section class="stf-card${c.cls ? ' ' + c.cls : ''}"${c.style ? ` style="${c.style}"` : ''}>
+    ${head}<div class="stf-card-b${c.pad === false ? ' is-flush' : ''}">${c.body || ''}</div>
+  </section>`;
+}
+
+function _stfSecLabel(t) { return `<div class="stf-seclab">${escapeHTML(t)}<span class="stf-seclab-ln"></span></div>`; }
+
+// Stat tile. `tone` tints only the value + dot, never the surface.
+function _stfTile(o) {
+  return `<div class="stf-tile${o.onclick ? ' is-click' : ''}${o.tone ? ' stf-tile--' + o.tone : ''}"${o.onclick ? ` onclick="${o.onclick}" role="button" tabindex="0"` : ''}>
+    <div class="stf-tile-l">${o.iconHTML || `<i class="fas ${o.icon || 'fa-circle'}"></i>`}${escapeHTML(o.label)}</div>
+    <div class="stf-tile-v">${o.value}</div>
+    <div class="stf-tile-d">${escapeHTML(o.sub || '')}</div>
+  </div>`;
+}
+
+function _stfPill(text, tone) { return `<span class="stf-pill${tone ? ' stf-pill--' + tone : ''}">${escapeHTML(text)}</span>`; }
+
+function _stfBtn(label, onclick, o) {
+  const c = o || {};
+  return `<button class="fs-btn${c.primary ? ' fs-btn--primary' : ''}${c.danger ? ' stf-btn--danger' : ''}${c.good ? ' stf-btn--good' : ''}${c.sm ? ' stf-btn--sm' : ''}" onclick="${onclick}"${c.disabled ? ' disabled' : ''}>${c.icon ? `<i class="fas ${c.icon}"></i>` : ''}${escapeHTML(label)}</button>`;
+}
+
+// The console's search field — the app's .settings-input with an inline glyph.
+function _stfSearch(id, placeholder, oninput) {
+  return `<label class="stf-find">
+    <i class="fas fa-magnifying-glass"></i>
+    <input id="${id}" class="settings-input stf-find-in" type="text" placeholder="${escapeHTML(placeholder)}" oninput="${oninput}" autocomplete="off" spellcheck="false">
+  </label>`;
+}
+
+function _stfUserCell(u, sub) {
+  const name = u.display_name || u.displayName || u.username;
+  return `<span class="stf-uc">
+    <span class="stf-uc-av">${buildAvatarHTML(u.pfp, name, 34, u.pfpCrop)}</span>
+    <span class="stf-uc-tx">
+      <span class="stf-uc-n">${escapeHTML(name)}</span>
+      <span class="stf-uc-h">${escapeHTML(sub != null ? sub : '@' + (u.username || '?'))}</span>
+    </span>
+  </span>`;
+}
+
+// ── Small action card ──────────────────────────────────────────────
+// Small card ⇒ the .ftz-close-btn.ftz-ac-x close button, per the app-wide
+// convention. Fields: text | number | textarea | select | date | duration.
+function _stfAsk(o) {
+  return new Promise(resolve => {
+    document.getElementById('stf-ask')?.remove();
+    const opt = o || {};
+    const fields = opt.fields || [];
+    const fieldHTML = fields.map(f => {
+      const fid = 'stfq-' + f.id;
+      const lbl = f.label ? `<span class="stf-fl">${escapeHTML(f.label)}</span>` : '';
+      const hint = f.hint ? `<span class="stf-fh">${escapeHTML(f.hint)}</span>` : '';
+      let ctl;
+      if (f.type === 'textarea') {
+        ctl = `${Array.isArray(f.presets) && f.presets.length ? `<span class="stf-presets">${f.presets.map(p => `<button type="button" class="stf-preset" onclick="document.getElementById('${fid}').value=this.textContent;document.getElementById('${fid}').focus();">${escapeHTML(p)}</button>`).join('')}</span>` : ''}
+          <textarea id="${fid}" class="settings-input stf-ta" rows="${f.rows || 3}" placeholder="${escapeHTML(f.placeholder || '')}">${escapeHTML(f.value || '')}</textarea>`;
+      } else if (f.type === 'select') {
+        ctl = `<select id="${fid}" class="settings-input stf-sel">${(f.options || []).map(op => `<option value="${escapeHTML(op.value)}"${String(op.value) === String(f.value) ? ' selected' : ''}>${escapeHTML(op.label)}</option>`).join('')}</select>`;
+      } else if (f.type === 'duration') {
+        ctl = `<span class="stf-frow">
+          <input id="${fid}-amt" class="settings-input" type="number" min="1" value="${f.amount || 1}">
+          <select id="${fid}-unit" class="settings-input stf-sel">${['minutes', 'hours', 'days', 'weeks', 'months'].map(u => `<option value="${u}"${u === (f.unit || 'hours') ? ' selected' : ''}>${u[0].toUpperCase() + u.slice(1)}</option>`).join('')}</select>
+        </span>`;
+      } else {
+        ctl = `<span class="stf-frow">
+          <input id="${fid}" class="settings-input" type="${f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text'}"${f.min != null ? ` min="${f.min}"` : ''} placeholder="${escapeHTML(f.placeholder || '')}" value="${escapeHTML(String(f.value == null ? '' : f.value))}">
+          ${Array.isArray(f.presets) && f.presets.length ? `<span class="stf-presets">${f.presets.map(p => `<button type="button" class="stf-preset" onclick="document.getElementById('${fid}').value='${p}'">${escapeHTML(String(p))}</button>`).join('')}</span>` : ''}
+        </span>`;
+      }
+      return `<label class="stf-field">${lbl}${ctl}${hint}</label>`;
+    }).join('');
+
+    const ov = document.createElement('div');
+    ov.className = 'ftz-confirm-overlay';
+    ov.id = 'stf-ask';
+    ov.innerHTML = `
+      <div class="ftz-confirm-card ftz-ac-card stf-ask" role="dialog" aria-label="${escapeHTML(opt.title || 'Action')}">
+        <button class="ftz-close-btn ftz-ac-x" aria-label="Close" data-act="cancel">&times;</button>
+        <div class="stf-ask-h">
+          <span class="stf-ask-ic${opt.danger ? ' is-danger' : ''}">${opt.iconHTML || `<i class="fas ${opt.icon || 'fa-bolt'}"></i>`}</span>
+          <span class="stf-ask-tx">
+            <span class="stf-ask-t">${escapeHTML(opt.title || 'Action')}</span>
+            ${opt.subtitle ? `<span class="stf-ask-s">${escapeHTML(opt.subtitle)}</span>` : ''}
+          </span>
+        </div>
+        ${fieldHTML ? `<div class="stf-ask-b">${fieldHTML}</div>` : ''}
+        ${opt.note ? `<div class="stf-ask-note"><i class="fas fa-circle-info"></i>${escapeHTML(opt.note)}</div>` : ''}
+        <div class="ftz-modal-foot stf-ask-f">
+          <button class="fs-btn" data-act="cancel">Cancel</button>
+          <button class="fs-btn ${opt.danger ? 'stf-btn--danger' : 'fs-btn--primary'}" data-act="ok">${escapeHTML(opt.confirmLabel || 'Confirm')}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+
+    const gather = () => {
+      const v = {};
+      fields.forEach(f => {
+        const fid = 'stfq-' + f.id;
+        if (f.type === 'duration') v[f.id] = { amount: parseInt(document.getElementById(fid + '-amt')?.value) || 0, unit: document.getElementById(fid + '-unit')?.value };
+        else v[f.id] = (document.getElementById(fid)?.value || '').trim();
+      });
+      return v;
+    };
+    const done = val => { ov.remove(); document.removeEventListener('keydown', esc, true); resolve(val); };
+    const esc = e => { if (e.key === 'Escape') { e.stopPropagation(); done(null); } };
+    document.addEventListener('keydown', esc, true);
+    ov.onclick = e => { if (e.target === ov) done(null); };
+    ov.querySelectorAll('[data-act="cancel"]').forEach(b => b.onclick = () => done(null));
+    ov.querySelector('[data-act="ok"]').onclick = () => done(gather());
+    setTimeout(() => ov.querySelector('textarea,input,select')?.focus(), 60);
+  });
+}
+
+// ── Subject dossier drawer ─────────────────────────────────────────
+function _stfDrawerClose() {
+  const d = document.getElementById('stf-drawer');
+  if (!d) return;
+  d.classList.remove('open');
+  setTimeout(() => d.remove(), 240);
+}
+
+async function _stfDossier(username) {
+  if (!username) return;
+  document.getElementById('stf-drawer')?.remove();
+  const d = document.createElement('div');
+  d.id = 'stf-drawer';
+  d.className = 'stf-drawer';
+  d.dataset.user = username;   // so _stfRefresh can repaint it after an action
+  d.innerHTML = `
+    <div class="stf-drawer-scrim" onclick="_stfDrawerClose()"></div>
+    <div class="stf-drawer-panel" role="dialog" aria-label="Subject dossier">
+      <div class="stf-drawer-head">
+        <span class="stf-drawer-t"><i class="fas fa-id-badge"></i> Subject dossier</span>
+        <button class="ftz-close-btn ftz-ac-x stf-drawer-x" aria-label="Close" onclick="_stfDrawerClose()">&times;</button>
+      </div>
+      <div class="stf-drawer-body" id="stf-drawer-body">${_stfLoadingHTML(3)}</div>
+    </div>`;
+  document.body.appendChild(d);
+  requestAnimationFrame(() => d.classList.add('open'));
+  const esc = e => { if (e.key === 'Escape' && document.getElementById('stf-drawer')) { _stfDrawerClose(); document.removeEventListener('keydown', esc, true); } };
+  document.addEventListener('keydown', esc, true);
+
+  const body = d.querySelector('#stf-drawer-body');
+  let u = null;
+  try { u = await FortizedSocial.getUserByName(username, { noCache: true }); } catch (_) {}
+  if (!document.getElementById('stf-drawer')) return;
+  if (!u) { body.innerHTML = _ftzNotFound('No such account', 'Nothing on the roll by that name.'); return; }
+  body.innerHTML = _stfDossierHTML(u);
+}
+
+function _stfDossierHTML(u) {
+  const name = u.display_name || u.displayName || u.username;
+  const bans = _stfLocal('ftz_bans', []);
+  const banInfo = bans.find(b => (b.username || '').toLowerCase() === (u.username || '').toLowerCase());
+  const susp = u.suspension && new Date(u.suspension.until) > new Date() ? u.suspension : null;
+  const radUntil = u.radianceUntil || u.radiance_until;
+  const radActive = radUntil && (typeof radUntil === 'number' ? radUntil : new Date(radUntil).getTime()) > Date.now();
+  const warnings = Array.isArray(u.warnings) ? u.warnings : [];
+  const role = getStaffRole(u.username);
+  const me = (u.username || '').toLowerCase() === (CU.username || '').toLowerCase();
+
+  const flags = [
+    banInfo ? _stfPill('Banned', 'danger') : '',
+    susp ? _stfPill('Suspended', 'warn') : '',
+    u.verified ? _stfPill('Verified', 'info') : '',
+    radActive ? _stfPill('Radiance', 'gold') : '',
+    role && role !== 'user' ? _stfPill(role, 'info') : '',
+    warnings.length ? _stfPill(warnings.length + ' warning' + (warnings.length === 1 ? '' : 's'), 'warn') : '',
+  ].filter(Boolean).join('');
+
+  const facts = [
+    ['Username', '@' + (u.username || '?')],
+    ['Joined', u.createdAt || u.created_at ? _fmtDateEU(u.createdAt || u.created_at) : 'Unknown'],
+    ['Status', u.status || 'offline'],
+    ['Onyx', _ftzFullNum(Number(u.onyx) || 0)],
+    ['Country', u.countryCode || u.country_code || '—'],
+    ['Email', u.email || '—'],
+  ].map(([k, v]) => `<div class="stf-fact"><span class="stf-fact-k">${escapeHTML(k)}</span><span class="stf-fact-v">${escapeHTML(String(v))}</span></div>`).join('');
+
+  const un = escapeHTML(u.username || '');
+  const acts = me ? '<div class="stf-dr-note">This is your own account.</div>' : `<div class="stf-acts">
+      ${_stfBtn('Warn', `_stfActWarn('${un}')`, { icon: 'fa-triangle-exclamation', sm: true })}
+      ${susp ? _stfBtn('Lift suspension', `_stfActUnsuspend('${un}')`, { icon: 'fa-unlock', good: true, sm: true })
+             : _stfBtn('Suspend', `_stfActSuspend('${un}')`, { icon: 'fa-hourglass-half', sm: true })}
+      ${banInfo ? _stfBtn('Unban', `_stfActUnban('${un}')`, { icon: 'fa-unlock', good: true, sm: true })
+                : _stfBtn('Ban', `_stfActBan('${un}')`, { icon: 'fa-gavel', danger: true, sm: true })}
+      ${_stfBtn('Grant Onyx', `_stfActOnyx('${un}')`, { icon: 'fa-plus', sm: true })}
+      ${_stfBtn('Grant Radiance', `_stfActRadiance('${un}')`, { icon: 'fa-star', sm: true })}
+      ${_stfBtn('Force logout', `_stfActLogout('${un}')`, { icon: 'fa-right-from-bracket', sm: true })}
+    </div>`;
+
+  const history = warnings.length ? warnings.slice(-6).reverse().map(w => `
+    <div class="stf-hist">
+      <span class="stf-hist-ic stf-tone-warn"><i class="fas fa-triangle-exclamation"></i></span>
+      <span class="stf-hist-tx">
+        <span class="stf-hist-t">${escapeHTML(w.reason || 'Warning')}</span>
+        <span class="stf-hist-m">${escapeHTML(w.issuedBy || 'staff')} · ${w.issuedAt ? formatTimeAgo(w.issuedAt) : ''}</span>
+      </span>
+    </div>`).join('') : _ftzNotFound('Clean record', 'No warnings on file.', { compact: true });
+
+  return `
+    <div class="stf-dr-hero">
+      <span class="stf-dr-av">${buildAvatarHTML(u.pfp, name, 66, u.pfpCrop)}</span>
+      <span class="stf-dr-tx">
+        <span class="stf-dr-n">${escapeHTML(name)}</span>
+        <span class="stf-dr-h">@${escapeHTML(u.username || '?')}</span>
+        ${flags ? `<span class="stf-dr-flags">${flags}</span>` : ''}
+      </span>
+    </div>
+    ${banInfo ? `<div class="stf-alert stf-alert--danger"><i class="fas fa-gavel"></i><span><b>Banned</b> by ${escapeHTML(banInfo.bannedBy || 'staff')} · ${escapeHTML(banInfo.reason || 'no reason recorded')}</span></div>` : ''}
+    ${susp ? `<div class="stf-alert stf-alert--warn"><i class="fas fa-hourglass-half"></i><span><b>Suspended</b> until ${escapeHTML(_fmtDateEU(susp.until))} · ${escapeHTML(susp.reason || 'no reason recorded')}</span></div>` : ''}
+    ${_stfCard({ title: 'Record', icon: 'fa-list', body: `<div class="stf-facts">${facts}</div>` })}
+    ${_stfCard({ title: 'Actions', icon: 'fa-bolt', body: acts })}
+    ${_stfCard({ title: 'History', icon: 'fa-clock-rotate-left', body: history })}`;
+}
+
+// ── Local caches the console reads (written by _syncAdminData) ─────
+function _stfLocal(key, fallback) {
+  try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v == null ? fallback : v; }
+  catch (_) { return fallback; }
+}
+
+// ── Moderation actions ─────────────────────────────────────────────
+// Each one is: confirm through _stfAsk → mutate → record the violation →
+// notify the member → audit → refresh whatever is on screen.
+const _STF_REASONS = ['Harassment or bullying', 'Hate speech or slurs', 'Threats or violence', 'Encouraging self-harm', 'Sexual harassment', 'Doxxing / sharing private info', 'Spam or scams', 'NSFW or inappropriate content', 'Impersonation', 'Ban evasion', 'Violating the Terms of Use'];
+
+function _stfRefresh() {
+  _stfGo(_stfPage, true);
+  const d = document.getElementById('stf-drawer');
+  const un = d?.dataset?.user;
+  if (un) _stfDossier(un);
+}
+
+async function _stfActBan(username) {
+  const v = await _stfAsk({
+    icon: 'fa-gavel', danger: true, title: 'Ban ' + username,
+    subtitle: 'Locks this account out of Fortized.',
+    fields: [{ id: 'reason', type: 'textarea', label: 'Reason', placeholder: 'Why is this account being banned?', presets: _STF_REASONS }],
+    confirmLabel: 'Ban account', note: 'Recorded in the audit log and shown to the member.',
+  });
+  if (!v) return;
+  if (!v.reason) { toast('A reason is required', 'error'); return; }
+  const bans = _stfLocal('ftz_bans', []);
+  const rec = { username, reason: v.reason, bannedBy: CU.username, bannedAt: new Date().toISOString() };
+  bans.push(rec);
+  try { localStorage.setItem('ftz_bans', JSON.stringify(bans)); } catch (_) {}
+  await FortizedSocial.adminSaveBan(rec).catch(() => {});
+  await _ftzStaffRecordViolation(username, { type: 'ban', reason: v.reason }).catch(() => {});
+  FortizedSocial.addNotification(username, { type: 'system', text: 'Your account has been banned. Reason: ' + v.reason }).catch(() => {});
+  logAudit('ban', username, v.reason);
+  toast(username + ' has been banned', 'success');
+  _stfRefresh();
+}
+
+async function _stfActUnban(username) {
+  const v = await _stfAsk({
+    icon: 'fa-unlock', title: 'Lift the ban on ' + username,
+    subtitle: 'The account can sign in again immediately.',
+    fields: [{ id: 'reason', type: 'text', label: 'Note (optional)', placeholder: 'Why is this being lifted?' }],
+    confirmLabel: 'Lift ban',
+  });
+  if (!v) return;
+  const bans = _stfLocal('ftz_bans', []).filter(b => (b.username || '').toLowerCase() !== username.toLowerCase());
+  try { localStorage.setItem('ftz_bans', JSON.stringify(bans)); } catch (_) {}
+  await FortizedSocial.adminRemoveBan(username).catch(() => {});
+  FortizedSocial.addNotification(username, { type: 'system', text: 'Your account ban has been lifted. Welcome back.' }).catch(() => {});
+  logAudit('unban', username, v.reason || 'Lifted by ' + CU.username);
+  toast(username + ' has been unbanned', 'success');
+  _stfRefresh();
+}
+
+async function _stfActWarn(username) {
+  const v = await _stfAsk({
+    icon: 'fa-triangle-exclamation', title: 'Warn ' + username,
+    subtitle: 'A formal warning the member has to acknowledge.',
+    fields: [{ id: 'reason', type: 'textarea', label: 'Warning message', placeholder: 'What is the member being warned for?', presets: _STF_REASONS }],
+    confirmLabel: 'Issue warning',
+  });
+  if (!v) return;
+  if (!v.reason) { toast('A reason is required', 'error'); return; }
+  await FortizedSocial.adminWarnUser(username, { reason: v.reason, issuedBy: CU.username, issuedAt: new Date().toISOString() }).catch(() => {});
+  await _ftzStaffRecordViolation(username, { type: 'warning', reason: v.reason }).catch(() => {});
+  FortizedSocial.addNotification(username, { type: 'system', text: 'Staff warning: ' + v.reason }).catch(() => {});
+  logAudit('warn', username, v.reason);
+  toast('Warning issued to ' + username, 'success');
+  _stfRefresh();
+}
+
+const _STF_UNIT_MS = { minutes: 60000, hours: 3600000, days: 86400000, weeks: 604800000, months: 2592000000 };
+
+async function _stfActSuspend(username) {
+  const v = await _stfAsk({
+    icon: 'fa-hourglass-half', title: 'Suspend ' + username,
+    subtitle: 'A time-out. The account unlocks by itself when it expires.',
+    fields: [
+      { id: 'dur', type: 'duration', label: 'Length', amount: 24, unit: 'hours' },
+      { id: 'reason', type: 'textarea', label: 'Reason', placeholder: 'Why is this account being suspended?', presets: _STF_REASONS },
+    ],
+    confirmLabel: 'Suspend account',
+  });
+  if (!v) return;
+  if (!v.reason) { toast('A reason is required', 'error'); return; }
+  const ms = (v.dur.amount || 0) * (_STF_UNIT_MS[v.dur.unit] || 3600000);
+  if (ms <= 0) { toast('Pick a length', 'error'); return; }
+  const until = new Date(Date.now() + ms).toISOString();
+  const obj = { reason: v.reason, until, duration: v.dur.amount + ' ' + v.dur.unit, suspendedBy: CU.username, suspendedAt: new Date().toISOString() };
+  await FortizedSocial.adminSuspendUser(username, obj).catch(() => {});
+  await _ftzStaffRecordViolation(username, { type: 'suspension', reason: v.reason, until }).catch(() => {});
+  FortizedSocial.addNotification(username, { type: 'system', text: 'Your account has been suspended until ' + _fmtDateEU(until) + '. Reason: ' + v.reason }).catch(() => {});
+  logAudit('suspend', username, v.reason + ' (' + obj.duration + ')');
+  toast(username + ' suspended for ' + obj.duration, 'success');
+  _stfRefresh();
+}
+
+async function _stfActUnsuspend(username) {
+  await FortizedSocial.adminUnsuspendUser(username).catch(() => {});
+  FortizedSocial.addNotification(username, { type: 'system', text: 'Your suspension has been lifted.' }).catch(() => {});
+  logAudit('unsuspend', username, 'Lifted by ' + CU.username);
+  toast(username + "'s suspension lifted", 'success');
+  _stfRefresh();
+}
+
+async function _stfActLogout(username) {
+  const v = await _stfAsk({
+    icon: 'fa-right-from-bracket', title: 'Force logout', subtitle: 'Ends every active session for @' + username + '.',
+    confirmLabel: 'Sign them out',
+  });
+  if (!v) return;
+  await FortizedSocial.adminForceLogout(username).catch(() => {});
+  logAudit('force_logout', username, 'By ' + CU.username);
+  toast('Sessions ended for ' + username, 'success');
+}
+
+async function _stfActOnyx(username) {
+  const v = await _stfAsk({
+    icon: 'fa-plus', title: 'Grant Onyx to ' + username,
+    subtitle: 'Adds to their balance right away. Use a negative number to claw back.',
+    fields: [
+      { id: 'amount', type: 'number', label: 'Amount', placeholder: '100', presets: [50, 100, 250, 500] },
+      { id: 'reason', type: 'text', label: 'Reason', placeholder: 'Why?' },
+    ],
+    confirmLabel: 'Grant Onyx',
+  });
+  if (!v) return;
+  const amt = parseInt(v.amount, 10);
+  if (!amt) { toast('Enter an amount', 'error'); return; }
+  try {
+    const u = await FortizedSocial.getUserByName(username, { noCache: true });
+    if (!u) { toast('No such account', 'error'); return; }
+    const next = Math.max(0, (Number(u.onyx) || 0) + amt);
+    await FortizedSocial.adminUpdateUserField(username, 'onyx', next);
+    FortizedSocial.addNotification(username, { type: 'system', text: (amt > 0 ? 'Staff granted you ' + amt + ' Onyx.' : 'Staff adjusted your Onyx by ' + amt + '.') + (v.reason ? ' (' + v.reason + ')' : '') }).catch(() => {});
+    logAudit(amt > 0 ? 'give_onyx' : 'clawback_onyx', username, amt + ' Onyx · ' + (v.reason || 'no reason'));
+    toast((amt > 0 ? 'Granted ' : 'Removed ') + Math.abs(amt) + ' Onyx', 'success');
+    _stfRefresh();
+  } catch (e) { toast('That did not go through', 'error'); }
+}
+
+async function _stfActRadiance(username) {
+  const v = await _stfAsk({
+    icon: 'fa-star', title: 'Grant Radiance to ' + username,
+    subtitle: 'Days stack on top of any time they already have.',
+    fields: [{ id: 'days', type: 'number', label: 'Days', placeholder: '7', presets: [7, 14, 30, 90] }],
+    confirmLabel: 'Grant Radiance',
+  });
+  if (!v) return;
+  const days = parseInt(v.days, 10);
+  if (!days || days < 1) { toast('Enter a number of days', 'error'); return; }
+  try {
+    const u = await FortizedSocial.getUserByName(username, { noCache: true });
+    if (!u) { toast('No such account', 'error'); return; }
+    const cur = u.radianceUntil || u.radiance_until;
+    const base = cur && new Date(cur).getTime() > Date.now() ? new Date(cur).getTime() : Date.now();
+    const until = new Date(base + days * 86400000).toISOString();
+    await FortizedSocial.adminUpdateUserField(username, 'radianceUntil', until);
+    FortizedSocial.addNotification(username, { type: 'system', text: 'Staff granted you ' + days + ' days of Radiance.' }).catch(() => {});
+    logAudit('grant_radiance', username, days + ' days');
+    toast('Granted ' + days + ' days of Radiance', 'success');
+    _stfRefresh();
+  } catch (e) { toast('That did not go through', 'error'); }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — Command Center
+// ════════════════════════════════════════════════════════════════════
+_STF_RENDER.overview = async function (host, seq) {
+  const [reports, bans, staff, stats, nsfw, audit, tickets] = await Promise.all([
+    FortizedSocial.adminGetReports().catch(() => []),
+    FortizedSocial.adminGetBans().catch(() => []),
+    FortizedSocial.adminGetStaff().catch(() => ({ admins: [], moderators: [] })),
+    FortizedSocial.adminGetDashboardStats().catch(() => null),
+    FortizedSocial.adminGetNsfwQueue().catch(() => []),
+    FortizedSocial.adminGetAuditLog().catch(() => []),
+    FortizedSocial.adminGetSupportTickets().catch(() => ({})),
+  ]);
+  if (seq !== _stfSeq) return;
+
+  const open = reports.filter(r => !['resolved', 'dismissed', 'warned'].includes(r.status));
+  const openTickets = Object.values(tickets || {}).filter(t => t && t.status === 'open');
+  const s = stats || {};
+  const active = (s.onlineCount || 0) + (s.awayCount || 0) + (s.dndCount || 0);
+  const totalStaff = (SUPER_ADMINS || []).length + (staff.admins || []).length + (staff.moderators || []).length;
+
+  // Nav attention pills — set here so the badge is live wherever you navigate.
+  _stfCounts.reports = open.length;
+  _stfCounts.content = nsfw.length;
+  _stfCounts.feedback = openTickets.length;
+  _stfRenderNav();
+
+  const load = open.length * 3 + nsfw.length * 2 + openTickets.length;
+  const state = load > 20 ? { t: 'Heavy', tone: 'danger', d: 'The queues need people on them.' }
+    : load > 8 ? { t: 'Busy', tone: 'warn', d: 'A steady stream of work is waiting.' }
+      : load > 0 ? { t: 'Steady', tone: 'info', d: 'A handful of things to clear.' }
+        : { t: 'Clear', tone: 'good', d: 'Nothing is waiting on staff.' };
+
+  const oldest = open.reduce((m, r) => (r.createdAt && (m === null || r.createdAt < m)) ? r.createdAt : m, null);
+
+  _stfHeadAct(`<span class="stf-state stf-state--${state.tone}"><span class="stf-state-dot"></span>${state.t}</span>
+    ${_stfBtn('Refresh', "_syncAdminData().then(()=>{toast('Synced','success');_stfGo('overview');})", { icon: 'fa-rotate', sm: true })}`);
+
+  const queue = [
+    { id: 'reports', icon: 'fa-flag', tone: 'danger', n: open.length, label: 'Reports pending', sub: oldest ? 'oldest waiting ' + formatTimeAgo(oldest).replace(' ago', '') : 'nothing waiting' },
+    { id: 'content', icon: 'fa-image', tone: 'warn', n: nsfw.length, label: 'Media to review', sub: nsfw.length ? 'awaiting your call' : 'all reviewed' },
+    { id: 'feedback', icon: 'fa-comment-dots', tone: 'info', n: openTickets.length, label: 'Open tickets', sub: openTickets.length ? 'need a reply' : 'inbox zero' },
+  ].map(q => `<button class="stf-q stf-q--${q.tone}" onclick="_stfGo('${q.id}')">
+      <span class="stf-q-ic"><i class="fas ${q.icon}"></i></span>
+      <span class="stf-q-n">${q.n}</span>
+      <span class="stf-q-l">${q.label}</span>
+      <span class="stf-q-s">${escapeHTML(q.sub)}</span>
+      <span class="stf-q-go">Open <i class="fas fa-arrow-right"></i></span>
+    </button>`).join('');
+
+  const feed = audit.slice(0, 10).map(e => {
+    const a = e.action || '';
+    const tone = /ban|takedown|clawback/.test(a) ? 'danger' : /warn|suspend/.test(a) ? 'warn' : /give|grant|code/.test(a) ? 'gold' : 'info';
+    const ic = /ban/.test(a) ? 'fa-gavel' : /warn|suspend/.test(a) ? 'fa-triangle-exclamation' : /give|grant/.test(a) ? 'fa-gift' : /report/.test(a) ? 'fa-flag' : 'fa-bolt';
+    return `<div class="stf-ev">
+      <span class="stf-ev-ic stf-tone-${tone}"><i class="fas ${ic}"></i></span>
+      <span class="stf-ev-tx">
+        <span class="stf-ev-t"><b>${escapeHTML(a)}</b> on <b>${escapeHTML(e.target || '?')}</b></span>
+        <span class="stf-ev-m">${escapeHTML(e.by || '?')} · ${e.at ? formatTimeAgo(e.at) : ''}</span>
+      </span>
+    </div>`;
+  }).join('') || _ftzNotFound('Nothing has happened yet', 'Staff actions land here the moment they are taken.', { compact: true });
+
+  const arrivals = (s.newestUsers || []).slice(0, 5).map(u => `<button class="stf-ev is-click" onclick="_stfDossier('${escapeHTML(u.username)}')">
+      <span class="stf-ev-av">${buildAvatarHTML(u.pfp, u.display_name || u.username, 30)}</span>
+      <span class="stf-ev-tx">
+        <span class="stf-ev-t">${escapeHTML(u.display_name || u.username)}</span>
+        <span class="stf-ev-m">@${escapeHTML(u.username)} · ${u.createdAt ? formatTimeAgo(u.createdAt) : ''}</span>
+      </span>
+    </button>`).join('') || _ftzNotFound('No arrivals', 'Nobody has signed up recently.', { compact: true });
+
+  host.innerHTML = `<div class="stf-wrap">
+    <div class="stf-hello">
+      <div class="stf-hello-tx">
+        <div class="stf-hello-t">${escapeHTML(_stfGreeting())}, ${escapeHTML(CU.displayName || CU.username)}.</div>
+        <div class="stf-hello-s">${escapeHTML(state.d)}</div>
+      </div>
+      <div class="stf-hello-time">${new Date().toLocaleString()}</div>
+    </div>
+
+    ${_stfSecLabel('Needs attention')}
+    <div class="stf-qrow">${queue}</div>
+
+    ${_stfSecLabel('Platform pulse')}
+    <div class="stf-tiles">
+      ${_stfTile({ icon: 'fa-signal', label: 'Active now', value: active.toLocaleString(), sub: `${s.onlineCount || 0} online · ${s.awayCount || 0} idle · ${s.dndCount || 0} dnd`, tone: 'good' })}
+      ${_stfTile({ icon: 'fa-users', label: 'Members', value: (s.totalUsers || 0).toLocaleString(), sub: 'total accounts', onclick: "_stfGo('users')" })}
+      ${_stfTile({ iconHTML: '<span class="stf-rad-ic"></span>', label: 'Radiance', value: (s.radianceCount || 0).toLocaleString(), sub: 'active subscribers', tone: 'gold' })}
+      ${_stfTile({ icon: 'fa-user-shield', label: 'Staff', value: totalStaff, sub: `${bans.length} ban${bans.length === 1 ? '' : 's'} on record`, onclick: "_stfGo('staff')" })}
+    </div>
+
+    ${_stfSecLabel('Now')}
+    <div class="stf-cols">
+      ${_stfCard({ title: 'Live activity', icon: 'fa-bolt', meta: '<span class="stf-live"><span class="stf-live-dot"></span>Live</span>', body: `<div class="stf-list">${feed}</div>`, pad: false })}
+      <div class="stf-colstack">
+        ${_stfCard({ title: 'Jump to', icon: 'fa-compass', body: `<div class="stf-jumps">
+          <button class="stf-jmp" onclick="_stfPalette()"><i class="fas fa-magnifying-glass"></i><span><b>Look up a member</b><i>Inspect · warn · suspend · ban</i></span><i class="fas fa-chevron-right"></i></button>
+          <button class="stf-jmp" onclick="_stfGo('codes')"><i class="fas fa-ticket"></i><span><b>Onyx codes</b><i>Create, edit or revoke a code</i></span><i class="fas fa-chevron-right"></i></button>
+          <button class="stf-jmp" onclick="_stfGo('monitor')"><i class="fas fa-earth-europe"></i><span><b>Global Monitor</b><i>Where Fortized is being used</i></span><i class="fas fa-chevron-right"></i></button>
+        </div>` })}
+        ${_stfCard({ title: 'New arrivals', icon: 'fa-user-plus', body: `<div class="stf-list">${arrivals}</div>`, pad: false })}
+      </div>
+    </div>
+  </div>`;
+};
+
+function _stfGreeting() {
+  const h = new Date().getHours();
+  return h < 6 ? 'Late shift' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — Global Monitor (the world map is kept as-is)
+// ════════════════════════════════════════════════════════════════════
+_STF_RENDER.monitor = async function (host, seq) {
+  host.innerHTML = `<div class="stf-wrap stf-wrap--flush">
+    ${_stfCard({ title: 'Where Fortized is being used', icon: 'fa-earth-europe', meta: '<span class="stf-live"><span class="stf-live-dot"></span>Live</span>', body: '<div class="stf-map" id="stf-map"></div>', pad: false })}
+    <div class="stf-tiles" id="stf-map-tiles"></div>
+  </div>`;
+  try { await _staffOpsRefresh(); } catch (_) {}
+  if (seq !== _stfSeq) return;
+  const mount = document.getElementById('stf-map');
+  if (mount) { try { await renderStaffWorldMap(mount, _scCountryCounts); } catch (e) { console.warn('[Staff] map failed', e); } }
+  if (seq !== _stfSeq) return;
+
+  const counts = _scCountryCounts || {};
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const tiles = document.getElementById('stf-map-tiles');
+  if (tiles) tiles.innerHTML = [
+    _stfTile({ icon: 'fa-globe', label: 'Countries', value: Object.keys(counts).length, sub: 'with at least one member' }),
+    _stfTile({ icon: 'fa-users', label: 'Placed members', value: total.toLocaleString(), sub: 'accounts with a country set' }),
+    ...top.map((c, i) => _stfTile({ icon: 'fa-location-dot', label: '#' + (i + 1) + ' ' + c[0], value: c[1].toLocaleString(), sub: total ? ((c[1] / total) * 100).toFixed(1) + '% of placed' : '' })),
+  ].join('');
+  // The map's own poll keeps counts warm while this page is open.
+  _stfTimer = setInterval(() => { _staffOpsRefresh().catch(() => {}); }, 15000);
+};
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — Users
+// ════════════════════════════════════════════════════════════════════
+let _stfUsers = [];
+_STF_RENDER.users = async function (host, seq) {
+  const [users, bans] = await Promise.all([
+    FortizedSocial.getUsers().catch(() => []),
+    FortizedSocial.adminGetBans().catch(() => []),
+  ]);
+  if (seq !== _stfSeq) return;
+  const banned = new Set(bans.map(b => (b.username || '').toLowerCase()));
+  _stfUsers = (users || []).map(u => ({ ...u, _banned: banned.has((u.username || '').toLowerCase()) }));
+  _stfUsers.sort((a, b) => new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0));
+
+  _stfHeadAct(`<span class="stf-count">${_stfUsers.length.toLocaleString()} accounts</span>`);
+  host.innerHTML = `<div class="stf-wrap">
+    <div class="stf-toolbar">
+      ${_stfSearch('stf-user-q', 'Search by name or @username…', '_stfUserFilter(this.value)')}
+      <div class="stf-segs" id="stf-user-segs">
+        ${['all', 'online', 'radiance', 'banned', 'staff'].map((f, i) => `<button class="stf-seg${i === 0 ? ' active' : ''}" data-f="${f}" onclick="_stfUserSeg('${f}')">${f[0].toUpperCase() + f.slice(1)}</button>`).join('')}
+      </div>
+    </div>
+    <div id="stf-user-list"></div>
+  </div>`;
+  _stfUserRender();
+};
+
+let _stfUserQ = '', _stfUserF = 'all';
+function _stfUserFilter(q) { _stfUserQ = (q || '').toLowerCase().trim(); _stfUserRender(); }
+function _stfUserSeg(f) {
+  _stfUserF = f;
+  document.querySelectorAll('#stf-user-segs .stf-seg').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+  _stfUserRender();
+}
+function _stfUserRender() {
+  const el = document.getElementById('stf-user-list'); if (!el) return;
+  let list = _stfUsers;
+  if (_stfUserF === 'online') list = list.filter(u => u.status && u.status !== 'offline');
+  else if (_stfUserF === 'radiance') list = list.filter(u => { const r = u.radianceUntil || u.radiance_until; return r && new Date(r).getTime() > Date.now(); });
+  else if (_stfUserF === 'banned') list = list.filter(u => u._banned);
+  else if (_stfUserF === 'staff') list = list.filter(u => { const r = getStaffRole(u.username); return r && r !== 'user'; });
+  if (_stfUserQ) list = list.filter(u => (u.username || '').toLowerCase().includes(_stfUserQ) || (u.display_name || u.displayName || '').toLowerCase().includes(_stfUserQ));
+
+  if (!list.length) { el.innerHTML = _ftzNotFound(_stfUserQ ? 'No account by that name' : 'Nobody here', _stfUserQ ? '' : 'This filter has no members in it.'); return; }
+  el.innerHTML = `<div class="stf-rows">${list.slice(0, 200).map((u, i) => {
+    const role = getStaffRole(u.username);
+    const rad = u.radianceUntil || u.radiance_until;
+    const radOn = rad && new Date(rad).getTime() > Date.now();
+    return `<div class="stf-row" style="--i:${Math.min(i, 16)};">
+      ${_stfUserCell(u)}
+      <span class="stf-row-flags">
+        ${u._banned ? _stfPill('Banned', 'danger') : ''}
+        ${u.suspension && new Date(u.suspension.until) > new Date() ? _stfPill('Suspended', 'warn') : ''}
+        ${role && role !== 'user' ? _stfPill(role, 'info') : ''}
+        ${radOn ? _stfPill('Radiance', 'gold') : ''}
+        ${u.verified ? _stfPill('Verified', 'info') : ''}
+      </span>
+      <span class="stf-row-meta">${escapeHTML(_ftzCompactNum(Number(u.onyx) || 0))} Onyx</span>
+      <span class="stf-row-act">${_stfBtn('Inspect', `_stfDossier('${escapeHTML(u.username)}')`, { sm: true, icon: 'fa-id-badge' })}</span>
+    </div>`;
+  }).join('')}</div>
+  ${list.length > 200 ? `<div class="stf-more">Showing the first 200 of ${list.length.toLocaleString()} — narrow the search to see the rest.</div>` : ''}`;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — Bastions
+// ════════════════════════════════════════════════════════════════════
+let _stfBastions = [];
+_STF_RENDER.bastions = async function (host, seq) {
+  const all = await FortizedSocial.getGlobalBastions().catch(() => ({}));
+  if (seq !== _stfSeq) return;
+  _stfBastions = Object.values(all || {}).filter(Boolean);
+  _stfBastions.sort((a, b) => (b.members?.length || 0) - (a.members?.length || 0));
+  _stfHeadAct(`<span class="stf-count">${_stfBastions.length.toLocaleString()} bastions</span>`);
+  host.innerHTML = `<div class="stf-wrap">
+    <div class="stf-toolbar">${_stfSearch('stf-b-q', 'Search bastions…', '_stfBastionFilter(this.value)')}</div>
+    <div id="stf-b-list"></div>
+  </div>`;
+  _stfBastionRender('');
+};
+function _stfBastionFilter(q) { _stfBastionRender(q); }
+function _stfBastionRender(q) {
+  const el = document.getElementById('stf-b-list'); if (!el) return;
+  const s = (q || '').toLowerCase().trim();
+  const list = s ? _stfBastions.filter(b => (b.name || '').toLowerCase().includes(s) || (b.owner || '').toLowerCase().includes(s)) : _stfBastions;
+  if (!list.length) { el.innerHTML = _ftzNotFound('No bastion by that name', ''); return; }
+  el.innerHTML = `<div class="stf-rows">${list.slice(0, 150).map((b, i) => `
+    <div class="stf-row" style="--i:${Math.min(i, 16)};">
+      <span class="stf-uc">
+        <span class="stf-uc-av stf-uc-av--sq">${b.icon ? `<img src="${escapeHTML(b.icon)}" alt="" onerror="this.remove()">` : `<span class="stf-uc-ini">${escapeHTML((b.name || '?')[0].toUpperCase())}</span>`}</span>
+        <span class="stf-uc-tx">
+          <span class="stf-uc-n">${escapeHTML(b.name || 'Untitled bastion')}</span>
+          <span class="stf-uc-h">owned by @${escapeHTML(b.owner || '?')}</span>
+        </span>
+      </span>
+      <span class="stf-row-flags">
+        ${b.verified ? _stfPill('Verified', 'info') : ''}
+        ${b.featured ? _stfPill('Featured', 'gold') : ''}
+        ${b.public ? _stfPill('Public') : _stfPill('Private')}
+      </span>
+      <span class="stf-row-meta">${(b.members?.length || 0).toLocaleString()} member${(b.members?.length || 0) === 1 ? '' : 's'}</span>
+      <span class="stf-row-act">${_stfBtn('Owner', `_stfDossier('${escapeHTML(b.owner || '')}')`, { sm: true, icon: 'fa-user' })}</span>
+    </div>`).join('')}</div>`;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — Reports
+// ════════════════════════════════════════════════════════════════════
+const _stfRepOpen = r => !['resolved', 'dismissed', 'warned'].includes(r.status);
+const _stfRepTarget = r => r.username || r.msgFrom || r.adOwner || null;
+
+let _stfReports = [], _stfRepF = 'open';
+_STF_RENDER.reports = async function (host, seq) {
+  const reps = await FortizedSocial.adminGetReports().catch(() => []);
+  if (seq !== _stfSeq) return;
+  _stfReports = (reps || []).slice().sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+  const open = _stfReports.filter(_stfRepOpen);
+  _stfCounts.reports = open.length; _stfRenderNav();
+  _stfHeadAct(`<span class="stf-count">${open.length} open · ${_stfReports.length - open.length} closed</span>`);
+  host.innerHTML = `<div class="stf-wrap">
+    <div class="stf-toolbar">
+      <div class="stf-segs" id="stf-rep-segs">
+        <button class="stf-seg active" data-f="open" onclick="_stfRepSeg('open')">Open</button>
+        <button class="stf-seg" data-f="closed" onclick="_stfRepSeg('closed')">Closed</button>
+        <button class="stf-seg" data-f="all" onclick="_stfRepSeg('all')">All</button>
+      </div>
+    </div>
+    <div id="stf-rep-list"></div>
+  </div>`;
+  _stfRepRender();
+};
+function _stfRepSeg(f) {
+  _stfRepF = f;
+  document.querySelectorAll('#stf-rep-segs .stf-seg').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+  _stfRepRender();
+}
+function _stfRepRender() {
+  const el = document.getElementById('stf-rep-list'); if (!el) return;
+  const list = _stfRepF === 'all' ? _stfReports : _stfReports.filter(r => _stfRepF === 'open' ? _stfRepOpen(r) : !_stfRepOpen(r));
+  if (!list.length) {
+    el.innerHTML = _ftzNotFound(_stfRepF === 'open' ? 'Queue is clear' : 'Nothing here', _stfRepF === 'open' ? 'No reports are waiting on staff right now.' : '');
+    return;
+  }
+  el.innerHTML = list.slice(0, 100).map((r, i) => {
+    const target = _stfRepTarget(r);
+    const isOpen = _stfRepOpen(r);
+    const kind = r.type === 'ad' ? 'Ad' : r.type === 'message' ? 'Message' : 'Account';
+    const body = (r.msgText || r.details || '').replace(/\[FTZ[A-Z]+:[^\]]*\]/g, '').trim();
+    const id = escapeHTML(String(r.id || ''));
+    return `<article class="stf-case" style="--i:${Math.min(i, 12)};">
+      <div class="stf-case-h">
+        ${_stfPill(kind, 'info')}
+        ${isOpen ? _stfPill('Open', 'warn') : _stfPill(r.status === 'dismissed' ? 'Dismissed' : 'Resolved', 'good')}
+        <span class="stf-case-when">${r.createdAt ? formatTimeAgo(r.createdAt) : ''}</span>
+      </div>
+      <div class="stf-case-b">
+        <div class="stf-case-line"><span class="stf-case-k">Reported</span><span class="stf-case-v">${target ? `<button class="stf-link" onclick="_stfDossier('${escapeHTML(target)}')">@${escapeHTML(target)}</button>` : '—'}</span></div>
+        <div class="stf-case-line"><span class="stf-case-k">By</span><span class="stf-case-v">${r.reportedBy ? `<button class="stf-link" onclick="_stfDossier('${escapeHTML(r.reportedBy)}')">@${escapeHTML(r.reportedBy)}</button>` : '—'}</span></div>
+        <div class="stf-case-line"><span class="stf-case-k">Reason</span><span class="stf-case-v">${escapeHTML(r.reason || 'No reason given')}</span></div>
+        ${body ? `<blockquote class="stf-quote">${escapeHTML(body.slice(0, 400))}${body.length > 400 ? '…' : ''}</blockquote>` : ''}
+      </div>
+      ${isOpen ? `<div class="stf-case-f">
+        ${target ? _stfBtn('Inspect', `_stfDossier('${escapeHTML(target)}')`, { sm: true, icon: 'fa-id-badge' }) : ''}
+        ${target ? _stfBtn('Warn', `_stfActWarn('${escapeHTML(target)}')`, { sm: true, icon: 'fa-triangle-exclamation' }) : ''}
+        ${_stfBtn('Dismiss', `_stfRepClose('${id}','dismissed')`, { sm: true, icon: 'fa-xmark' })}
+        ${_stfBtn('Mark resolved', `_stfRepClose('${id}','resolved')`, { sm: true, primary: true, icon: 'fa-check' })}
+      </div>` : `<div class="stf-case-f"><span class="stf-case-by">Closed by ${escapeHTML(r.resolvedBy || 'staff')}${r.resolvedAt ? ' · ' + formatTimeAgo(r.resolvedAt) : ''}</span></div>`}
+    </article>`;
+  }).join('');
+}
+async function _stfRepClose(id, status) {
+  const r = _stfReports.find(x => String(x.id) === String(id));
+  if (!r) return;
+  r.status = status; r.resolvedBy = CU.username; r.resolvedAt = new Date().toISOString();
+  await FortizedSocial.adminSaveReport(r).catch(() => {});
+  logAudit('report_' + status, _stfRepTarget(r) || String(id), r.reason || '');
+  toast(status === 'resolved' ? 'Report resolved' : 'Report dismissed', 'success');
+  _stfRepRender();
+  _stfCounts.reports = _stfReports.filter(_stfRepOpen).length; _stfRenderNav();
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — Content Review
+// ════════════════════════════════════════════════════════════════════
+_STF_RENDER.content = async function (host, seq) {
+  const queue = await FortizedSocial.adminGetNsfwQueue().catch(() => []);
+  if (seq !== _stfSeq) return;
+  _stfCounts.content = queue.length; _stfRenderNav();
+  _stfHeadAct(`<span class="stf-count">${queue.length} awaiting review</span>`);
+  if (!queue.length) {
+    host.innerHTML = `<div class="stf-wrap">${_ftzNotFound('Queue is clear', 'Nothing is being held back for a human call.')}</div>`;
+    return;
+  }
+  host.innerHTML = `<div class="stf-wrap">
+    <div class="stf-note"><i class="fas fa-circle-info"></i>Media held back by automod. Approving publishes it; removing deletes it and records a violation against the uploader.</div>
+    ${queue.map((item, i) => {
+    const src = item.thumbnail || item.url || item.dataUrl || '';
+    const tone = /EXPLICIT|BANNED/.test(item.aiLabel || '') ? 'danger' : /SUGGESTIVE/.test(item.aiLabel || '') ? 'warn' : 'info';
+    const up = escapeHTML(item.uploader || '');
+    const id = escapeHTML(String(item.id || i));
+    return `<article class="stf-case" style="--i:${Math.min(i, 12)};">
+        <div class="stf-case-h">
+          ${_stfPill(item.aiLabel || 'Flagged', tone)}
+          ${_stfPill((item.type || 'image').toUpperCase())}
+          <span class="stf-case-when">${item.flaggedAt || item.createdAt ? formatTimeAgo(item.flaggedAt || item.createdAt) : ''}</span>
+        </div>
+        <div class="stf-case-b stf-case-b--media">
+          ${src ? (item.type === 'video'
+      ? `<video class="stf-media" src="${escapeHTML(src)}" controls preload="metadata"></video>`
+      : `<img class="stf-media" src="${escapeHTML(src)}" alt="" loading="lazy" onerror="this.remove()">`) : '<div class="stf-media stf-media--none">Preview unavailable</div>'}
+          <div class="stf-case-side">
+            <div class="stf-case-line"><span class="stf-case-k">Uploader</span><span class="stf-case-v">${up ? `<button class="stf-link" onclick="_stfDossier('${up}')">@${up}</button>` : 'Unknown'}</span></div>
+            <div class="stf-case-line"><span class="stf-case-k">File</span><span class="stf-case-v">${escapeHTML(item.fileName || 'unknown')}</span></div>
+            <div class="stf-case-line"><span class="stf-case-k">Confidence</span><span class="stf-case-v">${escapeHTML(String(item.aiScore != null ? item.aiScore : '—'))}</span></div>
+            ${item.bastionId ? `<div class="stf-case-line"><span class="stf-case-k">Bastion</span><span class="stf-case-v">${escapeHTML(item.bastionId)}</span></div>` : ''}
+          </div>
+        </div>
+        <div class="stf-case-f">
+          ${_stfBtn('Approve', `_stfContentDecide('${id}','approve')`, { sm: true, good: true, icon: 'fa-check' })}
+          ${_stfBtn('Remove', `_stfContentDecide('${id}','remove')`, { sm: true, danger: true, icon: 'fa-trash-can' })}
+        </div>
+      </article>`;
+  }).join('')}
+  </div>`;
+};
+
+async function _stfContentDecide(id, decision) {
+  let queue = await FortizedSocial.adminGetNsfwQueue().catch(() => []);
+  const item = queue.find(q => String(q.id) === String(id));
+  if (!item) { toast('That item is already gone', 'info'); _stfGo('content'); return; }
+  if (decision === 'remove') {
+    const v = await _stfAsk({
+      icon: 'fa-trash-can', danger: true, title: 'Remove this media',
+      subtitle: 'Deletes it and records a violation against the uploader.',
+      fields: [{ id: 'reason', type: 'textarea', label: 'Reason', placeholder: 'What is wrong with it?', presets: _STF_REASONS }],
+      confirmLabel: 'Remove media',
+    });
+    if (!v) return;
+    if (!v.reason) { toast('A reason is required', 'error'); return; }
+    if (item.uploader) {
+      await _ftzStaffRecordViolation(item.uploader, { type: 'warning', reason: 'Removed media: ' + v.reason }).catch(() => {});
+      FortizedSocial.addNotification(item.uploader, { type: 'system', text: 'Media you uploaded was removed by staff. Reason: ' + v.reason }).catch(() => {});
+    }
+    logAudit('content_removed', item.uploader || String(id), v.reason);
+    toast('Media removed', 'success');
+  } else {
+    try { if (item.hash) await FortizedSocial.adminSaveNsfwSafeHash(item.hash); } catch (_) {}
+    logAudit('content_approved', item.uploader || String(id), item.fileName || '');
+    toast('Media approved', 'success');
+  }
+  queue = queue.filter(q => String(q.id) !== String(id));
+  await FortizedSocial.adminSaveNsfwQueue(queue).catch(() => {});
+  try { localStorage.setItem('ftz_nsfw_queue', JSON.stringify(queue)); } catch (_) {}
+  _stfGo('content');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — Bans
+// ════════════════════════════════════════════════════════════════════
+_STF_RENDER.bans = async function (host, seq) {
+  const bans = await FortizedSocial.adminGetBans().catch(() => []);
+  if (seq !== _stfSeq) return;
+  const list = (bans || []).slice().sort((a, b) => new Date(b.bannedAt || 0) - new Date(a.bannedAt || 0));
+  _stfHeadAct(`<span class="stf-count">${list.length} on record</span>`);
+  host.innerHTML = `<div class="stf-wrap">
+    ${list.length ? `<div class="stf-rows">${list.map((b, i) => `
+      <div class="stf-row" style="--i:${Math.min(i, 16)};">
+        <span class="stf-uc">
+          <span class="stf-uc-av">${buildAvatarHTML(null, b.username, 34)}</span>
+          <span class="stf-uc-tx">
+            <span class="stf-uc-n">@${escapeHTML(b.username || '?')}</span>
+            <span class="stf-uc-h">${escapeHTML(b.reason || 'No reason recorded')}</span>
+          </span>
+        </span>
+        <span class="stf-row-flags">${_stfPill('Banned', 'danger')}</span>
+        <span class="stf-row-meta">${escapeHTML(b.bannedBy || 'staff')}${b.bannedAt ? ' · ' + formatTimeAgo(b.bannedAt) : ''}</span>
+        <span class="stf-row-act">
+          ${_stfBtn('Inspect', `_stfDossier('${escapeHTML(b.username || '')}')`, { sm: true, icon: 'fa-id-badge' })}
+          ${_stfBtn('Unban', `_stfActUnban('${escapeHTML(b.username || '')}')`, { sm: true, good: true, icon: 'fa-unlock' })}
+        </span>
+      </div>`).join('')}</div>` : _ftzNotFound('No bans on record', 'Nobody is locked out of Fortized.')}
+  </div>`;
+};
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — Suspensions
+// ════════════════════════════════════════════════════════════════════
+_STF_RENDER.suspensions = async function (host, seq) {
+  const users = await FortizedSocial.getUsers().catch(() => []);
+  if (seq !== _stfSeq) return;
+  const list = (users || []).filter(u => u.suspension && u.suspension.until)
+    .map(u => ({ username: u.username, ...u.suspension, active: new Date(u.suspension.until) > new Date() }))
+    .sort((a, b) => (b.active ? 1 : 0) - (a.active ? 1 : 0) || new Date(b.suspendedAt || 0) - new Date(a.suspendedAt || 0));
+  const active = list.filter(s => s.active).length;
+  _stfHeadAct(`<span class="stf-count">${active} active · ${list.length - active} expired</span>`);
+  host.innerHTML = `<div class="stf-wrap">
+    ${list.length ? `<div class="stf-rows">${list.map((s, i) => `
+      <div class="stf-row${s.active ? '' : ' is-dim'}" style="--i:${Math.min(i, 16)};">
+        <span class="stf-uc">
+          <span class="stf-uc-av">${buildAvatarHTML(null, s.username, 34)}</span>
+          <span class="stf-uc-tx">
+            <span class="stf-uc-n">@${escapeHTML(s.username || '?')}</span>
+            <span class="stf-uc-h">${escapeHTML(s.reason || 'No reason recorded')}</span>
+          </span>
+        </span>
+        <span class="stf-row-flags">${s.active ? _stfPill('Active', 'warn') : _stfPill('Expired')}</span>
+        <span class="stf-row-meta">${s.active ? 'lifts ' : 'lifted '}${escapeHTML(_fmtDateEUShort(s.until))}</span>
+        <span class="stf-row-act">
+          ${_stfBtn('Inspect', `_stfDossier('${escapeHTML(s.username || '')}')`, { sm: true, icon: 'fa-id-badge' })}
+          ${s.active ? _stfBtn('Lift', `_stfActUnsuspend('${escapeHTML(s.username || '')}')`, { sm: true, good: true, icon: 'fa-unlock' }) : ''}
+        </span>
+      </div>`).join('')}</div>` : _ftzNotFound('No suspensions', 'Nobody is serving a time-out.')}
+  </div>`;
+};
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — Feedback
+// ════════════════════════════════════════════════════════════════════
+_STF_RENDER.feedback = async function (host, seq) {
+  const [tickets, feedback] = await Promise.all([
+    FortizedSocial.adminGetSupportTickets().catch(() => ({})),
+    FortizedSocial.adminGetFeedback ? FortizedSocial.adminGetFeedback().catch(() => []) : Promise.resolve([]),
+  ]);
+  if (seq !== _stfSeq) return;
+  const list = Object.values(tickets || {}).filter(Boolean).sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+  const open = list.filter(t => t.status === 'open');
+  _stfCounts.feedback = open.length; _stfRenderNav();
+  _stfHeadAct(`<span class="stf-count">${open.length} open · ${list.length} total</span>`);
+
+  const ticketHTML = list.length ? list.slice(0, 60).map((t, i) => {
+    const isOpen = t.status === 'open';
+    const id = escapeHTML(String(t.id || ''));
+    return `<article class="stf-case" style="--i:${Math.min(i, 12)};">
+      <div class="stf-case-h">
+        ${isOpen ? _stfPill('Open', 'warn') : _stfPill('Closed', 'good')}
+        ${t.category ? _stfPill(t.category, 'info') : ''}
+        <span class="stf-case-when">${t.submittedAt ? formatTimeAgo(t.submittedAt) : ''}</span>
+      </div>
+      <div class="stf-case-b">
+        <div class="stf-case-t">${escapeHTML(t.subject || 'No subject')}</div>
+        <blockquote class="stf-quote">${escapeHTML((t.message || '').slice(0, 600))}</blockquote>
+        <div class="stf-case-line"><span class="stf-case-k">From</span><span class="stf-case-v">${t.username ? `<button class="stf-link" onclick="_stfDossier('${escapeHTML(t.username)}')">@${escapeHTML(t.username)}</button>` : 'Anonymous'}${t.email ? ' · ' + escapeHTML(t.email) : ''}</span></div>
+      </div>
+      <div class="stf-case-f">
+        ${isOpen ? _stfBtn('Close ticket', `_stfTicket('${id}','close')`, { sm: true, primary: true, icon: 'fa-check' })
+        : _stfBtn('Reopen', `_stfTicket('${id}','reopen')`, { sm: true, icon: 'fa-rotate-left' })}
+        ${isSuperAdmin() ? _stfBtn('Delete', `_stfTicket('${id}','delete')`, { sm: true, danger: true, icon: 'fa-trash-can' }) : ''}
+      </div>
+    </article>`;
+  }).join('') : _ftzNotFound('Inbox zero', 'No support tickets are waiting.');
+
+  const fb = (Array.isArray(feedback) ? feedback : []).slice(0, 20);
+  host.innerHTML = `<div class="stf-wrap">
+    ${_stfSecLabel('Support tickets')}
+    ${ticketHTML}
+    ${fb.length ? _stfSecLabel('What members told us') + _stfCard({
+    title: 'Recent feedback', icon: 'fa-comment', pad: false,
+    body: `<div class="stf-list">${fb.map(f => `<div class="stf-ev">
+        <span class="stf-ev-ic stf-tone-info"><i class="fas fa-comment"></i></span>
+        <span class="stf-ev-tx">
+          <span class="stf-ev-t">${escapeHTML((f.text || f.message || '').slice(0, 200))}</span>
+          <span class="stf-ev-m">${escapeHTML(f.username || 'anonymous')}${f.at || f.submittedAt ? ' · ' + formatTimeAgo(f.at || f.submittedAt) : ''}</span>
+        </span>
+      </div>`).join('')}</div>`
+  }) : ''}
+  </div>`;
+};
+
+async function _stfTicket(id, act) {
+  if (act === 'delete' && !isSuperAdmin()) { toast('Only superadmins can delete tickets', 'error'); return; }
+  if (act === 'delete') {
+    const ok = await _stfAsk({ icon: 'fa-trash-can', danger: true, title: 'Delete this ticket', subtitle: 'It is gone for good — the member keeps no copy either.', confirmLabel: 'Delete ticket' });
+    if (!ok) return;
+  }
+  try {
+    const tickets = await FortizedSocial.adminGetSupportTickets();
+    if (act === 'delete') delete tickets[id];
+    else if (tickets[id]) {
+      if (act === 'close') { tickets[id].status = 'closed'; tickets[id].closedBy = CU.username; tickets[id].closedAt = new Date().toISOString(); }
+      else { tickets[id].status = 'open'; delete tickets[id].closedBy; delete tickets[id].closedAt; }
+    }
+    await FortizedSocial.adminSaveSupportTickets(tickets);
+    logAudit('ticket_' + act, String(id), '');
+    toast(act === 'close' ? 'Ticket closed' : act === 'reopen' ? 'Ticket reopened' : 'Ticket deleted', 'success');
+  } catch (e) { toast('That did not go through', 'error'); }
+  _stfGo('feedback');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — Onyx Codes  (NEW)
+// ════════════════════════════════════════════════════════════════════
+// Codes used to be hardcoded in the bundle (`_FS_CODES`), so shipping a new
+// one meant a deploy and revoking one was impossible. They now live in the
+// existing `admin_kv` table under `onyx_codes` — no schema change — and the
+// redeem path merges the store OVER the built-ins, so a read failure degrades
+// to the shipped codes rather than breaking redemption.
+//
+// Record shape:  { onyx, label, once, expires (ISO|null), revoked, createdBy,
+//                  createdAt, editedBy, editedAt, uses }
+let _stfCodeStore = {};
+
+_STF_RENDER.codes = async function (host, seq) {
+  const store = await FortizedSocial.adminGetOnyxCodes().catch(() => ({}));
+  if (seq !== _stfSeq) return;
+  // Built-ins show up too, flagged as such, so staff see the WHOLE picture —
+  // but they are read-only here: editing one writes an override into the store.
+  _stfCodeStore = store || {};
+  const merged = {};
+  for (const [k, v] of Object.entries(_FS_CODES)) merged[k] = { ...v, _builtin: true };
+  for (const [k, v] of Object.entries(_stfCodeStore)) merged[k] = { ...(merged[k] || {}), ...v, _builtin: !!merged[k]?._builtin, _stored: true };
+
+  const rows = Object.entries(merged).map(([code, def]) => ({ code, ...def }));
+  rows.sort((a, b) => (_stfCodeState(a).rank - _stfCodeState(b).rank) || a.code.localeCompare(b.code));
+  const live = rows.filter(r => _stfCodeState(r).id === 'active').length;
+
+  _stfHeadAct(`<span class="stf-count">${live} active · ${rows.length} total</span>
+    ${_stfBtn('New code', '_stfCodeEdit()', { primary: true, icon: 'fa-plus', sm: true })}`);
+
+  host.innerHTML = `<div class="stf-wrap">
+    <div class="stf-note"><i class="fas fa-circle-info"></i>Members redeem these from the Fortshop. Revoking one stops it being accepted immediately; balances already granted are untouched.</div>
+    ${rows.length ? `<div class="stf-rows stf-rows--codes">${rows.map((r, i) => {
+    const st = _stfCodeState(r);
+    const code = escapeHTML(r.code);
+    return `<div class="stf-row stf-row--code${st.id === 'active' ? '' : ' is-dim'}" style="--i:${Math.min(i, 16)};">
+        <span class="stf-code">
+          <span class="stf-code-v">${code}</span>
+          <span class="stf-code-l">${escapeHTML(r.label || 'Onyx code')}${r._builtin ? ' · built in' : ''}</span>
+        </span>
+        <span class="stf-code-amt"><span class="stf-onyx-ic"></span>${_ftzFullNum(Number(r.onyx) || 0)}</span>
+        <span class="stf-row-flags">
+          ${_stfPill(st.label, st.tone)}
+          ${r.once !== false ? _stfPill('Once per account') : _stfPill('Repeatable', 'info')}
+        </span>
+        <span class="stf-row-meta">${escapeHTML(_stfCodeWhen(r))}</span>
+        <span class="stf-row-act">
+          ${_stfBtn('Copy', `_stfCodeCopy('${code}')`, { sm: true, icon: 'fa-copy' })}
+          ${_stfBtn('Edit', `_stfCodeEdit('${code}')`, { sm: true, icon: 'fa-pen' })}
+          ${r.revoked
+        ? _stfBtn('Restore', `_stfCodeRevoke('${code}',false)`, { sm: true, good: true, icon: 'fa-rotate-left' })
+        : _stfBtn('Revoke', `_stfCodeRevoke('${code}',true)`, { sm: true, danger: true, icon: 'fa-ban' })}
+        </span>
+      </div>`;
+  }).join('')}</div>` : _ftzNotFound('No codes yet', 'Create one and members can redeem it straight away.')}
+  </div>`;
+};
+
+// active → scheduled → expired → revoked. `rank` drives the list order.
+function _stfCodeState(r) {
+  if (r.revoked) return { id: 'revoked', label: 'Revoked', tone: 'danger', rank: 3 };
+  if (r.expires && Date.now() > new Date(r.expires).getTime()) return { id: 'expired', label: 'Expired', tone: 'warn', rank: 2 };
+  if (r.starts && Date.now() < new Date(r.starts).getTime()) return { id: 'scheduled', label: 'Scheduled', tone: 'info', rank: 1 };
+  return { id: 'active', label: 'Active', tone: 'good', rank: 0 };
+}
+function _stfCodeWhen(r) {
+  if (r.revoked) return 'revoked' + (r.revokedBy ? ' by ' + r.revokedBy : '');
+  if (!r.expires) return 'never expires';
+  const d = new Date(r.expires);
+  return (d.getTime() < Date.now() ? 'expired ' : 'until ') + _fmtDateEUShort(r.expires);
+}
+
+function _stfCodeCopy(code) {
+  try { navigator.clipboard.writeText(code); toast('Code copied', 'success'); }
+  catch (_) { toast('Could not copy', 'error'); }
+}
+
+async function _stfCodeEdit(code) {
+  const existing = code ? { ..._FS_CODES[code], ..._stfCodeStore[code] } : null;
+  const v = await _stfAsk({
+    icon: code ? 'fa-pen' : 'fa-ticket',
+    title: code ? 'Edit ' + code : 'New Onyx code',
+    subtitle: code ? 'Changes apply the next time someone redeems it.' : 'Members can redeem it the moment you save.',
+    fields: [
+      ...(code ? [] : [{ id: 'code', type: 'text', label: 'Code', placeholder: 'FORTGIFT26', hint: 'Letters and numbers. Not case sensitive when redeemed.' }]),
+      { id: 'onyx', type: 'number', label: 'Onyx granted', min: 1, value: existing?.onyx || '', placeholder: '100', presets: [50, 100, 226, 500] },
+      { id: 'label', type: 'text', label: 'Label', placeholder: 'Launch gift', value: existing?.label || '', hint: 'Staff-facing only — members never see it.' },
+      { id: 'expires', type: 'date', label: 'Expires on', value: existing?.expires ? String(existing.expires).slice(0, 10) : '', hint: 'Leave empty and the code never expires.' },
+      { id: 'once', type: 'select', label: 'Limit', value: existing && existing.once === false ? 'no' : 'yes', options: [{ value: 'yes', label: 'Once per account' }, { value: 'no', label: 'Repeatable' }] },
+    ],
+    confirmLabel: code ? 'Save changes' : 'Create code',
+  });
+  if (!v) return;
+
+  const key = (code || v.code || '').toUpperCase().replace(/\s+/g, '');
+  if (!key) { toast('Give the code a name', 'error'); return; }
+  if (!/^[A-Z0-9._-]{3,32}$/.test(key)) { toast('Use 3–32 letters, numbers, dot, dash or underscore', 'error'); return; }
+  const amount = parseInt(v.onyx, 10);
+  if (!amount || amount < 1) { toast('Set how much Onyx it grants', 'error'); return; }
+  if (!code && (_stfCodeStore[key] || _FS_CODES[key])) { toast('A code with that name already exists', 'error'); return; }
+
+  const now = new Date().toISOString();
+  const prev = _stfCodeStore[key] || {};
+  _stfCodeStore[key] = {
+    ...prev,
+    onyx: amount,
+    label: v.label || prev.label || 'Onyx code',
+    once: v.once !== 'no',
+    // End of day, so "expires on the 31st" means the whole 31st is valid.
+    expires: v.expires ? new Date(v.expires + 'T23:59:59.999Z').toISOString() : null,
+    revoked: !!prev.revoked,
+    createdBy: prev.createdBy || CU.username,
+    createdAt: prev.createdAt || now,
+    editedBy: CU.username,
+    editedAt: now,
+  };
+  try {
+    await FortizedSocial.adminSaveOnyxCodes(_stfCodeStore);
+    logAudit(code ? 'onyx_code_edit' : 'onyx_code_create', key, amount + ' Onyx' + (v.expires ? ' · expires ' + v.expires : ''));
+    toast(code ? 'Code updated' : 'Code created', 'success');
+    _fsInvalidateCodes();
+    _stfGo('codes');
+  } catch (e) { toast('Could not save the code', 'error'); }
+}
+
+async function _stfCodeRevoke(code, revoke) {
+  if (revoke) {
+    const ok = await _stfAsk({
+      icon: 'fa-ban', danger: true, title: 'Revoke ' + code,
+      subtitle: 'Nobody can redeem it from now on. Onyx already granted stays where it is.',
+      confirmLabel: 'Revoke code',
+    });
+    if (!ok) return;
+  }
+  const base = _stfCodeStore[code] || { ..._FS_CODES[code] };
+  if (!base || base.onyx == null) { toast('No such code', 'error'); return; }
+  _stfCodeStore[code] = { ...base, revoked: !!revoke, revokedBy: revoke ? CU.username : null, revokedAt: revoke ? new Date().toISOString() : null };
+  try {
+    await FortizedSocial.adminSaveOnyxCodes(_stfCodeStore);
+    logAudit(revoke ? 'onyx_code_revoke' : 'onyx_code_restore', code, '');
+    toast(revoke ? 'Code revoked' : 'Code restored', 'success');
+    _fsInvalidateCodes();
+    _stfGo('codes');
+  } catch (e) { toast('That did not go through', 'error'); }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — Economy
+// ════════════════════════════════════════════════════════════════════
+_STF_RENDER.economy = async function (host, seq) {
+  const [stats, users] = await Promise.all([
+    FortizedSocial.adminGetDashboardStats().catch(() => null),
+    FortizedSocial.getUsers().catch(() => []),
+  ]);
+  if (seq !== _stfSeq) return;
+  const list = users || [];
+  const total = list.reduce((s, u) => s + (Number(u.onyx) || 0), 0);
+  const holders = list.filter(u => (Number(u.onyx) || 0) > 0).length;
+  const avg = holders ? Math.round(total / holders) : 0;
+  const top = (stats?.topOnyx || []).length ? stats.topOnyx
+    : list.slice().sort((a, b) => (Number(b.onyx) || 0) - (Number(a.onyx) || 0)).slice(0, 8);
+
+  _stfHeadAct(_stfBtn('Grant Onyx', '_stfGrantPrompt()', { primary: true, icon: 'fa-plus', sm: true }));
+  host.innerHTML = `<div class="stf-wrap">
+    <div class="stf-tiles">
+      ${_stfTile({ iconHTML: '<span class="stf-onyx-ic"></span>', label: 'In circulation', value: _ftzCompactNum(total), sub: _ftzFullNum(total) + ' Onyx', tone: 'gold' })}
+      ${_stfTile({ icon: 'fa-wallet', label: 'Holders', value: holders.toLocaleString(), sub: 'accounts with a balance' })}
+      ${_stfTile({ icon: 'fa-scale-balanced', label: 'Average balance', value: _ftzCompactNum(avg), sub: 'per holder' })}
+      ${_stfTile({ iconHTML: '<span class="stf-rad-ic"></span>', label: 'Radiance', value: (stats?.radianceCount || 0).toLocaleString(), sub: 'active subscribers', tone: 'gold' })}
+    </div>
+    ${_stfSecLabel('Largest balances')}
+    ${_stfCard({
+    title: 'Top holders', icon: 'fa-crown', pad: false,
+    body: top.length ? `<div class="stf-rows stf-rows--flush">${top.slice(0, 8).map((u, i) => `
+        <div class="stf-row" style="--i:${i};">
+          <span class="stf-rank">#${i + 1}</span>
+          ${_stfUserCell(u)}
+          <span class="stf-row-meta stf-row-meta--strong"><span class="stf-onyx-ic"></span>${_ftzFullNum(Number(u.onyx) || 0)}</span>
+          <span class="stf-row-act">${_stfBtn('Inspect', `_stfDossier('${escapeHTML(u.username)}')`, { sm: true, icon: 'fa-id-badge' })}</span>
+        </div>`).join('')}</div>` : _ftzNotFound('No balances yet', 'Nobody is holding Onyx.', { compact: true })
+  })}
+  </div>`;
+};
+
+async function _stfGrantPrompt() {
+  const v = await _stfAsk({
+    icon: 'fa-user', title: 'Who is this for?', subtitle: 'Enter the account you want to grant Onyx to.',
+    fields: [{ id: 'user', type: 'text', label: 'Username', placeholder: 'staw' }],
+    confirmLabel: 'Continue',
+  });
+  if (!v || !v.user) return;
+  _stfActOnyx(v.user.replace(/^@/, ''));
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — Ad Emplacements
+// ════════════════════════════════════════════════════════════════════
+_STF_RENDER.ads = async function (host, seq) {
+  const ads = await FortizedSocial.getGlobalAds().catch(() => []);
+  if (seq !== _stfSeq) return;
+  const withMeta = (ads || []).map(a => {
+    const role = getStaffRole(a.owner || '');
+    const baseW = role === 'superadmin' ? 5 : role === 'admin' ? 3 : a.ownerVerified ? 2 : 1;
+    const boost = Math.max(0.1, Math.min(10, Number(a.adminBoost) || 1));
+    return { ad: a, role, baseW, boost, effW: baseW * boost };
+  }).sort((a, b) => b.effW - a.effW);
+  const totalW = withMeta.reduce((s, m) => s + m.effW, 0);
+  const banners = withMeta.filter(m => (m.ad.ratio || 'banner') === 'banner').length;
+
+  _stfHeadAct(`<span class="stf-count">${withMeta.length} in rotation</span>`);
+  host.innerHTML = `<div class="stf-wrap">
+    <div class="stf-tiles">
+      ${_stfTile({ icon: 'fa-rectangle-ad', label: 'Active', value: withMeta.length, sub: 'ads in rotation' })}
+      ${_stfTile({ icon: 'fa-image', label: 'Banner', value: banners, sub: '728×90' })}
+      ${_stfTile({ icon: 'fa-vector-square', label: 'Rectangle', value: withMeta.length - banners, sub: '300×250' })}
+      ${_stfTile({ icon: 'fa-scale-unbalanced', label: 'Total weight', value: totalW.toFixed(1), sub: 'across every format' })}
+    </div>
+    <div class="stf-note"><i class="fas fa-circle-info"></i>Weight decides how often an ad shows within its format. Superadmin ×5 · admin ×3 · verified ×2 · everyone else ×1, multiplied by any boost you set.</div>
+    ${withMeta.length ? `<div class="stf-rows">${withMeta.map((m, i) => {
+    const a = m.ad, share = totalW ? (m.effW / totalW) * 100 : 0;
+    const id = escapeHTML(a.id || '');
+    return `<div class="stf-row stf-row--ad" style="--i:${Math.min(i, 16)};">
+        <span class="stf-ad-prev">${a.image || a.bastionIcon ? `<img src="${escapeHTML(a.image || a.bastionIcon)}" alt="" onerror="this.remove()">` : ''}</span>
+        <span class="stf-uc-tx">
+          <span class="stf-uc-n">${escapeHTML(a.title || a.bastionName || 'Untitled ad')}</span>
+          <span class="stf-uc-h">@${escapeHTML(a.owner || 'unknown')}${m.role !== 'user' ? ' · ' + m.role : a.ownerVerified ? ' · verified' : ''}</span>
+        </span>
+        <span class="stf-row-flags">${_stfPill((a.ratio || 'banner') === 'rectangle' ? 'Rectangle' : 'Banner', 'info')}</span>
+        <span class="stf-share">
+          <span class="stf-share-n">${share.toFixed(1)}%</span>
+          <span class="stf-share-bar"><span style="width:${share.toFixed(1)}%;"></span></span>
+          <span class="stf-share-l">×${m.baseW} base · ×${m.boost.toFixed(2)} boost</span>
+        </span>
+        <span class="stf-row-act">
+          ${_stfBtn('Boost', `_stfAdBoost('${id}')`, { sm: true, icon: 'fa-arrow-trend-up' })}
+          ${_stfBtn('Take down', `_stfAdTakedown('${id}')`, { sm: true, danger: true, icon: 'fa-trash-can' })}
+        </span>
+      </div>`;
+  }).join('')}</div>` : _ftzNotFound('No ads running', 'Nothing is in rotation right now.')}
+  </div>`;
+};
+
+async function _stfAdBoost(adId) {
+  const v = await _stfAsk({
+    icon: 'fa-arrow-trend-up', title: 'Set priority boost',
+    subtitle: '1 is normal, 2 shows it twice as often, 0.5 halves it.',
+    fields: [{ id: 'boost', type: 'number', label: 'Multiplier', value: 1, presets: [0.5, 1, 2, 5] }],
+    confirmLabel: 'Apply boost',
+  });
+  if (!v) return;
+  const n = parseFloat(v.boost);
+  if (isNaN(n) || n < 0.1 || n > 10) { toast('Boost must be between 0.1 and 10', 'error'); return; }
+  try {
+    const ads = await FortizedSocial.getGlobalAds();
+    const ad = ads.find(a => a.id === adId);
+    if (!ad) { toast('That ad is gone', 'error'); return; }
+    ad.adminBoost = n; ad.adminBoostBy = CU.username; ad.adminBoostAt = new Date().toISOString();
+    await FortizedSocial.upsertGlobalAd(ad);
+    logAudit('ad_boost', adId, 'boost=' + n + ' owner=' + ad.owner);
+    toast('Boost set to ×' + n.toFixed(2), 'success');
+    _stfGo('ads');
+  } catch (e) { toast('Could not set the boost', 'error'); }
+}
+
+async function _stfAdTakedown(adId) {
+  let ad = null;
+  try { ad = (await FortizedSocial.getGlobalAds()).find(a => a.id === adId); } catch (_) {}
+  if (ad && _isAdOwnerSuperadmin(ad) && !isSuperAdmin()) { toast('Only superadmins can take down superadmin ads', 'error'); return; }
+  const v = await _stfAsk({
+    icon: 'fa-trash-can', danger: true, title: 'Take this ad down',
+    subtitle: 'It stops showing everywhere immediately.',
+    fields: [{ id: 'reason', type: 'textarea', label: 'Reason', placeholder: 'Why is it coming down?' }],
+    confirmLabel: 'Take down',
+  });
+  if (!v) return;
+  if (!v.reason) { toast('A reason is required', 'error'); return; }
+  try {
+    if (!ad) ad = { id: adId, owner: '?' };
+    ad.status = 'taken_down'; ad.takedownBy = CU.username; ad.takedownReason = v.reason; ad.takedownAt = new Date().toISOString();
+    await FortizedSocial.upsertGlobalAd(ad);
+    logAudit('ad_takedown', adId, 'owner=' + (ad.owner || '?') + ' reason=' + v.reason);
+    toast('Ad taken down', 'success');
+    _stfGo('ads');
+  } catch (e) { toast('Could not take it down', 'error'); }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — Staff
+// ════════════════════════════════════════════════════════════════════
+_STF_RENDER.staff = async function (host, seq) {
+  const staff = await FortizedSocial.adminGetStaff().catch(() => ({ admins: [], moderators: [] }));
+  if (seq !== _stfSeq) return;
+  const groups = [
+    { key: 'super', title: 'Superadmins', icon: 'fa-crown', tone: 'gold', names: SUPER_ADMINS || [], locked: true, desc: 'Full access. Set in the codebase, not from here.' },
+    { key: 'admins', title: 'Administrators', icon: 'fa-user-shield', tone: 'info', names: staff.admins || [], desc: 'Everything except superadmin-only switches.' },
+    { key: 'moderators', title: 'Moderators', icon: 'fa-shield-halved', tone: 'good', names: staff.moderators || [], desc: 'Reports, content review and member moderation.' },
+  ];
+  const canEdit = isSuperAdmin();
+  _stfHeadAct(canEdit ? _stfBtn('Add staff', '_stfStaffAdd()', { primary: true, icon: 'fa-plus', sm: true })
+    : '<span class="stf-count">Superadmins manage this list</span>');
+
+  host.innerHTML = `<div class="stf-wrap">
+    ${groups.map(g => _stfCard({
+    title: g.title, icon: g.icon, meta: `<span class="stf-card-meta-n">${g.names.length}</span>`, pad: false,
+    body: `<div class="stf-cardnote">${escapeHTML(g.desc)}</div>` + (g.names.length ? `<div class="stf-rows stf-rows--flush">${g.names.map((n, i) => `
+        <div class="stf-row" style="--i:${i};">
+          <span class="stf-uc">
+            <span class="stf-uc-av">${buildAvatarHTML(null, n, 34)}</span>
+            <span class="stf-uc-tx"><span class="stf-uc-n">@${escapeHTML(n)}</span><span class="stf-uc-h">${escapeHTML(g.title.replace(/s$/, ''))}</span></span>
+          </span>
+          <span class="stf-row-flags">${_stfPill(g.locked ? 'Permanent' : 'Appointed', g.tone)}</span>
+          <span class="stf-row-act">
+            ${_stfBtn('Inspect', `_stfDossier('${escapeHTML(n)}')`, { sm: true, icon: 'fa-id-badge' })}
+            ${canEdit && !g.locked ? _stfBtn('Remove', `_stfStaffRemove('${escapeHTML(n)}','${g.key}')`, { sm: true, danger: true, icon: 'fa-user-minus' }) : ''}
+          </span>
+        </div>`).join('')}</div>` : `<div class="stf-cardempty">${escapeHTML('Nobody holds this role.')}</div>`)
+  })).join('')}
+  </div>`;
+};
+
+async function _stfStaffAdd() {
+  if (!isSuperAdmin()) { toast('Only superadmins can appoint staff', 'error'); return; }
+  const v = await _stfAsk({
+    icon: 'fa-user-plus', title: 'Appoint staff', subtitle: 'They get the role the next time they load Fortized.',
+    fields: [
+      { id: 'user', type: 'text', label: 'Username', placeholder: 'staw' },
+      { id: 'role', type: 'select', label: 'Role', value: 'moderators', options: [{ value: 'moderators', label: 'Moderator' }, { value: 'admins', label: 'Administrator' }] },
+    ],
+    confirmLabel: 'Appoint',
+  });
+  if (!v || !v.user) return;
+  const name = v.user.replace(/^@/, '').trim();
+  try {
+    const staff = await FortizedSocial.adminGetStaff();
+    staff.admins = staff.admins || []; staff.moderators = staff.moderators || [];
+    if (staff.admins.includes(name) || staff.moderators.includes(name)) { toast('They already hold a role', 'error'); return; }
+    staff[v.role].push(name);
+    await FortizedSocial.adminSaveStaff(staff);
+    FortizedSocial.addNotification(name, { type: 'system', text: 'You have been appointed as ' + (v.role === 'admins' ? 'an administrator' : 'a moderator') + ' on Fortized.' }).catch(() => {});
+    logAudit('staff_appoint', name, v.role);
+    toast(name + ' appointed', 'success');
+    _stfGo('staff');
+  } catch (e) { toast('Could not appoint them', 'error'); }
+}
+
+async function _stfStaffRemove(name, group) {
+  if (!isSuperAdmin()) { toast('Only superadmins can remove staff', 'error'); return; }
+  const ok = await _stfAsk({ icon: 'fa-user-minus', danger: true, title: 'Remove ' + name, subtitle: 'They lose console access immediately.', confirmLabel: 'Remove role' });
+  if (!ok) return;
+  try {
+    const staff = await FortizedSocial.adminGetStaff();
+    staff[group] = (staff[group] || []).filter(n => n !== name);
+    await FortizedSocial.adminSaveStaff(staff);
+    logAudit('staff_remove', name, group);
+    toast(name + "'s role removed", 'success');
+    _stfGo('staff');
+  } catch (e) { toast('Could not remove them', 'error'); }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — System
+// ════════════════════════════════════════════════════════════════════
+_STF_RENDER.system = async function (host, seq) {
+  const settings = await FortizedSocial.adminGetGlobalSettings().catch(() => ({})) || {};
+  if (seq !== _stfSeq) return;
+  const maint = !!settings.maintenance;
+  _stfHeadAct('');
+  host.innerHTML = `<div class="stf-wrap">
+    <div class="stf-note stf-note--warn"><i class="fas fa-triangle-exclamation"></i>These switches affect every member on Fortized. Take a breath before flipping one.</div>
+    ${_stfCard({
+    title: 'Maintenance mode', icon: 'fa-screwdriver-wrench',
+    body: `<div class="stf-switch">
+        <div class="stf-switch-tx">
+          <div class="stf-switch-t">${maint ? 'Fortized is in maintenance' : 'Fortized is live'}</div>
+          <div class="stf-switch-s">${maint ? 'Everyone sees the maintenance screen. Turning this off reloads their page automatically.' : 'Turning this on locks members out and shows the maintenance screen instead.'}</div>
+        </div>
+        ${_stfBtn(maint ? 'End maintenance' : 'Start maintenance', `_stfMaintenance(${maint ? 'false' : 'true'})`, maint ? { good: true, icon: 'fa-play' } : { danger: true, icon: 'fa-pause' })}
+      </div>
+      ${settings.maintenanceMessage ? `<blockquote class="stf-quote">${escapeHTML(settings.maintenanceMessage)}</blockquote>` : ''}`
+  })}
+    ${_stfCard({
+    title: 'Announcement banner', icon: 'fa-bullhorn',
+    body: `<div class="stf-switch">
+        <div class="stf-switch-tx">
+          <div class="stf-switch-t">${settings.announcement ? 'A banner is showing' : 'No banner'}</div>
+          <div class="stf-switch-s">${settings.announcement ? escapeHTML(String(settings.announcement).slice(0, 160)) : 'Post a short line every member sees at the top of the app.'}</div>
+        </div>
+        ${_stfBtn(settings.announcement ? 'Change' : 'Post banner', '_stfAnnounce()', { primary: true, icon: 'fa-pen' })}
+        ${settings.announcement ? _stfBtn('Clear', '_stfAnnounceClear()', { danger: true, icon: 'fa-xmark' }) : ''}
+      </div>`
+  })}
+  </div>`;
+};
+
+async function _stfMaintenance(on) {
+  const v = await _stfAsk({
+    icon: on ? 'fa-pause' : 'fa-play', danger: !!on,
+    title: on ? 'Start maintenance' : 'End maintenance',
+    subtitle: on ? 'Every member is locked out until you turn this back off.' : 'Members are let back in and their page reloads by itself.',
+    fields: on ? [{ id: 'msg', type: 'textarea', label: 'Message', rows: 2, placeholder: "We're making things better and will be back shortly.", value: "We're making things better and will be back shortly." }] : [],
+    confirmLabel: on ? 'Start maintenance' : 'Bring Fortized back',
+  });
+  if (!v) return;
+  try {
+    const settings = await FortizedSocial.adminGetGlobalSettings() || {};
+    settings.maintenance = !!on;
+    if (on) settings.maintenanceMessage = v.msg || "We're making things better and will be back shortly.";
+    await FortizedSocial.adminSaveGlobalSettings(settings);
+    logAudit(on ? 'maintenance_on' : 'maintenance_off', 'platform', v.msg || '');
+    toast(on ? 'Maintenance mode is on' : 'Fortized is live again', 'success');
+    _stfGo('system');
+  } catch (e) { toast('That did not go through', 'error'); }
+}
+
+async function _stfAnnounce() {
+  const cur = (await FortizedSocial.adminGetGlobalSettings().catch(() => ({}))) || {};
+  const v = await _stfAsk({
+    icon: 'fa-bullhorn', title: 'Announcement banner', subtitle: 'Keep it to one line — it sits above everything.',
+    fields: [{ id: 'text', type: 'textarea', label: 'Message', rows: 2, value: cur.announcement || '', placeholder: 'Fortized 3.4 is here.' }],
+    confirmLabel: 'Post banner',
+  });
+  if (!v) return;
+  if (!v.text) { toast('Write something first', 'error'); return; }
+  cur.announcement = v.text;
+  await FortizedSocial.adminSaveGlobalSettings(cur).catch(() => {});
+  logAudit('announcement_set', 'platform', v.text.slice(0, 120));
+  toast('Banner posted', 'success');
+  _stfGo('system');
+}
+
+async function _stfAnnounceClear() {
+  const cur = (await FortizedSocial.adminGetGlobalSettings().catch(() => ({}))) || {};
+  delete cur.announcement;
+  await FortizedSocial.adminSaveGlobalSettings(cur).catch(() => {});
+  logAudit('announcement_clear', 'platform', '');
+  toast('Banner cleared', 'success');
+  _stfGo('system');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — Statistics
+// ════════════════════════════════════════════════════════════════════
+_STF_RENDER.stats = async function (host, seq) {
+  const [stats, users, bastions, reports, bans] = await Promise.all([
+    FortizedSocial.adminGetDashboardStats().catch(() => null),
+    FortizedSocial.getUsers().catch(() => []),
+    FortizedSocial.getGlobalBastions().catch(() => ({})),
+    FortizedSocial.adminGetReports().catch(() => []),
+    FortizedSocial.adminGetBans().catch(() => []),
+  ]);
+  if (seq !== _stfSeq) return;
+  const s = stats || {}, list = users || [];
+  const bl = Object.values(bastions || {}).filter(Boolean);
+  const day = 86400000, now = Date.now();
+  const since = d => list.filter(u => { const t = new Date(u.createdAt || u.created_at || 0).getTime(); return t && now - t < d; }).length;
+  const verified = list.filter(u => u.verified).length;
+  const withPfp = list.filter(u => u.pfp).length;
+  const totalMembers = bl.reduce((a, b) => a + (b.members?.length || 0), 0);
+
+  _stfHeadAct('');
+  host.innerHTML = `<div class="stf-wrap">
+    ${_stfSecLabel('Growth')}
+    <div class="stf-tiles">
+      ${_stfTile({ icon: 'fa-users', label: 'Members', value: (s.totalUsers || list.length).toLocaleString(), sub: 'total accounts' })}
+      ${_stfTile({ icon: 'fa-user-plus', label: 'Last 24 hours', value: since(day).toLocaleString(), sub: 'new sign-ups', tone: 'good' })}
+      ${_stfTile({ icon: 'fa-calendar-week', label: 'Last 7 days', value: since(day * 7).toLocaleString(), sub: 'new sign-ups' })}
+      ${_stfTile({ icon: 'fa-calendar', label: 'Last 30 days', value: since(day * 30).toLocaleString(), sub: 'new sign-ups' })}
+    </div>
+    ${_stfSecLabel('Engagement')}
+    <div class="stf-tiles">
+      ${_stfTile({ icon: 'fa-signal', label: 'Online now', value: (s.onlineCount || 0).toLocaleString(), sub: 'right this moment', tone: 'good' })}
+      ${_stfTile({ icon: 'fa-image-portrait', label: 'With an avatar', value: list.length ? Math.round((withPfp / list.length) * 100) + '%' : '—', sub: withPfp.toLocaleString() + ' accounts' })}
+      ${_stfTile({ icon: 'fa-circle-check', label: 'Verified', value: verified.toLocaleString(), sub: 'accounts' })}
+      ${_stfTile({ iconHTML: '<span class="stf-rad-ic"></span>', label: 'Radiance', value: (s.radianceCount || 0).toLocaleString(), sub: list.length ? ((s.radianceCount || 0) / list.length * 100).toFixed(1) + '% of members' : '', tone: 'gold' })}
+    </div>
+    ${_stfSecLabel('Communities')}
+    <div class="stf-tiles">
+      ${_stfTile({ icon: 'fa-chess-rook', label: 'Bastions', value: bl.length.toLocaleString(), sub: 'created' })}
+      ${_stfTile({ icon: 'fa-user-group', label: 'Memberships', value: totalMembers.toLocaleString(), sub: 'across every bastion' })}
+      ${_stfTile({ icon: 'fa-arrows-left-right', label: 'Average size', value: bl.length ? Math.round(totalMembers / bl.length) : 0, sub: 'members per bastion' })}
+      ${_stfTile({ icon: 'fa-star', label: 'Verified', value: bl.filter(b => b.verified).length, sub: 'bastions' })}
+    </div>
+    ${_stfSecLabel('Safety')}
+    <div class="stf-tiles">
+      ${_stfTile({ icon: 'fa-flag', label: 'Reports', value: (reports || []).length.toLocaleString(), sub: 'filed all time' })}
+      ${_stfTile({ icon: 'fa-gavel', label: 'Bans', value: (bans || []).length.toLocaleString(), sub: 'on record', tone: (bans || []).length ? 'danger' : undefined })}
+      ${_stfTile({ icon: 'fa-hourglass-half', label: 'Suspended', value: list.filter(u => u.suspension && new Date(u.suspension.until) > new Date()).length, sub: 'right now', tone: 'warn' })}
+      ${_stfTile({ icon: 'fa-shield-halved', label: 'Report rate', value: list.length ? ((reports || []).length / list.length).toFixed(2) : '—', sub: 'reports per member' })}
+    </div>
+  </div>`;
+};
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE — Audit Log
+// ════════════════════════════════════════════════════════════════════
+let _stfAudit = [];
+_STF_RENDER.audit = async function (host, seq) {
+  const log = await FortizedSocial.adminGetAuditLog().catch(() => []);
+  if (seq !== _stfSeq) return;
+  _stfAudit = log || [];
+  _stfHeadAct(`<span class="stf-count">${_stfAudit.length} entries</span>`);
+  host.innerHTML = `<div class="stf-wrap">
+    <div class="stf-toolbar">${_stfSearch('stf-audit-q', 'Search by action, target or staff member…', '_stfAuditRender(this.value)')}</div>
+    <div id="stf-audit-list"></div>
+  </div>`;
+  _stfAuditRender('');
+};
+function _stfAuditRender(q) {
+  const el = document.getElementById('stf-audit-list'); if (!el) return;
+  const s = (q || '').toLowerCase().trim();
+  const list = s ? _stfAudit.filter(e => ((e.action || '') + ' ' + (e.target || '') + ' ' + (e.by || '') + ' ' + (e.note || '')).toLowerCase().includes(s)) : _stfAudit;
+  if (!list.length) { el.innerHTML = _ftzNotFound(s ? 'Nothing matches' : 'No entries yet', s ? '' : 'Staff actions are recorded here as they happen.'); return; }
+  el.innerHTML = `<div class="stf-rows stf-rows--tight">${list.slice(0, 250).map((e, i) => {
+    const a = e.action || '';
+    const tone = /ban|takedown|clawback|remove|delete|revoke/.test(a) ? 'danger' : /warn|suspend|maintenance/.test(a) ? 'warn' : /give|grant|create|approve/.test(a) ? 'gold' : 'info';
+    return `<div class="stf-row stf-row--audit" style="--i:${Math.min(i, 20)};">
+      <span class="stf-ev-ic stf-tone-${tone}"><i class="fas fa-${/ban/.test(a) ? 'gavel' : /warn|suspend/.test(a) ? 'triangle-exclamation' : /give|grant/.test(a) ? 'gift' : /code/.test(a) ? 'ticket' : 'bolt'}"></i></span>
+      <span class="stf-uc-tx">
+        <span class="stf-uc-n"><b>${escapeHTML(a)}</b> · ${escapeHTML(e.target || '?')}</span>
+        <span class="stf-uc-h">${escapeHTML(e.note || '')}</span>
+      </span>
+      <span class="stf-row-meta">${escapeHTML(e.by || '?')}${e.at ? ' · ' + formatTimeAgo(e.at) : ''}</span>
+    </div>`;
+  }).join('')}</div>
+  ${list.length > 250 ? `<div class="stf-more">Showing the most recent 250 of ${list.length.toLocaleString()}.</div>` : ''}`;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// Jump palette (⌘K)
+// ════════════════════════════════════════════════════════════════════
+function _stfPalette() {
+  document.getElementById('stf-pal')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'stf-pal';
+  ov.className = 'stf-pal';
+  ov.innerHTML = `
+    <div class="stf-pal-scrim"></div>
+    <div class="stf-pal-card" role="dialog" aria-label="Jump to">
+      <label class="stf-pal-in">
+        <i class="fas fa-magnifying-glass"></i>
+        <input id="stf-pal-q" type="text" placeholder="Jump to a page, or type a username…" autocomplete="off" spellcheck="false">
+      </label>
+      <div class="stf-pal-list" id="stf-pal-list"></div>
+    </div>`;
+  document.body.appendChild(ov);
+  const close = () => { ov.remove(); document.removeEventListener('keydown', key, true); };
+  const key = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
+  document.addEventListener('keydown', key, true);
+  ov.querySelector('.stf-pal-scrim').onclick = close;
+
+  const render = q => {
+    const s = (q || '').toLowerCase().trim();
+    const pages = [];
+    for (const sec of _STF_SECTIONS) for (const it of sec.items) {
+      if (!_stfCanSee(it)) continue;
+      if (!s || it.label.toLowerCase().includes(s) || sec.label.toLowerCase().includes(s)) pages.push({ sec: sec.label, it });
+    }
+    const users = s ? _stfUsers.filter(u => (u.username || '').toLowerCase().includes(s) || (u.display_name || '').toLowerCase().includes(s)).slice(0, 6) : [];
+    let html = pages.slice(0, 8).map(p => `<button class="stf-pal-r" data-go="${p.it.id}"><i class="fas ${p.it.icon}"></i><span><b>${escapeHTML(p.it.label)}</b><i>${escapeHTML(p.sec)}</i></span></button>`).join('');
+    if (users.length) html += `<div class="stf-pal-sec">Members</div>` + users.map(u => `<button class="stf-pal-r" data-user="${escapeHTML(u.username)}"><i class="fas fa-user"></i><span><b>${escapeHTML(u.display_name || u.username)}</b><i>@${escapeHTML(u.username)}</i></span></button>`).join('');
+    if (s && !pages.length && !users.length) html = `<button class="stf-pal-r" data-user="${escapeHTML(s)}"><i class="fas fa-id-badge"></i><span><b>Look up “${escapeHTML(s)}”</b><i>Open the dossier for this name</i></span></button>`;
+    const listEl = ov.querySelector('#stf-pal-list');
+    listEl.innerHTML = html;
+    listEl.querySelectorAll('.stf-pal-r').forEach(b => b.onclick = () => {
+      close();
+      if (b.dataset.go) _stfGo(b.dataset.go);
+      else if (b.dataset.user) _stfDossier(b.dataset.user);
+    });
+  };
+  const input = ov.querySelector('#stf-pal-q');
+  input.oninput = () => render(input.value);
+  input.onkeydown = e => { if (e.key === 'Enter') ov.querySelector('.stf-pal-r')?.click(); };
+  render('');
+  setTimeout(() => input.focus(), 40);
+}

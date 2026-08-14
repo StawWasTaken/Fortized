@@ -5340,16 +5340,11 @@ function updateOnyxDisplay() {
 // (header row with balance + 3 action items with consistent icon set).
 function onOnyxCtxMenu(ev) {
   ev.preventDefault();
-  const balance = CU?.onyx || 0;
-  const onyxIcon = _maskIcon('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png', 14);
-  const shopIcon = '<i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>';
   const questIcon = '<i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>';
-  const radIcon = _maskIcon('/radiance-logo.png', 14);
   const cardIcon = '<i class="fa-solid fa-receipt" aria-hidden="true"></i>';
   const giftIcon = '<i class="fa-solid fa-ticket" aria-hidden="true"></i>';
   const buyIcon  = '<i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>';
   const items = [
-    { icon: onyxIcon, label: `${_ftzFullNum(balance)} Onyx`, hint: 'Balance', disabled: true },
     // Buying Onyx for real money is built but intentionally hidden until we
     // actually sell it — flip _FTZ_ONYX_SALE_LIVE to switch it on.
     ...(_FTZ_ONYX_SALE_LIVE ? [{ icon: buyIcon, label: 'Buy Onyx', hint: 'Store', action: () => _fsOpenBuyOnyx() }] : []),
@@ -5359,30 +5354,9 @@ function onOnyxCtxMenu(ev) {
     },
     { icon: cardIcon, label: 'My Transactions', hint: 'History', action: () => _fsOpenTransactions() },
     { icon: giftIcon, label: 'Redeem Onyx Codes', hint: 'Codes',  action: () => _fsOpenRedeem() },
-    {
-      icon: shopIcon, label: 'Open the Fortshop', hint: 'Atelier',
-      action: () => {
-        if (typeof showView === 'function') showView('atelier');
-        if (typeof switchAtelierTab === 'function') setTimeout(() => switchAtelierTab('shop'), 80);
-      },
-    },
-    {
-      icon: questIcon, label: 'Earn Onyx from quests', hint: 'Atelier',
-      action: () => {
-        if (typeof showView === 'function') showView('atelier');
-        if (typeof switchAtelierTab === 'function') setTimeout(() => switchAtelierTab('quests'), 80);
-      },
-    },
-    {
-      icon: radIcon, label: 'Buy Radiance', hint: 'Atelier',
-      action: () => {
-        if (typeof showView === 'function') showView('atelier');
-        if (typeof switchAtelierTab === 'function') setTimeout(() => switchAtelierTab('radiance'), 80);
-      },
-    },
   ];
   if (typeof showCtxMenu === 'function') {
-    showCtxMenu(ev.clientX, ev.clientY, [{ label: 'Onyx', items }]);
+    showCtxMenu(ev.clientX, ev.clientY, [{ label: 'Onyx', items }], { cls: 'ctx-menu--wallet' });
   }
 }
 
@@ -5524,7 +5498,9 @@ function updateStreakDisplay() {
   }
   const streak = +CU?.dailyStreak || 0;
   const protected_ = _isStreakProtected();
-  if (valEl) valEl.textContent = streak;
+  // Same compact treatment as the Onyx balance so a huge streak can never
+  // stretch the capsule (exact under 10k, then K/M/B).
+  if (valEl) valEl.textContent = _ftzCompactNum(streak);
   pillEl.classList.toggle('is-protected', protected_);
   pillEl.classList.toggle('is-zero', streak === 0);
   // Protected → a subtle corner badge (not coloured text, not a verbose
@@ -5541,7 +5517,7 @@ function updateStreakDisplay() {
   }
   // Soft custom tooltip — just the streak amount. No verbose native title.
   pillEl.removeAttribute('title');
-  pillEl.setAttribute('data-tip', streak === 0 ? 'No streak yet' : `${streak}-day streak`);
+  pillEl.setAttribute('data-tip', streak === 0 ? 'No streak yet' : `${_ftzFullNum(streak)}-day streak`);
 }
 
 // Buy or extend streak protection. Stacks from the existing expiry, so calling
@@ -5591,17 +5567,13 @@ function onStreakCtxMenu(ev) {
   const graceOK = _isStreakGraceAvailable();
   const graceNext = !graceOK ? new Date((+CU.streakGraceUsedAt || 0) + STREAK_GRACE_COOLDOWN_MS).toLocaleDateString() : null;
 
-  const flameIcon = '<i class="fa-solid fa-fire" aria-hidden="true"></i>';
   const shieldIcon = '<i class="fa-solid fa-shield-halved" aria-hidden="true"></i>';
   const questIcon = '<i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>';
+  const infoIcon = '<i class="fa-solid fa-circle-info" aria-hidden="true"></i>';
 
-  const headerLabel = streak > 0 ? `${streak}-day streak` : 'No streak yet';
-  const statusLabel = protected_
-    ? `Protected until ${untilStr}`
-    : (graceOK ? 'Grace pass available' : `Grace refreshes ${graceNext}`);
-
+  // Every row here DOES something — the old menu opened with a dead status
+  // line and pointed at the retired Atelier route.
   const items = [
-    { icon: flameIcon, label: headerLabel, hint: statusLabel, disabled: true },
     {
       icon: shieldIcon,
       label: protected_ ? `Extend protection · +${STREAK_PROTECT_DAYS} days` : `Protect streak · ${STREAK_PROTECT_DAYS} days`,
@@ -5611,17 +5583,62 @@ function onStreakCtxMenu(ev) {
     },
     {
       icon: questIcon,
-      label: streak > 0 ? 'Open daily claim' : 'Start a streak',
-      hint: 'Atelier',
-      action: () => {
-        if (typeof showView === 'function') showView('atelier');
-        if (typeof switchAtelierTab === 'function') setTimeout(() => switchAtelierTab('quests'), 80);
-      },
+      label: streak > 0 ? 'Keep the streak alive' : 'Start a streak',
+      hint: 'Quests',
+      action: () => { if (typeof showView === 'function') showView('quests'); },
+    },
+    {
+      icon: infoIcon,
+      label: 'How streaks work',
+      hint: protected_ ? 'Protected' : (graceOK ? 'Grace ready' : 'Grace used'),
+      action: () => _streakInfoCard(),
     },
   ];
   if (typeof showCtxMenu === 'function') {
-    showCtxMenu(ev.clientX, ev.clientY, [{ label: 'Daily streak', items }]);
+    showCtxMenu(ev.clientX, ev.clientY, [
+      { label: streak > 0 ? `${_ftzCompactNum(streak)}-day streak` : 'Daily streak', items },
+    ], { cls: 'ctx-menu--wallet' });
   }
+}
+
+// The streak explainer, in the shared popup-card family. Replaces the dead
+// status row the streak menu used to open with.
+function _streakInfoCard() {
+  document.getElementById('ftz-streak-info')?.remove();
+  const streak = +CU?.dailyStreak || 0;
+  const protected_ = _isStreakProtected();
+  const untilStr = protected_ ? new Date(+CU.streakProtectedUntil).toLocaleDateString() : null;
+  const graceOK = _isStreakGraceAvailable();
+  const graceNext = !graceOK ? new Date((+CU.streakGraceUsedAt || 0) + STREAK_GRACE_COOLDOWN_MS).toLocaleDateString() : null;
+  const row = (ic, t, s, on) =>
+    `<div class="fs-sk-row${on ? ' is-on' : ''}"><span class="fs-sk-ic"><i class="fa-solid ${ic}"></i></span>
+      <span class="fs-sk-tx"><b>${t}</b><span>${s}</span></span></div>`;
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.id = 'ftz-streak-info';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="ftz-confirm-card ftz-ac-card fs-streakcard" role="dialog" aria-label="How streaks work">
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('ftz-streak-info')?.remove()">&times;</button>
+      <div class="fs-sk-head">
+        <span class="fs-sk-flame">${typeof _streakFlameSvg === 'function' ? _streakFlameSvg(30) : '<i class="fa-solid fa-fire"></i>'}</span>
+        <span class="fs-sk-n">${_ftzCompactNum(streak)}</span>
+        <span class="fs-sk-lb">${streak === 1 ? 'day' : 'days'} in a row</span>
+      </div>
+      <div class="ftz-ac-body">
+        ${row('fa-calendar-day', 'One visit a day', 'Send a message or claim a daily quest and the day counts. Miss a whole day and the streak resets.', true)}
+        ${row('fa-shield-halved', protected_ ? `Protected until ${untilStr}` : 'Streak protection', protected_ ? 'Missed days won’t reset your streak while protection is active. Buying again stacks more days on top.' : `${STREAK_PROTECT_COST} Onyx buys ${STREAK_PROTECT_DAYS} days where a missed day can’t break your streak.`, protected_)}
+        ${row('fa-heart-pulse', graceOK ? 'Grace pass ready' : 'Grace pass used', graceOK ? 'Slip up once and we’ll quietly cover you. It comes back around every six months.' : `Your next free save unlocks ${graceNext}.`, graceOK)}
+      </div>
+      <div class="fs-sk-acts">
+        <button class="fs-btn" onclick="document.getElementById('ftz-streak-info')?.remove()">Got it</button>
+        <button class="fs-btn fs-btn--primary" onclick="document.getElementById('ftz-streak-info')?.remove();${streak > 0 ? 'buyStreakProtection()' : "showView('quests')"}">${streak > 0 ? (protected_ ? 'Extend protection' : 'Protect my streak') : 'Start a streak'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.tabIndex = -1;
+  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.remove(); });
+  setTimeout(() => overlay.focus(), 0);
 }
 
 // Renders a small public-facing streak chip. `streak` is the integer.
@@ -8418,7 +8435,8 @@ async function renderDMSidebar(scroll, force) {
   html += `<div class="dm-nav-btn${_navActive('radiance')}" onclick="showView('radiance')">
     <span class="dm-nav-ico"><span class="dm-nav-mask" style="-webkit-mask-image:url('/radiance-logo.png');mask-image:url('/radiance-logo.png');"></span></span>
     <span class="dm-nav-label">Radiance</span></div>`;
-  html += `<div class="dm-nav-btn${_navActive('fortshop')}" onclick="showView('fortshop')">
+  html += `<div class="dm-nav-btn${_navActive('fortshop')}" onclick="showView('fortshop')"
+    onmouseenter="_fsNewPopShow(this)" onmouseleave="_fsNewPopHide()">
     <span class="dm-nav-ico"><svg viewBox="0 0 512 512" width="17" height="17" fill="currentColor"><path d="M30.7 72.3C37.6 48.4 59.5 32 84.4 32l344 0c24.9 0 46.8 16.4 53.8 40.3l23.4 80.2c12.8 43.7-20.1 87.5-65.6 87.5-26.3 0-49.4-14.9-60.8-37.1-11.6 21.9-34.6 37.1-61.4 37.1-26.6 0-49.7-15-61.3-37-11.6 22-34.7 37-61.3 37-26.8 0-49.8-15.1-61.4-37.1-11.4 22.1-34.5 37.1-60.8 37.1-45.6 0-78.4-43.7-65.6-87.5L30.7 72.3zM96.4 352l320 0 0-66.4c7.6 1.6 15.5 2.4 23.5 2.4 14.3 0 28-2.6 40.5-7.2l0 151.2c0 26.5-21.5 48-48 48l-352 0c-26.5 0-48-21.5-48-48l0-151.2c12.5 4.6 26.1 7.2 40.5 7.2 8.1 0 15.9-.8 23.5-2.4l0 66.4z"/></svg></span>
     <span class="dm-nav-label">Fortshop</span>${_fsShopNewHTML()}</div>`;
   html += `<div class="dm-nav-btn${_navActive('quests')}" onclick="showView('quests')">
@@ -28134,14 +28152,19 @@ async function _translateMessage(msgRow, text) {
 }
 
 // Close context menu
+// The close animation blanks the menu 100ms later. Opening a second menu inside
+// that window (right-click Onyx, then right-click the streak) would wipe the
+// fresh one — so the pending teardown is always cancellable.
+let _ctxCloseT = null;
 function _closeCtxMenu() {
   const menu = document.getElementById('ctx-menu');
   const overlay = document.getElementById('ctx-overlay');
+  clearTimeout(_ctxCloseT);
   if (menu && menu.classList.contains('ctx-visible')) {
     menu.style.transition = 'opacity .1s ease, transform .1s ease';
     menu.style.opacity = '0';
     menu.style.transform = 'scale(.97)';
-    setTimeout(() => {
+    _ctxCloseT = setTimeout(() => {
       menu.classList.remove('ctx-visible');
       menu.innerHTML = '';
       menu.style.transition = '';
@@ -28157,11 +28180,16 @@ function _closeCtxMenu() {
 
 // Build context menu items from grouped structure
 // groups = [ { label?, items: [ { icon, label, hint?, action?, danger?, disabled? } ] } ]
-function showCtxMenu(x, y, groups) {
+function showCtxMenu(x, y, groups, opts) {
   _closeCtxMenu();
   const menu = document.getElementById('ctx-menu');
   const overlay = document.getElementById('ctx-overlay');
   menu.innerHTML = '';
+  // Optional per-menu skin (e.g. the wallet menus). Reset first so a class from
+  // a previous menu can never leak into the next one. _closeCtxMenu above may
+  // have left the fade styles behind — clear them so the new menu paints.
+  menu.className = 'ctx-menu' + ((opts && opts.cls) ? ' ' + opts.cls : '');
+  menu.style.transition = ''; menu.style.opacity = ''; menu.style.transform = '';
 
   const isMobile = window.innerWidth <= 768;
 
@@ -48542,15 +48570,51 @@ function _fsShopHasNew() {
 function _fsMarkShopSeen() {
   try { const col = _fsFeaturedCol(); if (col) localStorage.setItem(_fsShopNewKey(), col.id); } catch {}
   try { document.querySelectorAll('.dm-nav-new').forEach(n => n.remove()); } catch {}
+  try { _fsNewPopHide(); } catch {}
 }
 function _fsShopNewHTML() {
   if (!_fsShopHasNew()) return '';
-  const col = _fsFeaturedCol();
-  const pending = _fsPendingTradeCount();
-  const title = pending ? `${pending} trade request${pending === 1 ? '' : 's'}` : escapeHTML(col?.name || 'New drop');
-  const sub = pending ? 'Someone wants to trade with you. Take a look.' : `A new collection just landed in the Fortshop.`;
-  const cover = col?.coverImg ? `<span class="fs-newpop-art" style="background-image:url('${col.coverImg}')"></span>` : '';
-  return `<span class="dm-nav-new">NEW<span class="fs-newpop">${cover}<span class="fs-newpop-b"><span class="fs-newpop-t">${title}</span><span class="fs-newpop-s">${escapeHTML(sub)}</span></span></span></span>`;
+  return '<span class="dm-nav-new">NEW</span>';
+}
+// The preview card is PORTALLED to <body> and positioned like a tooltip.
+// Living inside the rail meant the sidebar's stacking context painted it behind
+// the page; and it only answered to the little capsule instead of the whole row.
+let _fsNewPopEl = null, _fsNewPopT = null;
+function _fsNewPopShow(btn) {
+  clearTimeout(_fsNewPopT);
+  if (!btn || !_fsShopHasNew()) return;
+  _fsNewPopT = setTimeout(() => {
+    _fsNewPopHide();
+    const col = _fsFeaturedCol();
+    const pending = _fsPendingTradeCount();
+    const title = pending ? `${pending} trade request${pending === 1 ? '' : 's'}` : escapeHTML(col?.name || 'New drop');
+    const sub = pending ? 'Someone wants to trade with you. Take a look.' : 'A new collection just landed in the Fortshop.';
+    const cover = col?.coverImg ? `<span class="fs-newpop-art" style="background-image:url('${col.coverImg}')"></span>` : '';
+    const pop = document.createElement('div');
+    pop.className = 'fs-newpop';
+    pop.innerHTML = `${cover}<span class="fs-newpop-b"><span class="fs-newpop-k">${pending ? 'Trades' : 'New drop'}</span><span class="fs-newpop-t">${title}</span><span class="fs-newpop-s">${escapeHTML(sub)}</span></span>`;
+    document.body.appendChild(pop);
+    _fsNewPopEl = pop;
+    const r = btn.getBoundingClientRect();
+    const pr = pop.getBoundingClientRect();
+    // Right of the rail by default, flipped left if it would run off-screen.
+    let place = 'right';
+    let left = r.right + 12;
+    if (left + pr.width > window.innerWidth - 8) { place = 'left'; left = r.left - pr.width - 12; }
+    let top = r.top + r.height / 2 - pr.height / 2;
+    top = Math.max(8, Math.min(top, window.innerHeight - pr.height - 8));
+    pop.dataset.place = place;
+    // Keep the arrow pointing at the row even after vertical clamping.
+    pop.style.setProperty('--arrow-y', Math.max(12, Math.min(pr.height - 12, r.top + r.height / 2 - top)) + 'px');
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+    requestAnimationFrame(() => pop.classList.add('visible'));
+  }, 220);
+}
+function _fsNewPopHide() {
+  clearTimeout(_fsNewPopT);
+  if (_fsNewPopEl) { _fsNewPopEl.remove(); _fsNewPopEl = null; }
+  document.querySelectorAll('body > .fs-newpop').forEach(p => p.remove());
 }
 function _fsTradePolicy(u) { return (u && u.tradePolicy) || 'friends'; }
 function _fsTrades(dir) { const k = dir === 'out' ? 'tradesOutgoing' : 'tradesIncoming'; return Array.isArray(CU?.[k]) ? CU[k] : []; }
@@ -48958,7 +49022,9 @@ function _fsTxRender() {
 const _FS_CODES = {
   FORTGIFT26: { onyx: 100, label: 'Launch gift', once: true },
 };
-const _FS_ONYX_CARDS = ['/Icons/OnyxCard1.png', '/Icons/OnyxCard2.png'];
+// Card art lives at the web root, NOT under /Icons — pointing at /Icons is what
+// made the art silently self-remove via the onerror guard.
+const _FS_ONYX_CARDS = ['/OnyxCard1.png', '/OnyxCard2.png'];
 function _fsOpenRedeem() {
   document.getElementById('fs-redeem-modal')?.remove();
   const art = _FS_ONYX_CARDS[Math.floor(Math.random() * _FS_ONYX_CARDS.length)];
@@ -48969,24 +49035,24 @@ function _fsOpenRedeem() {
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card fs-redeem" role="dialog" aria-label="Redeem Onyx codes">
       <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-redeem-modal')?.remove()">&times;</button>
-      <div class="fs-redeem-art"><img src="${art}" alt="" onerror="this.closest('.fs-redeem-art').remove()"></div>
-      <div class="ftz-ac-hero ftz-ac-hero--noicon">
-        <div class="ftz-ac-title">Redeem Onyx Codes</div>
-        <div class="ftz-ac-sub">Enter a gift, promo or event code to top up your Onyx.</div>
-      </div>
-      <div class="ftz-ac-body">
-        <label class="fs-redeem-lb" for="fs-code-in">Code</label>
-        <input id="fs-code-in" class="fs-redeem-in" type="text" placeholder="FORTGIFT26" autocomplete="off" spellcheck="false"
-               oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');document.getElementById('fs-redeem-go').disabled=!this.value.trim()"
-               onkeydown="if(event.key==='Enter')document.getElementById('fs-redeem-go').click()">
-        <div class="fs-redeem-err" id="fs-redeem-err"></div>
-        <div class="fs-redeem-note">Codes are single-use per account. Redeeming requires a quick Lifecheck so we know you're human.</div>
-      </div>
-      <div class="ftz-modal-foot">
-        <div class="ftz-modal-foot__actions" style="width:100%;gap:8px;">
-          <button class="fs-btn" style="flex:1" onclick="document.getElementById('fs-redeem-modal')?.remove()">Cancel</button>
-          <button class="fs-btn fs-btn--primary" id="fs-redeem-go" style="flex:1" disabled onclick="_fsRedeemCode()">Redeem</button>
+      <div class="fs-redeem-split">
+        <div class="fs-redeem-main">
+          <div class="fs-redeem-hero">
+            <div class="ftz-ac-title">Redeem Onyx Codes</div>
+            <div class="ftz-ac-sub">Got a gift, promo or event code? Cash it in here.</div>
+          </div>
+          <label class="fs-redeem-lb" for="fs-code-in">Your code</label>
+          <input id="fs-code-in" class="fs-redeem-in" type="text" placeholder="Enter your code" autocomplete="off" spellcheck="false"
+                 oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');document.getElementById('fs-redeem-go').disabled=!this.value.trim()"
+                 onkeydown="if(event.key==='Enter'&&!document.getElementById('fs-redeem-go').disabled)document.getElementById('fs-redeem-go').click()">
+          <div class="fs-redeem-err" id="fs-redeem-err"></div>
+          <div class="fs-redeem-note"><i class="fa-solid fa-shield-halved"></i><span>One use per account, and a quick Lifecheck so we know you're human.</span></div>
         </div>
+        <div class="fs-redeem-art"><img src="${art}" alt="" draggable="false" onerror="this.closest('.fs-redeem-art')?.remove()"></div>
+      </div>
+      <div class="fs-redeem-acts">
+        <button class="fs-btn" onclick="document.getElementById('fs-redeem-modal')?.remove()">Cancel</button>
+        <button class="fs-btn fs-btn--primary" id="fs-redeem-go" disabled onclick="_fsRedeemCode()">Redeem</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);

@@ -1,6 +1,44 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **WALLET MENUS + REDEEM CARD + NEW TOOLTIP fixes (`2026fix484`).**
+  • **Onyx ctx menu trimmed** to the spec: Buy Onyx (hidden) · Earn Onyx →
+    Quests · My Transactions · Redeem Onyx Codes. Removed the dead balance row
+    AND the three stale rows (Open the Fortshop / Earn Onyx from quests / Buy
+    Radiance) — they still routed through the RETIRED `showView('atelier')` +
+    `switchAtelierTab`, and duplicated Earn Onyx.
+  • **Streak ctx menu redesigned** — every row now DOES something: Protect/Extend
+    · Keep the streak alive (→ `showView('quests')`, was the dead atelier route)
+    · **How streaks work** → new `_streakInfoCard()` (`.fs-streakcard`, big flame
+    + count, 3 explainer rows lit by state, Protect CTA). Streak count now uses
+    `_ftzCompactNum` in the capsule + `_ftzFullNum` in its tooltip.
+  • Both menus get `showCtxMenu(..., {cls:'ctx-menu--wallet'})` — a new 4th arg;
+    `.ctx-menu--wallet` = 28px icon tiles that light accent on hover + pill hints.
+  • **🐞 CTX MENU RACE:** `_closeCtxMenu`'s 100ms teardown wasn't cancellable, so
+    opening a second menu inside that window blanked it. Now `_ctxCloseT` is
+    cleared and the fade styles are reset in `showCtxMenu`.
+  • **🐞 ONYX CARD ART 404'd** — `_FS_ONYX_CARDS` pointed at `/Icons/OnyxCardN.png`
+    but the files are at the WEB ROOT (`/OnyxCard1.png`). The onerror guard then
+    silently removed the `<img>`, which is why no art ever showed.
+  • **Redeem card rebuilt** as a 2-col split (form left, card art right, art is
+    landscape ≈1.74:1 so it's `object-fit:contain`, never cropped). Placeholder
+    is "Enter your code" (was leaking the real code).
+  • **🐞 FOCUS RING:** the global `input[type="text"]:focus` rule forces
+    `rgba(255,249,62,.25)` with `!important`, and its ATTRIBUTE selector outranks
+    a lone class — that's why the field looked washed out and squared. Fixed with
+    `.fs-redeem .fs-redeem-in:focus` (+ radius pinned on `:focus`/`:focus-visible`).
+    Verified computed: `rgb(255,249,62)`, 3px, radius 14px both states.
+  • **🐞 DISABLED BUTTON:** `.fs-btn--primary:hover` repainted the yellow over a
+    DISABLED button (the "transparent yellow" on hover). Added
+    `.fs-btn:disabled:hover/:active` + a muted primary-disabled face.
+  • **🐞 NEW HOVER CARD WAS BEHIND THE PAGE** — it lived inside the rail, so the
+    sidebar's stacking context buried it. Now **portalled to `<body>`** by
+    `_fsNewPopShow(btn)`/`_fsNewPopHide()`, positioned like `.ftz-tooltip`
+    (`position:fixed`, `z-index:var(--z-max)`, rotated-square **arrow**,
+    `--arrow-y` pinned to the row after clamping, flips left if it won't fit).
+    Triggers on the **whole Fortshop rail button**, not just the capsule.
+  ⚠️ LIVE-VERIFY: hover the Fortshop rail row (card in front of everything, arrow
+  aimed at the row); right-click Onyx + streak; redeem focus ring + art.
 - **ONYX WALLET + reward card + NEW capsule (`2026fix482`→`483`).**
   • **Compact numbers** `_ftzCompactNum` (Roblox-style: exact w/ space separators
     <10k, then K/M/B/T, `999T+` cap) on the balance; `_ftzFullNum` in the tooltip.

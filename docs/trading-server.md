@@ -203,6 +203,67 @@ revoke all on function public.ftz_trade_settle(text, text) from anon, authentica
 revoke all on function public.ftz_move_items(text, text, jsonb) from anon, authenticated;
 ```
 
+### 2c. Send Onyx (`ftz_onyx_send`)
+
+Powers the Radiance-only **Send Onyx** button on profile cards. Same shape as
+the trade settle: both rows locked `FOR UPDATE` in alphabetical order so two
+sends crossing each other can't deadlock, Radiance and balance re-checked
+server-side, and the move done in one statement. Run this once:
+
+```sql
+create or replace function public.ftz_onyx_send(p_from text, p_to text, p_amount int)
+returns table (ok boolean, reason text, from_balance bigint)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  a text; b text;
+  from_onyx bigint; to_onyx bigint;
+  from_rad bigint;
+begin
+  if p_amount is null or p_amount < 1 then
+    return query select false, 'Enter an amount.', null::bigint; return;
+  end if;
+  if p_amount > 50000 then
+    return query select false, 'The most you can send at once is 50 000 Onyx.', null::bigint; return;
+  end if;
+  if lower(p_from) = lower(p_to) then
+    return query select false, 'You cannot send Onyx to yourself.', null::bigint; return;
+  end if;
+
+  -- Alphabetical lock order — deadlock-safe when two sends cross.
+  if lower(p_from) < lower(p_to) then a := p_from; b := p_to; else a := p_to; b := p_from; end if;
+  perform 1 from users where lower(username) = lower(a) for update;
+  perform 1 from users where lower(username) = lower(b) for update;
+
+  select onyx, radiance_until into from_onyx, from_rad
+    from users where lower(username) = lower(p_from);
+  select onyx into to_onyx from users where lower(username) = lower(p_to);
+
+  if from_onyx is null then
+    return query select false, 'Sender not found.', null::bigint; return;
+  end if;
+  if to_onyx is null then
+    return query select false, 'No account by that name.', null::bigint; return;
+  end if;
+  if from_rad is null or from_rad < (extract(epoch from now()) * 1000)::bigint then
+    return query select false, 'Sending Onyx is a Radiance feature.', null::bigint; return;
+  end if;
+  if from_onyx < p_amount then
+    return query select false, 'Not enough Onyx.', from_onyx; return;
+  end if;
+
+  update users set onyx = onyx - p_amount where lower(username) = lower(p_from);
+  update users set onyx = onyx + p_amount where lower(username) = lower(p_to);
+
+  return query select true, null::text, (from_onyx - p_amount);
+end;
+$$;
+
+revoke all on function public.ftz_onyx_send(text, text, int) from anon, authenticated;
+```
+
 ## 3. Verify
 
 `GET https://<host>/api/trades/health` should return:
@@ -214,6 +275,16 @@ revoke all on function public.ftz_move_items(text, text, jsonb) from anon, authe
 The client polls this once per session. While `ready` is false it keeps using
 the old local path, so a half-finished rollout doesn't break trading — it just
 doesn't harden it.
+
+`GET https://<host>/api/onyx/health` should return:
+
+```json
+{ "serviceRole": true, "sessionSecret": true, "rpc": true, "max": 50000, "ready": true }
+```
+
+Send Onyx has **no local fallback** on purpose — a half-completed balance
+transfer is worse than a disabled button, so while `ready` is false the client
+tells the member the feature is unavailable instead of trying it client-side.
 
 ## Hardening — still open, and needed before this is genuinely safe
 

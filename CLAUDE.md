@@ -1,5 +1,86 @@
 # Fortized — working notes for Claude
 
+## 🟢 SHIPPED — Console rebuilt AGAIN + Onyx wallet round 2 (`2026fix493`, branch `claude/ui-polish-redesigns-xf43er`)
+The user rejected the first console rebuild: **"NOT THAT BAD but i wanted a full
+redesign & rework… right now it was just a slight redesign… dont CREATE design,
+use the designs we use in radiance, friends, quests pages etc… something that is
+FULL, not something we build in multiple sessions… something that could be on
+discord, something that looks and feels finished."**
+- **🎨 THE LESSON — do not invent a visual vocabulary.** Round 1 invented
+  `.stf-card/.stf-row/.stf-tile/.stf-btn/.stf-seg/.stf-seclab`, which is exactly
+  why it read as a reskin. Round 2 is assembled from the app's OWN parts and the
+  `.stf-*` names are now GLUE ONLY (shell, drawer, palette, review queue):
+  `.disc-subnav`+`.disc-subnav-btn` page topbar · `.qst-banner`+`.qst-crest`+
+  `.qst-bstat` hero · `.qst-group` section heads · `.fs-tb-panel` panels ·
+  `.fr-row`/`.fr-act` rows + round controls · `.fs-btn` buttons ·
+  `.fs-trade-tab` segmented tabs · `_ftzSelectHTML` dropdowns ·
+  `.settings-input`/`.fr-search` fields · `.ftz-ac-card` popups · `_ftzNotFound`.
+  Card language matches the **inbox** (`.notif-panel-v2`): 2px `var(--border)`,
+  radius-lg, rows that are real cards with a hover lift, no glows.
+- **Every page now has a real page topbar** (`_stfSubnav`) with its own tabs —
+  Reports has *Review queue / All reports*, the Inbox has *Tickets / Feedback*.
+- **NEW — one-at-a-time review queue** (`_stfQueueStart`/`_stfQueuePaint`), the
+  archetype the user asked for long ago. Shared by Reports AND Content Review:
+  progress bar ("Case 3 of 12"), prev/skip, and acting on a case (warn/suspend/
+  ban) **closes the report and advances**. ⚠️ `.stf-facts--stack` exists because
+  key-left/value-right gets stretched apart in a full-width case panel.
+- **Also new**: Statistics has a dependency-free 30-day signup **sparkline**
+  (`_stfSpark`) + trend vs the previous 30; System has **live service health**
+  probes against the real `/api/*/health` endpoints; Audit has action-type
+  filters; Members/Bastions have sort dropdowns + paging; the dossier now shows
+  bastions owned; the palette has ↑↓/↵ keyboard nav.
+- **Topbar shield** is now the **FortizedSecurity logo as a currentColor mask**
+  (`.ftz-sec-ico`) resting at `#b3b2b4` like every other topbar icon, and
+  **right-clicking it opens a real context menu** (`onStaffCtxMenu`) that jumps
+  straight to Command Center / Reports / Content / Inbox / Codes / Monitor /
+  Audit, with live queue counts as hints.
+- **💸 SEND ONYX — a Radiance perk.** New item in the profile-card **More** menu
+  (`_fppShowMoreMenu`) using the user's vault SVG (`_FS_SEND_SVG`); non-members
+  get the pitch card, not a dead button. Max **50 000** per send.
+  ⚠️ **Server-authoritative with NO local fallback on purpose** — trades can
+  degrade to the client path because both halves re-verify at settle; a bare
+  balance transfer cannot, and a half-completed send is worse than a disabled
+  button. `POST /api/onyx/send` + `GET /api/onyx/health` (server.js) →
+  `ftz_onyx_send` RPC, which locks both rows FOR UPDATE **in alphabetical
+  order** (same deadlock-safe trick as `ftz_trade_settle`) and re-checks
+  Radiance + balance server-side.
+  ⚠️ **USER ACTION — run the `ftz_onyx_send` SQL** in `docs/trading-server.md`
+  §2c, then check `/api/onyx/health` → `ready:true`.
+- **Onyx REMOVED from trades.** Trades are items-only now; the builder shows a
+  note pointing at Send Onyx. `giveOnyx`/`getOnyx` stay in the draft and on the
+  wire so trades sent BEFORE this change still settle correctly.
+- **Radiance Vault**: Stickers moved into the carousel with real art
+  (`stickers.png`); **Send Onyx** took its place in the smaller perk list.
+- **🐞 MY TRANSACTIONS — outgoing Onyx never appeared, and it was structural.**
+  Two causes: (1) only quests + codes ever called `_fsLogTx`, so the outgoing
+  column had nothing to show; (2) direction came from a per-kind `in:true/false`
+  flag, so a two-way kind (`trade`, `gift`) was always filed as incoming and any
+  unlisted kind vanished. **`amount` is now SIGNED** — sign is the only thing
+  that can't lie — and **all 27 real Onyx movements now log** (Fortshop,
+  bundles, decorations, nameplates, appearances, Radiance buy/gift/link, gifts,
+  ads create/renew/cancel/boost/edit, bastion boosts, streak protection, Onyx
+  badge, listing fees, trades, sends, dailies, invites). 15 kinds in
+  `_FS_TX_META`. Card rebuilt: 4-tile summary (Received/Spent/Net/Balance),
+  breakdown by kind on BOTH sides, and a real **itemised activity list** with
+  All/In/Out filters.
+- **"Not Enough Onyx" rebuilt** (`_fsNotEnoughOnyx`, now shared). Was inline
+  styles, a bare `😕` OS emoji and a **dead** `switchAtelierTab('quests')`
+  route. Now: `ohno.png` art, a shortfall meter, two "ways to earn" rows, a real
+  `.ftz-modal-foot` and 3D buttons.
+- **🗣️ QUICK FEEDBACK — redesigned AND reworked.** It's a **Swiftaw Card** now
+  (`.ftz-ov-swft`, the same overlay the Lifecheck card wears), a corner card
+  rather than a blocking modal. ⚠️ **The trigger rules were the real problem**:
+  60% per action / 5-min cooldown / 8 a day meant it interrupted constantly and
+  people learned to dismiss it on sight. Now: only asks about a feature you
+  actually used, **once ever** (`ftz_fb_asked`), ~1 in 8 eligible moments, 45-min
+  cooldown, 2/day, gives up for the day after 2 dismissals, and never interrupts
+  typing, an open modal, or the first 2 minutes of a session.
+- ⚠️ **LIVE-VERIFY:** every console page with real data; right-click the shield;
+  create → redeem → revoke an Onyx code; the review queue end-to-end; Send Onyx
+  (needs the SQL first); My Transactions showing outgoing; the feedback card.
+  FA icons, the Onyx/security mask glyphs and the SWFT overlay are CDN-blind
+  in-sandbox — verified via Playwright plainviews with stubbed globals.
+
 ## 🟢 SHIPPED THIS SESSION — UI polish pass (`2026fix488`, branch `claude/ui-polish-redesigns-xf43er`)
 All six items the user asked for. CSS lives in ONE appended block at the END of
 `app/styles.css` ("UI POLISH PASS (2026fix488)").

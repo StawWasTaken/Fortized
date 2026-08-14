@@ -315,6 +315,61 @@ app.get('/api/trades/health', async (_req, res) => {
   res.json(out);
 });
 
+// ══════════════════════════════════════════════════════════════════
+// Send Onyx — member to member, Radiance only
+// ══════════════════════════════════════════════════════════════════
+// Moving balance between two accounts has to be atomic, so the real work
+// happens in the `ftz_onyx_send` Postgres function (SECURITY DEFINER): it
+// locks both user rows FOR UPDATE in alphabetical order — the same
+// deadlock-safe ordering ftz_trade_settle uses — re-checks the sender's
+// Radiance and balance server-side, and moves the Onyx in one statement.
+// SQL lives in docs/trading-server.md.
+const ONYX_SEND_MAX = 50000;
+
+app.post('/api/onyx/send', async (req, res) => {
+  const me = _readSession(req);
+  if (!me) return res.status(401).json({ error: 'Sign in again to send Onyx.' });
+  if (!_tradeRateOK(me, 10)) return res.status(429).json({ error: 'Slow down — too many sends.' });
+
+  const to = String(req.body?.to || '').trim().replace(/^@/, '');
+  const amount = Math.floor(Number(req.body?.amount) || 0);
+  const note = String(req.body?.note || '').slice(0, 200);
+
+  if (!to) return res.status(400).json({ error: 'Who is it going to?' });
+  if (to.toLowerCase() === me.toLowerCase()) return res.status(400).json({ error: 'You cannot send Onyx to yourself.' });
+  if (amount < 1) return res.status(400).json({ error: 'Enter an amount.' });
+  if (amount > ONYX_SEND_MAX) return res.status(400).json({ error: `The most you can send at once is ${ONYX_SEND_MAX.toLocaleString('en-GB')} Onyx.` });
+
+  try {
+    const { data, error } = await sbAdmin.rpc('ftz_onyx_send', {
+      p_from: me, p_to: to, p_amount: amount,
+    });
+    if (error) throw error;
+    const result = Array.isArray(data) ? data[0] : data;
+    if (!result || result.ok === false) {
+      return res.status(409).json({ error: result?.reason || 'That send could not go through.' });
+    }
+    res.json({ ok: true, amount, to, note, balance: result.from_balance });
+  } catch (e) {
+    console.warn('[onyx/send] failed:', e.message);
+    res.status(503).json({ error: 'Couldn’t send that Onyx.', detail: e.message });
+  }
+});
+
+// GET /api/onyx/health — the client probes this once and falls back to
+// hiding the feature rather than half-completing a transfer.
+app.get('/api/onyx/health', async (_req, res) => {
+  const out = { serviceRole: !!SUPABASE_SERVICE_ROLE, sessionSecret: !!process.env.FTZ_SESSION_SECRET, rpc: false, max: ONYX_SEND_MAX };
+  try {
+    const { error } = await sbAdmin.rpc('ftz_onyx_send', { p_from: '__probe__', p_to: '__probe__', p_amount: 0 });
+    // A missing function 404s; any other error means it exists and simply
+    // rejected the probe — which is exactly what we want to see.
+    out.rpc = !error || !/does not exist|not find/i.test(error.message || '');
+  } catch {}
+  out.ready = out.rpc;
+  res.json(out);
+});
+
 // ── Health check endpoint ─────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({

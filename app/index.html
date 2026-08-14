@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix492';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix493';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix492';
+    s4.src = '/firebase-compat-shim.js?v=2026fix493';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix492">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix493">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix492', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix493', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix492"></script>
+<script src="/app/utils.js?v=2026fix493"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -298,8 +298,8 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
     <div style="flex:1;"></div>
     <div class="tb-actions" id="tb-actions"></div>
     <!-- Staff console button (hidden by default, shown via JS for staff) -->
-    <button onclick="tryOpenAdmin()" id="tb-admin-btn" title="Staff Console" style="display:none;position:relative;background:none;border:1px solid rgba(248,113,113,.2);color:rgba(248,113,113,.7);cursor:pointer;width:36px;height:36px;border-radius:10px;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;background:rgba(248,113,113,.04);" onmouseover="this.style.background='rgba(248,113,113,.1)';this.style.color='#f87171'" onmouseout="this.style.background='rgba(248,113,113,.04)';this.style.color='rgba(248,113,113,.7)'">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <button onclick="tryOpenAdmin()" oncontextmenu="onStaffCtxMenu(event)" id="tb-admin-btn" class="tb-staff-btn" title="Staff Console" data-tip="Staff Console">
+      <span class="ftz-sec-ico"></span>
     </button>
     <!-- Inbox -->
     <button onclick="toggleNotifPanel()" class="tb-notif-btn" id="tb-notif-btn" title="Inbox" style="position:relative;background:none;border:none;color:#b3b2b4;cursor:pointer;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;" onmouseover="this.style.background='rgba(255,255,255,.06)';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='#b3b2b4'">
@@ -670,7 +670,9 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
         <div class="stf-me" id="stf-me"></div>
       </aside>
       <main class="stf-main">
-        <header class="stf-head" id="stf-head"></header>
+        <!-- The app's own page topbar, so a console page navigates exactly
+             like the Fortshop or Quests page does. -->
+        <div class="disc-subnav stf-subnav" id="stf-subnav"></div>
         <div class="stf-scroll" id="stf-scroll"></div>
       </main>
     </div>
@@ -1165,10 +1167,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix492"></script>
-<script src="/app/app.js?v=2026fix492"></script>
-<script src="/app/joy-system.js?v=2026fix492"></script>
-<script src="/app/chronicle-games.js?v=2026fix492"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix493"></script>
+<script src="/app/app.js?v=2026fix493"></script>
+<script src="/app/joy-system.js?v=2026fix493"></script>
+<script src="/app/chronicle-games.js?v=2026fix493"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

@@ -104,6 +104,34 @@ All six items the user asked for. CSS lives in ONE appended block at the END of
   nothing needs clipping and the card keeps its 3D drop edge. Reduced-motion
   falls back to a plain lift.
 
+## 🟢 ROUND 4 (`2026fix490`, same branch)
+- **Onyx card now LEANS TOWARD THE CURSOR** (`_fsWireCardTilt`, called from
+  `_fsOpenRedeem`). ⚠️ **Why it's a per-frame lerp and not a CSS transition:** a
+  transition re-times itself on every `mousemove`, which is exactly what makes
+  cursor-tracked tilts feel rubbery and lag behind the pointer. The rAF loop
+  eases current→target at k=0.15 each frame, stays glued to the cursor, and
+  still settles softly on leave (then clears the inline transform and stops the
+  loop — no idle rAF). JS adds `.is-tilt`; the CSS `:hover` transform is kept
+  only as the no-JS / reduced-motion fallback. Sheen is now a **pointer-tracked
+  specular** (`radial-gradient at var(--gx) var(--gy)`, `opacity:var(--sheen)`),
+  replacing the fixed sweep. ⚠️ On hover the flat `0 6px 0 0 var(--ink)` drop is
+  swapped for an ambient shadow — a hard offset edge reads as a detached
+  rectangle once the card is rotated in 3D.
+- **NEW hover card polish**: tooltip **arrow removed** (it was the only patch of
+  raw card background against the collection cover and read as a notch cut out
+  of the art), "New collection" eyebrow → **white**, mark **28px→38px**, and the
+  `N items · open the Fortshop` CTA is gone with the description taking its
+  place. 372×137.
+- **🐞 ANTI-SPAM / RATE-LIMIT CARD had nothing to do with Fortized.**
+  `_showRateLimitPopup` was a Discord-coloured one-off built from inline styles
+  — `#2b2d31` card, `#5865f2` button, `#949ba4` text, an 8px radius and an OS
+  `🚫` emoji — so it ignored the appearance system completely. Rebuilt on the
+  app's own family: `.ftz-confirm-overlay` + `.ftz-confirm-card.ftz-ac-card`
+  (`.fs-rl`), themed surfaces, 2px `var(--border)` strokes, `var(--radius-lg)`,
+  the `ftz-close-btn ftz-ac-x` close button (small card), a real
+  `.ftz-modal-foot`, a 3D `.fs-btn--primary`, and the **`knight_angry`** emoji
+  art (`/fortized emojis/knight_angry.png`) instead of the emoji.
+
 ## 🟥 NEXT TASK — STAFF CONSOLE, REBUILT FROM SCRATCH (user, verbatim intent)
 The user's words: the staff console (topbar icon + its card) **"needs to be
 COMPLETELY REWORKED ALMOST FROM SCRATCH — IT'S A FREAKING MESS."**

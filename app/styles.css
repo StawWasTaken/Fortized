@@ -17293,3 +17293,57 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .btn-a:disabled,.btn-g:disabled,.btn-green:disabled,.rad-cta:disabled{
   box-shadow:0 4px 0 0 var(--ink)!important;transform:none!important;}
 .fr-act:focus,.fr-act:focus:hover,.fr-act:focus:active{border-radius:50%;}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ROUND 4 (2026fix490) — cursor-tracked Onyx card, NEW card polish, and the
+   rate-limit card rebuilt on the app's own card family.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── NEW hover card polish ──
+   The tooltip arrow was the only patch of raw card background sitting against
+   the collection cover, which read as a notch cut out of the art — dropped, the
+   card reads cleanly on its own. Eyebrow goes white (the accent yellow fought
+   the CTA), the mark gets bigger, and the description takes the CTA's place. */
+.fs-newpop::after,.fs-newpop[data-place="right"]::after,.fs-newpop[data-place="left"]::after{display:none;}
+.fs-newpop-k{color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.55);}
+.fs-newpop-tx .fs-newpop-logo{margin-top:10px;max-height:38px;max-width:94%;}
+.fs-newpop-tx .fs-newpop-t{margin-top:8px;font-size:20px;}
+.fs-newpop-s{margin-top:11px;}
+
+/* ── Onyx card: leans toward the cursor ──
+   JS owns the motion once .is-tilt is set — it eases the angle toward the
+   pointer every frame. A CSS transition would re-time itself on every mousemove
+   and feel rubbery, so it is off while JS drives. The rule below is the
+   no-JS / reduced-motion fallback. */
+.fs-redeem-art{perspective:900px;}
+.fs-redeem-card{transform-origin:50% 50%;}
+.fs-redeem-card.is-tilt{transition:none;}
+.fs-redeem-art:hover .fs-redeem-card.is-tilt{transform:none;}
+/* While the card is tilted the flat ink drop reads as a detached rectangle
+   behind it — a real card casts a soft shadow, so hand over to an ambient one
+   and let it ease back to the 3D edge on leave. */
+.fs-redeem-art:hover .fs-redeem-card img{box-shadow:0 24px 42px rgba(0,0,0,.55);}
+/* Specular highlight that follows the pointer, like light moving across the
+   plastic. Replaces the fixed left-to-right sweep. */
+.fs-redeem-card::after{
+  background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),
+    rgba(255,255,255,.26) 0%,rgba(255,255,255,.10) 26%,rgba(255,255,255,0) 58%);
+  background-size:auto;background-position:0 0;
+  opacity:var(--sheen,0);transition:opacity .28s var(--ease-out);}
+.fs-redeem-art:hover .fs-redeem-card::after{animation:none;opacity:var(--sheen,1);}
+
+/* ── Rate-limit card ──
+   Themed surfaces, 2px strokes, the app's radius, a real footer and the 3D
+   button — nothing hardcoded, so it follows the user's appearance. */
+.fs-rl{max-width:420px!important;text-align:center;border:2px solid var(--border);
+  border-radius:var(--radius-lg);}
+.fs-rl-art{display:flex;justify-content:center;padding:30px 24px 0;}
+.fs-rl-art img{width:104px;height:auto;object-fit:contain;
+  animation:ftzNfBob 3.6s ease-in-out infinite;}
+.fs-rl .ftz-ac-hero{padding:14px 26px 4px;}
+.fs-rl .ftz-ac-sub{max-width:296px;}
+.fs-rl .fs-rl-foot{display:flex;justify-content:center;padding:18px 26px;margin:22px 0 0;
+  border-top:2px solid var(--border);border-radius:0 0 var(--radius-lg) var(--radius-lg);
+  background:rgba(0,0,0,.14);}
+.fs-rl .fs-rl-foot .fs-btn{min-width:190px;}
+@media (prefers-reduced-motion: reduce){.fs-rl-art img{animation:none;}}

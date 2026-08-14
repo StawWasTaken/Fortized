@@ -48710,7 +48710,6 @@ function _fsNewPopShow(btn) {
           <span class="fs-newpop-k">New collection</span>
           ${logo}
           ${col.tagline ? `<span class="fs-newpop-s">${escapeHTML(col.tagline)}</span>` : ''}
-          <span class="fs-newpop-cta">${items.length} item${items.length === 1 ? '' : 's'} · open the Fortshop</span>
         </span>
       </span>`;
     document.body.appendChild(pop);
@@ -49378,7 +49377,56 @@ function _fsOpenRedeem() {
   document.body.appendChild(overlay);
   overlay.tabIndex = -1;
   overlay.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.remove(); });
+  _fsWireCardTilt(overlay);
   setTimeout(() => document.getElementById('fs-code-in')?.focus(), 30);
+}
+
+// ── The Onyx card leans toward your cursor, like a real gift card ──
+// Every frame eases the CURRENT angle toward the TARGET (a lerp) instead of
+// relying on a CSS transition. A transition re-times itself on every mousemove,
+// which is what makes cursor-tracked tilts feel rubbery and laggy; easing per
+// frame stays glued to the pointer and still settles softly when you leave.
+// The specular highlight tracks the pointer too (--gx/--gy), so the gloss reads
+// as light moving across plastic.
+function _fsWireCardTilt(scope) {
+  const art = scope && scope.querySelector('.fs-redeem-art');
+  const card = art && art.querySelector('.fs-redeem-card');
+  if (!card) return;
+  try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch {}
+  card.classList.add('is-tilt');           // hands the hover effect to JS
+  const MAX_Y = 12, MAX_X = 8;             // degrees of lean
+  let tRX = 0, tRY = 0, tGX = 50, tGY = 50, tOn = 0;   // targets
+  let rX = 0, rY = 0, gX = 50, gY = 50, on = 0;        // current
+  let raf = 0, hovering = false;
+  const step = () => {
+    const k = 0.15;
+    rX += (tRX - rX) * k; rY += (tRY - rY) * k;
+    gX += (tGX - gX) * k; gY += (tGY - gY) * k;
+    on += (tOn - on) * k;
+    card.style.transform =
+      `rotateX(${rX.toFixed(3)}deg) rotateY(${rY.toFixed(3)}deg) `
+      + `translateY(${(on * -6).toFixed(2)}px) scale(${(1 + on * 0.03).toFixed(4)})`;
+    card.style.setProperty('--gx', gX.toFixed(2) + '%');
+    card.style.setProperty('--gy', gY.toFixed(2) + '%');
+    card.style.setProperty('--sheen', on.toFixed(3));
+    const settled = Math.abs(tRX - rX) < .02 && Math.abs(tRY - rY) < .02 && Math.abs(tOn - on) < .003;
+    if (hovering || !settled) { raf = requestAnimationFrame(step); return; }
+    raf = 0; card.style.transform = ''; card.style.removeProperty('--sheen');
+  };
+  const kick = () => { if (!raf) raf = requestAnimationFrame(step); };
+  art.addEventListener('pointerenter', () => { hovering = true; tOn = 1; kick(); });
+  art.addEventListener('pointermove', e => {
+    const r = card.getBoundingClientRect(); if (!r.width || !r.height) return;
+    const px = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    const py = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+    tRY = (px - .5) * 2 * MAX_Y;    // cursor right → card leans right
+    tRX = -(py - .5) * 2 * MAX_X;   // cursor down  → top edge tips away
+    tGX = px * 100; tGY = py * 100;
+    kick();
+  });
+  art.addEventListener('pointerleave', () => {
+    hovering = false; tRX = 0; tRY = 0; tOn = 0; tGX = 50; tGY = 50; kick();
+  });
 }
 async function _fsRedeemCode() {
   const inp = document.getElementById('fs-code-in');
@@ -53574,28 +53622,32 @@ function showContentWarning(reason) {
   setTimeout(() => banner.remove(), 5000);
 }
 
-// Discord-style rate limit popup
+// Rate-limit card. Was a Discord-coloured one-off (#2b2d31 card, #5865f2
+// button, an OS emoji) that ignored the appearance system entirely — rebuilt on
+// the app's own card family so it themes, strokes and presses like everything
+// else. Small card ⇒ the .ftz-close-btn.ftz-ac-x close button.
 function _showRateLimitPopup() {
-  // Remove existing popup if any
   document.getElementById('rate-limit-popup')?.remove();
-  
   const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
   overlay.id = 'rate-limit-popup';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
-  overlay.onclick = () => overlay.remove();
-  
-  const card = document.createElement('div');
-  card.style.cssText = 'background:#2b2d31;border-radius:8px;padding:24px;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.5);';
-  card.onclick = (e) => e.stopPropagation();
-  card.innerHTML = `
-    <div style="font-size:48px;margin-bottom:16px;">🚫</div>
-    <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;">WHOA, EASY THERE!</div>
-    <div style="font-size:14px;color:#949ba4;margin-bottom:20px;">You're sending messages too quickly!</div>
-    <button onclick="this.closest('#rate-limit-popup').remove()" style="background:#5865f2;color:#fff;border:none;border-radius:4px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer;">Back to chat</button>
-  `;
-  
-  overlay.appendChild(card);
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="ftz-confirm-card ftz-ac-card fs-rl" role="dialog" aria-label="Slow down">
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('rate-limit-popup')?.remove()">&times;</button>
+      <div class="fs-rl-art"><img src="/fortized%20emojis/knight_angry.png" alt="" draggable="false" onerror="this.closest('.fs-rl-art')?.remove()"></div>
+      <div class="ftz-ac-hero ftz-ac-hero--noicon">
+        <div class="ftz-ac-title">Whoa, easy there!</div>
+        <div class="ftz-ac-sub">You’re sending messages too quickly. Take a breath and the guard will stand down.</div>
+      </div>
+      <div class="ftz-modal-foot fs-rl-foot">
+        <button class="fs-btn fs-btn--primary" onclick="document.getElementById('rate-limit-popup')?.remove()">Back to chat</button>
+      </div>
+    </div>`;
   document.body.appendChild(overlay);
+  overlay.tabIndex = -1;
+  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.remove(); });
+  setTimeout(() => overlay.focus(), 0);
 }
 
 // Message content pre-scan (keywords)

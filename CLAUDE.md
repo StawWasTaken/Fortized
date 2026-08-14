@@ -1,6 +1,31 @@
 # Fortized — working notes for Claude
 
 ## 🔴 OPEN TODO (current session, branch `claude/relaxed-fermat-cgpgj8`)
+- **ONYX WALLET + reward card + NEW capsule (`2026fix482`→`483`).**
+  • **Compact numbers** `_ftzCompactNum` (Roblox-style: exact w/ space separators
+    <10k, then K/M/B/T, `999T+` cap) on the balance; `_ftzFullNum` in the tooltip.
+  • **Onyx right-click menu**: Buy Onyx (HIDDEN behind `_FTZ_ONYX_SALE_LIVE=false`,
+    opens an empty card, ready for when we sell) · **Earn Onyx** → Quests ·
+    **My Transactions** · **Redeem Onyx Codes**.
+  • **`_fsOpenTransactions`** — Roblox-inspired ledger in our card family:
+    `.ftz-select` date range (day/7d/30d/year), Incoming vs Outgoing grouped by
+    kind + totals + net change. Backed by `CU.onyxLedger` via **`_fsLogTx(kind,
+    amount, label)`** — ⚠️ only quests + codes log so far; wire purchases,
+    Radiance, gifts, trades, resales into `_fsLogTx` next.
+  • **`_fsOpenRedeem`** — code input, always Lifecheck-gated, random
+    `/Icons/OnyxCard1.png|OnyxCard2.png` art (⚠️ NOT UPLOADED YET — the `<img>`
+    self-removes until they exist). `FORTGIFT26` = 100 Onyx, once per account
+    (`CU.redeemedCodes`).
+  • **`_fsOnyxReward`** replaces the old quest-claim popup — big `/Icons/
+    ClaimOnyx.png` art, +amount, balance, Keep questing / Explore the Fortshop.
+    Shared by quest claims AND code redemption.
+  • **NEW capsule** (`_fsShopNewHTML`): white pill + black text on the Fortshop
+    rail launcher, hovering shows a card with the featured collection's cover.
+    Covers new drops AND pending trades; cleared by `_fsMarkShopSeen` on open.
+  • Heroic Search knight drop-shadow removed.
+  **⚠️ STILL OPEN from the user's list:** polish the **Inbox**; customised inbox
+  notifications for trades; polish the **trading card**; then the REAL, SAFE
+  server-side trading system. Plus Friends/Quests/Radiance page polish.
 - **TRADING + RESELLING + Heroic Search (`2026fix480`→`481`).**
   • **Heroic Search** — shared empty state `_ftzNotFound(title, sub, opts)`
     (`/Icons/MediaNotFound.png`, rotating whimsical lines, `compact` variant,

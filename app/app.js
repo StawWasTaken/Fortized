@@ -5294,11 +5294,30 @@ function _mobileSettingsNav(tab) {
   setTimeout(() => buildProfileView(tab), 100);
 }
 let _lastOnyxSeen = null;
+// Compact currency formatting, Roblox-style: exact with space separators up to
+// 10 000, then K / M / B with one decimal, and a trailing + past a trillion.
+function _ftzCompactNum(n) {
+  n = Math.floor(Math.abs(+n || 0)) * (n < 0 ? -1 : 1);
+  const a = Math.abs(n);
+  if (a < 10000) return n.toLocaleString('fr-FR').replace(/\u202f|\u00a0/g, ' ');
+  const units = [[1e12, 'T'], [1e9, 'B'], [1e6, 'M'], [1e3, 'K']];
+  if (a >= 1e15) return (n < 0 ? '-' : '') + '999T+';
+  for (const [div, suf] of units) {
+    if (a >= div) {
+      const v = n / div;
+      const str = (Math.abs(v) >= 100 ? Math.round(v) : Math.round(v * 10) / 10).toString();
+      return str.replace('.', ',') + suf;
+    }
+  }
+  return String(n);
+}
+function _ftzFullNum(n) { return (Math.floor(+n || 0)).toLocaleString('fr-FR').replace(/\u202f|\u00a0/g, ' '); }
+
 function updateOnyxDisplay() {
   const bal = CU?.onyx || 0;
   ['onyx-val','atelier-balance'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.textContent = bal;
+    if (el) el.textContent = _ftzCompactNum(bal);
   });
   // Soft custom tooltip (data-tip) — just the amount, e.g. "1 256 Onyx".
   // No native title (that verbose "· click to open · right-click…" line
@@ -5306,7 +5325,7 @@ function updateOnyxDisplay() {
   const onyxPill = document.getElementById('onyx-display');
   if (onyxPill) {
     onyxPill.removeAttribute('title');
-    onyxPill.setAttribute('data-tip', `${bal.toLocaleString('fr-FR')} Onyx`);
+    onyxPill.setAttribute('data-tip', `${_ftzFullNum(bal)} Onyx`);
   }
   if (_lastOnyxSeen !== null && bal !== _lastOnyxSeen && typeof _logJoysterEvent === 'function') {
     const delta = bal - _lastOnyxSeen;
@@ -5326,8 +5345,20 @@ function onOnyxCtxMenu(ev) {
   const shopIcon = '<i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>';
   const questIcon = '<i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>';
   const radIcon = _maskIcon('/radiance-logo.png', 14);
+  const cardIcon = '<i class="fa-solid fa-receipt" aria-hidden="true"></i>';
+  const giftIcon = '<i class="fa-solid fa-ticket" aria-hidden="true"></i>';
+  const buyIcon  = '<i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>';
   const items = [
-    { icon: onyxIcon, label: `${balance.toLocaleString()} Onyx`, hint: 'Balance', disabled: true },
+    { icon: onyxIcon, label: `${_ftzFullNum(balance)} Onyx`, hint: 'Balance', disabled: true },
+    // Buying Onyx for real money is built but intentionally hidden until we
+    // actually sell it — flip _FTZ_ONYX_SALE_LIVE to switch it on.
+    ...(_FTZ_ONYX_SALE_LIVE ? [{ icon: buyIcon, label: 'Buy Onyx', hint: 'Store', action: () => _fsOpenBuyOnyx() }] : []),
+    {
+      icon: questIcon, label: 'Earn Onyx', hint: 'Quests',
+      action: () => { if (typeof showView === 'function') showView('quests'); },
+    },
+    { icon: cardIcon, label: 'My Transactions', hint: 'History', action: () => _fsOpenTransactions() },
+    { icon: giftIcon, label: 'Redeem Onyx Codes', hint: 'Codes',  action: () => _fsOpenRedeem() },
     {
       icon: shopIcon, label: 'Open the Fortshop', hint: 'Atelier',
       action: () => {
@@ -8389,7 +8420,7 @@ async function renderDMSidebar(scroll, force) {
     <span class="dm-nav-label">Radiance</span></div>`;
   html += `<div class="dm-nav-btn${_navActive('fortshop')}" onclick="showView('fortshop')">
     <span class="dm-nav-ico"><svg viewBox="0 0 512 512" width="17" height="17" fill="currentColor"><path d="M30.7 72.3C37.6 48.4 59.5 32 84.4 32l344 0c24.9 0 46.8 16.4 53.8 40.3l23.4 80.2c12.8 43.7-20.1 87.5-65.6 87.5-26.3 0-49.4-14.9-60.8-37.1-11.6 21.9-34.6 37.1-61.4 37.1-26.6 0-49.7-15-61.3-37-11.6 22-34.7 37-61.3 37-26.8 0-49.8-15.1-61.4-37.1-11.4 22.1-34.5 37.1-60.8 37.1-45.6 0-78.4-43.7-65.6-87.5L30.7 72.3zM96.4 352l320 0 0-66.4c7.6 1.6 15.5 2.4 23.5 2.4 14.3 0 28-2.6 40.5-7.2l0 151.2c0 26.5-21.5 48-48 48l-352 0c-26.5 0-48-21.5-48-48l0-151.2c12.5 4.6 26.1 7.2 40.5 7.2 8.1 0 15.9-.8 23.5-2.4l0 66.4z"/></svg></span>
-    <span class="dm-nav-label">Fortshop</span></div>`;
+    <span class="dm-nav-label">Fortshop</span>${_fsShopNewHTML()}</div>`;
   html += `<div class="dm-nav-btn${_navActive('quests')}" onclick="showView('quests')">
     <span class="dm-nav-ico"><svg viewBox="0 0 576 512" width="17" height="17" fill="currentColor"><path d="M0 112C0 70.5 31.6 36.4 72 32.4l0-.4 280 0c53 0 96 43 96 96l0 176-176 0c-39.8 0-72 32.2-72 72l0 60c0 24.3-19.7 44-44 44s-44-19.7-44-44l0-228-64 0c-26.5 0-48-21.5-48-48l0-48zM236.8 480c7.1-13.1 11.2-28.1 11.2-44l0-60c0-13.3 10.7-24 24-24l248 0c13.3 0 24 10.7 24 24l0 24c0 44.2-35.8 80-80 80l-227.2 0zM80 80c-17.7 0-32 14.3-32 32l0 48 64 0 0-48c0-17.7-14.3-32-32-32z"/></svg></span>
     <span class="dm-nav-label">Quests</span><span class="dm-nav-qbadge" id="dm-quest-badge" style="display:none;"></span></div>`;
@@ -47667,37 +47698,8 @@ function updateQuestBadge() {
 // popup language (theme-aware surface, accent top-line, gentle scale entrance,
 // NO auto-dismiss / no brutal fade — the user closes it).
 function _showQuestClaimPopup(reward, questTitle) {
-  document.getElementById('quest-claim-popup')?.remove();
-  const balance = (+CU?.onyx || 0);
-  const onyx = '<span class="rad-onyx-ic"></span>';
-  const overlay = document.createElement('div');
-  overlay.id = 'quest-claim-popup';
-  overlay.className = 'ftz-confirm-overlay';
-  overlay.onclick = (e) => { if (e.target === overlay) _dismissQuestClaimPopup(); };
-  overlay.innerHTML = `
-    <div class="ftz-confirm-card ftz-ac-card ftz-ac-card--reward" role="dialog" aria-label="Quest reward">
-      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="_dismissQuestClaimPopup()">&times;</button>
-      <div class="ftz-ac-hero ftz-ac-hero--noicon">
-        <div class="ftz-ac-title">You earned <span class="qcl-plus">+${reward} ${onyx}</span></div>
-        <div class="ftz-ac-sub">Nice work on the <b>${escapeHTML(questTitle || 'quest')}</b> quest — it’s all yours.</div>
-      </div>
-      <div class="ftz-ac-body">
-        <div class="qcl-balance">
-          <span class="qcl-balance__label">Your Onyx balance</span>
-          <span class="qcl-balance__val">${onyx} ${balance.toLocaleString()}</span>
-        </div>
-      </div>
-      <div class="ftz-modal-foot">
-        <div class="ftz-modal-foot__actions" style="width:100%;">
-          <button class="btn-g" onclick="_dismissQuestClaimPopup()" style="flex:1;justify-content:center;">Keep questing</button>
-          <button class="btn-a" onclick="_dismissQuestClaimPopup();showView('fortshop')" style="flex:1;justify-content:center;">Explore the Fortshop</button>
-        </div>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-  overlay.tabIndex = -1;
-  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') _dismissQuestClaimPopup(); });
-  setTimeout(() => overlay.focus(), 0);
+  try { _fsLogTx('quest', reward, questTitle || 'Quest'); } catch {}
+  _fsOnyxReward(reward, questTitle);
 }
 function _dismissQuestClaimPopup() {
   document.getElementById('quest-claim-popup')?.remove();
@@ -48527,6 +48529,29 @@ function _fsSyncTradeBadge() {
   b.textContent = n > 9 ? '9+' : String(n);
   b.style.display = n ? '' : 'none';
 }
+// A drop counts as "new" until you next open the Fortshop. Trades reuse the
+// same capsule so the rail speaks one language.
+function _fsShopNewKey() { return 'ftz_shop_seen_' + (CU?.username || 'anon'); }
+function _fsShopHasNew() {
+  try {
+    const col = _fsFeaturedCol(); if (!col) return false;
+    const pending = _fsPendingTradeCount();
+    return pending > 0 || localStorage.getItem(_fsShopNewKey()) !== col.id;
+  } catch { return false; }
+}
+function _fsMarkShopSeen() {
+  try { const col = _fsFeaturedCol(); if (col) localStorage.setItem(_fsShopNewKey(), col.id); } catch {}
+  try { document.querySelectorAll('.dm-nav-new').forEach(n => n.remove()); } catch {}
+}
+function _fsShopNewHTML() {
+  if (!_fsShopHasNew()) return '';
+  const col = _fsFeaturedCol();
+  const pending = _fsPendingTradeCount();
+  const title = pending ? `${pending} trade request${pending === 1 ? '' : 's'}` : escapeHTML(col?.name || 'New drop');
+  const sub = pending ? 'Someone wants to trade with you. Take a look.' : `A new collection just landed in the Fortshop.`;
+  const cover = col?.coverImg ? `<span class="fs-newpop-art" style="background-image:url('${col.coverImg}')"></span>` : '';
+  return `<span class="dm-nav-new">NEW<span class="fs-newpop">${cover}<span class="fs-newpop-b"><span class="fs-newpop-t">${title}</span><span class="fs-newpop-s">${escapeHTML(sub)}</span></span></span></span>`;
+}
 function _fsTradePolicy(u) { return (u && u.tradePolicy) || 'friends'; }
 function _fsTrades(dir) { const k = dir === 'out' ? 'tradesOutgoing' : 'tradesIncoming'; return Array.isArray(CU?.[k]) ? CU[k] : []; }
 function _fsPendingTradeCount() { return _fsTrades('in').filter(t => t.status === 'pending').length; }
@@ -48837,6 +48862,209 @@ function _fsBuyListing(itemId, listingId) {
     priceOnyx: l.price,
     onConfirm: () => toast('Resale purchases open once collectibles launch.', 'info'),
   });
+}
+
+// ════════════════════════════════════════════════════════════
+// ONYX WALLET — transactions, code redemption, and (later) buying Onyx.
+// All three use the shared popup-card family so the wallet reads like the
+// rest of Fortized. Ledger entries are appended by the places that move
+// Onyx; _fsLogTx is the single entry point.
+// ════════════════════════════════════════════════════════════
+// Selling Onyx for real money isn't live yet. The flow is built so the day we
+// switch it on it's already wired — flip this to true.
+const _FTZ_ONYX_SALE_LIVE = false;
+const _FS_TX_RANGES = [
+  { id: 'day',   label: 'Past Day',     days: 1 },
+  { id: 'week',  label: 'Past 7 Days',  days: 7 },
+  { id: 'month', label: 'Past 30 Days', days: 30 },
+  { id: 'year',  label: 'Past Year',    days: 365 },
+];
+function _fsTxLedger() { return Array.isArray(CU?.onyxLedger) ? CU.onyxLedger : []; }
+// kind: 'quest' | 'purchase' | 'gift' | 'trade' | 'code' | 'radiance' | 'resale'
+async function _fsLogTx(kind, amount, label) {
+  if (!CU) return;
+  const entry = { id: 'tx_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind, amount: Math.round(amount) || 0, label: label || '', at: Date.now() };
+  CU.onyxLedger = [entry, ...(_fsTxLedger())].slice(0, 400); // keep the row light
+  try { await saveUser(true); } catch {}
+}
+const _FS_TX_META = {
+  quest:    { in: true,  label: 'Quest rewards',    ic: 'fa-clipboard-check' },
+  code:     { in: true,  label: 'Redeemed codes',   ic: 'fa-ticket' },
+  gift:     { in: true,  label: 'Gifts received',   ic: 'fa-gift' },
+  resale:   { in: true,  label: 'Sales of items',   ic: 'fa-tag' },
+  trade:    { in: true,  label: 'Trades',           ic: 'fa-right-left' },
+  purchase: { in: false, label: 'Fortshop purchases', ic: 'fa-bag-shopping' },
+  radiance: { in: false, label: 'Radiance',         ic: 'fa-bolt' },
+};
+function _fsOpenTransactions(range) {
+  window._fsTxRange = range || window._fsTxRange || 'month';
+  document.getElementById('fs-tx-modal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.id = 'fs-tx-modal';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `<div class="ftz-confirm-card ftz-ac-card fs-tx" role="dialog" aria-label="My transactions"></div>`;
+  document.body.appendChild(overlay);
+  overlay.tabIndex = -1;
+  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.remove(); });
+  _fsTxRender();
+  setTimeout(() => overlay.focus(), 0);
+}
+function _fsSetTxRange(r) { window._fsTxRange = r; _fsTxRender(); }
+function _fsTxRender() {
+  const card = document.querySelector('#fs-tx-modal .fs-tx'); if (!card) return;
+  const rid = window._fsTxRange || 'month';
+  const range = _FS_TX_RANGES.find(r => r.id === rid) || _FS_TX_RANGES[2];
+  const since = Date.now() - range.days * 86400000;
+  const rows = _fsTxLedger().filter(t => t.at >= since);
+  const sum = kind => rows.filter(t => t.kind === kind).reduce((s, t) => s + Math.abs(t.amount), 0);
+  const line = (kind) => {
+    const m = _FS_TX_META[kind];
+    return `<div class="fs-tx-row"><span class="fs-tx-lb"><i class="fa-solid ${m.ic}"></i> ${m.label}</span><span class="fs-tx-amt">${m.in ? '' : '-'}${_FS_ONYX_IC}${_ftzCompactNum(sum(kind))}</span></div>`;
+  };
+  const inKinds = Object.keys(_FS_TX_META).filter(k => _FS_TX_META[k].in);
+  const outKinds = Object.keys(_FS_TX_META).filter(k => !_FS_TX_META[k].in);
+  const totalIn = inKinds.reduce((s, k) => s + sum(k), 0);
+  const totalOut = outKinds.reduce((s, k) => s + sum(k), 0);
+  const sel = (typeof _ftzSelectHTML === 'function')
+    ? _ftzSelectHTML('fs-txrange', rid, _FS_TX_RANGES.map(r => ({ value: r.id, label: r.label })), "_fsSetTxRange(__VALUE__)")
+    : '';
+  card.innerHTML = `
+    <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-tx-modal')?.remove()">&times;</button>
+    <div class="ftz-ac-hero ftz-ac-hero--noicon">
+      <div class="ftz-ac-title">My Transactions</div>
+      <div class="ftz-ac-sub">Where your Onyx came from, and where it went.</div>
+    </div>
+    <div class="ftz-ac-body fs-tx-body">
+      <div class="fs-tx-head"><span class="fs-tx-h-lb">Date range</span>${sel}</div>
+      ${rows.length ? `
+        <div class="fs-tx-sec">
+          <div class="fs-tx-sec-h"><span>Incoming Onyx</span><span>Amount</span></div>
+          ${inKinds.map(line).join('')}
+          <div class="fs-tx-row fs-tx-row--total"><span class="fs-tx-lb">Total</span><span class="fs-tx-amt fs-tx-amt--in">${_FS_ONYX_IC}${_ftzCompactNum(totalIn)}</span></div>
+        </div>
+        <div class="fs-tx-sec">
+          <div class="fs-tx-sec-h"><span>Outgoing Onyx</span><span>Amount</span></div>
+          ${outKinds.map(line).join('')}
+          <div class="fs-tx-row fs-tx-row--total"><span class="fs-tx-lb">Total</span><span class="fs-tx-amt fs-tx-amt--out">-${_FS_ONYX_IC}${_ftzCompactNum(totalOut)}</span></div>
+        </div>
+        <div class="fs-tx-net"><span>Net change</span><b class="${totalIn - totalOut >= 0 ? 'is-up' : 'is-down'}">${totalIn - totalOut >= 0 ? '+' : '-'}${_FS_ONYX_IC}${_ftzCompactNum(Math.abs(totalIn - totalOut))}</b></div>`
+        : _ftzNotFound('Nothing moved in this window', 'Try a wider date range — or go earn some Onyx.')}
+    </div>`;
+}
+
+// ── Redeem Onyx codes ──
+// FORTGIFT26 is the launch code and stays valid forever.
+const _FS_CODES = {
+  FORTGIFT26: { onyx: 100, label: 'Launch gift', once: true },
+};
+const _FS_ONYX_CARDS = ['/Icons/OnyxCard1.png', '/Icons/OnyxCard2.png'];
+function _fsOpenRedeem() {
+  document.getElementById('fs-redeem-modal')?.remove();
+  const art = _FS_ONYX_CARDS[Math.floor(Math.random() * _FS_ONYX_CARDS.length)];
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.id = 'fs-redeem-modal';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="ftz-confirm-card ftz-ac-card fs-redeem" role="dialog" aria-label="Redeem Onyx codes">
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-redeem-modal')?.remove()">&times;</button>
+      <div class="fs-redeem-art"><img src="${art}" alt="" onerror="this.closest('.fs-redeem-art').remove()"></div>
+      <div class="ftz-ac-hero ftz-ac-hero--noicon">
+        <div class="ftz-ac-title">Redeem Onyx Codes</div>
+        <div class="ftz-ac-sub">Enter a gift, promo or event code to top up your Onyx.</div>
+      </div>
+      <div class="ftz-ac-body">
+        <label class="fs-redeem-lb" for="fs-code-in">Code</label>
+        <input id="fs-code-in" class="fs-redeem-in" type="text" placeholder="FORTGIFT26" autocomplete="off" spellcheck="false"
+               oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');document.getElementById('fs-redeem-go').disabled=!this.value.trim()"
+               onkeydown="if(event.key==='Enter')document.getElementById('fs-redeem-go').click()">
+        <div class="fs-redeem-err" id="fs-redeem-err"></div>
+        <div class="fs-redeem-note">Codes are single-use per account. Redeeming requires a quick Lifecheck so we know you're human.</div>
+      </div>
+      <div class="ftz-modal-foot">
+        <div class="ftz-modal-foot__actions" style="width:100%;gap:8px;">
+          <button class="fs-btn" style="flex:1" onclick="document.getElementById('fs-redeem-modal')?.remove()">Cancel</button>
+          <button class="fs-btn fs-btn--primary" id="fs-redeem-go" style="flex:1" disabled onclick="_fsRedeemCode()">Redeem</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.tabIndex = -1;
+  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.remove(); });
+  setTimeout(() => document.getElementById('fs-code-in')?.focus(), 30);
+}
+async function _fsRedeemCode() {
+  const inp = document.getElementById('fs-code-in');
+  const err = document.getElementById('fs-redeem-err');
+  const code = (inp?.value || '').trim().toUpperCase();
+  const fail = (m) => { if (err) { err.textContent = m; err.classList.add('show'); } };
+  if (err) { err.textContent = ''; err.classList.remove('show'); }
+  const def = _FS_CODES[code];
+  if (!def) { fail('That code isn’t valid.'); return; }
+  const used = Array.isArray(CU?.redeemedCodes) ? CU.redeemedCodes : [];
+  if (def.once && used.includes(code)) { fail('You’ve already redeemed this code.'); return; }
+  // Always gate redemption behind Lifecheck — codes are the obvious bot target.
+  if (typeof swiftawLifecheck === 'function') {
+    const ok = await swiftawLifecheck({ reason: 'Redeem an Onyx code' }).catch(() => false);
+    if (!ok) { fail('Lifecheck failed — try again.'); return; }
+  }
+  CU.onyx = (CU.onyx || 0) + def.onyx;
+  CU.redeemedCodes = [...used, code];
+  try { await saveUser(true); } catch {}
+  try { await _fsLogTx('code', def.onyx, code); } catch {}
+  if (typeof updateOnyxDisplay === 'function') updateOnyxDisplay();
+  document.getElementById('fs-redeem-modal')?.remove();
+  _fsOnyxReward(def.onyx, def.label || 'code', { code });
+}
+
+// ── Buy Onyx (hidden until we actually sell it) ──
+function _fsOpenBuyOnyx() {
+  document.getElementById('fs-buyonyx-modal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.id = 'fs-buyonyx-modal';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="ftz-confirm-card ftz-ac-card" role="dialog" aria-label="Buy Onyx">
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-buyonyx-modal')?.remove()">&times;</button>
+      <div class="ftz-ac-hero ftz-ac-hero--noicon">
+        <div class="ftz-ac-title">Buy Onyx</div>
+        <div class="ftz-ac-sub">Onyx packs aren’t on sale yet.</div>
+      </div>
+      <div class="ftz-ac-body">${_ftzNotFound('Not open yet', 'Onyx packs land here when we start selling. For now, quests are the way.')}</div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// ── The shared "you earned Onyx" reward card ──
+// Used by quest claims AND code redemption. Uses the hand-drawn ClaimOnyx art
+// the same way Heroic Search uses the knight.
+function _fsOnyxReward(amount, sourceLabel, opts) {
+  const o = opts || {};
+  document.getElementById('fs-reward-modal')?.remove();
+  const bal = CU?.onyx || 0;
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.id = 'fs-reward-modal';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="ftz-confirm-card ftz-ac-card fs-reward" role="dialog" aria-label="Onyx earned">
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-reward-modal')?.remove()">&times;</button>
+      <div class="fs-reward-art"><img src="/Icons/ClaimOnyx.png" alt="" draggable="false" onerror="this.closest('.fs-reward-art')?.remove()"></div>
+      <div class="fs-reward-amt">${_FS_ONYX_IC}<b>+${_ftzCompactNum(amount)}</b></div>
+      <div class="fs-reward-t">${o.code ? 'Code redeemed' : 'Quest complete'}</div>
+      <div class="fs-reward-s">${o.code ? `<b>${escapeHTML(o.code)}</b> paid out — nice find.` : `Nice work on <b>${escapeHTML(sourceLabel || 'that quest')}</b> — it’s all yours.`}</div>
+      <div class="fs-reward-bal"><span>Your Onyx balance</span><b>${_FS_ONYX_IC}${_ftzCompactNum(bal)}</b></div>
+      <div class="fs-reward-acts">
+        <button class="fs-btn" onclick="document.getElementById('fs-reward-modal')?.remove();${o.code ? '' : "showView('quests')"}">${o.code ? 'Done' : 'Keep questing'}</button>
+        <button class="fs-btn fs-btn--primary" onclick="document.getElementById('fs-reward-modal')?.remove();showView('fortshop')">Explore the Fortshop</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.tabIndex = -1;
+  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.remove(); });
+  setTimeout(() => overlay.focus(), 0);
 }
 
 // ── Item-detail popup ──

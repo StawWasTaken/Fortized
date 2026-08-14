@@ -16673,3 +16673,79 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .fs-seller-p .rad-onyx-ic{width:13px;height:13px;color:var(--green,#3ecf6e);}
 .fs-seller-s{font-size:11px;color:var(--muted);}
 .fs-seller-buy{padding:8px 16px;font-size:12px;}
+
+/* Heroic Search knight — no drop shadow (user request) */
+.ftz-nf-img{filter:none;}
+
+/* ══════════ ONYX REWARD CARD (quests + code redemption) ══════════ */
+.fs-reward{max-width:420px!important;text-align:center;padding-bottom:20px!important;}
+.fs-reward-art{display:flex;justify-content:center;padding:26px 24px 2px;}
+.fs-reward-art img{width:132px;height:auto;object-fit:contain;animation:ftzNfBob 3.6s ease-in-out infinite;}
+.fs-reward-amt{display:inline-flex;align-items:center;justify-content:center;gap:9px;font-family:var(--font-display);color:var(--accent);margin:4px 0 2px;}
+.fs-reward-amt b{font-size:38px;font-weight:800;letter-spacing:-.02em;}
+.fs-reward-amt .rad-onyx-ic{width:28px;height:28px;color:var(--accent);}
+.fs-reward-t{font-family:var(--font-display);font-weight:800;font-size:19px;color:#fff;}
+.fs-reward-s{font-size:13px;color:var(--muted-light);line-height:1.5;padding:6px 30px 0;}
+.fs-reward-s b{color:var(--text);}
+.fs-reward-bal{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 22px 0;padding:13px 16px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;font-size:12.5px;color:var(--muted-light);}
+.fs-reward-bal b{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-display);font-size:17px;font-weight:800;color:var(--text);}
+.fs-reward-bal .rad-onyx-ic{width:16px;height:16px;color:var(--accent);}
+.fs-reward-acts{display:flex;gap:9px;margin:16px 22px 0;}
+.fs-reward-acts .fs-btn{flex:1;}
+@media (prefers-reduced-motion: reduce){ .fs-reward-art img{animation:none;} }
+
+/* ══════════ TRANSACTIONS ══════════ */
+.fs-tx{max-width:560px!important;}
+.fs-tx-body{max-height:60vh;}
+.fs-tx-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;}
+.fs-tx-h-lb{font-family:var(--font-display);font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+.fs-tx-head .ftz-select{min-width:172px;}
+.fs-tx-sec{margin-bottom:18px;}
+.fs-tx-sec-h{display:flex;align-items:center;justify-content:space-between;padding:0 2px 8px;
+  font-family:var(--font-display);font-weight:700;font-size:12.5px;color:var(--text);border-bottom:1px solid var(--border);}
+.fs-tx-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 2px;font-size:13px;color:var(--muted-light);}
+.fs-tx-row + .fs-tx-row{border-top:1px solid rgba(255,255,255,.04);}
+.fs-tx-lb{display:inline-flex;align-items:center;gap:9px;}
+.fs-tx-lb i{width:14px;font-size:11.5px;color:var(--muted);}
+.fs-tx-amt{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-display);font-weight:700;color:var(--text);}
+.fs-tx-amt .rad-onyx-ic{width:13px;height:13px;color:var(--text);}
+.fs-tx-row--total{border-top:1px solid var(--border);margin-top:4px;font-weight:700;color:var(--text);}
+.fs-tx-amt--in{color:var(--green,#3ecf6e);} .fs-tx-amt--in .rad-onyx-ic{color:var(--green,#3ecf6e);}
+.fs-tx-amt--out{color:#ff6b7f;} .fs-tx-amt--out .rad-onyx-ic{color:#ff6b7f;}
+.fs-tx-net{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:12px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);font-size:12.5px;color:var(--muted-light);}
+.fs-tx-net b{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:18px;font-weight:800;}
+.fs-tx-net b.is-up{color:var(--green,#3ecf6e);} .fs-tx-net b.is-up .rad-onyx-ic{color:var(--green,#3ecf6e);}
+.fs-tx-net b.is-down{color:#ff6b7f;} .fs-tx-net b.is-down .rad-onyx-ic{color:#ff6b7f;}
+
+/* ══════════ REDEEM CODES ══════════ */
+.fs-redeem{max-width:440px!important;}
+.fs-redeem-art{padding:18px 24px 0;}
+.fs-redeem-art img{width:100%;height:auto;border-radius:14px;display:block;border:2px solid var(--border);}
+.fs-redeem-lb{display:block;font-family:var(--font-display);font-weight:700;font-size:11.5px;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.fs-redeem-in{width:100%;background:var(--panel2);border:2px solid var(--border);border-radius:12px;padding:13px 15px;
+  color:var(--text);font-family:var(--font-display);font-weight:700;font-size:16px;letter-spacing:.12em;text-transform:uppercase;
+  outline:none;transition:border-color .14s,background .14s;}
+.fs-redeem-in:focus{border-color:var(--accent-mid,rgba(255,249,62,.4));background:var(--panel3);}
+.fs-redeem-in::placeholder{color:var(--muted);letter-spacing:.12em;}
+.fs-redeem-err{font-size:12px;color:#ff6b7f;min-height:0;opacity:0;transition:opacity .14s;margin-top:8px;}
+.fs-redeem-err.show{opacity:1;}
+.fs-redeem-note{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:12px;}
+
+/* ══════════ "NEW" capsule + hover preview (rail launchers) ══════════ */
+.dm-nav-btn{position:relative;}
+.dm-nav-new{margin-left:auto;position:relative;flex-shrink:0;
+  background:#fff;color:#0b0b0e;font-family:var(--font-display);font-weight:800;font-size:9.5px;letter-spacing:.07em;
+  border-radius:100px;padding:3px 8px;line-height:1;text-transform:uppercase;}
+.fs-newpop{position:absolute;left:calc(100% + 14px);top:50%;transform:translateY(-50%) translateX(-6px) scale(.97);
+  width:290px;background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;
+  box-shadow:0 22px 54px rgba(0,0,0,.55);opacity:0;pointer-events:none;z-index:9000;
+  transition:opacity .16s var(--ease-out),transform .16s var(--ease-out);text-transform:none;letter-spacing:0;}
+.dm-nav-new:hover .fs-newpop{opacity:1;transform:translateY(-50%) translateX(0) scale(1);}
+.fs-newpop-art{display:block;height:104px;background-size:cover;background-position:center;}
+.fs-newpop-b{display:block;padding:12px 14px 14px;}
+.fs-newpop-t{display:block;font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--text);}
+.fs-newpop-s{display:block;font-size:12px;color:var(--muted-light);line-height:1.45;margin-top:3px;}
+@media(max-width:900px){.fs-newpop{display:none;}}

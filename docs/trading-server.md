@@ -20,12 +20,41 @@ Order of operations matters. Do step 1 and 2 first: the API is inert without
 them, and the client stays on its current local path until
 `GET /api/trades/health` reports `ready: true`.
 
-## 1. Environment (Render → Environment)
+## 1. Environment (Render → your service → Environment → Add Environment Variable)
 
-| Variable | Why |
-| --- | --- |
-| `SUPABASE_SERVICE_ROLE` | The service-role key. Lets the server write rows the browser is not allowed to. Without it the server falls back to the anon key and enforces nothing the client couldn't bypass. **Never expose this to the client.** |
-| `FTZ_SESSION_SECRET` | Signs trade session tokens (any long random string). Without it a fresh random secret is generated per boot, so every deploy silently logs everyone out of trading. |
+### `SUPABASE_SERVICE_ROLE`
+
+**Where the value comes from:** Supabase dashboard → your project → the gear
+icon (**Project Settings**) → **API Keys** → the key labelled **`service_role`**
+/ `secret`. Click *Reveal*, copy the whole thing, paste it as the value.
+
+It's a long JWT starting `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…` — it looks
+like the anon key you already have, but the middle segment decodes to
+`"role":"service_role"` instead of `"role":"anon"`. If you paste the anon key
+here by mistake nothing will error; it will just silently enforce nothing. You
+can check which one you pasted at `/api/trades/health` — `serviceRole: true`
+only means *a* value is set, so decode the middle segment on jwt.io if unsure.
+
+**This key bypasses every Supabase security rule.** It must only ever live in
+Render's environment. Never put it in `app/`, in any file that ships to the
+browser, or in a commit.
+
+### `FTZ_SESSION_SECRET`
+
+**Where the value comes from:** you invent it. Any long random string — it's
+only used as an HMAC key to sign session tokens, so it never has to match
+anything else. Generate one with:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+```
+
+If you leave it unset the server generates a fresh random one on every boot,
+which means every deploy invalidates everyone's trade session and they have to
+reload the app. Not dangerous — just annoying.
+
+Changing this value later is safe: it logs everyone out of trading once, and
+they recover on the next page load.
 
 ## 2. SQL (Supabase → SQL editor)
 

@@ -1,5 +1,121 @@
 # Fortized — working notes for Claude
 
+## 🟢 SHIPPED — Console round 3 + Send Onyx round 2 (`2026fix494`, branch `claude/ui-polish-redesigns-xf43er`)
+Twenty-odd items from one message. The through-line: the console had the right
+*shape* after round 2 but a lot of it was still a facade — lists that couldn't
+act, data that didn't render, switches that wrote fields nobody read.
+
+### 🐞 Four real bugs, not cosmetics
+- **MAINTENANCE MODE DID NOTHING.** The console wrote `settings.maintenance`;
+  the enforcement path (`_maintenanceTick`, the thing that shows the takeover
+  and reloads people when it lifts) reads `gs.maintenanceMode`. Two keys, so
+  the switch flipped a field nobody looked at. Now `_STF_MAINT_KEY` is shared,
+  the writer sets BOTH (a stale tab can't disagree), and the reader accepts
+  either. It genuinely propagates in ~5s to everyone via the existing poller.
+- **THE ANNOUNCEMENT GLYPH WAS A BROKEN IMAGE.** The bar rendered
+  `<img src="${gs.announcementIcon}">` and the shipped default was an inline
+  **SVG string** — not a URL. Every announcement drew a broken image. Glyph is
+  now `announcementIcon2` (a FA class, drawn as `<i>`), the old key is deleted
+  on save, and the bar repaints on the whole composition (text+colour+icon) —
+  keying off text alone meant recolouring changed nothing on screen.
+- **STAFF COULDN'T SEE THEY WERE BEING PAID.** `applyTax` wrote `onyx` and
+  nothing else, so an admin's balance grew with no line in My Transactions.
+  New `adminUpdateUserFields` writes balance + ledger entry in ONE
+  delta-diffed write, so this costs **no extra egress** on the hottest economy
+  path. New tx kinds `payout` / `shopcut`.
+- **REPORTS ONLY HALF-RENDERED.** Seven producers disagree on every field:
+  `reporter` vs `reportedBy`, `reason` vs `reasons[]`, `context` vs `details`,
+  `createdAt` vs `reportedAt`, and a different subject key per type. Normalised
+  once in `_stfRep*`; a bastion/game report now says what it's about instead of
+  "no target", and screenshots + AI-triage verdicts render.
+
+### 🔐 Access tiers (`_stfAccountKind` / `_stfCanActOn`)
+`SUPER_ADMINS` is an AUTHORITY list, not an identity list. Split for display
+and for guarding: **superadmin** = `staw` only · **system** = platform
+(`fortized`, `fortizedsafety`) + character (`leafen`, `joyster`), same
+authority · **admin** · **moderator** · **test accounts** (stored in
+`admin_kv.test_accounts`, mirrored to localStorage so the read is SYNCHRONOUS)
+— zero power, ordinary members, except nobody below superadmin/system can ban,
+suspend or warn them **and platform maintenance skips them**. ⚠️ The rank guard
+runs at the MUTATION, not just where the button is drawn.
+
+### ✨ New
+- **Dossiers are popup cards** (`.ftz-confirm-card.ftz-ac-card`), not a drawer
+  — and **bastions have dossiers too**, with verify/unverify, feature, rename,
+  associate-a-game, flag-for-review, staff note and delete. Staff-only bastion
+  metadata lives in `admin_kv.bastion_meta`. ⚠️ `saveGlobalBastion(ROW_ID,…)`
+  takes the **map key** of `getGlobalBastions()`, not a field — `_stfBastionList`
+  carries it as `_key`; losing it writes the wrong row.
+- **Identity everywhere** (`_stfIdent`/`_stfAvHTML`/`_ftzStyledNameHTML`):
+  avatar + decoration overlay + display name in the member's OWN font/effect/
+  colour, in members, bans, suspensions, staff, reports, inbox, audit and the
+  palette. Bans/suspensions only carry a username, so `_stfUserIndex` (built
+  from the `getUsers()` the Members page already fetches — **no new reads**)
+  resolves them into real people.
+- **Form kit**: our `.ftz-select` instead of a bare `<select>`; `_stfStep`
+  replaces the browser's number spinner; `_stfPicker` typeahead with avatars +
+  styled names; colour swatches + glyph picker; toggle.
+- **Members**: 7 filters incl. a working **watchlist** (`_stfWatchOn/Off` —
+  the Command Center panel had no writer before), 6 sorts, inline actions.
+- **Inbox** reads all FOUR ticket sources (in-app, website form with `body`
+  instead of `message`, the locally-queued ones nothing ever drained, and quick
+  feedback), + reply-in-a-DM, + a **feedback card tester** that bypasses the
+  trigger rules.
+- **Onyx codes**: redesigned create card with a live preview, a suggested
+  unused name, as-you-type sanitising; **revoked codes are deleted 5 days after
+  revocation** (`_stfCodePurge`), with the countdown shown.
+- **Economy** = the closed circuit made visible: the live `FORTIZED_TAX` split
+  on a donut, rates in force, per-admin/per-mod share, burn explained, a
+  **simulator**, minting log. ⚠️ Cumulative flow is labelled "measured here"
+  (`ftz_tax_log`) on purpose — recording a supply event server-side per
+  transaction means an admin_kv read-modify-write per purchase (last-write-wins,
+  loses events, adds egress). Circulating supply is counted off the member table
+  and is exact.
+- **Statistics**: bar charts, donuts, meters; 7/30/90 range; sign-ups, status
+  mix, countries, profile completeness, Onyx distribution, bastion sizes,
+  reports/bans over time, staff activity.
+- **System**: announcement **composer** (text + 7 colours + 9 glyphs + 5
+  presets + live preview); maintenance with real propagation.
+- **`GET /api/status`** — ONE source of truth. The public status page was seven
+  hardcoded "Operational" badges that could not go red during an outage; it now
+  fetches the same endpoint the console does, every 30s, and maintenance mode
+  overrides every member-facing component.
+- **Audit**: grouped by day, per-staff filter, CSV export of the FILTERED view.
+- **Shield is red** and its right-click menu is now the ONLY one — Inspect is
+  folded in (look up a member, look up a bastion, ⌘K, watch someone).
+- **Removed**: `#stf-brand`, `#stf-me`, the hero crest.
+
+### 💸 Send Onyx round 2
+White vault glyph in the More menu; the Radiance hint is the **radiance logo as
+a pink mask**, not a bolt; upsell CTA is the pink→yellow gradient; copy is
+"Sending Onyx **requires** Radiance" and names the target with their **styled
+display name**; the send card wears `.ftz-ov-rad` and reads "Straight into
+X's wallet.. forever."; the "up to 50 000" line uses the radiance logo in white.
+**Amount is digits only** — `type="number"` still accepts `e`/`+`/`-`/`.`, so
+it's a text field sanitised on input, keydown AND paste. **The note is the real
+chatbar** (`.chat-input-outer` + the same `toggleEmojiPicker` +
+`setupEmojiAutocomplete`), not a lookalike. On send it posts a **Discord-shaped
+receipt** into the DM: `[FTZONYXSEND:amount|from|to]` → gradient spine, amount,
+who-sent-whom, "Check transactions". Names fill in async via
+`_ftzEnrichOnyxReceipts` on the existing 5s ticker.
+
+### 🎨 Textboxes stay rounded
+Three global rules fight over a focused input (`input[type=text]:focus` with
+`!important`, a later `.settings-input:focus{border-color:var(--border)}`, and
+`*:focus{box-shadow:none}`) and **none pinned the radius** — whichever landed
+last dropped it. Radius is now pinned in every state and the ring is a real 2px
+accent stroke instead of the washed-out .25-alpha one.
+⚠️ `.stf-note`/`.stf-alert`/`.stf-ask-note` are **block, not flex** — under flex
+every inline `<b>`/`<a>`/`<code>` became a flex ITEM and broke sentences into
+columns.
+
+⚠️ **LIVE-VERIFY:** maintenance on/off from a second account; the announcement
+banner in all 7 colours; `/api/status` + the public status page; every console
+page with real data; a bastion dossier end-to-end; appoint staff via the picker;
+create → revoke → restore a code; Send Onyx (needs the `ftz_onyx_send` SQL) and
+its chat receipt. FA icons + the Onyx/Radiance/security masks are CDN-blind
+in-sandbox — verified via a Playwright plainview with stubbed globals.
+
 ## 🟢 SHIPPED — Console rebuilt AGAIN + Onyx wallet round 2 (`2026fix493`, branch `claude/ui-polish-redesigns-xf43er`)
 The user rejected the first console rebuild: **"NOT THAT BAD but i wanted a full
 redesign & rework… right now it was just a slight redesign… dont CREATE design,

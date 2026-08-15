@@ -2783,6 +2783,23 @@ const FortizedSocial = (() => {
     catch (_) { return {}; }
   }
 
+  // Generic admin_kv access. The staff console keeps several small settings
+  // rows (test accounts, bastion staff metadata, the status snapshot, the
+  // announcement composition) and adding a named pair of functions per row
+  // was turning into boilerplate — every one of them is "read this key, write
+  // this key" against the SAME table. Keys are namespaced by the caller.
+  async function adminGetKV(key, fallback) {
+    if (!key) return fallback === undefined ? null : fallback;
+    try {
+      const v = await _adminKVGet(String(key));
+      return v == null ? (fallback === undefined ? null : fallback) : v;
+    } catch (_) { return fallback === undefined ? null : fallback; }
+  }
+  async function adminSaveKV(key, val) {
+    if (!key) return;
+    await _adminKVSet(String(key), val);
+  }
+
   // -- Audit Log --
   async function adminGetAuditLog() {
     return (await _adminKVGet('audit_log')) || [];
@@ -2816,6 +2833,19 @@ const FortizedSocial = (() => {
     if (!u) return;
     u[field] = value;
     await saveUserObject(u);
+  }
+  // Several fields in ONE write. `saveUserObject` delta-diffs, so patching
+  // two fields together costs exactly what patching one costs — which is the
+  // whole point: the tax payout writes a balance AND a ledger entry per
+  // beneficiary, and doing that as two calls would double the writes on the
+  // hottest economy path we have.
+  async function adminUpdateUserFields(username, patch) {
+    if (!patch || typeof patch !== 'object') return null;
+    const u = await getUserByName(username);
+    if (!u) return null;
+    Object.assign(u, patch);
+    await saveUserObject(u);
+    return u;
   }
 
   // -- Support tickets --
@@ -3354,10 +3384,11 @@ const FortizedSocial = (() => {
     adminGetNsfwQueue, adminSaveNsfwQueue,
     adminGetStaff, adminSaveStaff,
     adminGetOnyxCodes, adminSaveOnyxCodes, getOnyxCodes,
+    adminGetKV, adminSaveKV,
     adminGetAuditLog, adminPushAuditLog,
     adminGetGlobalSettings, adminSaveGlobalSettings,
     adminGetNsfwBannedHashes, adminSaveNsfwBannedHashes,
-    adminUpdateUserField,
+    adminUpdateUserField, adminUpdateUserFields,
     adminGetSupportTickets, adminSaveSupportTickets, adminSubmitSupportTicket,
     getPlaceFeedback, submitPlaceFeedback, archivePlaceFeedback,
     getOnboardingInterestStats, submitOnboardingInterests,

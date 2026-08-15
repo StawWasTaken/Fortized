@@ -117,61 +117,20 @@
   <div class="container">
     <a href="/support" class="back-link"><svg><use href="#i-arrow-left"/></svg> Back to Support</a>
     <div class="eyebrow mint">System Status</div>
-    <h1>All systems <span class="pop">operational</span>.</h1>
+    <h1 id="statusHeadline">Checking <span class="pop">status</span>.</h1>
     <p class="lede">Live look at every Fortized service.</p>
 
-    <div class="status-hero">
+    <div class="status-hero" id="statusHero">
       <div class="status-orb"><svg><use href="#i-check-circle"/></svg></div>
       <div>
-        <h2>All systems operational</h2>
-        <p>No incidents reported in the last 90 days.</p>
+        <h2 id="statusTitle">Checking…</h2>
+        <p id="statusSub">Reading live service health.</p>
       </div>
-      <div class="updated"><svg><use href="#i-clock"/></svg> updated just now</div>
+      <div class="updated"><svg><use href="#i-clock"/></svg> <span id="statusWhen">just now</span></div>
     </div>
 
-    <div class="svc-grid">
-      <div class="svc">
-        <div class="ico"><svg><use href="#i-fortized"/></svg></div>
-        <div><h3>Web app</h3><p>fortized.com/app</p></div>
-        <span class="badge ok"><svg><use href="#i-check-circle"/></svg> Operational</span>
-        <span class="uptime">99.98%</span>
-      </div>
-      <div class="svc">
-        <div class="ico"><svg><use href="#i-shield"/></svg></div>
-        <div><h3>Bastions</h3><p>Community servers, rooms, ranks</p></div>
-        <span class="badge ok"><svg><use href="#i-check-circle"/></svg> Operational</span>
-        <span class="uptime">99.97%</span>
-      </div>
-      <div class="svc">
-        <div class="ico"><svg><use href="#i-comments"/></svg></div>
-        <div><h3>Messaging</h3><p>DMs, group chats, forum posts</p></div>
-        <span class="badge ok"><svg><use href="#i-check-circle"/></svg> Operational</span>
-        <span class="uptime">99.99%</span>
-      </div>
-      <div class="svc">
-        <div class="ico"><svg><use href="#i-bolt"/></svg></div>
-        <div><h3>Voice rooms</h3><p>Real-time voice, profile calls</p></div>
-        <span class="badge ok"><svg><use href="#i-check-circle"/></svg> Operational</span>
-        <span class="uptime">99.92%</span>
-      </div>
-      <div class="svc">
-        <div class="ico"><svg><use href="#i-fire"/></svg></div>
-        <div><h3>Fortshop &amp; Radiance</h3><p>Economy, marketplace, cosmetics</p></div>
-        <span class="badge ok"><svg><use href="#i-check-circle"/></svg> Operational</span>
-        <span class="uptime">99.95%</span>
-      </div>
-      <div class="svc">
-        <div class="ico"><svg><use href="#i-people"/></svg></div>
-        <div><h3>Authentication</h3><p>Login, signup, OAuth</p></div>
-        <span class="badge ok"><svg><use href="#i-check-circle"/></svg> Operational</span>
-        <span class="uptime">99.99%</span>
-      </div>
-      <div class="svc">
-        <div class="ico"><svg><use href="#i-download"/></svg></div>
-        <div><h3>Desktop downloads</h3><p>Windows / macOS / Linux installers</p></div>
-        <span class="badge ok"><svg><use href="#i-check-circle"/></svg> Operational</span>
-        <span class="uptime">100%</span>
-      </div>
+    <div class="svc-grid" id="svcGrid">
+      <div class="svc"><div class="ico"><svg><use href="#i-fortized"/></svg></div><div><h3>Loading</h3><p>Fetching component status…</p></div><span class="badge ok">Checking</span><span class="uptime"></span></div>
     </div>
   </div>
 </section>
@@ -189,5 +148,62 @@
 </footer>
 
 <script src="/css/fortized-2026.js"></script>
+<script>
+/* Live status. Everything on this page comes from /api/status — the SAME
+   endpoint the staff console reads, so what members see here and what staff
+   see in the console can never drift apart. It used to be seven hardcoded
+   "Operational" badges that stayed green through an outage, which is worse
+   than having no status page at all. */
+(function () {
+  var ICONS = {
+    app: 'i-fortized', realtime: 'i-comments', database: 'i-shield',
+    economy: 'i-fire', verification: 'i-people', moderation: 'i-bolt'
+  };
+  var COPY = {
+    operational: { badge: 'ok',   label: 'Operational',  hero: 'All systems operational', sub: 'Everything is running normally.', head: 'All systems <span class="pop">operational</span>.' },
+    degraded:    { badge: 'warn', label: 'Degraded',     hero: 'Partially degraded',      sub: 'Some parts of Fortized are not at full strength.', head: 'Some systems <span class="pop">degraded</span>.' },
+    maintenance: { badge: 'warn', label: 'Maintenance',  hero: 'Scheduled maintenance',   sub: 'We are working on Fortized and will be back shortly.', head: 'Down for <span class="pop">maintenance</span>.' },
+    down:        { badge: 'down', label: 'Down',         hero: 'We have a problem',       sub: 'At least one service is down. We are on it.', head: 'Service <span class="pop">disruption</span>.' }
+  };
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+
+  function paint(data) {
+    var overall = (data && data.overall) || 'down';
+    var c = COPY[overall] || COPY.down;
+    var hero = document.getElementById('statusHero');
+    hero.className = 'status-hero' + (overall === 'operational' ? '' : overall === 'down' ? ' down' : ' degraded');
+    document.getElementById('statusTitle').textContent = c.hero;
+    document.getElementById('statusSub').textContent = (data && data.maintenanceMessage) || c.sub;
+    document.getElementById('statusHeadline').innerHTML = c.head;
+    document.getElementById('statusWhen').textContent = 'updated just now';
+    document.title = c.hero + ' - Fortized';
+
+    var comps = (data && data.components) || [];
+    document.getElementById('svcGrid').innerHTML = comps.map(function (x) {
+      var s = COPY[x.state] || COPY.down;
+      return '<div class="svc">'
+        + '<div class="ico"><svg><use href="#' + (ICONS[x.id] || 'i-fortized') + '"/></svg></div>'
+        + '<div><h3>' + esc(x.label) + '</h3><p>' + esc(x.desc) + '</p></div>'
+        + '<span class="badge ' + s.badge + '"><svg><use href="#i-check-circle"/></svg> ' + s.label + '</span>'
+        + '<span class="uptime">' + esc(x.note || '') + '</span>'
+        + '</div>';
+    }).join('') || '<div class="svc"><div class="ico"><svg><use href="#i-fortized"/></svg></div><div><h3>No data</h3><p>The status service did not answer.</p></div><span class="badge down">Unknown</span><span class="uptime"></span></div>';
+  }
+
+  function load() {
+    fetch('/api/status', { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(paint)
+      .catch(function () {
+        // If we cannot even reach the status endpoint, say so plainly rather
+        // than leaving the last-known-good numbers on screen.
+        paint({ overall: 'down', components: [], maintenanceMessage: 'We cannot reach the status service from your connection.' });
+      });
+  }
+  load();
+  setInterval(load, 30000);
+})();
+</script>
+
 </body>
 </html>

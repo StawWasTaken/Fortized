@@ -380,6 +380,106 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// ── GET /api/status — ONE source of truth for "is Fortized up?" ──────
+// The public status page and the staff console both read this. They used to
+// disagree completely: the status page was seven hardcoded "Operational"
+// badges that could not go red if the whole platform was on fire, and the
+// console ran its own probes with different names. Now there is one list of
+// components, probed server-side, and both surfaces render the same answer.
+//
+// Maintenance mode is part of the picture: if staff have flipped the switch,
+// every member-facing component reports `maintenance` rather than pretending
+// nothing is happening.
+const _STATUS_COMPONENTS = [
+  { id: 'app',          label: 'Web app',            desc: 'fortized.com/app' },
+  { id: 'realtime',     label: 'Messaging & rooms',  desc: 'DMs, group chats, bastion channels' },
+  { id: 'database',     label: 'Accounts & data',    desc: 'Profiles, bastions, everything stored' },
+  { id: 'economy',      label: 'Fortshop & economy', desc: 'Onyx, trading, Radiance' },
+  { id: 'verification', label: 'Human verification', desc: 'Lifecheck on sensitive actions' },
+  { id: 'moderation',   label: 'Safety systems',     desc: 'Automod and report triage' },
+];
+
+// Cached briefly — the status page is public, and an un-cached endpoint that
+// probes Supabase on every hit is a free way to burn the egress quota.
+let _statusCache = null, _statusAt = 0;
+const _STATUS_TTL = 20000;
+
+async function _buildStatus() {
+  const state = {};
+  const note = {};
+
+  // App server: we are answering, so it is up.
+  state.app = 'operational';
+  note.app = 'uptime ' + Math.floor(process.uptime()) + 's';
+
+  // Realtime: the socket layer is in-process.
+  state.realtime = 'operational';
+  note.realtime = io.sockets.sockets.size + ' connected';
+
+  // Database: one cheap read.
+  try {
+    const t0 = Date.now();
+    const { error } = await sbAdmin.from('admin_kv').select('key').limit(1);
+    state.database = error ? 'down' : 'operational';
+    note.database = error ? (error.message || 'unreachable') : (Date.now() - t0) + 'ms';
+  } catch (e) { state.database = 'down'; note.database = 'unreachable'; }
+
+  // Economy: trading needs the settle RPC, sends need theirs. Either one
+  // missing is degraded, not down — the Fortshop itself still works.
+  let tradesOk = false, sendOk = false;
+  try {
+    const { error } = await sbAdmin.rpc('ftz_trade_settle', { p_trade_id: '__probe__', p_actor: '__probe__' });
+    tradesOk = !error || !/does not exist|not find/i.test(error.message || '');
+  } catch {}
+  try {
+    const { error } = await sbAdmin.rpc('ftz_onyx_send', { p_from: '__probe__', p_to: '__probe__', p_amount: 0 });
+    sendOk = !error || !/does not exist|not find/i.test(error.message || '');
+  } catch {}
+  state.economy = (tradesOk && sendOk) ? 'operational' : (tradesOk || sendOk) ? 'degraded' : 'degraded';
+  note.economy = tradesOk && sendOk ? 'trading and sends ready'
+    : tradesOk ? 'sends not set up' : sendOk ? 'trading not set up' : 'running client-side';
+
+  // Verification + moderation are configuration, not liveness.
+  const lifecheck = !!(process.env.SWIFTAW_LIFECHECK_SITEKEY && process.env.SWIFTAW_LIFECHECK_APIKEY);
+  state.verification = lifecheck ? 'operational' : 'degraded';
+  note.verification = lifecheck ? 'configured' : 'falling back to the built-in challenge';
+
+  const aiKey = !!(process.env.AI_MOD_KEY || '').trim();
+  state.moderation = aiKey ? 'operational' : 'degraded';
+  note.moderation = aiKey ? 'configured' : 'running on the local ruleset';
+
+  // Maintenance overrides everything member-facing.
+  let maintenance = false, maintenanceMessage = '';
+  try {
+    // Global settings are their own single-row table, NOT an admin_kv key.
+    const { data } = await sbAdmin.from('admin_global_settings').select('data').eq('id', 1).maybeSingle();
+    const gs = data?.data || {};
+    maintenance = !!(gs.maintenanceMode || gs.maintenance);
+    maintenanceMessage = gs.maintenanceMessage || '';
+  } catch {}
+  if (maintenance) {
+    for (const c of _STATUS_COMPONENTS) if (c.id !== 'app') { state[c.id] = 'maintenance'; note[c.id] = 'scheduled maintenance'; }
+  }
+
+  const components = _STATUS_COMPONENTS.map(c => ({ ...c, state: state[c.id] || 'down', note: note[c.id] || '' }));
+  const overall = maintenance ? 'maintenance'
+    : components.some(c => c.state === 'down') ? 'down'
+      : components.some(c => c.state === 'degraded') ? 'degraded' : 'operational';
+
+  return { overall, maintenance, maintenanceMessage, components, checkedAt: new Date().toISOString() };
+}
+
+app.get('/api/status', async (_req, res) => {
+  try {
+    if (_statusCache && Date.now() - _statusAt < _STATUS_TTL) return res.json(_statusCache);
+    _statusCache = await _buildStatus();
+    _statusAt = Date.now();
+    res.json(_statusCache);
+  } catch (e) {
+    res.status(503).json({ overall: 'down', components: [], error: 'status unavailable' });
+  }
+});
+
 // ── IGDB API Proxy ────────────────────────────────
 // Proxies requests to IGDB (via Twitch auth) so the
 // client can fetch game metadata (genre, cover art).

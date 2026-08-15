@@ -2366,11 +2366,18 @@ async function _syncBastionToGlobal(bastionIdx) {
       await FortizedSocial.addBastionMember(b.globalId, CU.username);
     }
     const bid = b.globalId;
-    // Preserve admin-set fields (verified) from existing global data
+    // Preserve staff-set fields from the existing global row.
+    // ⚠️ This sync copies the OWNER's local bastion object over the global one,
+    // and the owner's copy has never seen these fields — so anything only staff
+    // can set is wiped by an ordinary "Save Changes" unless it's listed here.
+    // `featured` drives the Featured rail on Discover; losing it silently
+    // un-features a bastion the moment its owner edits their description.
     let existingGlobal = null;
     try { existingGlobal = await FortizedSocial.getGlobalBastion(bid); } catch(e) {}
     const globalData = {...b, id: bid, owner: b.owner || CU.username, memberCount: b.memberCount || 1};
-    if (existingGlobal?.verified !== undefined) globalData.verified = existingGlobal.verified;
+    ['verified', 'featured', 'flagged', 'staffNote'].forEach(f => {
+      if (existingGlobal?.[f] !== undefined) globalData[f] = existingGlobal[f];
+    });
     delete globalData.globalId; // avoid nesting
     await FortizedSocial.saveGlobalBastion(bid, globalData);
     // Broadcast change to all connected clients so they re-sync
@@ -15646,10 +15653,31 @@ async function _unblockFromDM(username) {
 // ════════════════════════════════════════════
 // DISCOVER
 // ════════════════════════════════════════════
+// ── Discover state ──
+// `discoverTab` (legacy) is kept as the category filter so `setDiscoverTab`
+// callers outside this file keep working.
+let _discSort = 'members';      // members | new | az
+let _discHideJoined = false;
+let _discQuery = '';
+
+const _DISC_CATS = [
+  { id: 'gaming',    label: 'Gaming',    icon: 'fa-gamepad' },
+  { id: 'art',       label: 'Art',       icon: 'fa-palette' },
+  { id: 'tech',      label: 'Tech',      icon: 'fa-microchip' },
+  { id: 'social',    label: 'Social',    icon: 'fa-comments' },
+  { id: 'music',     label: 'Music',     icon: 'fa-music' },
+  { id: 'education', label: 'Education', icon: 'fa-graduation-cap' },
+  { id: 'community', label: 'Community', icon: 'fa-people-group' },
+];
+function _discCatLabel(id) {
+  return (_DISC_CATS.find(c => c.id === String(id).toLowerCase()) || {}).label || '';
+}
+
 async function loadDiscover(){
-  const grid=document.getElementById('discover-grid');
-  if(!grid)return;
-  grid.innerHTML='<div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">' + Array(6).fill(0).map(() => '<div class="skeleton-card"><div class="skeleton skeleton-banner"></div><div class="skeleton-body"><div class="skeleton skeleton-text" style="width:65%;height:14px;"></div><div class="skeleton skeleton-text" style="width:90%;"></div><div class="skeleton skeleton-text" style="width:40%;height:10px;"></div></div></div>').join('') + '</div>';
+  const body = document.getElementById('disc-body');
+  if (body && !discoverData.length) {
+    body.innerHTML = `<div class="disc-wrap">${_discRailSkeleton()}${_discRailSkeleton()}</div>`;
+  }
   try { FortizedSocial.clearBastionCache(); } catch(e) {}
   try{discoverData=Object.values(await FortizedSocial.getGlobalBastions()||{});}catch{discoverData=[];}
   // Strictly filter: only show bastions that are explicitly public
@@ -15658,91 +15686,424 @@ async function loadDiscover(){
   discoverData = discoverData.filter(b => b.name && b.name.trim().length > 0);
   // Fix member counts — ensure at least 1 if they have an owner
   discoverData.forEach(b => { if (!b.memberCount && b.owner) b.memberCount = 1; });
-  // Update stats
-  const statsEl=document.getElementById('disc-stats');
-  if(statsEl){
-    const publicCount=discoverData.length;
-    const totalMembers=discoverData.reduce((s,b)=>s+(b.memberCount||1),0);
-    statsEl.innerHTML=`<div class="disc-stat"><strong>${publicCount}</strong> communities</div><div class="disc-stat"><strong>${totalMembers}</strong> total members</div>`;
-  }
   _renderDiscoverActivities();
-  _renderDiscoverFeatured(discoverData);
-  renderDiscoverGrid(discoverData);
+  _discRenderBastions();
+  // Growth history for the Rising rail. Fire-and-forget: it must never hold up
+  // the page, and if it fails the rail simply doesn't appear.
+  _discSnapshot().then(ok => { if (ok) _discRenderBastions(); }).catch(() => {});
 }
-function _renderDiscoverFeatured(bastions){
-  const el=document.getElementById('disc-featured');
-  if(!el)return;
-  const featured=bastions.filter(b=>b.public!==false).sort((a,b)=>(b.memberCount||0)-(a.memberCount||0)).slice(0,3);
-  if(!featured.length){el.innerHTML='';return;}
-  el.innerHTML=`<div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:14px;display:flex;align-items:center;gap:8px;letter-spacing:.04em;text-transform:uppercase;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Trending Bastions</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
-  ${featured.map(b=>{
-    const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id);
-    const mc = b.memberCount||1;
-    const boostBadge = (b.boostLevel||0)>0?(['🟦 Tier 1','🟪 Tier 2','👑 Tier 3'][(b.boostLevel||1)-1]):'';
-    return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,${(b.boostLevel||0)>0?'rgba(255,249,62,.08)':'rgba(255,249,62,.04)'},rgba(62,207,110,.02),rgba(14,18,28,.95));border:1.5px solid ${(b.boostLevel||0)>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.12)'};border-radius:18px;padding:20px 22px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;backdrop-filter:none;" onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 40px ${(b.boostLevel||0)>0?'rgba(255,249,62,.12)':'rgba(255,249,62,.06)'}';" onmouseleave="this.style.transform='';this.style.boxShadow='';">
-      <div style="width:52px;height:52px;border-radius:14px;background:${(b.boostLevel||0)>0?'linear-gradient(135deg,rgba(255,249,62,.15),rgba(255,249,62,.05))':'rgba(255,249,62,.06)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid ${(b.boostLevel||0)>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.1)'};overflow:hidden;">${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">`:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.4)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`}</div>
-      <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;line-height:1.2;">${escapeHTML(b.name)}${b.verified?_verifiedBadge(16):''} ${boostBadge?'<span style="font-size:10px;margin-left:6px;font-weight:700;color:var(--accent);">'+boostBadge+'</span>':''}</div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-ui);">${escapeHTML((b.desc||'A community bastion').slice(0,70))}</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.3);"><span style="display:flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</span>${mc>=5?`<span style="color:rgba(62,207,110,.8);display:flex;align-items:center;gap:2px;font-weight:700;">🔥 Trending</span>`:`<span style="color:rgba(255,255,255,.4);">💤 ${mc>1?'Active':'Quiet'}</span>`}</div></div>
-      ${joined?`<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.12);padding:5px 12px;border-radius:10px;">✓ Joined</span>`:`<span style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);padding:5px 12px;border-radius:10px;">+ Join</span>`}
-    </div>`;
-  }).join('')}</div>`;
+
+// ══════════════════════════════════════════════════════════════════════
+// Growth snapshots — what makes "Rising" a real measurement
+// ══════════════════════════════════════════════════════════════════════
+// ONE admin_kv row holds a member-count snapshot per bastion per day, written
+// at most once a day by whichever client opens Discover first. That's one small
+// read and (at most) one small write per day for the WHOLE platform, not per
+// user and not per bastion — the only shape of this that's egress-honest.
+// ⚠️ Until a week of history exists, Rising hides itself. A "rising" rail built
+// from a single data point would just be the member-count list wearing a
+// different hat, which is the exact dishonesty we removed from the cards.
+const _DISC_SNAP_KEY = 'bastion_growth';
+const _DISC_SNAP_KEEP = 10;           // days of history retained
+let _discGrowth = null;               // { byId: {id: delta}, days: n }
+
+function _discDayStamp(d) { return new Date(d || Date.now()).toISOString().slice(0, 10); }
+
+async function _discSnapshot() {
+  try {
+    const store = (await FortizedSocial.adminGetKV(_DISC_SNAP_KEY, null)) || { days: {} };
+    const days = store.days || {};
+    const today = _discDayStamp();
+    const keys = Object.keys(days).sort();
+
+    // Only the first client of the day pays for the write.
+    if (!days[today]) {
+      const shot = {};
+      discoverData.forEach(b => { const id = b.id || b.name; if (id) shot[id] = b.memberCount || 1; });
+      days[today] = shot;
+      // Trim oldest so the row can't grow without bound.
+      Object.keys(days).sort().slice(0, Math.max(0, Object.keys(days).length - _DISC_SNAP_KEEP))
+        .forEach(k => delete days[k]);
+      try { await FortizedSocial.adminSaveKV(_DISC_SNAP_KEY, { days }); } catch (_) {}
+    }
+
+    // Compare today against the oldest snapshot at least 7 days back. Anything
+    // shorter is noise; anything we don't have, we don't claim.
+    const cutoff = _discDayStamp(Date.now() - 7 * 86400000);
+    const base = keys.filter(k => k <= cutoff).pop();
+    if (!base) { _discGrowth = null; return false; }
+    const then = days[base] || {}, now = days[today] || {};
+    const byId = {};
+    Object.keys(now).forEach(id => {
+      const was = then[id];
+      if (was === undefined) return;      // didn't exist a week ago — that's "Fresh", not "Rising"
+      const gained = (now[id] || 0) - was;
+      if (gained > 0) byId[id] = gained;
+    });
+    _discGrowth = Object.keys(byId).length ? { byId, since: base } : null;
+    return !!_discGrowth;
+  } catch (_) { _discGrowth = null; return false; }
 }
-// Discover ad emplacement removed by request.
-function renderDiscoverGrid(bastions){
-  const grid=document.getElementById('discover-grid');
-  if(!grid)return;
-  const filtered=bastions.filter(b=>b.public!==false&&(discoverTab==='all'||(b.category||'').toLowerCase()===discoverTab));
-  if(!filtered.length){grid.innerHTML=`<div style="grid-column:1/-1;" class="ftz-empty"><div class="ftz-empty-icon"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div><div class="ftz-empty-title">No bastions found</div><div class="ftz-empty-text">Try a different category or search term</div></div>`;return;}
-  // Sort: verified first, then most members, then oldest (established communities)
-  const sorted = [...filtered].sort((a,b) => {
-    // Verified bastions always come first
-    const aV = a.verified ? 1 : 0, bV = b.verified ? 1 : 0;
-    if (aV !== bV) return bV - aV;
-    const aMembers = a.memberCount||0, bMembers = b.memberCount||0;
-    if (aMembers !== bMembers) return bMembers - aMembers;
-    // Tie-break by creation date (older = more established first)
-    return (a.createdAt||'').localeCompare(b.createdAt||'');
-  });
-  grid.innerHTML=sorted.map(b=>{
-    const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id);
-    const cat=(b.category||'').toLowerCase();
-    const mc = b.memberCount||1;
-    const isTrending = mc >= 5;
-    const boostLevel = b.boostLevel||0;
-    const tags = (b.tags || []).slice(0,3);
-    const _cardId = 'bc-'+(b.id||b.name||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,12)+Math.random().toString(36).slice(2,5);
-    // Banner: actual banner > icon > fallback gradient
-    const hasBanner = !!b.banner;
-    const hasIcon = !!b.icon;
-    const bannerSrc = b.banner || b.icon || '';
-    const bannerHTML = bannerSrc
-      ? `<img src="${escapeHTML(bannerSrc)}" style="width:100%;height:100%;object-fit:cover;" referrerpolicy="no-referrer" onload="try{_extractCardColor(this,'${_cardId}')}catch{}" onerror="this.style.display='none'">`
-      : `<div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(80,80,120,.3),rgba(30,30,50,.8));"></div>`;
-    return `<div class="bc" id="${_cardId}" onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">
-      ${boostLevel>0?`<div style="position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;padding:3px 8px;background:rgba(0,0,0,.5);backdrop-filter:none;border-radius:6px;color:#fff;z-index:3;">${['🟦','🟪','👑'][boostLevel-1]} T${boostLevel}</div>`:''}
-      <div class="bc-banner">${bannerHTML}</div>
-      <div class="bc-body">
-        <div class="bc-meta">
-          <div class="bc-icon">${hasIcon?`<img src="${escapeHTML(b.icon)}" alt="">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border-radius:inherit;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>`}</div>
-          <div style="flex:1"></div>
-          ${joined?`<span style="font-size:10.5px;font-weight:700;color:var(--green);background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);padding:4px 12px;border-radius:8px;display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Joined</span>`:`<button class="ftz-btn ftz-btn-accent ftz-btn-xs" style="padding:5px 16px;border-radius:8px;" onclick="event.stopPropagation();promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">+ Join</button>`}
+
+// ══════════════════════════════════════════════════════════════════════
+// The page
+// ══════════════════════════════════════════════════════════════════════
+function _discRenderBastions() {
+  _discRenderHero();
+  _discRenderFilters();
+  _discRenderBody();
+}
+
+function _discJoined(b) {
+  return (CU?.bastions || []).some(ub => ub.globalId === (b.id || b.name));
+}
+function _discIsFresh(b) {
+  const t = Date.parse(b.createdAt || '');
+  return !!t && (Date.now() - t) < 30 * 86400000;
+}
+
+function _discRenderHero() {
+  const el = document.getElementById('disc-hero-host');
+  if (!el) return;
+  const total = discoverData.length;
+  const members = discoverData.reduce((s, b) => s + (b.memberCount || 1), 0);
+  const mine = discoverData.filter(_discJoined).length;
+  // The Fortshop hero, including its depth move: the art is full-bleed and tall
+  // with the title up top, and everything after it — search, stats, filters and
+  // the first rail — is pulled UP by `.disc-rowwrap` so it straddles the
+  // dissolving edge of the cover instead of starting below it.
+  el.innerHTML = `
+    <div class="fs-heroblock disc-heroblock">
+      <div class="fs-hero disc-hero2">
+        <div class="fs-hero-bg" style="background-image:url('/Fortized banner.png?v=2')"></div>
+        <div class="fs-hero-inner disc-hero2-inner">
+          <div class="disc-hero2-left">
+            <div class="qst-banner-eyebrow">DISCOVER</div>
+            <div class="fs-hero-lg-txt disc-hero2-title">Find your people.</div>
+            <div class="disc-hero2-sub">Every public bastion in the realm, in one place.</div>
+          </div>
         </div>
-        <div class="bc-name">${escapeHTML(b.name)}${b.verified?_verifiedBadge(16):''}</div>
-        <div class="bc-desc">${escapeHTML((b.desc||'').slice(0,140))}</div>
-        <div class="bc-footer">
-          <span style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:rgba(255,255,255,.35);"><span style="width:8px;height:8px;border-radius:50%;background:#3ecf6e;"></span> ${mc > 1000 ? Math.floor(mc/1000)+'K' : Math.max(1,Math.floor(mc*0.3))} Online</span>
-          <span style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:rgba(255,255,255,.35);"><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.25);"></span> ${mc > 1000 ? (mc/1000).toFixed(1)+'K' : mc} Member${mc!==1?'s':''}</span>
+      </div>
+      <div class="disc-rowwrap">
+        <div class="disc-hero-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="disc-search-input" placeholder="Scout the realm…"
+                 value="${escapeHTML(_discQuery)}" autocomplete="off" spellcheck="false"
+                 oninput="filterDiscover(this.value)">
+          ${_discQuery ? `<button class="disc-hero-x" onclick="filterDiscover('')" aria-label="Clear search"><i class="fa-solid fa-xmark"></i></button>` : ''}
+        </div>
+        <div class="disc-hero2-stats">
+          <div class="disc-hstat"><b>${_ftzCompactNum(total)}</b><span>communities</span></div>
+          <div class="disc-hstat"><b>${_ftzCompactNum(members)}</b><span>members</span></div>
+          <div class="disc-hstat"><b>${_ftzCompactNum(mine)}</b><span>joined by you</span></div>
         </div>
       </div>
     </div>`;
-  }).join('');
-  // After render, extract dominant colors for cards without banners
 }
-function filterDiscover(q){
-  const query=q.toLowerCase().trim();
-  if(!query){renderDiscoverGrid(discoverData);return;}
-  renderDiscoverGrid(discoverData.filter(b=>(b.name||'').toLowerCase().includes(query)||(b.desc||'').toLowerCase().includes(query)||(b.category||'').toLowerCase().includes(query)));
+
+function _discRenderFilters() {
+  const el = document.getElementById('disc-filters-host');
+  if (!el) return;
+  // ⚠️ Only categories that actually EXIST in the data get a chip. The old page
+  // hardcoded seven tabs, six of which could never match anything, so most of
+  // the filter bar was dead on arrival.
+  const live = {};
+  discoverData.forEach(b => {
+    const c = String(b.category || '').toLowerCase();
+    if (c) live[c] = (live[c] || 0) + 1;
+  });
+  const cats = _DISC_CATS.filter(c => live[c.id]);
+  const chips = [{ id: 'all', label: 'All', icon: 'fa-layer-group' }, ...cats];
+  el.innerHTML = `
+    <div class="disc-wrap disc-filters">
+      <div class="disc-chips">
+        ${chips.map(c => `
+          <button class="disc-chip${discoverTab === c.id ? ' is-on' : ''}" onclick="setDiscoverTab('${c.id}',this)">
+            <i class="fa-solid ${c.icon}"></i>${escapeHTML(c.label)}
+            ${c.id !== 'all' ? `<span class="disc-chip-n">${live[c.id]}</span>` : ''}
+          </button>`).join('')}
+      </div>
+      <div class="disc-filter-right">
+        <button class="disc-toggle${_discHideJoined ? ' is-on' : ''}" onclick="_discToggleJoined()">
+          <i class="fa-solid ${_discHideJoined ? 'fa-square-check' : 'fa-square'}"></i>Hide joined
+        </button>
+        ${_ftzSelectHTML('disc-sort', _discSort, [
+          { value: 'members', label: 'Most members' },
+          { value: 'new',     label: 'Newest' },
+          { value: 'az',      label: 'A – Z' },
+        ], '_discSetSort(__VALUE__)')}
+      </div>
+    </div>`;
 }
+
+function _discSetSort(v) { _discSort = v || 'members'; _discRenderBody(); }
+function _discToggleJoined() { _discHideJoined = !_discHideJoined; _discRenderFilters(); _discRenderBody(); }
+
+function _discSortList(list) {
+  const l = [...list];
+  if (_discSort === 'new') l.sort((a, b) => Date.parse(b.createdAt || 0) - Date.parse(a.createdAt || 0));
+  else if (_discSort === 'az') l.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  else l.sort((a, b) => (b.memberCount || 0) - (a.memberCount || 0));
+  return l;
+}
+
+// Everything the current filters allow through, before rails split it up.
+function _discPool() {
+  let l = discoverData.filter(b => b.public !== false);
+  if (discoverTab !== 'all') l = l.filter(b => String(b.category || '').toLowerCase() === discoverTab);
+  if (_discHideJoined) l = l.filter(b => !_discJoined(b));
+  if (_discQuery) {
+    const q = _discQuery.toLowerCase();
+    l = l.filter(b => (b.name || '').toLowerCase().includes(q)
+      || (b.desc || '').toLowerCase().includes(q)
+      || (b.tagline || '').toLowerCase().includes(q)
+      || (b.category || '').toLowerCase().includes(q)
+      || (b.tags || []).some(t => String(t).toLowerCase().includes(q)));
+  }
+  return l;
+}
+
+function _discRenderBody() {
+  const el = document.getElementById('disc-body');
+  if (!el) return;
+  const pool = _discPool();
+
+  if (!pool.length) {
+    // ⚠️ Say the REAL reason it's empty. "Hide joined" emptying a shelf you're
+    // already a member of is a different thing from that shelf being empty, and
+    // telling someone "nothing in Tech yet" when they're in the only Tech
+    // bastion is just wrong. Re-test the pool without the joined filter to tell
+    // the two apart.
+    const emptiedByHide = _discHideJoined && (() => {
+      const was = _discHideJoined; _discHideJoined = false;
+      const n = _discPool().length; _discHideJoined = was; return n > 0;
+    })();
+    el.innerHTML = `<div class="disc-wrap">${
+      emptiedByHide ? _ftzNotFound('You’re already in these', discoverTab === 'all'
+          ? 'Every public bastion has you in it. Turn off “Hide joined” to see them.'
+          : 'You’ve joined everything in ' + _discCatLabel(discoverTab) + '. Turn off “Hide joined” to see them.',
+          { art: 'celebrate' })
+      : _discQuery ? _ftzNotFound('No bastion by that name', 'Try a shorter word, or clear the search.')
+      : discoverTab !== 'all' ? _ftzNotFound('Nothing in ' + _discCatLabel(discoverTab) + ' yet', 'Be the first — set your own bastion’s category in its settings.', { art: 'battle' })
+      : _ftzNotFound('No bastions yet', 'When someone opens a public bastion, it shows up here.', { art: 'battle' })
+    }</div>`;
+    return;
+  }
+
+  // ⚠️ Searching or filtering collapses the rails into ONE grid. Rails are for
+  // browsing (here are some things you might like); the moment someone types a
+  // query they want an answer, and slicing that answer across five scrollers
+  // hides most of it off-screen.
+  if (_discQuery || discoverTab !== 'all') {
+    el.innerHTML = `<div class="disc-wrap">
+      ${_discGroup(_discQuery ? `${pool.length} result${pool.length !== 1 ? 's' : ''}` : _discCatLabel(discoverTab))}
+      ${_discGrid(_discSortList(pool))}
+    </div>`;
+    _discAfterPaint();
+    return;
+  }
+
+  const seen = new Set();
+  const take = (list, n) => {
+    const out = [];
+    for (const b of list) {
+      const id = b.id || b.name;
+      if (seen.has(id)) continue;
+      out.push(b); seen.add(id);
+      if (out.length >= (n || 12)) break;
+    }
+    return out;
+  };
+  const rails = [];
+
+  const featured = take(pool.filter(b => b.featured), 12);
+  if (featured.length) rails.push({ t: 'Featured', s: 'Picked by the Fortized team', l: featured });
+
+  if (_discGrowth) {
+    const rising = take(
+      pool.filter(b => _discGrowth.byId[b.id || b.name])
+        .sort((a, b) => _discGrowth.byId[b.id || b.name] - _discGrowth.byId[a.id || a.name]), 12);
+    if (rising.length) rails.push({ t: 'Rising', s: 'Grew the most this week', l: rising, growth: true });
+  }
+
+  const verified = take(pool.filter(b => b.verified), 12);
+  if (verified.length) rails.push({ t: 'Verified', s: 'Confirmed as the real thing', l: verified });
+
+  const fresh = take(pool.filter(_discIsFresh)
+    .sort((a, b) => Date.parse(b.createdAt || 0) - Date.parse(a.createdAt || 0)), 12);
+  if (fresh.length) rails.push({ t: 'Fresh arrivals', s: 'Opened in the last month', l: fresh });
+
+  _DISC_CATS.forEach(c => {
+    const inCat = take(_discSortList(pool.filter(b => String(b.category || '').toLowerCase() === c.id)), 12);
+    if (inCat.length) rails.push({ t: c.label, s: null, l: inCat, cat: c.id });
+  });
+
+  // Whatever no rail claimed still deserves to be findable.
+  const rest = _discSortList(pool.filter(b => !seen.has(b.id || b.name)));
+
+  el.innerHTML = `<div class="disc-wrap">
+    ${rails.map(r => _discRail(r)).join('')}
+    ${rest.length ? _discGroup(rails.length ? 'Everything else' : 'All bastions') + _discGrid(rest) : ''}
+  </div>`;
+  _discAfterPaint();
+}
+
+function _discGroup(title, right) {
+  return `<div class="qst-group disc-group"><span class="qst-group-t">${escapeHTML(title)}</span>${right || ''}</div>`;
+}
+
+// A horizontal rail — the Guilded structure. Arrows page by a viewport's worth
+// and hide themselves when there's nothing left that way.
+let _discRailN = 0;
+function _discRail(r) {
+  const id = 'discrail-' + (++_discRailN);
+  return `<div class="disc-railblock">
+    <div class="qst-group disc-group">
+      <span class="qst-group-t">${escapeHTML(r.t)}</span>
+      ${r.s ? `<span class="disc-group-s">${escapeHTML(r.s)}</span>` : ''}
+      <div class="disc-rail-nav">
+        ${r.cat ? `<button class="disc-viewall" onclick="setDiscoverTab('${r.cat}')">View all</button>` : ''}
+        <button class="fr-act disc-arr" data-rail="${id}" data-dir="-1" aria-label="Scroll left"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="fr-act disc-arr" data-rail="${id}" data-dir="1" aria-label="Scroll right"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+    <div class="disc-rail" id="${id}">
+      ${r.l.map((b, i) => _discCard(b, i, { growth: r.growth ? _discGrowth.byId[b.id || b.name] : 0 })).join('')}
+    </div>
+  </div>`;
+}
+
+function _discGrid(list) {
+  return `<div class="disc-grid">${list.map((b, i) => _discCard(b, i)).join('')}</div>`;
+}
+
+function _discRailSkeleton() {
+  return `<div class="disc-railblock">
+    <div class="qst-group disc-group"><span class="skeleton skeleton-text" style="width:130px;height:15px;"></span></div>
+    <div class="disc-rail">${Array(5).fill(0).map(() => `
+      <div class="disc-card disc-card--skel">
+        <div class="skeleton disc-card-banner"></div>
+        <div class="disc-card-body">
+          <div class="skeleton skeleton-text" style="width:60%;height:14px;margin-top:14px;"></div>
+          <div class="skeleton skeleton-text" style="width:92%;"></div>
+          <div class="skeleton skeleton-text" style="width:70%;"></div>
+        </div>
+      </div>`).join('')}</div>
+  </div>`;
+}
+
+// ── The card ──
+function _discCard(b, i, o) {
+  const opt = o || {};
+  const id = b.id || b.name || '';
+  const cardId = 'bc-' + String(id).replace(/[^a-zA-Z0-9]/g, '').slice(0, 12) + (i || 0);
+  const joined = _discJoined(b);
+  const mc = b.memberCount || 1;
+  const tier = b.boostLevel || 0;
+  // The category chip counts toward the row — 1 + 3 wraps to a second line and
+  // makes neighbouring cards different heights, which is what a rail must avoid.
+  const cat = _discCatLabel(b.category);
+  const tags = (b.tags || []).filter(Boolean).slice(0, cat ? 2 : 3);
+  const moreTags = Math.max(0, (b.tags || []).length - tags.length);
+  const esc = escapeHTML(String(id));
+
+  const banner = b.banner || b.icon || '';
+  const bannerHTML = banner
+    ? `<img src="${escapeHTML(banner)}" alt="" referrerpolicy="no-referrer"
+         onload="try{_extractCardColor(this,'${cardId}')}catch{}" onerror="this.style.display='none'">`
+    : '';
+
+  const emblem = b.icon
+    ? `<img src="${escapeHTML(b.icon)}" alt="">`
+    : `<span class="disc-card-em-txt">${escapeHTML((b.name || 'B')[0].toUpperCase())}</span>`;
+
+  return `<div class="disc-card" id="${cardId}" style="--i:${i || 0}" role="button" tabindex="0"
+      onclick="promptJoinPublicBastion('${esc}')"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();promptJoinPublicBastion('${esc}')}">
+    <div class="disc-card-banner">
+      ${bannerHTML}
+      ${tier > 0 ? `<span class="disc-card-boost" data-tip="Boost tier ${tier}"><i class="fa-solid fa-bolt"></i>T${tier}</span>` : ''}
+      ${opt.growth ? `<span class="disc-card-rise"><i class="fa-solid fa-arrow-trend-up"></i>+${_ftzCompactNum(opt.growth)}</span>`
+        : _discIsFresh(b) ? `<span class="disc-card-new">New</span>` : ''}
+    </div>
+    <div class="disc-card-em">${emblem}</div>
+    <div class="disc-card-body">
+      <div class="disc-card-name">${escapeHTML(b.name)}${b.verified ? _verifiedBadge(15) : ''}</div>
+      ${tags.length || cat ? `<div class="disc-card-tags">
+        ${cat ? `<span class="disc-tag disc-tag--cat">${escapeHTML(cat)}</span>` : ''}
+        ${tags.map(t => `<span class="disc-tag">${escapeHTML(String(t).slice(0, 18))}</span>`).join('')}
+        ${moreTags ? `<span class="disc-tag disc-tag--more">+${moreTags}</span>` : ''}
+      </div>` : ''}
+      <div class="disc-card-desc">${escapeHTML(b.desc || b.tagline || 'A community bastion.')}</div>
+      <div class="disc-card-foot">
+        <span class="disc-card-mem"><i class="fa-solid fa-user-group"></i>${_ftzCompactNum(mc)} member${mc !== 1 ? 's' : ''}</span>
+      </div>
+      ${joined
+        ? `<button class="fs-btn disc-card-btn" onclick="event.stopPropagation();promptJoinPublicBastion('${esc}')">Open</button>`
+        : `<button class="fs-btn fs-btn--primary disc-card-btn" onclick="event.stopPropagation();promptJoinPublicBastion('${esc}')">Join</button>`}
+    </div>
+  </div>`;
+}
+
+// Rail arrows: page by a viewport, and disable at the ends so a dead arrow
+// never invites a click that does nothing.
+function _discAfterPaint() {
+  document.querySelectorAll('#disc-body .disc-arr').forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      const rail = document.getElementById(btn.dataset.rail);
+      if (!rail) return;
+      rail.scrollBy({ left: rail.clientWidth * 0.85 * Number(btn.dataset.dir), behavior: 'smooth' });
+    };
+  });
+  document.querySelectorAll('#disc-body .disc-rail').forEach(rail => {
+    const sync = () => {
+      const max = rail.scrollWidth - rail.clientWidth - 2;
+      // Nothing to scroll at all → don't show the controls. Two permanently
+      // dead arrows on every short rail is noise, not an affordance.
+      document.querySelectorAll(`.disc-arr[data-rail="${rail.id}"]`).forEach(a => {
+        a.style.display = max <= 0 ? 'none' : '';
+        const dir = Number(a.dataset.dir);
+        a.classList.toggle('is-off', dir < 0 ? rail.scrollLeft <= 2 : rail.scrollLeft >= max);
+      });
+    };
+    rail.onscroll = sync;
+    sync();
+  });
+}
+
+function setDiscoverTab(tab, btn) {
+  discoverTab = tab || 'all';
+  _discQuery = '';
+  _discRenderFilters();
+  _discRenderBody();
+  const sc = document.getElementById('discover-scroll');
+  if (sc) sc.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function filterDiscover(q) {
+  _discQuery = (q || '').trim();
+  const inp = document.getElementById('disc-search-input');
+  if (inp && inp.value !== (q || '')) inp.value = q || '';
+  clearTimeout(window._discSearchT);
+  window._discSearchT = setTimeout(() => {
+    // Re-rendering the hero would steal focus mid-type, so only the clear
+    // button's presence is patched in place.
+    const host = document.getElementById('disc-hero-host');
+    const has = !!host?.querySelector('.disc-hero-x');
+    if (!!_discQuery !== has) {
+      const sel = document.getElementById('disc-search-input');
+      const pos = sel?.selectionStart;
+      _discRenderHero();
+      const next = document.getElementById('disc-search-input');
+      if (next && sel === document.activeElement) { next.focus(); try { next.setSelectionRange(pos, pos); } catch (_) {} }
+    }
+    _discRenderBody();
+  }, 120);
+}
+
+// Kept for callers outside Discover (the grid id is gone; the page owns itself).
+function renderDiscoverGrid() { _discRenderBody(); }
 
 // ── Activities ─────────────────────────────────────────────────────────────
 // ── Activity icon SVGs (Lucide-style, 20×20) ──
@@ -15859,13 +16220,11 @@ function openActivityOverview(id) {
   if (!act) return;
 
   const discScroll = document.getElementById('discover-scroll');
-  const hero    = discScroll ? discScroll.querySelector('.disc-hero') : null;
   const bastionsPage   = document.getElementById('disc-page-bastions');
   const activitiesPage = document.getElementById('disc-page-activities');
   const overview       = document.getElementById('disc-activity-overview');
   if (!overview) return;
 
-  if (hero)          hero.style.display = 'none';
   if (bastionsPage)  bastionsPage.style.display = 'none';
   if (activitiesPage) activitiesPage.style.display = 'none';
 
@@ -15976,11 +16335,8 @@ function openActivityOverview(id) {
 }
 
 function _closeActivityOverview() {
-  const discScroll = document.getElementById('discover-scroll');
-  const hero    = discScroll ? discScroll.querySelector('.disc-hero') : null;
   const overview = document.getElementById('disc-activity-overview');
   if (overview) overview.style.display = 'none';
-  if (hero)   hero.style.display = '';
   const activitiesPage = document.getElementById('disc-page-activities');
   if (activitiesPage) activitiesPage.style.display = '';
 }
@@ -16215,16 +16571,13 @@ function _extractCardColor(img, cardId) {
     card.style.borderColor = `rgba(${r},${g},${b},.2)`;
   } catch(e) { /* CORS or canvas error — ignore */ }
 }
-function setDiscoverTab(tab,btn){discoverTab=tab;document.querySelectorAll('.disc-tab').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');renderDiscoverGrid(discoverData);}
 function setDiscoverSubPage(page, btn) {
   document.querySelectorAll('.disc-subnav-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   const bastions = document.getElementById('disc-page-bastions');
   const activities = document.getElementById('disc-page-activities');
   const overview = document.getElementById('disc-activity-overview');
-  const hero = document.querySelector('#discover-scroll .disc-hero');
   if (overview) overview.style.display = 'none';
-  if (hero) hero.style.display = '';
   if (bastions) bastions.style.display = page === 'bastions' ? '' : 'none';
   if (activities) activities.style.display = page === 'activities' ? '' : 'none';
   if (page === 'activities') _renderDiscoverActivities();
@@ -20108,6 +20461,18 @@ function renderBSettingsMain(tab) {
           <div style="font-size:10.5px;color:var(--muted);margin-top:4px;">Letters, numbers, dashes, underscores. Must be unique.</div>
         </div>
       </div>
+      <div class="settings-title">Category <span style="font-size:11px;color:var(--muted);font-weight:400;">— which Discover shelf it sits on</span></div>
+      <div class="bs-cats" id="bs-cats" style="margin-bottom:14px;">
+        ${[{id:'',label:'None'}, ..._DISC_CATS].map(c => `
+          <button type="button" class="disc-chip${String(b.category||'').toLowerCase()===c.id?' is-on':''}"
+                  onclick="_bsPickCategory('${c.id}')">
+            ${c.icon ? `<i class="fa-solid ${c.icon}"></i>` : ''}${escapeHTML(c.label)}
+          </button>`).join('')}
+      </div>
+      <input type="hidden" id="bs-category" value="${escapeHTML(b.category||'')}">
+      <div class="settings-title">Tags <span style="font-size:11px;color:var(--muted);font-weight:400;">— up to 5, comma separated</span></div>
+      <input class="field-input" id="bs-tags" value="${escapeHTML((b.tags||[]).join(', '))}" placeholder="speedrunning, modding, chill" style="margin-bottom:20px;">
+
       <div class="settings-title">Visibility</div>
       <div class="vis-toggle" style="margin-bottom:20px;">
         <div class="vis-opt ${b.public!==false?'active':''}" onclick="setBastionVis(true)">
@@ -22212,11 +22577,33 @@ async function _loadAnnouncementPreview() {
 }
 
 // Bastion settings actions
+// Category chips in Bastion Settings → Overview. Writes the hidden field that
+// saveBastionOverview reads, and repaints selection without a full re-render
+// (which would throw away anything else typed into the form).
+function _bsPickCategory(id) {
+  const hidden = document.getElementById('bs-category');
+  if (hidden) hidden.value = id || '';
+  const row = document.getElementById('bs-cats');
+  if (!row) return;
+  [...row.querySelectorAll('.disc-chip')].forEach((btn, i) => {
+    const cid = i === 0 ? '' : (_DISC_CATS[i - 1] || {}).id;
+    btn.classList.toggle('is-on', cid === (id || ''));
+  });
+}
+
 async function saveBastionOverview() {
   const b = CU.bastions[curBastion];
   b.name = document.getElementById('bs-name')?.value?.trim() || b.name;
   b.tagline = document.getElementById('bs-tagline')?.value?.trim() || '';
   b.desc = document.getElementById('bs-desc')?.value?.trim() || '';
+  // Category + tags are what make Discover's filters work at all. Before this
+  // existed nothing could set them, so six of the seven category tabs on
+  // Discover could never match a single bastion.
+  b.category = (document.getElementById('bs-category')?.value || '').toLowerCase();
+  if (!b.category) delete b.category;
+  const _tagsRaw = (document.getElementById('bs-tags')?.value || '');
+  const _tags = _tagsRaw.split(',').map(t => t.trim().slice(0, 18)).filter(Boolean).slice(0, 5);
+  if (_tags.length) b.tags = _tags; else delete b.tags;
   const vanityRaw = (document.getElementById('bs-vanity')?.value || '').trim().toLowerCase();
   if (vanityRaw) {
     if (!/^[a-z0-9_-]{2,32}$/.test(vanityRaw)) { toast('Invalid vanity URL', 'error'); return; }

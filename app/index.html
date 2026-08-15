@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix500';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix501';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix500';
+    s4.src = '/firebase-compat-shim.js?v=2026fix501';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix500">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix501">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix500', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix501', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix500"></script>
+<script src="/app/utils.js?v=2026fix501"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -485,39 +485,12 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
       </div>
       <!-- Scrollable content (flex:1) -->
       <div class="discover-scroll" id="discover-scroll">
-        <!-- Hero Banner -->
-        <div class="disc-hero">
-          <img src="/Fortized banner.png?v=2" class="disc-hero-bg" alt="">
-          <div class="disc-hero-fade"></div>
-          <div class="disc-hero-content">
-            <h1 style="font-family:var(--font-display);font-size:20px;font-weight:900;color:#fff;margin:0 0 3px;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.5);">Explore the realm.</h1>
-            <p style="font-size:12px;color:rgba(255,255,255,.45);margin:0;">Find the Bastions and Activities where people gather.</p>
-          </div>
-        </div>
-        <!-- Bastions Sub-page -->
+        <!-- Bastions Sub-page — hero, filters and rails are all rendered by
+             _discRenderBastions() so they can react to the real data. -->
         <div id="disc-page-bastions">
-          <div style="padding:16px 28px 0;">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-              <div class="disc-search" style="flex:1;max-width:360px;">
-                <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-                <input type="text" placeholder="Search bastions..." id="disc-search-input" oninput="filterDiscover(this.value)">
-              </div>
-              <div class="disc-stats" id="disc-stats" style="display:flex;gap:12px;margin-left:auto;"></div>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
-              <button class="disc-tab active" onclick="setDiscoverTab('all',this)">All</button>
-              <button class="disc-tab" onclick="setDiscoverTab('gaming',this)">Gaming</button>
-              <button class="disc-tab" onclick="setDiscoverTab('art',this)">Art</button>
-              <button class="disc-tab" onclick="setDiscoverTab('tech',this)">Tech</button>
-              <button class="disc-tab" onclick="setDiscoverTab('social',this)">Social</button>
-              <button class="disc-tab" onclick="setDiscoverTab('music',this)">Music</button>
-              <button class="disc-tab" onclick="setDiscoverTab('education',this)">Education</button>
-            </div>
-          </div>
-          <div style="padding:0 28px 28px;">
-            <div id="disc-featured" style="margin-bottom:20px;"></div>
-            <div class="bastion-grid" id="discover-grid"></div>
-          </div>
+          <div id="disc-hero-host"></div>
+          <div id="disc-filters-host"></div>
+          <div id="disc-body"></div>
         </div>
         <!-- Activities Sub-page -->
         <div id="disc-page-activities" style="display:none;">
@@ -1168,10 +1141,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix500"></script>
-<script src="/app/app.js?v=2026fix500"></script>
-<script src="/app/joy-system.js?v=2026fix500"></script>
-<script src="/app/chronicle-games.js?v=2026fix500"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix501"></script>
+<script src="/app/app.js?v=2026fix501"></script>
+<script src="/app/joy-system.js?v=2026fix501"></script>
+<script src="/app/chronicle-games.js?v=2026fix501"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

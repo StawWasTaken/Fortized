@@ -18549,3 +18549,184 @@ body.has-announce .main{padding-top:var(--ann-h);}
 /* One button, and it's the acknowledgement — so it sits on the right on its own
    rather than pretending there's a choice to make. */
 .ftz-wn-foot{justify-content:flex-end;flex-shrink:0;}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DISCOVER — rebuilt (2026fix500)
+   Assembled from the app's OWN parts: `.qst-banner`/`.qst-crest`/`.qst-bstat`
+   for the hero, `.qst-group` section heads, `.fr-act` round controls, the ONE
+   3D `.fs-btn` recipe, `.ftz-select` for sort, Heroic Search when empty.
+   The old page was inline styles and hand-rolled gradients that ignored the
+   appearance themes entirely — recolour the app and Discover stayed the same.
+   Card language matches the inbox: 2px var(--border) on var(--panel),
+   radius-lg, a hover lift, no glows.
+   ══════════════════════════════════════════════════════════════════════ */
+.disc-wrap{padding:0 28px;max-width:1500px;}
+#disc-hero-host{max-width:1500px;}
+
+/* Hero — the Fortshop treatment, depth move included.
+   Full-bleed cover art dissolving into the page through `.fs-hero-bg::after`'s
+   15-stop color-mix ramp, title ON the art at the top, and then everything
+   after it pulled UP so it sits half on the art and half on the page — the
+   same overlap `.fs-heroblock .fs-rowwrap{margin-top:-152px}` gives the
+   Fortshop's featured row.
+   ⚠️ `.fs-hero`'s negative margin is tuned to the Fortshop's own -28/-32px
+   scroller padding; Discover's has none, so it's reset to 0 and the full bleed
+   comes from the hero spanning the scroller edge to edge instead. */
+.disc-heroblock{position:relative;margin-bottom:0;}
+.disc-hero2{margin:0;min-height:394px;align-items:flex-start;}
+.disc-hero2-inner{padding:52px 30px 0;align-items:flex-start;}
+.disc-hero2-left{min-width:0;flex:1;}
+.disc-hero2-title{font-size:48px;margin:5px 0 10px;letter-spacing:-.015em;}
+.disc-hero2-sub{font-size:14px;color:rgba(255,255,255,.74);
+  text-shadow:0 1px 10px rgba(0,0,0,.7);}
+.disc-hero2 .qst-banner-eyebrow{text-shadow:0 1px 10px rgba(0,0,0,.7);}
+/* Horizontal scrim — the same move `.qst-banner` makes. The cover here is the
+   busy Fortized banner rather than a designed collection cover with quiet
+   space in it, so the text side needs darkening or the title competes with
+   floating gamepads. No z-index: ::before must paint UNDER ::after so the
+   vertical dissolve still lands on top. */
+.disc-hero2 .fs-hero-bg::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(100deg,
+    rgba(9,10,14,.90) 0%, rgba(9,10,14,.78) 30%,
+    rgba(9,10,14,.44) 58%, rgba(9,10,14,.12) 100%);}
+
+/* The overlap. Rides up over the fading cover, and everything below it inherits
+   the position — the first rail lands half on art, half on page. */
+.disc-rowwrap{position:relative;z-index:2;margin-top:-150px;padding:0 28px;
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  flex-wrap:wrap;max-width:1500px;}
+.disc-hero2-stats{display:flex;gap:10px;flex-shrink:0;}
+/* Search and stats read straight off the art, so they carry their own smoked
+   plate rather than the page-surface panel the rest of the app uses. */
+.disc-hstat{display:flex;flex-direction:column;gap:1px;padding:11px 16px;
+  border-radius:14px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.14);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);min-width:88px;}
+.disc-hstat b{font-family:var(--font-display);font-weight:700;font-size:19px;color:#fff;}
+.disc-hstat span{font-size:10.5px;color:rgba(255,255,255,.62);font-weight:600;white-space:nowrap;}
+.disc-hero-search{display:flex;align-items:center;gap:10px;flex:1;max-width:420px;
+  padding:0 15px;height:46px;border-radius:100px;background:rgba(0,0,0,.5);
+  border:2px solid rgba(255,255,255,.16);transition:border-color .16s,background .16s;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+.disc-hero-search:focus-within{border-color:var(--accent);background:rgba(0,0,0,.64);}
+.disc-hero-search > i{color:rgba(255,255,255,.5);font-size:14px;flex-shrink:0;}
+.disc-hero-search input{flex:1;min-width:0;background:none;border:none;outline:none;
+  color:#fff;font-family:var(--font-ui);font-size:14px;}
+.disc-hero-search input::placeholder{color:rgba(255,255,255,.45);}
+.disc-hero-x{background:none;border:none;cursor:pointer;color:rgba(255,255,255,.5);
+  padding:4px;line-height:1;font-size:14px;transition:color .14s;}
+.disc-hero-x:hover{color:#fff;}
+
+/* Filter row */
+.disc-filters{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  position:relative;z-index:2;margin:16px auto 4px;}
+#disc-body{position:relative;z-index:2;}
+.disc-chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:0;}
+.disc-chip{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;
+  border-radius:100px;background:var(--panel);border:2px solid var(--border);
+  color:var(--muted-light);font-family:var(--font-display);font-size:12.5px;
+  font-weight:700;cursor:pointer;transition:background .14s,border-color .14s,color .14s,transform .1s;}
+.disc-chip i{font-size:11.5px;}
+.disc-chip:hover{color:var(--text);border-color:var(--surface-border-hover);transform:translateY(-1px);}
+.disc-chip:active{transform:translateY(1px);}
+.disc-chip.is-on{background:var(--accent);border-color:var(--accent);color:var(--ink);}
+.disc-chip-n{font-size:11px;opacity:.65;font-weight:600;}
+.disc-filter-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.disc-filter-right .ftz-select{min-width:158px;}
+.disc-toggle{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;
+  border-radius:100px;background:var(--panel);border:2px solid var(--border);
+  color:var(--muted-light);font-family:var(--font-display);font-size:12.5px;
+  font-weight:700;cursor:pointer;transition:color .14s,border-color .14s;}
+.disc-toggle:hover{color:var(--text);border-color:var(--surface-border-hover);}
+.disc-toggle.is-on{color:var(--accent);border-color:var(--accent-mid);}
+
+/* Section heads + rails */
+.disc-group{align-items:center;margin:22px 2px 14px;}
+.disc-group-s{font-size:12px;color:var(--muted-light);margin-right:auto;
+  font-family:var(--font-ui);text-transform:none;letter-spacing:0;}
+.disc-rail-nav{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.disc-viewall{background:none;border:none;cursor:pointer;color:var(--muted-light);
+  font-family:var(--font-display);font-size:12px;font-weight:700;padding:6px 4px;
+  transition:color .14s;}
+.disc-viewall:hover{color:var(--accent);}
+.disc-arr{width:32px;height:32px;}
+.disc-arr i{font-size:12px;}
+/* A dead arrow that still looks live invites a click that does nothing. */
+.disc-arr.is-off{opacity:.3;pointer-events:none;}
+.disc-rail{display:flex;gap:16px;overflow-x:auto;scroll-behavior:smooth;
+  padding:4px 2px 10px;scrollbar-width:none;}
+.disc-rail::-webkit-scrollbar{display:none;}
+.disc-rail > .disc-card{flex:0 0 268px;}
+.disc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));
+  gap:16px;padding:4px 2px 10px;}
+
+/* The card */
+.disc-card{position:relative;display:flex;flex-direction:column;text-align:left;
+  background:var(--panel);border:2px solid var(--border);border-radius:var(--radius-lg);
+  overflow:hidden;cursor:pointer;
+  transition:transform .16s var(--ease-out),border-color .16s,box-shadow .16s;
+  /* ⚠️ `backwards`, never `both`/`forwards` — those keep the final keyframe
+     (transform:none) applied forever and silently swallow the :hover lift. */
+  animation:stfRowIn .34s var(--ease-out) backwards;
+  animation-delay:calc(var(--i,0) * 24ms);}
+.disc-card:hover{transform:translateY(-3px);border-color:var(--surface-border-hover);
+  box-shadow:0 14px 30px rgba(0,0,0,.34);}
+.disc-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.disc-card-banner{position:relative;height:104px;flex-shrink:0;overflow:hidden;
+  background:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,.02));}
+.disc-card-banner img{width:100%;height:100%;object-fit:cover;display:block;}
+.disc-card-boost,.disc-card-new,.disc-card-rise{position:absolute;top:9px;right:9px;
+  display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:100px;
+  font-family:var(--font-display);font-size:10.5px;font-weight:700;z-index:2;
+  background:rgba(0,0,0,.58);color:#fff;}
+.disc-card-boost{left:9px;right:auto;color:var(--accent);}
+.disc-card-rise{color:var(--green);}
+.disc-card-boost i,.disc-card-rise i{font-size:10px;}
+/* Emblem overlaps the banner's bottom edge — Discord's move, and it's what
+   stops the card reading as two unrelated stacked boxes. */
+.disc-card-em{position:relative;width:52px;height:52px;margin:-26px 0 0 16px;
+  border-radius:16px;overflow:hidden;flex-shrink:0;z-index:2;
+  border:3px solid var(--panel);background:var(--panel2);
+  display:flex;align-items:center;justify-content:center;}
+.disc-card-em img{width:100%;height:100%;object-fit:cover;}
+.disc-card-em-txt{font-family:var(--font-display);font-size:21px;font-weight:700;
+  color:var(--accent);}
+.disc-card-body{display:flex;flex-direction:column;flex:1;padding:9px 16px 16px;}
+.disc-card-name{display:flex;align-items:center;gap:6px;font-family:var(--font-display);
+  font-size:15.5px;font-weight:700;color:var(--text);line-height:1.25;
+  margin-bottom:7px;}
+.disc-card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
+.disc-tag{padding:3px 9px;border-radius:100px;background:rgba(255,255,255,.05);
+  border:1px solid var(--border);color:var(--muted-light);font-size:10.5px;
+  font-weight:600;white-space:nowrap;}
+.disc-tag--cat{color:var(--accent);border-color:var(--accent-dim);}
+.disc-tag--more{opacity:.7;}
+/* Clamped so a long description can't make one card twice the height of its
+   neighbour — that's what makes a rail read as a tidy row (Osmium). */
+.disc-card-desc{font-size:12.5px;line-height:1.5;color:var(--muted-light);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-bottom:12px;}
+.disc-card-foot{display:flex;align-items:center;gap:12px;margin-top:auto;
+  padding-bottom:12px;}
+.disc-card-mem{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;
+  color:var(--muted-light);font-weight:600;}
+.disc-card-mem i{font-size:10.5px;opacity:.75;}
+.disc-card-btn{width:100%;justify-content:center;}
+.disc-card--skel{pointer-events:none;animation:none;}
+.disc-card--skel .disc-card-banner{border-radius:0;}
+
+@media (max-width:820px){
+  .disc-wrap{padding-left:16px;padding-right:16px;}
+  .disc-hero2-inner{flex-direction:column;align-items:flex-start;padding:28px 16px 24px;}
+  .disc-hero2-title{font-size:32px;}
+  .disc-hero2-stats{width:100%;flex-wrap:wrap;}
+  .disc-hero-search{max-width:100%;width:100%;}
+  .disc-rail > .disc-card{flex-basis:240px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .disc-card{animation:none;}
+  .disc-rail{scroll-behavior:auto;}
+}
+
+/* Category chips inside Bastion Settings reuse the Discover chip, but the
+   settings form is narrow — let them wrap instead of overflowing the panel. */
+.bs-cats{display:flex;flex-wrap:wrap;gap:7px;}

@@ -344,17 +344,84 @@ app.post('/api/onyx/send', async (req, res) => {
     const { data, error } = await sbAdmin.rpc('ftz_onyx_send', {
       p_from: me, p_to: to, p_amount: amount,
     });
-    if (error) throw error;
+    if (error) {
+      if (!_rpcMissing(error)) throw error;
+      // No RPC deployed yet — do it here instead. See _onyxSendCAS.
+      const r = await _onyxSendCAS(me, to, amount);
+      if (!r.ok) return res.status(409).json({ error: r.reason });
+      return res.json({ ok: true, amount, to, note, balance: r.balance, mode: 'cas' });
+    }
     const result = Array.isArray(data) ? data[0] : data;
     if (!result || result.ok === false) {
       return res.status(409).json({ error: result?.reason || 'That send could not go through.' });
     }
-    res.json({ ok: true, amount, to, note, balance: result.from_balance });
+    res.json({ ok: true, amount, to, note, balance: result.from_balance, mode: 'rpc' });
   } catch (e) {
     console.warn('[onyx/send] failed:', e.message);
     res.status(503).json({ error: 'Couldn’t send that Onyx.', detail: e.message });
   }
 });
+
+function _rpcMissing(error) {
+  const m = (error?.message || '') + ' ' + (error?.details || '');
+  return /does not exist|not find|could not find the function|schema cache/i.test(m);
+}
+
+// ── Transfer without the RPC ───────────────────────────────────────
+// ⚠️ This is the FALLBACK, not the preferred path. `ftz_onyx_send` does the
+// whole move inside one Postgres transaction with both rows locked; nothing in
+// JS can match that. What this CAN do is make the dangerous half safe:
+// the debit is a compare-and-swap (`.eq('onyx', seen)`), so if anything else
+// touched the sender's balance between our read and our write the update
+// matches zero rows and we retry against the new value. That is what actually
+// prevents a double-spend — two concurrent sends can never both succeed off
+// the same balance. The credit is the same CAS, and if it can't be landed the
+// debit is rolled back the same way.
+// The residual risk is a process death in the gap between debit and credit,
+// which would strand the amount. It is logged loudly so it can be reconciled.
+// Run the SQL in docs/trading-server.md §2c and this stops being used.
+const _CAS_TRIES = 5;
+async function _onyxRow(username) {
+  const { data, error } = await sbAdmin.from('users')
+    .select('username,onyx,radiance_until').eq('username', String(username).toLowerCase()).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+async function _onyxAdjust(username, delta, { floor = false } = {}) {
+  for (let i = 0; i < _CAS_TRIES; i++) {
+    const row = await _onyxRow(username);
+    if (!row) return { ok: false, reason: 'account-missing' };
+    const seen = row.onyx || 0;
+    if (floor && seen + delta < 0) return { ok: false, reason: 'insufficient' };
+    const next = Math.max(0, seen + delta);
+    const { data, error } = await sbAdmin.from('users')
+      .update({ onyx: next }).eq('username', row.username).eq('onyx', seen).select('onyx');
+    if (error) throw error;
+    if (data && data.length) return { ok: true, balance: next };
+    // Someone else wrote in between — re-read and try again against the new value.
+  }
+  return { ok: false, reason: 'contended' };
+}
+async function _onyxSendCAS(from, to, amount) {
+  const [sender, target] = await Promise.all([_onyxRow(from), _onyxRow(to)]);
+  if (!sender) return { ok: false, reason: 'Account not found.' };
+  if (!target) return { ok: false, reason: 'That user doesn’t exist.' };
+  if (!(Number(sender.radiance_until) > Date.now())) return { ok: false, reason: 'Sending Onyx requires Radiance.' };
+  if ((sender.onyx || 0) < amount) return { ok: false, reason: 'You don’t have that much Onyx.' };
+
+  const debit = await _onyxAdjust(sender.username, -amount, { floor: true });
+  if (!debit.ok) {
+    return { ok: false, reason: debit.reason === 'insufficient'
+      ? 'You don’t have that much Onyx.' : 'Too busy to send that right now — try again.' };
+  }
+  const credit = await _onyxAdjust(target.username, amount);
+  if (!credit.ok) {
+    const back = await _onyxAdjust(sender.username, amount);
+    if (!back.ok) console.error('[onyx/send] STRANDED', amount, 'from', sender.username, 'to', target.username);
+    return { ok: false, reason: 'That send could not go through — nothing was taken.' };
+  }
+  return { ok: true, balance: debit.balance };
+}
 
 // GET /api/onyx/health — the client probes this once and falls back to
 // hiding the feature rather than half-completing a transfer.
@@ -364,9 +431,14 @@ app.get('/api/onyx/health', async (_req, res) => {
     const { error } = await sbAdmin.rpc('ftz_onyx_send', { p_from: '__probe__', p_to: '__probe__', p_amount: 0 });
     // A missing function 404s; any other error means it exists and simply
     // rejected the probe — which is exactly what we want to see.
-    out.rpc = !error || !/does not exist|not find/i.test(error.message || '');
+    out.rpc = !error || !_rpcMissing(error);
   } catch {}
-  out.ready = out.rpc;
+  // Without the RPC we can still transfer safely enough (see _onyxSendCAS), so
+  // the feature is available — `mode` says which path a send will take, and
+  // `advice` names what would upgrade it.
+  out.mode = out.rpc ? 'rpc' : 'cas';
+  out.ready = true;
+  if (!out.rpc) out.advice = 'Run the ftz_onyx_send SQL (docs/trading-server.md §2c) for a single-transaction transfer.';
   res.json(out);
 });
 

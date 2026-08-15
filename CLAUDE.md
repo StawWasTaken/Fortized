@@ -1,5 +1,108 @@
 # Fortized — working notes for Claude
 
+## 🟢 SHIPPED — Console round 4 + Send Onyx round 3 (`2026fix495`, branch `claude/ui-polish-redesigns-xf43er`)
+
+### 🐞 THE ONE TO REMEMBER — a stray `</style>` inside `styles.css`
+Line 13971 of `app/styles.css` was a literal `</style>` tag. Linked as a real
+stylesheet the CSS parser treats `</style> … #staff-ops-root` as one invalid
+selector and swallows everything up to the next `{…}` — so **`#staff-ops-root`
+never existed**, and standalone Live Ops opened as an unstyled div. Proven by
+counting parsed rules through a local server before/after. ⚠️ It also means
+**never inline `styles.css` into a `<style>` tag in a harness** — the tag closed
+the block early and silently dropped the last 4,400 lines, which is exactly how
+this was found.
+
+### 💸 Send Onyx round 3
+Limit line is **white** with the Radiance mark on the SAME axis (`align-items:
+center` — `vertical-align` on a masked span moves the box, not the glyph, which
+is why it sat a pixel high). **Send is the pink→yellow gradient** (`.fs-send-cta`
+on the button); disabled keeps the gradient's shape and only loses saturation.
+Note bar: the chatbar aligns its row to `flex-end` (right for a growing message,
+wrong for a one-line note) — centred, with padding moved off the textarea onto
+the row, and `_fsSendNoteGrow` run on open so `rows="1"` is one of OUR lines.
+Free-user mark now says **"Radiance Exclusive"**, same as settings.
+- **🐞 SENDING NOW WORKS WITHOUT THE SQL.** `/api/onyx/send` falls back to
+  `_onyxSendCAS` when the RPC is missing: the debit is a **compare-and-swap**
+  (`.eq('onyx', seen)`), so two concurrent sends can never both succeed off one
+  balance; the credit is the same CAS and a failure rolls the debit back.
+  Not equal to the RPC (one transaction, both rows locked) — a process death
+  between debit and credit still strands the amount, and it logs `STRANDED`
+  loudly. `/api/onyx/health` reports `mode:'rpc'|'cas'`. **Running the SQL is
+  still the upgrade.** The client no longer caches a `false` health probe.
+
+### 🗂️ My Transactions — the ORIGINAL card is back
+The user liked the old one. Reverted to range dropdown → Incoming section →
+Outgoing section → Net change. ⚠️ The ONE thing kept from the rebuilt version is
+the part that was a **bug fix, not a redesign**: direction comes from the SIGN of
+each entry, because the old per-kind `in:true/false` flag could not describe a
+two-way kind (every trade and gift filed as incoming, unlisted kinds vanished).
+Its CSS override block is deleted — the original `.fs-tx*` rules earlier in
+`styles.css` are the design again.
+
+### 🎛️ Console
+- **🐞 BLACK GLYPHS.** Nearly every console card is a real `<button>`; a button
+  with no `color` falls back to the UA's `buttontext`. Filled with
+  `:where(.stf-modal) :where(button,summary){color:inherit}` — zero specificity,
+  so it only ever fills a gap.
+- Page topbar glyph is the **title's colour** with real space after it
+  (`.disc-subnav` sets `gap:0` for the chat bar it was built for).
+- **🐞 PICKER WAS CLIPPED.** `.ftz-ac-card` clips its own overflow, so an
+  absolute dropdown died at the card's edge. The menu is **portalled to
+  `<body>`, `position:fixed`**, flips up when there's no room, and is cleaned up
+  when the card closes. It now also does **bastions** (`type:'bastion'`) —
+  emblem, name, owner, member count — and Look-up-a-bastion uses it.
+- **🐞 TWO CONTEXT MENUS.** `_stawWireInspector` bound a SECOND `contextmenu`
+  listener to `#tb-admin-btn`, which already carries `onStaffCtxMenu` inline.
+  Unbound; **Inspect UI is a Developer row inside the one menu** (superadmin).
+- **Shield** = the inbox button's system in red: 36px, neutral
+  `rgba(255,255,255,.06)` hover plate, colour goes red where the inbox goes white.
+- **Report screenshots open in the app's own lightbox** with ‹ › paging.
+- **Onyx codes**: our own **calendar** (`_stfDate`/`_stfCal*`, portalled, Monday
+  first); the **limit choice is gone** — every code is once per account, because
+  a repeatable code is a money printer; codes render in **Syne**, not a system
+  mono stack.
+- **Announcement**: palette is now `ff0033 · 3ecf6e · 2caefc · fff93e · ff77e4`.
+  **🐞 Stripes** came back — the override used the `background` SHORTHAND, which
+  resets the `background-image` the stripes live in; it's `background-color` now.
+  **🐞 Celebration glyph** was `fa-party-horn` = FontAwesome **PRO**, so it drew
+  nothing → `fa-champagne-glasses`.
+- **Global Monitor**: map redrawn on the console's surfaces (2px `var(--border)`
+  on `var(--panel)`, round `.fr-act` controls, no blue wash, no `--panel-2` — a
+  token that never existed); empty land at 10% not 5%; ramp floored at .28 so one
+  member still lights a country; leaderboard shows **flag + country name**; new
+  **Coverage** stat so a breakdown built from 40% of accounts doesn't read as the
+  whole membership.
+- **🐞 COUNTRY DETECTION.** The old table listed ~60 hand-picked zones, so
+  Budapest, Halifax, Ho Chi Minh City, Accra and hundreds more resolved to
+  nothing and fell through to ipapi.co — rate-limited and ad-blocked. Now a full
+  IANA table (**262 zones / 160 countries, every one validated against `Intl`**)
+  + legacy aliases (`US/Eastern`, `Japan`, `Hongkong`…) + a city-name fallback,
+  then `Intl.Locale().maximize().region`, and only then the network call.
+
+### 🗣️ Feedback card
+No "Swiftaw" wordmark, no head/mark row — title, line, three ratings. **Centred
+with a fade+scale in**, and NO backdrop scrim so it still never blocks anything.
+⚠️ It wears `.ftz-confirm-card` deliberately: **the overlay art needs a solid
+surface**. The old card painted it onto translucent `--glass-heavy` behind a
+`backdrop-filter`, AND a legacy rule defined `.ftz-feedback-toast::before` as a
+2px hairline — `inset:0` can't stretch an element with an explicit `height`, so
+the art was being drawn clipped to a two-pixel strip. That whole dead block is
+deleted. `.ftz-confirm-card`'s `modalCardIn` animation is turned off here or its
+keyframes stamp over the `translate(-50%)` centring.
+
+### 🪙 Wallet capsules
+Onyx + streak now open their **own menus on either mouse button**; the old
+`onclick` routed to the retired `atelier` view. ⚠️ Both handlers
+`stopPropagation()` — a left click keeps bubbling to the document handler that
+closes any open context menu, which would shut it in the tick it opened.
+
+⚠️ **LIVE-VERIFY:** send Onyx end to end (watch `/api/onyx/health` → `mode`);
+the note bar + gradient button; My Transactions; the announcement banner in all
+5 colours incl. stripes + the celebration glyph; the code calendar; the picker
+over a card; right-click AND left-click the shield and the wallet capsules; the
+map; a report screenshot in the lightbox; the feedback card via the console
+tester. FA + the Onyx/Radiance/security masks are CDN-blind in-sandbox.
+
 ## 🟢 SHIPPED — Console round 3 + Send Onyx round 2 (`2026fix494`, branch `claude/ui-polish-redesigns-xf43er`)
 Twenty-odd items from one message. The through-line: the console had the right
 *shape* after round 2 but a lot of it was still a facade — lists that couldn't

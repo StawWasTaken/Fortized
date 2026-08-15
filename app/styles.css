@@ -4789,23 +4789,14 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .ann-readonly-bar svg{width:16px;height:16px;color:var(--muted);flex-shrink:0;}
 .ann-readonly-bar span{font-size:12px;color:var(--muted);}
 /* ── Feedback Toast UI ─────────────────────────── */
-.ftz-feedback-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);z-index:7500;background:var(--glass-heavy);border:1.5px solid rgba(255,249,62,.18);border-radius:20px;padding:18px 22px;box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,249,62,.04);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);opacity:0;transition:all .35s var(--ease-out);pointer-events:none;max-width:420px;width:92%;}
-.ftz-feedback-toast::before{content:"";position:absolute;top:0;left:18px;right:18px;height:2px;background:linear-gradient(90deg,transparent,rgba(255,249,62,.55),transparent);border-radius:0 0 2px 2px;}
-.ftz-feedback-toast.visible{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
-.ftz-feedback-toast .fb-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.ftz-feedback-toast .fb-title{font-family:var(--font-display);font-size:15px;font-weight:800;color:#fff;letter-spacing:-.005em;}
-.ftz-feedback-toast .fb-sub{font-size:12px;color:rgba(255,255,255,.55);margin-bottom:14px;line-height:1.5;}
-.ftz-feedback-toast .fb-actions{display:flex;gap:8px;}
-.ftz-feedback-toast .fb-btn{flex:1;padding:9px 14px;border-radius:12px;border:1.5px solid var(--border);background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;text-align:center;}
-.ftz-feedback-toast .fb-btn:hover{border-color:rgba(255,249,62,.2);background:rgba(255,249,62,.06);color:var(--accent);}
-.ftz-feedback-toast .fb-btn.fb-positive{background:rgba(62,207,110,.08);border-color:rgba(62,207,110,.2);color:var(--green);}
-.ftz-feedback-toast .fb-btn.fb-positive:hover{background:rgba(62,207,110,.15);}
-.ftz-feedback-toast .fb-btn.fb-negative{background:rgba(255, 0, 51,.06);border-color:rgba(255, 0, 51,.15);color:rgba(255, 0, 51,.7);}
-.ftz-feedback-toast .fb-btn.fb-negative:hover{background:rgba(255, 0, 51,.12);}
-.ftz-feedback-toast .fb-dismiss{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:rgba(255,255,255,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .1s;}
-.ftz-feedback-toast .fb-dismiss:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);}
-.ftz-feedback-toast .fb-comment-wrap{margin-top:8px;animation:fadeIn .2s ease;}
-.ftz-feedback-toast .fb-comment-input{transition:border-color .15s;}.ftz-feedback-toast .fb-comment-input:focus{border-color:rgba(255,249,62,.25);}
+/* ⚠️ THE WHOLE ORIGINAL BLOCK IS GONE, and one line of it is why the Swiftaw
+   overlay "didn't really work": it defined `.ftz-feedback-toast::before` as a
+   2px accent hairline. `.ftz-ov-swft::before` later sets `inset:0` to fill the
+   card — but `inset` only stretches an element that has no explicit height, and
+   `height:2px` from here survived. The overlay art was being painted, clipped
+   to a two-pixel strip along the top edge. The current card is styled in the
+   "Quick feedback" block near the end of this file; every class the old markup
+   used (.fb-header, .fb-btn, .fb-dismiss, .fb-comment-*) is unreferenced. */
 @keyframes callPulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.4);opacity:0}}
 @keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
 @keyframes ctxIn{from{opacity:0;transform:scale(.96) translateY(-4px);}to{opacity:1;transform:none;}}
@@ -13977,9 +13968,6 @@ select:focus,select:focus-visible,
 .ad-boost-tile__cost svg{flex-shrink:0;}
 .ad-boost-tile__current{font-size:10.5px;font-weight:800;color:var(--green);letter-spacing:.04em;text-transform:uppercase;}
 .ad-boost-tile__short{color:var(--red);font-weight:700;}
-</style>
-
-
 /* ── Staff console Phases 3–9 — Live Ops + dossier + map ─────────── */
 #staff-ops-root{ position:fixed; inset:0; z-index:10900; background:#0a0d14; color:#dde3ed; font-family:var(--font-ui); overflow:hidden; }
 .staff-ops{ display:flex; flex-direction:column; height:100%; }
@@ -14028,37 +14016,61 @@ select:focus,select:focus-visible,
 .staff-map__tip{ position:absolute; display:none; background:rgba(8,10,15,.96); color:#fff; padding:5px 9px; border-radius:6px; font-size:11px; font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; pointer-events:none; border:1px solid rgba(255,255,255,.08); z-index:2; }
 
 /* ── Global Monitor world map (self-contained inline-SVG, zoom/pan) ── */
-.scmap{ height:100%; display:flex; flex-direction:column; min-height:0; gap:8px; }
-.scmap__loading{ padding:40px; text-align:center; color:rgba(255,255,255,.4); font-size:12px; }
-.scmap__loading--err{ color:#ff0033; }
-.scmap__bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-.scmap__title{ display:flex; align-items:center; gap:8px; font-size:12px; color:rgba(255,255,255,.7); min-height:24px; }
-.scmap__title i{ color:var(--gold, #fff93e); font-size:13px; }
-.scmap__title b{ color:#fff; font-weight:800; font-variant-numeric:tabular-nums; }
-.scmap__readout-cont{ color:rgba(255,255,255,.5); }
-.scmap__clear{ background:rgba(255,255,255,.08); border:none; color:rgba(255,255,255,.6); border-radius:5px; cursor:pointer; font-size:10px; line-height:1; padding:2px 5px; margin-left:4px; }
-.scmap__clear:hover{ background:rgba(255,255,255,.16); color:#fff; }
-.scmap__zoom{ display:flex; gap:5px; margin-left:auto; }
-.scmap__zbtn{ width:26px; height:26px; display:grid; place-items:center; background:var(--panel-2, rgba(255,255,255,.05)); border:1px solid var(--border); border-radius:7px; color:rgba(255,255,255,.7); cursor:pointer; font-size:11px; transition:background .12s, color .12s; }
-.scmap__zbtn:hover{ background:rgba(255,249,62,.14); color:#fff93e; border-color:rgba(255,249,62,.3); }
-.scmap__canvas{ position:relative; flex:1; min-height:0; border-radius:11px; overflow:hidden; background:radial-gradient(120% 120% at 50% 0%, rgba(96,165,250,.06), transparent 60%), rgba(8,10,15,.5); border:1px solid var(--border); cursor:grab; touch-action:none; }
-.scmap__canvas.is-grabbing{ cursor:grabbing; }
-.scmap__svg{ display:block; width:100%; height:100%; }
-.scmap__layer{ transform-origin:0 0; }
-.scmap__layer--anim{ transition:transform .38s cubic-bezier(.4,0,.2,1); }
-.scmap__country{ stroke:rgba(8,10,15,.85); stroke-width:.35; vector-effect:non-scaling-stroke; transition:fill .15s; }
-.scmap__country.is-active{ cursor:pointer; }
-.scmap__country:hover{ stroke:#fff; stroke-width:1; }
-.scmap__country.is-sel{ stroke:var(--gold, #fff93e); stroke-width:1.4; }
-.scmap__tip{ position:absolute; display:none; background:rgba(8,10,15,.97); color:#fff; padding:6px 10px; border-radius:7px; font-size:11.5px; pointer-events:none; border:1px solid rgba(255,255,255,.1); z-index:3; max-width:60%; box-shadow:0 6px 20px rgba(0,0,0,.4); }
-.scmap__tip b{ display:block; font-weight:700; }
-.scmap__tip-sub{ display:block; font-size:10px; color:rgba(255,255,255,.55); margin-top:2px; font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; }
-.scmap__legend{ display:flex; gap:6px; flex-wrap:wrap; }
-.scmap__cont{ display:flex; align-items:center; gap:6px; background:var(--panel-2, rgba(255,255,255,.04)); border:1px solid var(--border); border-radius:100px; padding:4px 10px; cursor:pointer; transition:background .12s, border-color .12s; }
-.scmap__cont:hover{ background:rgba(255,249,62,.1); border-color:rgba(255,249,62,.3); }
-.scmap__cont.is-empty{ opacity:.4; }
-.scmap__cont-name{ font-size:10.5px; color:rgba(255,255,255,.65); }
-.scmap__cont-n{ font-size:10.5px; font-weight:800; color:#fff; font-variant-numeric:tabular-nums; }
+/* ── Global Monitor world map ──────────────────────────────────────── */
+/* Redrawn onto the console's own surfaces. It used to carry the pre-rebuild
+   `.sc-*` look — 1px hairlines, 5-7px radii, a blue radial wash, `--panel-2`
+   (a token that does not exist, so those fills silently fell back). Now it is
+   the same 2px `var(--border)` on `var(--panel)` as every other panel, the
+   round `.fr-act` controls, and the accent used only where it means something:
+   the choropleth and the selected country. No glows. */
+.scmap{height:100%;display:flex;flex-direction:column;min-height:0;gap:11px;}
+.scmap__loading{padding:44px;text-align:center;color:var(--muted);font-size:12.5px;
+  font-family:var(--font-display);font-weight:600;}
+.scmap__loading--err{color:var(--red);}
+.scmap__bar{display:flex;align-items:center;gap:11px;flex-wrap:wrap;}
+.scmap__title{display:flex;align-items:center;gap:9px;min-height:30px;
+  font-size:12.5px;color:var(--muted-light);}
+.scmap__title i{color:var(--accent);font-size:13px;}
+.scmap__title b{color:var(--text);font-family:var(--font-display);font-weight:700;font-variant-numeric:tabular-nums;}
+.scmap__readout-cont{color:var(--muted);}
+.scmap__clear{margin-left:6px;padding:2px 9px;border-radius:100px;cursor:pointer;
+  background:var(--panel2,var(--panel));border:2px solid var(--border);color:var(--muted-light);
+  font-family:var(--font-display);font-size:10.5px;font-weight:700;line-height:1.6;
+  transition:color .12s,border-color .12s;}
+.scmap__clear:hover{color:var(--text);border-color:var(--muted);}
+.scmap__zoom{display:flex;gap:6px;margin-left:auto;}
+.scmap__zbtn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;cursor:pointer;
+  background:var(--panel2,var(--panel));border:2px solid var(--border);color:var(--muted-light);font-size:11px;
+  transition:color .13s,border-color .13s,transform .1s;}
+.scmap__zbtn:hover{color:var(--text);border-color:var(--muted);transform:translateY(-1px);}
+.scmap__zbtn:active{transform:translateY(1px);}
+.scmap__canvas{position:relative;flex:1;min-height:0;border-radius:var(--radius-lg);overflow:hidden;
+  background:var(--bg);border:2px solid var(--border);cursor:grab;touch-action:none;}
+.scmap__canvas.is-grabbing{cursor:grabbing;}
+.scmap__svg{display:block;width:100%;height:100%;}
+.scmap__layer{transform-origin:0 0;}
+.scmap__layer--anim{transition:transform .38s var(--ease-out);}
+/* The sea shows through between countries, so the stroke is the page colour
+   rather than a lighter hairline — landmasses read as solid shapes. */
+.scmap__country{stroke:var(--bg);stroke-width:.4;vector-effect:non-scaling-stroke;transition:fill .15s;}
+.scmap__country.is-active{cursor:pointer;}
+.scmap__country:hover{stroke:var(--text);stroke-width:1.2;}
+.scmap__country.is-sel{stroke:var(--accent);stroke-width:1.6;}
+.scmap__tip{position:absolute;display:none;z-index:3;max-width:60%;padding:9px 12px;
+  border:2px solid var(--border);border-radius:var(--radius-md);background:var(--panel);color:var(--text);
+  font-size:12px;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.5);}
+.scmap__tip b{display:block;font-family:var(--font-display);font-weight:700;font-size:13px;}
+.scmap__tip-sub{display:block;font-size:11px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums;}
+.scmap__legend{display:flex;gap:7px;flex-wrap:wrap;}
+.scmap__cont{display:flex;align-items:center;gap:8px;padding:6px 13px;cursor:pointer;
+  border-radius:100px;background:var(--panel2,var(--panel));border:2px solid var(--border);
+  transition:color .13s,border-color .13s,transform .1s;}
+.scmap__cont:hover{border-color:var(--muted);transform:translateY(-1px);}
+.scmap__cont.is-empty{opacity:.45;}
+.scmap__cont-name{font-size:11.5px;color:var(--muted-light);}
+.scmap__cont-n{font-family:var(--font-display);font-size:11.5px;font-weight:800;color:var(--text);
+  font-variant-numeric:tabular-nums;}
+
 
 /* Dossier / inspector inner */
 .staff-loading{ padding:24px; text-align:center; color:rgba(255,255,255,.4); font-size:12px; }
@@ -17439,7 +17451,22 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .stf-navi.active .stf-navi-n{background:#13161d;color:var(--accent);}
 
 .stf-main{flex:1;min-width:0;display:flex;flex-direction:column;}
+/* ⚠️ WHY SOME GLYPHS RENDERED BLACK. Nearly every card in this console is a
+   real <button> so it is keyboard-reachable, and a <button> that never sets
+   `color` falls back to the UA's `buttontext` — near-black on our surfaces.
+   Anything inheriting from it (an <i>, a mask, an svg on currentColor) went
+   black with it. Zero-specificity `:where()` on both halves so this only ever
+   fills a GAP: any real rule, however plain, still wins. */
+:where(.stf-modal) :where(button,summary){color:inherit;}
+:where(.stf-modal) :where(svg){fill:currentColor;}
+
+/* The page topbar: the glyph is part of the title, so it reads at the title's
+   own colour with real space after it — not a 20%-alpha smudge welded to the
+   first letter (.disc-subnav sets gap:0 for the chat bar it was built for). */
 .stf-subnav{flex-shrink:0;}
+.stf-subnav .disc-subnav-icon{color:#fff;margin-right:10px;font-size:14px;
+  display:inline-flex;align-items:center;}
+.stf-subnav .disc-subnav-icon svg{width:15px;height:15px;fill:currentColor;}
 .stf-subnav-spacer{flex:1;}
 .stf-subnav-act{display:flex;align-items:center;gap:7px;flex-shrink:0;}
 .stf-tabn{
@@ -17624,7 +17651,12 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .stf-duty.is-clear{opacity:.62;}
 .stf-duty-h{display:flex;align-items:center;justify-content:space-between;}
 .stf-duty-ic{width:36px;height:36px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;
-  background:var(--panel2,var(--panel));border:2px solid var(--border);font-size:14px;}
+  background:var(--panel2,var(--panel));border:2px solid var(--border);font-size:14px;color:var(--muted-light);}
+.stf-duty-ic.stf-tone-good{color:var(--green,#3ecf6e);}
+.stf-duty-ic.stf-tone-warn{color:#fdba74;}
+.stf-duty-ic.stf-tone-danger{color:var(--red,#f87171);}
+.stf-duty-ic.stf-tone-info{color:var(--blue,#60a5fa);}
+.stf-duty-ic.stf-tone-gold{color:var(--accent);}
 .stf-duty-n{font-family:var(--font-display);font-size:28px;font-weight:700;color:var(--text);line-height:1;}
 .stf-duty-b{display:flex;flex-direction:column;gap:3px;}
 .stf-duty-t{font-family:var(--font-display);font-size:14.5px;font-weight:700;color:var(--text);}
@@ -17731,7 +17763,11 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .stf-meter .stf-bar{width:100%;height:8px;}
 
 /* ── Map ───────────────────────────────────────────────────────────── */
-.stf-map{width:100%;min-height:400px;border-radius:var(--radius-md);overflow:hidden;background:var(--bg);}
+/* The panel is flush, so the map brings its own breathing room. Fixed height
+   (not just min-height) because .scmap is a column flexbox whose canvas takes
+   the remaining space — with no height to divide up, the canvas collapses. */
+.stf-map{width:100%;height:clamp(360px,54vh,580px);padding:14px 16px 16px;
+  border-radius:var(--radius-md);overflow:hidden;background:transparent;}
 
 /* ── Health / switches ─────────────────────────────────────────────── */
 .stf-health{display:flex;flex-direction:column;gap:6px;}
@@ -17837,10 +17873,15 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
   background:var(--panel2,var(--panel));color:var(--muted);font-size:10px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;}
 .stf-pick-x:hover{color:var(--text);}
-.stf-pick-menu{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;
+/* ⚠️ FIXED, and portalled to <body> by _stfPickMenuEl. It used to be absolute
+   inside the field, which meant `.ftz-ac-card`'s own overflow clipped it and
+   the proposals were cut off at the card's edge. */
+.stf-pick-menu{position:fixed;z-index:var(--z-max,12000);
   max-height:266px;overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:3px;
   border:2px solid var(--border);border-radius:var(--radius-lg);background:var(--panel);
   box-shadow:0 16px 40px rgba(0,0,0,.5);}
+.stf-pick-menu[hidden]{display:none;}
+.stf-pick-menu .stf-bico{width:34px;height:34px;flex-shrink:0;}
 .stf-pick-r{display:flex;align-items:center;gap:10px;padding:7px 9px;width:100%;
   background:none;border:none;border-radius:var(--radius-md);cursor:pointer;text-align:left;
   transition:background .12s;}
@@ -17876,8 +17917,12 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 /* ── Onyx code preview ─────────────────────────────────────────────── */
 .stf-codeprev{display:flex;align-items:center;gap:13px;margin:0 22px;padding:13px 15px;
   border-radius:var(--radius-lg);border:2px solid var(--border);background:var(--bg);}
-.stf-codeprev-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:16px;font-weight:700;
-  letter-spacing:.08em;color:var(--accent);word-break:break-all;}
+/* ⚠️ Codes are set in OUR display face, not `ui-monospace`. A system mono
+   stack means the code renders in a different typeface on every machine —
+   the one string in the console that isn't ours. Syne with real tracking reads
+   just as unambiguously character by character. */
+.stf-codeprev-code{font-family:var(--font-display);font-size:17px;font-weight:800;
+  letter-spacing:.1em;color:var(--accent);word-break:break-all;}
 .stf-codeprev-tx{display:flex;flex-direction:column;gap:2px;margin-left:auto;text-align:right;}
 .stf-codeprev-tx b{display:inline-flex;align-items:center;gap:6px;justify-content:flex-end;
   font-size:14px;font-weight:700;color:var(--text);}
@@ -17886,9 +17931,39 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .stf-codemark{width:38px;height:38px;border-radius:var(--radius-md);flex-shrink:0;
   display:flex;align-items:center;justify-content:center;font-size:14px;
   background:var(--panel2,var(--panel));border:2px solid var(--border);color:var(--accent);}
-.stf-codev{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;
-  font-weight:700;letter-spacing:.05em;color:var(--text);}
+.stf-codev{font-family:var(--font-display);font-size:14.5px;
+  font-weight:800;letter-spacing:.09em;color:var(--text);}
 .stf-codewhen{font-size:11px;color:var(--muted);white-space:nowrap;}
+
+/* ── Date field + calendar ─────────────────────────────────────────── */
+/* Same reasoning as the number stepper: `<input type="date">` hands the one
+   control we can't style to the browser. This is our field, and the month grid
+   is portalled to <body> so an action card's overflow can't clip it. */
+.stf-date{display:block;}
+.stf-date-btn{display:flex;align-items:center;gap:10px;width:100%;cursor:pointer;text-align:left;}
+.stf-date-ic{font-size:12px;color:var(--muted);flex-shrink:0;}
+.stf-date-v{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.stf-date-v.is-empty{color:var(--muted);}
+.stf-date-ch{font-size:10px;color:var(--muted);flex-shrink:0;}
+.stf-cal{position:fixed;z-index:var(--z-max,9999);width:292px;padding:12px;
+  border:2px solid var(--border);border-radius:var(--radius-lg);background:var(--panel);
+  box-shadow:0 16px 44px rgba(0,0,0,.55);}
+.stf-cal-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
+.stf-cal-t{font-family:var(--font-display);font-size:13.5px;font-weight:700;color:var(--text);}
+.stf-cal-nav{width:28px;height:28px;font-size:11px;}
+.stf-cal-wd{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}
+.stf-cal-wd span{text-align:center;font-family:var(--font-display);font-size:9.5px;font-weight:800;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+.stf-cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.stf-cal-d{height:34px;border-radius:10px;border:2px solid transparent;background:none;cursor:pointer;
+  font-family:var(--font-display);font-size:12.5px;font-weight:600;color:var(--muted-light);
+  transition:background .12s,color .12s,border-color .12s;}
+.stf-cal-d.is-pad{pointer-events:none;}
+.stf-cal-d:hover{background:var(--panel2,var(--bg));color:var(--text);}
+.stf-cal-d.is-today{border-color:var(--border);color:var(--text);}
+.stf-cal-d.is-sel{background:var(--accent);border-color:var(--accent);color:var(--ink);}
+.stf-cal-f{display:flex;gap:7px;justify-content:flex-end;margin-top:11px;
+  padding-top:11px;border-top:2px solid var(--border);}
 
 /* ── Dossier popup ─────────────────────────────────────────────────── */
 /* A dossier is something you open, read and close — a card, not a second page.
@@ -17939,18 +18014,25 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 
 /* ── Topbar shield — the FortizedSecurity mark, in red ─────────────── */
 /* Red because it is the one control in the topbar that does something nobody
-   else can do; it should not blend in with the rest of the grey row. */
-.tb-staff-btn{display:none;position:relative;background:none;border:none;color:var(--red,#f87171);
-  cursor:pointer;width:32px;height:32px;border-radius:9px;align-items:center;justify-content:center;
-  transition:background .14s,color .14s,transform .1s;}
-.tb-staff-btn:hover{background:rgba(248,113,113,.12);color:#ff5f5f;}
+   else can do; it should not blend in with the rest of the grey row.
+   ⚠️ It behaves exactly like the INBOX button next to it — same 36px box, same
+   neutral `rgba(255,255,255,.06)` hover plate, same "dim at rest, full colour
+   on hover" idea. Only the colour differs: red where the inbox goes white. A
+   red-tinted hover plate was tried and read as a warning wash. */
+.tb-staff-btn{display:none;position:relative;background:none;border:none;color:#b3b2b4;
+  cursor:pointer;width:36px;height:36px;border-radius:10px;align-items:center;justify-content:center;
+  transition:background .15s,color .15s,transform .1s;}
+.tb-staff-btn:hover{background:rgba(255,255,255,.06);color:var(--red,#f87171);}
 .tb-staff-btn:active{transform:scale(.94);}
 .ftz-sec-ico{display:block;width:19px;height:19px;background-color:currentColor;
   -webkit-mask:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FortizedSecurity%20logo.png') center/contain no-repeat;
   mask:url('https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/FortizedSecurity%20logo.png') center/contain no-repeat;}
 
 /* ── Announcement bar: colour comes from the console ───────────────── */
-.sys-announce-bar{background:var(--ann,#3ecf6e) !important;
+/* ⚠️ `background-color`, NOT the `background` shorthand. The base rule paints
+   the bar's diagonal stripes with `background-image`, and a shorthand here
+   resets that image to none — which is exactly how the stripes disappeared. */
+.sys-announce-bar{background-color:var(--ann,#3ecf6e) !important;
   border-bottom:1px solid rgba(0,0,0,.22) !important;gap:0;}
 .sys-announce-bar .sa-icon{margin:0 11px;font-size:15px;color:#13161d;}
 .sys-announce-bar .sa-text{color:#13161d;font-weight:600;}
@@ -18040,63 +18122,12 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .rad-prow-svg svg{width:17px;height:17px;fill:currentColor;}
 
 /* ── My Transactions ─────────────────────────────────────────────── */
-.fs-tx{max-width:560px;}
-.fs-tx-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
-.fs-tx-sum-c{display:flex;flex-direction:column;gap:3px;padding:10px 11px;border:2px solid var(--border);
-  border-radius:var(--radius-md,12px);background:var(--panel2);min-width:0;}
-.fs-tx-sum-k{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.fs-tx-sum-v{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-display);font-weight:800;
-  font-size:14.5px;color:var(--text);}
-.fs-tx-sum-v .rad-onyx-ic{width:13px;height:13px;}
-.fs-tx-sum-v.is-in{color:var(--green);}
-.fs-tx-sum-v.is-out{color:var(--red);}
-.fs-tx-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.fs-tx-sec{border:2px solid var(--border);border-radius:var(--radius-md,12px);background:var(--panel2);padding:4px 12px 8px;min-width:0;}
-.fs-tx-sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:9px 0 7px;
-  border-bottom:1px solid rgba(255,255,255,.06);
-  font-family:var(--font-display);font-size:9.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);}
-.fs-tx-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;}
-.fs-tx-row + .fs-tx-row{border-top:1px solid rgba(255,255,255,.04);}
-.fs-tx-lb{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted-light);min-width:0;}
-.fs-tx-lb i{width:14px;text-align:center;font-size:11.5px;color:var(--muted);flex-shrink:0;}
-.fs-tx-lb em{font-style:normal;font-size:10px;color:var(--muted);background:rgba(255,255,255,.06);
-  border-radius:100px;padding:1px 6px;flex-shrink:0;}
-.fs-tx-amt{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-display);font-weight:700;
-  font-size:12.5px;color:var(--text);white-space:nowrap;}
-.fs-tx-amt .rad-onyx-ic{width:12px;height:12px;}
-.fs-tx-amt--in{color:var(--green);}
-.fs-tx-amt--out{color:var(--red);}
-.fs-tx-none{font-size:11.5px;color:var(--muted);padding:12px 0;}
-.fs-tx-listhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:16px 0 8px;}
-.fs-tx-flow{display:inline-flex;gap:4px;}
-.fs-tx-flowb{padding:5px 12px;border-radius:100px;cursor:pointer;background:rgba(255,255,255,.04);
-  border:1.5px solid var(--border);color:var(--muted-light);
-  font-family:var(--font-display);font-size:11px;font-weight:700;transition:background .12s,color .12s,border-color .12s;}
-.fs-tx-flowb:hover{color:var(--text);}
-.fs-tx-flowb.active{background:var(--accent);border-color:var(--accent);color:var(--ink);}
-.fs-tx-list{display:flex;flex-direction:column;}
-.fs-tx-e{display:flex;align-items:center;gap:11px;padding:9px 11px;margin-bottom:6px;
-  border:2px solid var(--border);border-radius:13px;background:rgba(255,255,255,.018);
-  animation:frRowIn .28s var(--ease-out) backwards;animation-delay:calc(var(--i,0)*22ms);}
-.fs-tx-e-ic{width:32px;height:32px;flex-shrink:0;border-radius:10px;display:inline-flex;align-items:center;
-  justify-content:center;background:var(--panel2);border:2px solid var(--border);font-size:12px;}
-.fs-tx-e-ic.is-in{color:var(--green);}
-.fs-tx-e-ic.is-out{color:var(--red);}
-.fs-tx-e-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
-.fs-tx-e-t{font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--text);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.fs-tx-e-s{font-size:10.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.fs-tx-e-amt{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;
-  font-family:var(--font-display);font-weight:800;font-size:13px;}
-.fs-tx-e-amt .rad-onyx-ic{width:13px;height:13px;}
-.fs-tx-e-amt.is-in{color:var(--green);}
-.fs-tx-e-amt.is-out{color:var(--red);}
-.fs-tx-more{font-size:11px;color:var(--muted);text-align:center;padding:6px 0 2px;}
-@media(max-width:520px){
-  .fs-tx-sum{grid-template-columns:repeat(2,1fr);}
-  .fs-tx-cols{grid-template-columns:1fr;}
-}
+/* ⚠️ The card's own look lives in the ORIGINAL .fs-tx block earlier in this
+   file — that is the design, and it is the one to edit. A later pass added a
+   full override here (summary tiles, two columns, an activity feed) and it was
+   reverted; only the two rules the restored markup actually needs stay. */
+.fs-tx-none{font-size:12px;color:var(--muted);padding:10px 2px;}
+.fs-tx-sec .fs-tx-none + .fs-tx-row--total{margin-top:0;}
 
 /* ── Not enough Onyx ─────────────────────────────────────────────── */
 .fs-nef{max-width:420px;}
@@ -18131,26 +18162,34 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .fs-nef-way-tx i{font-style:normal;font-size:11px;color:var(--muted);}
 .fs-nef-way > i:last-child{font-size:11px;color:var(--muted);flex-shrink:0;}
 
-/* ── Quick feedback — a Swiftaw card ─────────────────────────────── */
-/* Corner card, never a blocking modal: asking for feedback must never stand
-   between someone and what they were doing. The .ftz-ov-swft overlay is the
-   same one the Lifecheck card wears. */
-.ftz-feedback-toast{position:fixed;right:20px;bottom:22px;left:auto;transform:translateY(14px);
-  z-index:7500;width:min(370px,calc(100vw - 40px));padding:18px 20px 20px;
-  background:var(--panel);border:2px solid var(--border);border-radius:var(--radius-lg,18px);
-  box-shadow:0 24px 60px rgba(0,0,0,.55);opacity:0;pointer-events:none;
-  transition:opacity .3s var(--ease-out),transform .3s var(--ease-out);
-  -webkit-backdrop-filter:none;backdrop-filter:none;max-width:none;}
-.ftz-feedback-toast.visible{opacity:1;transform:none;pointer-events:auto;}
-.ftz-feedback-toast::before{opacity:.5;}   /* the SWFT art, dialled back behind text */
+/* ── Quick feedback ──────────────────────────────────────────────── */
+/* ⚠️ It carries `.ftz-confirm-card` on purpose. The overlay art
+   (`.ftz-ov-swft::before`) needs a SOLID surface underneath to read against —
+   the earlier version painted it onto translucent `--glass-heavy` behind a
+   `backdrop-filter`, which washed it out until it may as well not have been
+   there. On the Lifecheck card's own surface it renders exactly as it does on
+   Lifecheck.
+   Centred and fading in, as asked — but with NO backdrop scrim, so asking for
+   feedback still never stands between someone and what they were doing. */
+.ftz-feedback-toast{position:fixed;top:50%;left:50%;right:auto;bottom:auto;
+  transform:translate(-50%,-50%) scale(.965);
+  z-index:7500;width:min(400px,calc(100vw - 40px));max-width:none;
+  padding:22px 24px 22px;border:2px solid var(--border);border-radius:var(--radius-lg,18px);
+  background:var(--panel);box-shadow:0 28px 70px rgba(0,0,0,.6);opacity:0;pointer-events:none;
+  /* ⚠️ `.ftz-confirm-card` ships a `modalCardIn` animation that drives
+     `transform`. Left on, its keyframes would stamp over the translate(-50%)
+     centring for the first 200ms and the card would visibly jump into place. */
+  animation:none;
+  transition:opacity .34s var(--ease-out),transform .34s var(--ease-out);
+  -webkit-backdrop-filter:none;backdrop-filter:none;}
+.ftz-feedback-toast.visible{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto;}
+.ftz-feedback-toast::before{opacity:.6;}   /* the SWFT art, dialled back behind text */
+@media(prefers-reduced-motion:reduce){
+  .ftz-feedback-toast,.ftz-feedback-toast.visible{transform:translate(-50%,-50%);transition:opacity .2s linear;}
+}
 .fb-x{top:10px;right:12px;}
-.fb-head{display:flex;align-items:center;gap:11px;margin-bottom:10px;padding-right:30px;}
-.fb-mark{width:36px;height:36px;flex-shrink:0;border-radius:12px;display:inline-flex;align-items:center;
-  justify-content:center;background:var(--panel2);border:2px solid var(--border);color:var(--accent);font-size:14px;}
-.fb-head-tx{display:flex;flex-direction:column;min-width:0;line-height:1.25;}
-.fb-eyebrow{font-family:var(--font-display);font-size:9px;font-weight:800;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--muted);}
-.fb-title{font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--text);}
+.fb-title{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text);
+  padding-right:30px;margin-bottom:6px;}
 .fb-sub{font-size:12.5px;color:var(--muted-light);line-height:1.5;margin-bottom:13px;}
 .fb-sub b{color:var(--text);font-weight:700;}
 .fb-rates{display:flex;gap:7px;}
@@ -18179,7 +18218,7 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .fb-done{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--green);
   font-family:var(--font-display);font-weight:600;padding:6px 0 2px;}
 @media(max-width:520px){
-  .ftz-feedback-toast{right:12px;left:12px;bottom:14px;width:auto;}
+  .ftz-feedback-toast{width:calc(100vw - 28px);}
 }
 @media(prefers-reduced-motion:reduce){
   .fs-tx-e{animation:none;}
@@ -18213,16 +18252,32 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
    that is what the button is selling. Keeps the ONE 3D recipe underneath. */
 .fs-send-cta{background:linear-gradient(96deg,var(--rad-pink,#ef5fb0) 0%,var(--accent,#fff93e) 100%) !important;
   color:#13161d !important;}
-.fs-send-cta:hover{filter:brightness(1.04);}
+.fs-send-cta:hover:not(:disabled){filter:brightness(1.04);}
+/* Disabled keeps the gradient's SHAPE (so the button never changes identity
+   mid-interaction) and only loses its saturation. */
+.fs-send-cta:disabled,.fs-send-cta:disabled:hover{filter:saturate(.25) brightness(.8);opacity:.55;}
+
+/* The limit line is white so it reads as copy, not as a footnote, and the
+   Radiance mark sits on the SAME axis as the text — `vertical-align` on a
+   masked span aligns the box, not the glyph inside it, which is why it looked
+   a pixel high. Centring the flex row is the fix. */
+.fs-send-note-l{align-items:center;color:#fff;}
+.fs-send-note-l .fs-rad-mark{vertical-align:0;width:14px;height:14px;}
 
 /* The note IS the chatbar, so it only needs sizing — everything else comes
-   from .chat-input-outer / .chat-input-row / .chat-input-actions. */
+   from .chat-input-outer / .chat-input-row / .chat-input-actions.
+   ⚠️ The chatbar aligns its row to flex-END because a growing message should
+   keep its send controls pinned to the bottom line. This bar is one line most
+   of the time, and flex-end + the textarea's own padding pushed the text above
+   the emoji button. Centred, with the padding moved off the textarea and onto
+   the row, both sit on the same axis. */
 .fs-send-bar{margin:0;padding:0;width:100%;}
-.fs-send-bar .chat-input-row{align-items:flex-end;padding:6px 6px 6px 12px;}
+.fs-send-bar .chat-input-row{align-items:center;padding:7px 8px 7px 14px;min-height:46px;}
 .fs-send-note{flex:1;min-width:0;resize:none;max-height:96px;background:transparent;border:0;outline:0;
-  color:var(--text);font-family:var(--font-ui);font-size:13.5px;line-height:1.5;padding:7px 0;}
+  color:var(--text);font-family:var(--font-ui);font-size:13.5px;line-height:1.5;padding:0;
+  display:block;overflow-y:auto;}
 .fs-send-note::placeholder{color:var(--muted);}
-.fs-send-bar .chat-input-actions{padding-bottom:2px;}
+.fs-send-bar .chat-input-actions{padding:0;align-items:center;align-self:center;}
 
 /* ⚠️ The amount field kept going square on click: the global
    `input[type=text]:focus` rule and the later `:focus{border-color:var(--border)}`

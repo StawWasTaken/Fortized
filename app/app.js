@@ -1717,6 +1717,15 @@ function _isoToFlag(iso) {
 // Flag char → friendly country name (used by the hover/click tooltip)
 const _FTZ_FLAG_NAMES = Object.create(null);
 _FTZ_COUNTRY_ISO.forEach(([iso, name]) => { _FTZ_FLAG_NAMES[_isoToFlag(iso)] = name; });
+// ISO code → friendly name, straight off the same table. The staff console
+// leaderboard used to print bare codes ("FR", "GB"), which is fine for the
+// two you happen to know and useless for the rest.
+const _FTZ_ISO_NAMES = Object.create(null);
+_FTZ_COUNTRY_ISO.forEach(([iso, name]) => { _FTZ_ISO_NAMES[String(iso).toUpperCase()] = name; });
+function _ftzCountryName(iso) {
+  const k = String(iso || '').toUpperCase();
+  return _FTZ_ISO_NAMES[k] || k || '—';
+}
 
 // TODO(staw): manually recheck emoji categories — there are likely
 // stragglers in the wrong group (e.g. some Unicode 15+ additions land
@@ -5340,6 +5349,10 @@ function updateOnyxDisplay() {
 // (header row with balance + 3 action items with consistent icon set).
 function onOnyxCtxMenu(ev) {
   ev.preventDefault();
+  // ⚠️ Both mouse buttons open this menu, so a LEFT click gets here too — and a
+  // left click keeps bubbling to the document handler that closes any open
+  // context menu, which would shut this one in the same tick it opened.
+  ev.stopPropagation();
   const questIcon = '<i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>';
   const cardIcon = '<i class="fa-solid fa-receipt" aria-hidden="true"></i>';
   const giftIcon = '<i class="fa-solid fa-ticket" aria-hidden="true"></i>';
@@ -5562,6 +5575,7 @@ function _maskIcon(url, size) {
 // Right-click handler for the streak capsule — opens the unified ctx menu.
 function onStreakCtxMenu(ev) {
   ev.preventDefault();
+  ev.stopPropagation();   // see onOnyxCtxMenu — a left click would close it instantly
   const streak = +CU?.dailyStreak || 0;
   const protected_ = _isStreakProtected();
   const untilStr = protected_ ? new Date(+CU.streakProtectedUntil).toLocaleDateString() : null;
@@ -32755,21 +32769,23 @@ function showFeedbackToast(actionLabel, actionType, meta) {
   document.querySelector('.ftz-feedback-toast')?.remove();
   const context = curDM ? 'dm' : (typeof curGC !== 'undefined' && curGC) ? 'gc' : curBastion !== null ? 'bastion' : 'general';
 
+  // ⚠️ Built on the SAME shell as the Lifecheck card (`.ftz-confirm-card` +
+  // `.ftz-ov-swft`), because that is the one place the Swiftaw overlay renders
+  // correctly. The old toast painted the overlay onto a translucent
+  // `--glass-heavy` surface behind a `backdrop-filter`, so the art was washed
+  // out to nothing — the overlay was never really visible. A solid card lets
+  // the `::before` sit exactly where it does on Lifecheck.
+  // It is NOT wrapped in an overlay: it is centred and fades in, but it must
+  // never block the app behind it.
   const el = document.createElement('div');
-  el.className = 'ftz-feedback-toast ftz-ov-swft';
+  el.className = 'ftz-feedback-toast ftz-confirm-card ftz-ov-swft';
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-label', 'Quick feedback');
   el.dataset.actionType = actionType;
   el.dataset.context = context;
   el.innerHTML = `
     <button class="ftz-close-btn ftz-ac-x fb-x" aria-label="No thanks" onclick="_fbDismiss(this)">&times;</button>
-    <div class="fb-head">
-      <span class="fb-mark"><i class="fa-solid fa-comment-dots"></i></span>
-      <span class="fb-head-tx">
-        <span class="fb-eyebrow">Swiftaw</span>
-        <span class="fb-title">How did that go?</span>
-      </span>
-    </div>
+    <div class="fb-title">How did that go?</div>
     <div class="fb-sub">You just used <b>${escapeHTML(actionLabel)}</b>. Tell us how it felt — or close this, it's genuinely optional.</div>
     <div class="fb-rates">
       ${[['good', 'fa-face-grin-stars', 'Great'], ['ok', 'fa-face-meh', 'Fine'], ['bad', 'fa-face-frown', 'Rough']]
@@ -36418,10 +36434,13 @@ window._openLightboxFromImg = function(imgEl) {
   // If the clicked media is part of a multi-media message, gather its siblings
   // so the lightbox can show ‹ › arrows to page through them.
   try {
-    const scope = imgEl.closest('.msg-media-grid') || imgEl.closest('.msg-text');
+    // `.stf-shots` is the staff console's report screenshots — they page with
+    // the same ‹ › arrows as a multi-image message, so a case with four
+    // screenshots reads exactly like any other gallery in the app.
+    const scope = imgEl.closest('.msg-media-grid') || imgEl.closest('.stf-shots') || imgEl.closest('.msg-text');
     if (scope) {
       const srcs = [];
-      scope.querySelectorAll('img.ftz-chat-img, .ftz-embed-gif img, video').forEach(n => {
+      scope.querySelectorAll('img.ftz-chat-img, img.stf-shot, .ftz-embed-gif img, video').forEach(n => {
         const s = n.src || n.getAttribute('src'); if (s && srcs.indexOf(s) < 0) srcs.push(s);
       });
       if (srcs.length > 1) { meta.gallery = srcs; meta.galleryIndex = Math.max(0, srcs.indexOf(src)); }
@@ -49485,102 +49504,64 @@ function _fsOpenTransactions(range) {
   setTimeout(() => overlay.focus(), 0);
 }
 function _fsSetTxRange(r) { window._fsTxRange = r; _fsTxRender(); }
-function _fsSetTxFlow(f) { window._fsTxFlow = f; _fsTxRender(); }
 
-// Relative for anything recent, absolute once it stops being "the other day".
-function _fsTxWhen(at) {
-  const d = Date.now() - at;
-  if (d < 60000) return 'just now';
-  if (d < 86400000) return Math.max(1, Math.round(d / 3600000)) + 'h ago';
-  if (d < 604800000) return Math.round(d / 86400000) + 'd ago';
-  return new Date(at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-}
-
+// ⚠️ THE ORIGINAL CARD, kept. A later pass rebuilt this into summary tiles +
+// a two-column breakdown + an itemised activity feed; the user wanted the
+// original back. The only thing carried forward from that pass is the part
+// that was a genuine BUG fix, not a redesign: direction comes from the SIGN of
+// each entry instead of a per-kind `in:true/false` flag. That flag could not
+// describe a two-way kind — every trade and every gift was filed as incoming,
+// and any kind missing from the table vanished from the card entirely.
 function _fsTxRender() {
   const card = document.querySelector('#fs-tx-modal .fs-tx'); if (!card) return;
   const rid = window._fsTxRange || 'month';
-  const flow = window._fsTxFlow || 'all';
   const range = _FS_TX_RANGES.find(r => r.id === rid) || _FS_TX_RANGES[2];
   const since = Date.now() - range.days * 86400000;
-  const all = _fsTxLedger().filter(t => t && t.at >= since);
+  const rows = _fsTxLedger().filter(t => t && t.at >= since);
 
-  const totalIn = all.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
-  const totalOut = all.filter(t => t.amount < 0).reduce((s, t) => s - t.amount, 0);
-  const net = totalIn - totalOut;
-
-  // Group by kind AND direction, so "Trades" can show up on both sides.
-  const groups = {};
-  for (const t of all) {
-    const dir = t.amount < 0 ? 'out' : 'in';
-    const key = t.kind + ':' + dir;
-    (groups[key] = groups[key] || { kind: t.kind, dir, total: 0, n: 0 });
-    groups[key].total += Math.abs(t.amount);
-    groups[key].n++;
-  }
-  const side = dir => Object.values(groups).filter(g => g.dir === dir).sort((a, b) => b.total - a.total);
-
-  const kindRow = g => {
-    const m = _fsTxMeta(g.kind);
-    return `<div class="fs-tx-row">
-      <span class="fs-tx-lb"><i class="fa-solid ${m.ic}"></i>${escapeHTML(m.label)}<em>${g.n}</em></span>
-      <span class="fs-tx-amt fs-tx-amt--${g.dir}">${g.dir === 'out' ? '−' : '+'}${_FS_ONYX_IC}${_ftzCompactNum(g.total)}</span>
-    </div>`;
+  // Sum per kind PER SIDE, so a kind that moves both ways (trades, gifts,
+  // sends) shows the real figure on each side rather than a netted-out one.
+  const tally = dir => {
+    const by = {};
+    for (const t of rows) {
+      if (dir === 'in' ? t.amount <= 0 : t.amount >= 0) continue;
+      by[t.kind] = (by[t.kind] || 0) + Math.abs(t.amount);
+    }
+    return Object.entries(by).sort((a, b) => b[1] - a[1]);
   };
-
-  const listed = flow === 'all' ? all : all.filter(t => flow === 'in' ? t.amount > 0 : t.amount < 0);
-  const entries = listed.slice(0, 120).map((t, i) => {
-    const m = _fsTxMeta(t.kind);
-    const out = t.amount < 0;
-    return `<div class="fs-tx-e" style="--i:${Math.min(i, 14)};">
-      <span class="fs-tx-e-ic${out ? ' is-out' : ' is-in'}"><i class="fa-solid ${m.ic}"></i></span>
-      <span class="fs-tx-e-tx">
-        <span class="fs-tx-e-t">${escapeHTML(t.label || m.label)}</span>
-        <span class="fs-tx-e-s">${escapeHTML(m.label)} · ${_fsTxWhen(t.at)}</span>
-      </span>
-      <span class="fs-tx-e-amt${out ? ' is-out' : ' is-in'}">${out ? '−' : '+'}${_FS_ONYX_IC}${_ftzFullNum(Math.abs(t.amount))}</span>
-    </div>`;
-  }).join('');
+  const line = (dir) => ([kind, total]) => {
+    const m = _fsTxMeta(kind);
+    return `<div class="fs-tx-row"><span class="fs-tx-lb"><i class="fa-solid ${m.ic}"></i> ${escapeHTML(m.label)}</span>` +
+      `<span class="fs-tx-amt">${dir === 'out' ? '-' : ''}${_FS_ONYX_IC}${_ftzCompactNum(total)}</span></div>`;
+  };
+  const inRows = tally('in'), outRows = tally('out');
+  const totalIn = inRows.reduce((s, r) => s + r[1], 0);
+  const totalOut = outRows.reduce((s, r) => s + r[1], 0);
+  const net = totalIn - totalOut;
 
   const sel = (typeof _ftzSelectHTML === 'function')
     ? _ftzSelectHTML('fs-txrange', rid, _FS_TX_RANGES.map(r => ({ value: r.id, label: r.label })), "_fsSetTxRange(__VALUE__)")
     : '';
-
   card.innerHTML = `
     <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-tx-modal')?.remove()">&times;</button>
     <div class="ftz-ac-hero ftz-ac-hero--noicon">
       <div class="ftz-ac-title">My Transactions</div>
-      <div class="ftz-ac-sub">Every Onyx that came in, and every one that went out.</div>
+      <div class="ftz-ac-sub">Where your Onyx came from, and where it went.</div>
     </div>
     <div class="ftz-ac-body fs-tx-body">
       <div class="fs-tx-head"><span class="fs-tx-h-lb">Date range</span>${sel}</div>
-
-      <div class="fs-tx-sum">
-        <div class="fs-tx-sum-c"><span class="fs-tx-sum-k">Received</span><span class="fs-tx-sum-v is-in">+${_FS_ONYX_IC}${_ftzCompactNum(totalIn)}</span></div>
-        <div class="fs-tx-sum-c"><span class="fs-tx-sum-k">Spent</span><span class="fs-tx-sum-v is-out">−${_FS_ONYX_IC}${_ftzCompactNum(totalOut)}</span></div>
-        <div class="fs-tx-sum-c"><span class="fs-tx-sum-k">Net change</span><span class="fs-tx-sum-v ${net >= 0 ? 'is-in' : 'is-out'}">${net >= 0 ? '+' : '−'}${_FS_ONYX_IC}${_ftzCompactNum(Math.abs(net))}</span></div>
-        <div class="fs-tx-sum-c"><span class="fs-tx-sum-k">Balance now</span><span class="fs-tx-sum-v">${_FS_ONYX_IC}${_ftzCompactNum(CU?.onyx || 0)}</span></div>
-      </div>
-
-      ${all.length ? `
-        <div class="fs-tx-cols">
-          <div class="fs-tx-sec">
-            <div class="fs-tx-sec-h"><span>Incoming</span><span>${_ftzCompactNum(totalIn)}</span></div>
-            ${side('in').length ? side('in').map(kindRow).join('') : '<div class="fs-tx-none">Nothing came in.</div>'}
-          </div>
-          <div class="fs-tx-sec">
-            <div class="fs-tx-sec-h"><span>Outgoing</span><span>${_ftzCompactNum(totalOut)}</span></div>
-            ${side('out').length ? side('out').map(kindRow).join('') : '<div class="fs-tx-none">Nothing went out.</div>'}
-          </div>
+      ${rows.length ? `
+        <div class="fs-tx-sec">
+          <div class="fs-tx-sec-h"><span>Incoming Onyx</span><span>Amount</span></div>
+          ${inRows.length ? inRows.map(line('in')).join('') : '<div class="fs-tx-none">Nothing came in.</div>'}
+          <div class="fs-tx-row fs-tx-row--total"><span class="fs-tx-lb">Total</span><span class="fs-tx-amt fs-tx-amt--in">${_FS_ONYX_IC}${_ftzCompactNum(totalIn)}</span></div>
         </div>
-
-        <div class="fs-tx-listhead">
-          <span class="fs-tx-h-lb">Activity</span>
-          <span class="fs-tx-flow">
-            ${['all', 'in', 'out'].map(f => `<button class="fs-tx-flowb${flow === f ? ' active' : ''}" onclick="_fsSetTxFlow('${f}')">${f === 'all' ? 'All' : f === 'in' ? 'In' : 'Out'}</button>`).join('')}
-          </span>
+        <div class="fs-tx-sec">
+          <div class="fs-tx-sec-h"><span>Outgoing Onyx</span><span>Amount</span></div>
+          ${outRows.length ? outRows.map(line('out')).join('') : '<div class="fs-tx-none">Nothing went out.</div>'}
+          <div class="fs-tx-row fs-tx-row--total"><span class="fs-tx-lb">Total</span><span class="fs-tx-amt fs-tx-amt--out">-${_FS_ONYX_IC}${_ftzCompactNum(totalOut)}</span></div>
         </div>
-        <div class="fs-tx-list">${entries || _ftzNotFound('Nothing on this side', flow === 'in' ? 'No Onyx came in during this window.' : 'No Onyx went out during this window.', { compact: true })}</div>
-        ${listed.length > 120 ? `<div class="fs-tx-more">Showing the most recent 120 of ${listed.length.toLocaleString()}.</div>` : ''}`
+        <div class="fs-tx-net"><span>Net change</span><b class="${net >= 0 ? 'is-up' : 'is-down'}">${net >= 0 ? '+' : '-'}${_FS_ONYX_IC}${_ftzCompactNum(Math.abs(net))}</b></div>`
         : _ftzNotFound('Nothing moved in this window', 'Try a wider date range — or go earn some Onyx.')}
     </div>`;
 }
@@ -49596,8 +49577,8 @@ const FS_ONYX_SEND_MAX = 50000;
 let _fsSendReady = null;
 let _fsSendTarget = null;   // the full profile of who we're sending to
 async function _fsOnyxSendReady() {
-  if (_fsSendReady !== null) return _fsSendReady;
-  try {
+  if (_fsSendReady === true) return true;   // only a YES is worth caching —
+  try {                                     // a blip must not disable the feature for the session
     const r = await fetch('/api/onyx/health', { cache: 'no-store' });
     const j = await r.json();
     _fsSendReady = !!j.ready;
@@ -49663,7 +49644,7 @@ function _fsSendCard(to) {
       <div class="ftz-modal-foot">
         <div class="ftz-modal-foot__actions">
           <button class="fs-btn" onclick="_fsSendClose()">Cancel</button>
-          <button class="fs-btn fs-btn--primary" id="fs-send-go" disabled onclick="_fsSendOnyxGo('${escapeHTML(to)}')">Send</button>
+          <button class="fs-btn fs-btn--primary fs-send-cta" id="fs-send-go" disabled onclick="_fsSendOnyxGo('${escapeHTML(to)}')">Send</button>
         </div>
       </div>
     </div>`;
@@ -49674,6 +49655,11 @@ function _fsSendCard(to) {
   });
   // The note is a real chatbar, so :shortcode: autocomplete works in it too.
   try { setupEmojiAutocomplete('fs-send-note'); } catch (_) {}
+  // A `rows="1"` textarea is one line of the BROWSER's default line-height, not
+  // ours, so it opens a few pixels too tall and the text rides high in the bar.
+  // Measuring it once on open makes the closed state exactly one of our lines.
+  const note = document.getElementById('fs-send-note');
+  if (note) _fsSendNoteGrow(note);
   setTimeout(() => document.getElementById('fs-send-amt')?.focus(), 30);
   _fsSendLoadTarget(to);
 }
@@ -49793,11 +49779,19 @@ async function _fsSendOnyxGo(to) {
   if (go) { go.disabled = true; go.textContent = 'Sending…'; }
 
   if (!(await _fsOnyxSendReady())) {
-    _fsSendClose();
-    toast('Sending Onyx is unavailable right now — nothing was taken from your balance.', 'error');
+    // The probe only fails when /api/onyx/health itself is unreachable — an old
+    // build on the server, or the server being down. Say which, rather than a
+    // blanket "unavailable" that gives nobody anything to act on.
+    if (go) { go.disabled = false; go.textContent = 'Send'; }
+    const err = document.getElementById('fs-send-err');
+    const m = 'Send Onyx isn’t reachable — the server is down or running an older build.';
+    if (err) err.textContent = m; else toast(m, 'error');
     return;
   }
   try {
+    // Mint the signed session up front. Without it the first call 401s, and a
+    // 401 on a transfer reads like a refusal rather than a missing token.
+    await _fsEnsureSession();
     const r = await _fsTradeFetch('/api/onyx/send', { to, amount, note });
     CU.onyx = typeof r.balance === 'number' ? r.balance : Math.max(0, (CU.onyx || 0) - amount);
     await _fsLogTx('send', -amount, 'Sent to @' + to + (note ? ' · ' + note : ''));
@@ -58041,7 +58035,7 @@ function _fppShowMoreMenu(evt, username) {
       <div class="fpp-menu__item fpp-menu__item--onyx" onclick="_fppClose();_fsOpenSendOnyx('${safeUser}')">
         <span class="fpp-menu__send">${_FS_SEND_SVG}</span>
         Send Onyx
-        ${_hasRadiance(CU) ? '' : '<span class="fpp-menu__rad" data-tip="Radiance feature"></span>'}
+        ${_hasRadiance(CU) ? '' : '<span class="fpp-menu__rad" data-tip="Radiance Exclusive" aria-label="Radiance Exclusive"></span>'}
       </div>
       <div class="fpp-menu__divider"></div>`;
     const menuHTML = (sendOnyxHTML || inviteItems || safetyItemsHTML || reportItemHTML)
@@ -65643,18 +65637,12 @@ function _inspectorAllowed() {
   return typeof isSuperAdmin === 'function' ? !!isSuperAdmin() : false;
 }
 
-function _stawWireInspector() {
-  if (!_inspectorAllowed()) return;
-  const btn = document.getElementById('tb-admin-btn');
-  if (!btn) { setTimeout(_stawWireInspector, 600); return; }
-  if (btn._stawWired) return;
-  btn._stawWired = true;
-  btn.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    _stawShowMenu(e.clientX, e.clientY);
-  });
-}
-setTimeout(_stawWireInspector, 1500);
+// ⚠️ DELIBERATELY NOT BOUND ANY MORE. This used to attach a second
+// `contextmenu` listener to #tb-admin-btn, which already carries
+// `onStaffCtxMenu` inline — so right-clicking the shield opened this menu AND
+// the staff menu at once. Inspect UI is a row inside onStaffCtxMenu now.
+// `_stawShowMenu` is kept for the console/keyboard entry points that call it.
+function _stawWireInspector() { /* superseded by onStaffCtxMenu's Developer group */ }
 
 function _stawShowMenu(x, y) {
   document.getElementById('staw-menu')?.remove();
@@ -66286,28 +66274,100 @@ function _staffNewId(prefix) { return prefix + '_' + Date.now().toString(36) + M
 // Timezone first (free, ~85% accurate, no network). IP fallback only
 // once per session, cached. Country stamped onto CU.countryCode on
 // boot so the choropleth has fresh data immediately.
-const _TZ_TO_COUNTRY = {
-  'Europe/Paris':'FR','Europe/London':'GB','Europe/Berlin':'DE','Europe/Madrid':'ES','Europe/Rome':'IT',
-  'Europe/Amsterdam':'NL','Europe/Brussels':'BE','Europe/Lisbon':'PT','Europe/Dublin':'IE',
-  'Europe/Stockholm':'SE','Europe/Helsinki':'FI','Europe/Oslo':'NO','Europe/Copenhagen':'DK',
-  'Europe/Warsaw':'PL','Europe/Prague':'CZ','Europe/Athens':'GR','Europe/Vienna':'AT','Europe/Zurich':'CH',
-  'Europe/Moscow':'RU','Europe/Istanbul':'TR','Europe/Kiev':'UA','Europe/Kyiv':'UA','Europe/Bucharest':'RO',
-  'America/New_York':'US','America/Chicago':'US','America/Denver':'US','America/Los_Angeles':'US',
-  'America/Phoenix':'US','America/Anchorage':'US','Pacific/Honolulu':'US',
-  'America/Toronto':'CA','America/Vancouver':'CA','America/Edmonton':'CA','America/Montreal':'CA',
-  'America/Mexico_City':'MX','America/Sao_Paulo':'BR','America/Argentina/Buenos_Aires':'AR',
-  'America/Bogota':'CO','America/Lima':'PE','America/Santiago':'CL',
-  'Asia/Tokyo':'JP','Asia/Seoul':'KR','Asia/Shanghai':'CN','Asia/Hong_Kong':'HK','Asia/Taipei':'TW',
-  'Asia/Singapore':'SG','Asia/Bangkok':'TH','Asia/Jakarta':'ID','Asia/Manila':'PH','Asia/Kuala_Lumpur':'MY',
-  'Asia/Kolkata':'IN','Asia/Calcutta':'IN','Asia/Karachi':'PK','Asia/Dhaka':'BD',
-  'Asia/Dubai':'AE','Asia/Riyadh':'SA','Asia/Tel_Aviv':'IL','Asia/Jerusalem':'IL',
-  'Africa/Cairo':'EG','Africa/Lagos':'NG','Africa/Johannesburg':'ZA','Africa/Nairobi':'KE','Africa/Casablanca':'MA',
-  'Australia/Sydney':'AU','Australia/Melbourne':'AU','Australia/Perth':'AU','Australia/Brisbane':'AU',
-  'Pacific/Auckland':'NZ',
-};
+// ⚠️ WHY PEOPLE WERE COMING OUT UNPLACED. The old table listed ~60 hand-picked
+// zones, so anyone in Budapest, Halifax, Ho Chi Minh City, Accra, Auckland's
+// neighbours — hundreds of perfectly ordinary places — resolved to nothing and
+// fell through to the IP lookup, which is rate-limited on the free tier and is
+// blocked outright by most ad blockers. Two dead ends and no country.
+// Now: a full IANA zone → ISO table (below), then the browser's own locale
+// region, and only then the network call. The first two are free and offline.
+const _TZ_COUNTRY_SRC =
+  'AD Europe/Andorra;AE Asia/Dubai;AF Asia/Kabul;AL Europe/Tirane;AM Asia/Yerevan;' +
+  'AO Africa/Luanda;AR America/Argentina/Buenos_Aires America/Argentina/Cordoba America/Argentina/Mendoza America/Argentina/Salta America/Argentina/Tucuman America/Argentina/Ushuaia;' +
+  'AT Europe/Vienna;AU Australia/Sydney Australia/Melbourne Australia/Brisbane Australia/Perth Australia/Adelaide Australia/Hobart Australia/Darwin Australia/Canberra;' +
+  'AZ Asia/Baku;BA Europe/Sarajevo;BB America/Barbados;BD Asia/Dhaka;BE Europe/Brussels;BF Africa/Ouagadougou;' +
+  'BG Europe/Sofia;BH Asia/Bahrain;BI Africa/Bujumbura;BJ Africa/Porto-Novo;BN Asia/Brunei;BO America/La_Paz;' +
+  'BR America/Sao_Paulo America/Bahia America/Fortaleza America/Recife America/Manaus America/Belem America/Cuiaba America/Campo_Grande America/Porto_Velho;' +
+  'BS America/Nassau;BT Asia/Thimphu;BW Africa/Gaborone;BY Europe/Minsk;BZ America/Belize;' +
+  'CA America/Toronto America/Vancouver America/Edmonton America/Winnipeg America/Halifax America/St_Johns America/Montreal America/Regina America/Moncton America/Whitehorse America/Yellowknife;' +
+  'CD Africa/Kinshasa Africa/Lubumbashi;CF Africa/Bangui;CG Africa/Brazzaville;CH Europe/Zurich;CI Africa/Abidjan;' +
+  'CL America/Santiago Pacific/Easter;CM Africa/Douala;CN Asia/Shanghai Asia/Urumqi Asia/Chongqing Asia/Harbin;' +
+  'CO America/Bogota;CR America/Costa_Rica;CU America/Havana;CY Asia/Nicosia Asia/Famagusta;' +
+  'CZ Europe/Prague;DE Europe/Berlin Europe/Busingen;DK Europe/Copenhagen;DO America/Santo_Domingo;DZ Africa/Algiers;' +
+  'EC America/Guayaquil Pacific/Galapagos;EE Europe/Tallinn;EG Africa/Cairo;ER Africa/Asmara;ES Europe/Madrid Atlantic/Canary Africa/Ceuta;' +
+  'ET Africa/Addis_Ababa;FI Europe/Helsinki;FJ Pacific/Fiji;FR Europe/Paris;GA Africa/Libreville;' +
+  'GB Europe/London Europe/Belfast;GE Asia/Tbilisi;GH Africa/Accra;GN Africa/Conakry;GR Europe/Athens;' +
+  'GT America/Guatemala;HK Asia/Hong_Kong;HN America/Tegucigalpa;HR Europe/Zagreb;HT America/Port-au-Prince;' +
+  'HU Europe/Budapest;ID Asia/Jakarta Asia/Makassar Asia/Jayapura Asia/Pontianak;IE Europe/Dublin;' +
+  'IL Asia/Jerusalem Asia/Tel_Aviv;IN Asia/Kolkata Asia/Calcutta;IQ Asia/Baghdad;IR Asia/Tehran;' +
+  'IS Atlantic/Reykjavik;IT Europe/Rome;JM America/Jamaica;JO Asia/Amman;JP Asia/Tokyo;' +
+  'KE Africa/Nairobi;KG Asia/Bishkek;KH Asia/Phnom_Penh;KR Asia/Seoul;KW Asia/Kuwait;KZ Asia/Almaty Asia/Aqtobe Asia/Atyrau Asia/Oral;' +
+  'LA Asia/Vientiane;LB Asia/Beirut;LK Asia/Colombo;LT Europe/Vilnius;LU Europe/Luxembourg;LV Europe/Riga;' +
+  'LY Africa/Tripoli;MA Africa/Casablanca;MD Europe/Chisinau;ME Europe/Podgorica;MG Indian/Antananarivo;' +
+  'MK Europe/Skopje;ML Africa/Bamako;MM Asia/Yangon;MN Asia/Ulaanbaatar;MO Asia/Macau;MT Europe/Malta;' +
+  'MU Indian/Mauritius;MV Indian/Maldives;MW Africa/Blantyre;MX America/Mexico_City America/Tijuana America/Monterrey America/Cancun America/Chihuahua America/Hermosillo America/Merida;' +
+  'MY Asia/Kuala_Lumpur Asia/Kuching;MZ Africa/Maputo;NA Africa/Windhoek;NG Africa/Lagos;NI America/Managua;' +
+  'NL Europe/Amsterdam;NO Europe/Oslo;NP Asia/Kathmandu;NZ Pacific/Auckland Pacific/Chatham;OM Asia/Muscat;' +
+  'PA America/Panama;PE America/Lima;PG Pacific/Port_Moresby;PH Asia/Manila;PK Asia/Karachi;PL Europe/Warsaw;' +
+  'PR America/Puerto_Rico;PT Europe/Lisbon Atlantic/Azores Atlantic/Madeira;PY America/Asuncion;QA Asia/Qatar;' +
+  'RO Europe/Bucharest;RS Europe/Belgrade;' +
+  'RU Europe/Moscow Europe/Kaliningrad Europe/Samara Europe/Volgograd Europe/Saratov Europe/Astrakhan Europe/Ulyanovsk Asia/Yekaterinburg Asia/Omsk Asia/Novosibirsk Asia/Krasnoyarsk Asia/Irkutsk Asia/Yakutsk Asia/Vladivostok Asia/Magadan Asia/Kamchatka Asia/Sakhalin Asia/Tomsk Asia/Barnaul Asia/Novokuznetsk Asia/Chita;' +
+  'RW Africa/Kigali;SA Asia/Riyadh;SD Africa/Khartoum;SE Europe/Stockholm;SG Asia/Singapore;SI Europe/Ljubljana;' +
+  'SK Europe/Bratislava;SN Africa/Dakar;SO Africa/Mogadishu;SR America/Paramaribo;SV America/El_Salvador;' +
+  'SY Asia/Damascus;TD Africa/Ndjamena;TG Africa/Lome;TH Asia/Bangkok;TJ Asia/Dushanbe;TM Asia/Ashgabat;' +
+  'TN Africa/Tunis;TR Europe/Istanbul Asia/Istanbul;TT America/Port_of_Spain;TW Asia/Taipei;TZ Africa/Dar_es_Salaam;' +
+  'UA Europe/Kyiv Europe/Kiev Europe/Uzhgorod Europe/Zaporozhye Europe/Simferopol;UG Africa/Kampala;' +
+  'US America/New_York America/Chicago America/Denver America/Los_Angeles America/Phoenix America/Anchorage America/Detroit America/Indiana/Indianapolis America/Kentucky/Louisville America/Boise America/Juneau America/Sitka America/Nome America/Adak America/Menominee America/North_Dakota/Center Pacific/Honolulu;' +
+  'UY America/Montevideo;UZ Asia/Tashkent Asia/Samarkand;VE America/Caracas;VN Asia/Ho_Chi_Minh Asia/Saigon;' +
+  'YE Asia/Aden;ZA Africa/Johannesburg;ZM Africa/Lusaka;ZW Africa/Harare;' +
+  // Legacy aliases. Modern Intl normalises these away, but older engines and
+  // some Linux builds still report them verbatim, and the city fallback can't
+  // help with a name like "US/Eastern" that has no city in it.
+  'US US/Eastern US/Central US/Mountain US/Pacific US/Alaska US/Hawaii US/Arizona US/East-Indiana US/Michigan US/Samoa;' +
+  'CA Canada/Eastern Canada/Central Canada/Mountain Canada/Pacific Canada/Atlantic Canada/Newfoundland Canada/Saskatchewan Canada/Yukon;' +
+  'AU Australia/NSW Australia/Victoria Australia/Queensland Australia/West Australia/South Australia/North Australia/Tasmania Australia/ACT;' +
+  'BR Brazil/East Brazil/West Brazil/Acre Brazil/DeNoronha;CL Chile/Continental Chile/EasterIsland;' +
+  'MX Mexico/General Mexico/BajaNorte Mexico/BajaSur;GB GB GB-Eire;IE Eire;PT Portugal;PL Poland;' +
+  'IS Iceland;TR Turkey;EG Egypt;IL Israel;IR Iran;LY Libya;CU Cuba;JM Jamaica;' +
+  'JP Japan;KR ROK;CN PRC;SG Singapore;HK Hongkong;TW ROC;NZ NZ NZ-CHAT';
+const _TZ_TO_COUNTRY = (() => {
+  const m = Object.create(null);
+  for (const entry of _TZ_COUNTRY_SRC.split(';')) {
+    const parts = entry.trim().split(/\s+/);
+    const cc = parts.shift();
+    for (const z of parts) m[z] = cc;
+  }
+  return m;
+})();
 function _detectCountryFromTZ() {
-  try { return _TZ_TO_COUNTRY[Intl.DateTimeFormat().resolvedOptions().timeZone] || null; }
-  catch { return null; }
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    if (_TZ_TO_COUNTRY[tz]) return _TZ_TO_COUNTRY[tz];
+    // Some platforms report a legacy alias ("US/Eastern", "Asia/Calcutta") or a
+    // zone we don't list. Fall back to matching on the CITY half, which is
+    // unique across the database far more often than not.
+    const city = tz.split('/').pop();
+    if (city) {
+      for (const z in _TZ_TO_COUNTRY) if (z.split('/').pop() === city) return _TZ_TO_COUNTRY[z];
+    }
+  } catch (_) {}
+  return null;
+}
+// The browser's own locale carries a region for most people ("en-GB" → GB).
+// It says where they've set themselves up rather than where they are, so it
+// ranks below the timezone — but it's free, offline and almost always present.
+function _detectCountryFromLocale() {
+  try {
+    const langs = [...(navigator.languages || []), navigator.language].filter(Boolean);
+    for (const l of langs) {
+      let r = null;
+      try { r = new Intl.Locale(l).maximize().region; } catch (_) {
+        const m = String(l).match(/[-_]([A-Za-z]{2})\b/); r = m && m[1];
+      }
+      if (r && /^[A-Za-z]{2}$/.test(r)) return r.toUpperCase();
+    }
+  } catch (_) {}
+  return null;
 }
 async function _detectCountryFromIP() {
   try {
@@ -66323,10 +66383,10 @@ async function _detectCountryFromIP() {
 async function _ensureUserCountry() {
   if (!CU?.username) return;
   if (CU.countryCode && CU.countryCode.length === 2) return;
-  let cc = _detectCountryFromTZ();
+  let cc = _detectCountryFromTZ() || _detectCountryFromLocale();
   if (!cc) cc = await _detectCountryFromIP();
   if (!cc) return;
-  CU.countryCode = cc;
+  CU.countryCode = String(cc).toUpperCase();
   try { saveLocal(); } catch (_) {}
   try { if (typeof saveUser === 'function') saveUser().catch(()=>{}); } catch (_) {}
 }
@@ -66750,13 +66810,18 @@ function _scAssetVer() {
 // Choropleth ramp: dark base for zero, then a log-scaled climb up the
 // brand accent so busy countries glow. Returns [fill, textColor].
 function _scMapFill(n, maxN) {
-  if (!n) return ['rgba(255,255,255,.05)', 'rgba(255,255,255,.5)'];
+  // Empty land is a real surface, not a ghost — at 5% alpha the continents
+  // were barely distinguishable from the sea behind them.
+  if (!n) return ['rgba(255,255,255,.10)', 'rgba(255,255,255,.5)'];
+  // Log-scaled so one big country can't flatten everyone else to nothing, and
+  // floored at .28 so a country with a single member is still clearly lit.
   const t = Math.log(n + 1) / Math.log(maxN + 1);
-  return [`rgba(255,249,62,${(0.18 + t * 0.72).toFixed(3)})`, '#0a0d14'];
+  return [`rgba(255,249,62,${(0.28 + t * 0.66).toFixed(3)})`, '#0a0d14'];
 }
 // The country counts most-recently computed by _staffOpsRefresh, so the
 // map and its refreshes share one users read.
 let _scCountryCounts = {};
+let _scPlacedTotal = 0;   // every member seen in that same scan, placed or not
 async function renderStaffWorldMap(mountEl, counts) {
   if (!mountEl) return;
   counts = counts || _scCountryCounts || {};
@@ -66979,7 +67044,13 @@ async function _staffOpsRefresh() {
   const list = Object.values(users);
   // Country tallies shared with the world map so it never re-scans users.
   _scCountryCounts = {};
-  list.forEach(u => { if (u.countryCode) _scCountryCounts[u.countryCode] = (_scCountryCounts[u.countryCode] || 0) + 1; });
+  list.forEach(u => {
+    const cc = String(u.countryCode || '').trim().toUpperCase();
+    if (/^[A-Z]{2}$/.test(cc)) _scCountryCounts[cc] = (_scCountryCounts[cc] || 0) + 1;
+  });
+  // How many accounts the map can actually speak for. Without this the map
+  // looks like the whole membership when it may only be describing half of it.
+  _scPlacedTotal = list.length;
   const onlineCount = list.filter(u => u.status && u.status !== 'offline').length;
   const reports = (() => { try { return JSON.parse(localStorage.getItem('ftz_reports')||'[]'); } catch { return []; } })();
   const pendingReports = reports.filter(r => r && r.status !== 'resolved' && r.status !== 'dismissed').length;
@@ -67617,8 +67688,8 @@ function _stfAsk(o) {
       } else if (f.type === 'select') {
         // The app's dropdown, not the OS one.
         ctl = _ftzSelectHTML(fid, String(f.value == null ? (f.options?.[0]?.value ?? '') : f.value), (f.options || []).map(op => ({ value: String(op.value), label: op.label })), f.onChange || '');
-      } else if (f.type === 'user') {
-        ctl = _stfPicker(fid, { value: f.value || '', placeholder: f.placeholder || 'Start typing a name…' });
+      } else if (f.type === 'user' || f.type === 'bastion') {
+        ctl = _stfPicker(fid, { source: f.type === 'bastion' ? 'bastions' : 'users', value: f.value || '', placeholder: f.placeholder || '' });
       } else if (f.type === 'colour') {
         ctl = _stfSwatches(fid, f.value || (f.options || [])[0]?.value, f.options || []);
       } else if (f.type === 'icon') {
@@ -67638,9 +67709,11 @@ function _stfAsk(o) {
           ${_stfStep(fid, f.value == null ? '' : f.value, { min: f.min, max: f.max, step: f.step, placeholder: f.placeholder })}
           ${Array.isArray(f.presets) && f.presets.length ? `<span class="stf-presets">${f.presets.map(p => `<button type="button" class="stf-preset" onclick="_stfPreset('${fid}','${p}')">${escapeHTML(String(p))}</button>`).join('')}</span>` : ''}
         </span>`;
+      } else if (f.type === 'date') {
+        ctl = _stfDate(fid, f.value || '', { empty: f.emptyLabel || 'No date' });
       } else {
         ctl = `<span class="stf-frow">
-          <input id="${fid}" class="settings-input" type="${f.type === 'date' ? 'date' : 'text'}" placeholder="${escapeHTML(f.placeholder || '')}" value="${escapeHTML(String(f.value == null ? '' : f.value))}" autocomplete="off" spellcheck="false">
+          <input id="${fid}" class="settings-input" type="text" placeholder="${escapeHTML(f.placeholder || '')}" value="${escapeHTML(String(f.value == null ? '' : f.value))}" autocomplete="off" spellcheck="false">
           ${Array.isArray(f.presets) && f.presets.length ? `<span class="stf-presets">${f.presets.map(p => `<button type="button" class="stf-preset" onclick="_stfPreset('${fid}','${p}')">${escapeHTML(String(p))}</button>`).join('')}</span>` : ''}
         </span>`;
       }
@@ -67681,7 +67754,13 @@ function _stfAsk(o) {
       });
       return v;
     };
-    const done = value => { ov.remove(); document.removeEventListener('keydown', esc, true); resolve(value); };
+    // ⚠️ The picker menu lives on <body>, not inside this card (see
+    // _stfPickMenuEl), so closing the card would otherwise leave it floating.
+    const done = value => {
+      ov.remove(); _stfPickCleanup();
+      document.removeEventListener('keydown', esc, true);
+      resolve(value);
+    };
     const esc = e => { if (e.key === 'Escape') { e.stopPropagation(); done(null); } };
     document.addEventListener('keydown', esc, true);
     ov.onclick = e => { if (e.target === ov) done(null); };
@@ -67752,31 +67831,178 @@ function _stfStepKey(e, id) {
 // "which staw is this" is exactly the question a username-only list can't
 // answer. Writes the chosen username into a hidden input so `_stfAsk` reads
 // it back like any other field.
+// `source` picks what it proposes: 'users' (default) or 'bastions'. Both draw
+// the real thing — a member with their avatar, decoration and styled name; a
+// bastion with its emblem, member count and verified mark.
 function _stfPicker(id, o) {
   const opt = o || {};
-  return `<span class="stf-pick" id="${id}-wrap">
+  const src = opt.source || 'users';
+  const lead = src === 'bastions'
+    ? '<i class="fas fa-shield stf-pick-at"></i>'
+    : '<i class="fas fa-at stf-pick-at"></i>';
+  return `<span class="stf-pick" id="${id}-wrap" data-src="${src}">
     <input type="hidden" id="${id}" value="${escapeHTML(opt.value || '')}">
     <span class="stf-pick-field">
-      <i class="fas fa-at stf-pick-at"></i>
+      ${lead}
       <input class="settings-input stf-pick-in" id="${id}-q" type="text" autocomplete="off" spellcheck="false"
-        placeholder="${escapeHTML(opt.placeholder || 'Start typing a name…')}" value="${escapeHTML(opt.value || '')}"
-        oninput="_stfPickSearch('${id}')" onfocus="_stfPickSearch('${id}')" onkeydown="_stfPickKey(event,'${id}')">
+        placeholder="${escapeHTML(opt.placeholder || (src === 'bastions' ? 'Start typing a bastion…' : 'Start typing a name…'))}" value="${escapeHTML(opt.value || '')}"
+        oninput="_stfPickSearch('${id}')" onfocus="_stfPickSearch('${id}')" onkeydown="_stfPickKey(event,'${id}')"
+        onblur="_stfPickBlur('${id}')">
       <button type="button" class="stf-pick-x" aria-label="Clear" onclick="_stfPickClear('${id}')"><i class="fas fa-xmark"></i></button>
     </span>
-    <div class="stf-pick-menu ftz-ac-card" id="${id}-menu" hidden></div>
   </span>`;
+}
+
+// ⚠️ The menu is PORTALLED to <body>, not left inside the field. `.ftz-ac-card`
+// clips its own overflow (its hero and foot run edge to edge), so an absolutely
+// positioned dropdown inside an action card is cut off at the card's border —
+// which is exactly what happened. Fixed positioning off the field's own rect
+// puts it above everything and lets it flip up when there is no room below.
+function _stfPickMenuEl(id) {
+  let m = document.getElementById(id + '-menu');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = id + '-menu';
+    m.className = 'stf-pick-menu ftz-ac-card';
+    m.hidden = true;
+    document.body.appendChild(m);
+  } else if (m.parentElement !== document.body) document.body.appendChild(m);
+  return m;
+}
+function _stfPickPlace(id) {
+  const m = document.getElementById(id + '-menu');
+  const f = document.getElementById(id + '-q');
+  if (!m || !f || m.hidden) return;
+  const r = f.getBoundingClientRect();
+  m.style.left = Math.round(r.left) + 'px';
+  m.style.width = Math.round(r.width) + 'px';
+  m.style.top = '0px';                       // measure at a known offset first
+  const h = m.offsetHeight || 220;
+  const room = window.innerHeight - r.bottom;
+  m.style.top = Math.round((room < h + 14 && r.top > h + 14) ? r.top - h - 6 : r.bottom + 6) + 'px';
+}
+// Any open picker menu is orphaned the moment its card goes away — nothing
+// else would ever remove it, so it would hang over the app.
+function _stfPickCleanup() {
+  document.querySelectorAll('body > .stf-pick-menu').forEach(m => m.remove());
+  _stfCalClose();
+}
+
+// ── Date picker ────────────────────────────────────────────────────
+// `<input type="date">` draws the BROWSER's calendar — the same reason we
+// replaced the number spinner. This is a real field on our own surfaces, with
+// a month grid built from the app's round `.fr-act` controls, and it keeps the
+// value in a hidden input so `_stfAsk` reads it back like any other field.
+const _STF_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'];
+function _stfDateLabel(iso) {
+  const d = new Date(String(iso) + 'T00:00:00');
+  if (isNaN(+d)) return String(iso);
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+function _stfDate(id, value, o) {
+  const opt = o || {};
+  const empty = opt.empty || 'No date';
+  return `<span class="stf-date" id="${id}-wrap">
+    <input type="hidden" id="${id}" value="${escapeHTML(value || '')}">
+    <button type="button" class="settings-input stf-date-btn" id="${id}-btn" onclick="_stfCalOpen('${id}','${escapeHTML(empty)}')">
+      <i class="fas fa-calendar-day stf-date-ic"></i>
+      <span class="stf-date-v${value ? '' : ' is-empty'}" id="${id}-lbl">${value ? escapeHTML(_stfDateLabel(value)) : escapeHTML(empty)}</span>
+      <i class="fas fa-chevron-down stf-date-ch"></i>
+    </button>
+  </span>`;
+}
+let _stfCalId = null, _stfCalY = 0, _stfCalM = 0, _stfCalEmpty = 'No date';
+function _stfCalOpen(id, empty) {
+  if (_stfCalId === id) { _stfCalClose(); return; }   // second click closes
+  const cur = document.getElementById(id)?.value || '';
+  const d = cur ? new Date(cur + 'T00:00:00') : new Date();
+  _stfCalId = id; _stfCalEmpty = empty || 'No date';
+  _stfCalY = d.getFullYear(); _stfCalM = d.getMonth();
+  _stfCalPaint();
+  setTimeout(() => document.addEventListener('mousedown', _stfCalAway, true), 0);
+}
+function _stfCalAway(e) {
+  if (e.target.closest?.('#stf-cal') || e.target.closest?.('.stf-date')) return;
+  _stfCalClose();
+}
+function _stfCalClose() {
+  document.getElementById('stf-cal')?.remove();
+  document.removeEventListener('mousedown', _stfCalAway, true);
+  _stfCalId = null;
+}
+function _stfCalNav(delta) {
+  _stfCalM += delta;
+  while (_stfCalM < 0) { _stfCalM += 12; _stfCalY--; }
+  while (_stfCalM > 11) { _stfCalM -= 12; _stfCalY++; }
+  _stfCalPaint();
+}
+function _stfCalPick(iso) {
+  const id = _stfCalId; if (!id) return;
+  const h = document.getElementById(id);
+  if (h) { h.value = iso || ''; h.dispatchEvent(new Event('input', { bubbles: true })); }
+  const l = document.getElementById(id + '-lbl');
+  if (l) { l.textContent = iso ? _stfDateLabel(iso) : _stfCalEmpty; l.classList.toggle('is-empty', !iso); }
+  _stfCalClose();
+}
+function _stfCalPaint() {
+  const id = _stfCalId; if (!id) return;
+  let el = document.getElementById('stf-cal');
+  if (!el) { el = document.createElement('div'); el.id = 'stf-cal'; el.className = 'stf-cal'; document.body.appendChild(el); }
+  const sel = document.getElementById(id)?.value || '';
+  // Monday-first, to match how every other date in the app is written.
+  const lead = (new Date(Date.UTC(_stfCalY, _stfCalM, 1)).getUTCDay() + 6) % 7;
+  const days = new Date(Date.UTC(_stfCalY, _stfCalM + 1, 0)).getUTCDate();
+  const today = new Date();
+  const todayISO = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  let cells = '';
+  for (let i = 0; i < lead; i++) cells += '<span class="stf-cal-d is-pad"></span>';
+  for (let d = 1; d <= days; d++) {
+    const iso = `${_stfCalY}-${String(_stfCalM + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    cells += `<button type="button" class="stf-cal-d${iso === sel ? ' is-sel' : ''}${iso === todayISO ? ' is-today' : ''}" onclick="_stfCalPick('${iso}')">${d}</button>`;
+  }
+  el.innerHTML = `
+    <div class="stf-cal-h">
+      <button type="button" class="fr-act stf-cal-nav" aria-label="Previous month" onclick="_stfCalNav(-1)"><i class="fas fa-chevron-left"></i></button>
+      <span class="stf-cal-t">${_STF_MONTHS[_stfCalM]} ${_stfCalY}</span>
+      <button type="button" class="fr-act stf-cal-nav" aria-label="Next month" onclick="_stfCalNav(1)"><i class="fas fa-chevron-right"></i></button>
+    </div>
+    <div class="stf-cal-wd">${['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map(w => `<span>${w}</span>`).join('')}</div>
+    <div class="stf-cal-g">${cells}</div>
+    <div class="stf-cal-f">
+      <button type="button" class="fs-btn stf-btn--sm" onclick="_stfCalPick('')">Clear</button>
+      <button type="button" class="fs-btn stf-btn--sm" onclick="_stfCalPick('${todayISO}')">Today</button>
+    </div>`;
+  const btn = document.getElementById(id + '-btn');
+  if (btn) {
+    const r = btn.getBoundingClientRect();
+    el.style.left = Math.round(Math.min(r.left, window.innerWidth - 306)) + 'px';
+    el.style.top = '0px';
+    const h = el.offsetHeight || 320;
+    el.style.top = Math.round((window.innerHeight - r.bottom < h + 14 && r.top > h + 14) ? r.top - h - 6 : r.bottom + 6) + 'px';
+  }
+}
+function _stfPickBlur(id) {
+  // Late enough for a click on a row to land first.
+  setTimeout(() => { const m = document.getElementById(id + '-menu'); if (m) { m.hidden = true; m.innerHTML = ''; } }, 160);
 }
 
 let _stfPickSel = 0;
 async function _stfPickSearch(id) {
   const q = (document.getElementById(id + '-q')?.value || '').trim().toLowerCase().replace(/^@/, '');
-  const menu = document.getElementById(id + '-menu');
-  if (!menu) return;
-  document.getElementById(id).value = q;      // free typing still counts
+  const src = document.getElementById(id + '-wrap')?.dataset?.src || 'users';
+  const menu = _stfPickMenuEl(id);
+  const hidden = document.getElementById(id);
+  if (hidden) hidden.value = q;               // free typing still counts
   if (!q) { menu.hidden = true; menu.innerHTML = ''; return; }
+  menu.innerHTML = (src === 'bastions') ? await _stfPickBastionRows(id, q) : await _stfPickUserRows(id, q);
+  menu.hidden = false;
+  _stfPickSel = 0;
+  _stfPickPlace(id);
+}
+async function _stfPickUserRows(id, q) {
   await _stfUsersReady();
-  const all = Array.from(_stfUserIndex.values());
-  const hits = all.filter(u =>
+  const hits = Array.from(_stfUserIndex.values()).filter(u =>
     (u.username || '').toLowerCase().includes(q) ||
     (u.displayName || u.display_name || '').toLowerCase().includes(q)
   ).sort((a, b) => {
@@ -67784,12 +68010,8 @@ async function _stfPickSearch(id) {
     const an = (a.username || '').toLowerCase(), bn = (b.username || '').toLowerCase();
     return (an === q ? -2 : an.startsWith(q) ? -1 : 0) - (bn === q ? -2 : bn.startsWith(q) ? -1 : 0);
   }).slice(0, 7);
-  if (!hits.length) {
-    menu.innerHTML = `<div class="stf-pick-none">No account matches “${escapeHTML(q)}”. You can still type a full username.</div>`;
-    menu.hidden = false; return;
-  }
-  _stfPickSel = 0;
-  menu.innerHTML = hits.map((u, i) => {
+  if (!hits.length) return `<div class="stf-pick-none">No account matches “${escapeHTML(q)}”. You can still type a full username.</div>`;
+  return hits.map((u, i) => {
     const k = _stfAccountKind(u.username);
     return `<button type="button" class="stf-pick-r${i === 0 ? ' is-sel' : ''}" data-u="${escapeHTML(u.username)}" onclick="_stfPickChoose('${id}','${escapeHTML(u.username)}')">
       ${_stfAvHTML(u, 34)}
@@ -67800,15 +68022,33 @@ async function _stfPickSearch(id) {
       ${_stfRadOn(u) ? '<span class="stf-pick-rad" data-tip="Radiance"><i class="fas fa-star"></i></span>' : ''}
     </button>`;
   }).join('');
-  menu.hidden = false;
 }
-function _stfPickChoose(id, username) {
-  document.getElementById(id).value = username;
-  const q = document.getElementById(id + '-q'); if (q) q.value = username;
+async function _stfPickBastionRows(id, q) {
+  let list = [];
+  try { list = _stfBastions?.length ? _stfBastions : await _stfBastionList(); } catch (_) {}
+  const hits = (list || []).filter(b =>
+    (b.name || '').toLowerCase().includes(q) || (b.owner || '').toLowerCase().includes(q)
+  ).sort((a, b) => (b.members?.length || 0) - (a.members?.length || 0)).slice(0, 7);
+  if (!hits.length) return `<div class="stf-pick-none">No bastion matches “${escapeHTML(q)}”.</div>`;
+  return hits.map((b, i) => {
+    const key = escapeHTML(_stfBastionKey(b));
+    const n = b.members?.length || 0;
+    return `<button type="button" class="stf-pick-r${i === 0 ? ' is-sel' : ''}" data-u="${key}" onclick="_stfPickChoose('${id}','${key}','${escapeHTML(b.name || key)}')">
+      ${_stfBastionIcon(b)}
+      <span class="stf-pick-tx">
+        <span class="stf-pick-n">${escapeHTML(b.name || 'Untitled bastion')}${b.verified ? _stfPill('Verified', 'info') : ''}</span>
+        <span class="stf-pick-h">@${escapeHTML(b.owner || '?')} · ${n.toLocaleString()} member${n === 1 ? '' : 's'}</span>
+      </span>
+    </button>`;
+  }).join('');
+}
+function _stfPickChoose(id, value, label) {
+  document.getElementById(id).value = value;
+  const q = document.getElementById(id + '-q'); if (q) q.value = label || value;
   const menu = document.getElementById(id + '-menu'); if (menu) { menu.hidden = true; menu.innerHTML = ''; }
 }
 function _stfPickClear(id) {
-  document.getElementById(id).value = '';
+  const h = document.getElementById(id); if (h) h.value = '';
   const q = document.getElementById(id + '-q'); if (q) { q.value = ''; q.focus(); }
   const menu = document.getElementById(id + '-menu'); if (menu) { menu.hidden = true; menu.innerHTML = ''; }
 }
@@ -68726,16 +68966,23 @@ _STF_RENDER.monitor = async function (host, seq) {
   if (st) st.innerHTML = [
     _stfStat({ value: Object.keys(counts).length, label: 'Countries', sub: 'with at least one member' }),
     _stfStat({ value: total.toLocaleString(), label: 'Placed members', sub: 'accounts with a country' }),
-    _stfStat({ value: ranked[0] ? ranked[0][0] : '—', label: 'Biggest', sub: ranked[0] ? ranked[0][1].toLocaleString() + ' members' : '' }),
-    _stfStat({ value: total && ranked[0] ? ((ranked[0][1] / total) * 100).toFixed(0) + '%' : '—', label: 'Concentration', sub: 'in the top country' }),
+    _stfStat({ value: ranked[0] ? _ftzCountryName(ranked[0][0]) : '—', label: 'Biggest', sub: ranked[0] ? ranked[0][1].toLocaleString() + ' members' : '' }),
+    // Coverage is the honest caveat on everything above it: a country breakdown
+    // built from 40% of accounts is not the same claim as one built from 95%.
+    _stfStat({
+      value: _scPlacedTotal ? Math.round((total / _scPlacedTotal) * 100) + '%' : '—',
+      label: 'Coverage',
+      sub: _scPlacedTotal ? Math.max(0, _scPlacedTotal - total).toLocaleString() + ' still unplaced' : 'no members read',
+      tone: _scPlacedTotal && total / _scPlacedTotal < 0.5 ? 'warn' : 'good',
+    }),
   ].join('');
 
   const top = document.getElementById('stf-map-top');
   if (top) top.innerHTML = ranked.length ? `<div class="stf-rows">${ranked.slice(0, 12).map(([code, n], i) => _stfRow({
     i,
     av: `<span class="stf-rank">#${i + 1}</span>`,
-    name: escapeHTML(code),
-    sub: total ? ((n / total) * 100).toFixed(1) + '% of placed members' : '',
+    name: `${_isoToFlag(code)} ${escapeHTML(_ftzCountryName(code))}`,
+    sub: escapeHTML(String(code).toUpperCase()) + (total ? ' · ' + ((n / total) * 100).toFixed(1) + '% of placed members' : ''),
     meta: `<span class="stf-bar"><span style="width:${total ? Math.max(3, (n / ranked[0][1]) * 100).toFixed(1) : 0}%"></span></span>`,
     act: `<span class="stf-num">${n.toLocaleString()}</span>`,
   })).join('')}</div>` : _ftzNotFound('Nowhere yet', 'No account has a country on it.');
@@ -69177,7 +69424,7 @@ function _stfReportCase(r) {
       ${body ? `<blockquote class="stf-quote">${escapeHTML(body.slice(0, 900))}${body.length > 900 ? '…' : ''}</blockquote>` : ''}
       ${detail && detail !== body ? `<div class="stf-casedetail"><span class="stf-fl">What they told us</span>${escapeHTML(detail.slice(0, 600))}</div>` : ''}
       ${!body && !detail ? '<div class="stf-drnote">No body was captured with this report — judge it on the reason and the subject.</div>' : ''}
-      ${shots.length ? `<div class="stf-shots">${shots.slice(0, 4).map(s => `<img class="stf-shot" src="${escapeHTML(s)}" alt="Screenshot" loading="lazy" onclick="window.open(this.src,'_blank','noopener')" onerror="this.remove()">`).join('')}</div>` : ''}
+      ${shots.length ? `<div class="stf-shots">${shots.slice(0, 4).map((s, si) => `<img class="stf-shot" src="${escapeHTML(s)}" alt="Screenshot ${si + 1}" data-media-name="Report screenshot ${si + 1}" loading="lazy" onclick="_openLightboxFromImg(this)" onerror="this.remove()">`).join('')}</div>` : ''}
       ${r.aiTriage ? `<div class="stf-note"><i class="fas fa-robot"></i>Automated triage (${escapeHTML(r.aiTriage.engine || 'ai')}): ${escapeHTML(r.aiTriage.recommendation || r.aiTriage.action || '—')}${r.aiTriage.score != null ? ' · confidence ' + escapeHTML(String(r.aiTriage.score)) : ''}</div>` : ''}
       <div class="stf-caseacts">
         ${_stfBtn('Dismiss', `_stfRepClose('${id}','dismissed')`, { sm: true, icon: 'fa-xmark' })}
@@ -69726,12 +69973,11 @@ function _stfCodePreview() {
   const code = (document.getElementById('stfq-code')?.value || document.getElementById('stf-code-fixed')?.textContent || 'YOURCODE').toUpperCase().replace(/\s+/g, '') || 'YOURCODE';
   const onyx = parseInt(document.getElementById('stfq-onyx')?.value, 10) || 0;
   const exp = document.getElementById('stfq-expires')?.value || '';
-  const once = (document.getElementById('stfq-once')?.value || 'yes') !== 'no';
   box.innerHTML = `
     <span class="stf-codeprev-code">${escapeHTML(code)}</span>
     <span class="stf-codeprev-tx">
       <b><span class="rad-onyx-ic"></span> ${escapeHTML(_ftzFullNum(onyx))} Onyx</b>
-      <i>${once ? 'once per account' : 'repeatable'} · ${exp ? 'until ' + escapeHTML(exp) : 'never expires'}</i>
+      <i>once per account · ${exp ? 'until ' + escapeHTML(_stfDateLabel(exp)) : 'never expires'}</i>
     </span>`;
 }
 
@@ -69749,13 +69995,16 @@ async function _stfCodeEdit(code) {
       ...(code ? [] : [{ id: 'code', type: 'text', label: 'Code', value: suggested, placeholder: 'FORTGIFT26', hint: 'Pre-filled with a name nothing else is using — overwrite it if you have a better one. Letters, numbers, dot, dash or underscore; not case sensitive when redeemed.' }]),
       { id: 'onyx', type: 'number', label: 'Onyx granted', min: 1, max: 1000000, value: existing?.onyx || 100, placeholder: '100', presets: [50, 100, 226, 500, 1000] },
       { id: 'label', type: 'text', label: 'Label', placeholder: 'Launch gift', value: existing?.label || '', hint: 'Staff-facing only — members never see it.' },
-      { id: 'expires', type: 'date', label: 'Expires on', value: existing?.expires ? String(existing.expires).slice(0, 10) : '', hint: 'Leave empty and the code never expires. The whole day counts.' },
-      { id: 'once', type: 'select', label: 'Limit', value: existing && existing.once === false ? 'no' : 'yes', options: [{ value: 'yes', label: 'Once per account' }, { value: 'no', label: 'Repeatable — anyone, any number of times' }], onChange: '_stfCodePreview()' },
+      { id: 'expires', type: 'date', label: 'Expires on', emptyLabel: 'Never expires', value: existing?.expires ? String(existing.expires).slice(0, 10) : '', hint: 'Leave it empty and the code never expires. The whole day counts.' },
+      // ⚠️ NO "limit" field on purpose. A repeatable code is a money printer:
+      // one leak and anyone can redeem it as many times as they like, so every
+      // code is once per account, full stop. Existing repeatable codes are
+      // normalised to once-per-account the next time they are saved.
     ],
     confirmLabel: code ? 'Save changes' : 'Create code',
     onReady: (ov) => {
       _stfCodePreview();
-      ov.querySelectorAll('#stfq-code,#stfq-onyx,#stfq-expires,#stfq-once').forEach(el => el.addEventListener('input', _stfCodePreview));
+      ov.querySelectorAll('#stfq-code,#stfq-onyx,#stfq-expires').forEach(el => el.addEventListener('input', _stfCodePreview));
       const codeIn = ov.querySelector('#stfq-code');
       if (codeIn) {
         // A code is uppercase, no spaces — do it as they type rather than
@@ -69783,7 +70032,7 @@ async function _stfCodeEdit(code) {
     ...prev,
     onyx: amount,
     label: v.label || prev.label || 'Onyx code',
-    once: v.once !== 'no',
+    once: true,
     // End of day, so "expires on the 31st" means the whole 31st is valid.
     expires: v.expires ? new Date(v.expires + 'T23:59:59.999Z').toISOString() : null,
     revoked: !!prev.revoked,
@@ -70281,32 +70530,34 @@ const _STF_MAINT_KEY = 'maintenanceMode';
 // rather than a bare string. Presets exist because most banners are one of
 // five things and nobody wants to write "scheduled maintenance" from scratch
 // at 2am.
+// The banner's five colours. Fixed set on purpose: an announcement bar people
+// learn to read at a glance only works if red always means the same thing.
 const _STF_ANN_COLOURS = [
-  { value: '#fff93e', label: 'Brand yellow' },
-  { value: '#60a5fa', label: 'Information blue' },
+  { value: '#ff0033', label: 'Incident red' },
   { value: '#3ecf6e', label: 'All good green' },
-  { value: '#fdba74', label: 'Warning amber' },
-  { value: '#f87171', label: 'Incident red' },
-  { value: '#ef5fb0', label: 'Radiance pink' },
-  { value: '#a78bfa', label: 'Event violet' },
+  { value: '#2caefc', label: 'Information blue' },
+  { value: '#fff93e', label: 'Brand yellow' },
+  { value: '#ff77e4', label: 'Event pink' },
 ];
 const _STF_ANN_ICONS = [
   { value: 'fa-bullhorn', label: 'Announcement' },
   { value: 'fa-screwdriver-wrench', label: 'Maintenance' },
   { value: 'fa-triangle-exclamation', label: 'Warning' },
   { value: 'fa-circle-info', label: 'Information' },
-  { value: 'fa-party-horn', label: 'Celebration' },
+  // ⚠️ NOT `fa-party-horn` — that one is FontAwesome PRO, so it drew an empty
+  // box on the free kit we ship. `fa-champagne-glasses` is the free equivalent.
+  { value: 'fa-champagne-glasses', label: 'Celebration' },
   { value: 'fa-gift', label: 'Giveaway' },
   { value: 'fa-rocket', label: 'Release' },
   { value: 'fa-shield-halved', label: 'Safety' },
   { value: 'fa-heart-pulse', label: 'Status' },
 ];
 const _STF_ANN_PRESETS = [
-  { label: 'Scheduled maintenance', text: 'Fortized goes down for scheduled maintenance shortly. Finish what you are doing and we will be right back.', colour: '#fdba74', icon: 'fa-screwdriver-wrench' },
+  { label: 'Scheduled maintenance', text: 'Fortized goes down for scheduled maintenance shortly. Finish what you are doing and we will be right back.', colour: '#fff93e', icon: 'fa-screwdriver-wrench' },
   { label: 'We are back', text: 'Everything is back to normal. Thanks for waiting.', colour: '#3ecf6e', icon: 'fa-circle-info' },
-  { label: 'Investigating an issue', text: 'We are looking into a problem some of you are hitting. Updates on the status page.', colour: '#f87171', icon: 'fa-triangle-exclamation' },
-  { label: 'New release', text: 'A new version of Fortized just landed. Reload to pick it up.', colour: '#fff93e', icon: 'fa-rocket' },
-  { label: 'Event live', text: 'The event is live — head to Quests to take part.', colour: '#a78bfa', icon: 'fa-party-horn' },
+  { label: 'Investigating an issue', text: 'We are looking into a problem some of you are hitting. Updates on the status page.', colour: '#ff0033', icon: 'fa-triangle-exclamation' },
+  { label: 'New release', text: 'A new version of Fortized just landed. Reload to pick it up.', colour: '#2caefc', icon: 'fa-rocket' },
+  { label: 'Event live', text: 'The event is live — head to Quests to take part.', colour: '#ff77e4', icon: 'fa-champagne-glasses' },
 ];
 
 _STF_RENDER.system = async function (host, seq) {
@@ -70935,6 +71186,27 @@ function onStaffCtxMenu(ev) {
       { icon: ic('fa-clock-rotate-left'), label: 'Audit Log', hint: 'History', action: go('audit') },
     ],
   }];
+  // ⚠️ The UI inspector used to bind its OWN contextmenu listener to this same
+  // button (_stawWireInspector), so right-clicking the shield opened two menus
+  // stacked on each other. It is a row in THIS menu now — there is one menu.
+  if (typeof _inspectorAllowed === 'function' && _inspectorAllowed()) {
+    groups.push({
+      label: 'Developer',
+      items: [
+        {
+          icon: ic('fa-crosshairs'),
+          label: _stawInspectorOn ? 'Inspect UI · on' : 'Inspect UI',
+          hint: _stawInspectorOn ? 'Click to stop' : 'Element picker',
+          action: () => _stawToggleInspector(),
+        },
+        ...(_stawInspectorOn ? [{
+          icon: ic(_stawInspectorPaused ? 'fa-play' : 'fa-pause'),
+          label: _stawInspectorPaused ? 'Resume inspector' : 'Pause inspector',
+          action: () => _stawToggleInspectorPause(),
+        }] : []),
+      ],
+    });
+  }
   if (typeof showCtxMenu === 'function') showCtxMenu(ev.clientX, ev.clientY, groups);
 }
 
@@ -70942,12 +71214,18 @@ async function _stfBastionLookup() {
   await _stfBastionList().then(l => { _stfBastions = l; }).catch(() => {});
   const v = await _stfAsk({
     icon: 'fa-chess-rook', title: 'Look up a bastion', subtitle: 'Opens its dossier — record, owner, members and every action.',
-    fields: [{ id: 'name', type: 'text', label: 'Bastion name', placeholder: 'Start typing the name…' }],
+    // The same typeahead the member lookup uses, pointed at bastions: emblem,
+    // name, owner and member count, so you pick the right one rather than
+    // guessing at a name you half-remember.
+    fields: [{ id: 'name', type: 'bastion', label: 'Bastion' }],
     confirmLabel: 'Open dossier',
   });
   if (!v || !v.name) return;
-  const q = v.name.toLowerCase().trim();
-  const hit = _stfBastions.find(b => (b.name || '').toLowerCase() === q) || _stfBastions.find(b => (b.name || '').toLowerCase().includes(q));
+  // The picker writes the row KEY; free typing writes whatever was typed.
+  const raw = String(v.name).trim();
+  const hit = _stfBastions.find(b => _stfBastionKey(b) === raw)
+    || _stfBastions.find(b => (b.name || '').toLowerCase() === raw.toLowerCase())
+    || _stfBastions.find(b => (b.name || '').toLowerCase().includes(raw.toLowerCase()));
   if (!hit) { toast('No bastion by that name', 'error'); return; }
   _stfBastionDossier(_stfBastionKey(hit));
 }

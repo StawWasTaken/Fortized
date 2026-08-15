@@ -625,7 +625,6 @@ const _pfpCropCache = {}; // username -> {leftPct, topPct, widthPct} for GIF ava
 const _liveStatusCache = {}; // username -> status, updated by real-time presence events
 const _liveGameActivityCache = {}; // username -> { name, metadata, startedAt } | null
 const _liveActivityCache = {};     // username -> { activities:[...] }
-const _verifiedCache = {};   // username -> bool (populated via getUserByName)
 let curBastion = null;
 let curChannel = null;
 let curDM = null;
@@ -7058,7 +7057,6 @@ function _pickWeightedAd(ads, ratioFilter) {
     let w = 1;
     if (role === 'superadmin') w = 5;
     else if (role === 'admin') w = 3;
-    else if (a.ownerVerified) w = 2;
     const boost = Math.max(0.1, Math.min(10, Number(a.adminBoost) || 1));
     // User-paid boost (set from the Creator tab via _cmBoostAd) stacks
     // on top of any admin boost. Capped to 3x so a single advertiser
@@ -10156,7 +10154,6 @@ async function showGCMemberPanel(meta) {
         rememberProfile(ud);
         const entry = panel.querySelector(`.ml-entry[data-member="${CSS.escape(m)}"]`);
         if (!entry) return;
-        _verifiedCache[m] = !!ud.verified;
         const nameEl = entry.querySelector('.ml-name');
         if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
         if (nameEl) {
@@ -13476,7 +13473,6 @@ function appendMessage(container, msg, context, prevAuthor, skipSep) {
     } else
     FortizedSocial.getUserByName(msg.from).then(u=>{
       if (!u) return;
-      _verifiedCache[msg.from] = !!u.verified;
       if(u.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,u.displayName||msg.from,42);}
       // Add decoration overlay on chat avatar
       if(u.activeDecoration){const el=document.getElementById(avId);if(el){el.style.position='relative';el.style.overflow='visible';const existing=el.querySelector('.profile-decoration-overlay-sm');if(!existing){el.insertAdjacentHTML('beforeend',buildDecorationOverlay(u.activeDecoration,'profile-decoration-overlay-sm'));}}}
@@ -14937,7 +14933,6 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
         if (!ud) return;
         rememberProfile(ud);
         if (ud.pfpCrop) _pfpCropCache[u] = ud.pfpCrop;
-        _verifiedCache[u] = !!ud.verified;
         const entry = document.querySelector('.ml-entry[data-member="'+CSS.escape(u)+'"]');
         if (!entry) return;
         const nameEl = entry.querySelector('.ml-name');
@@ -15770,7 +15765,6 @@ const FORTIZED_ACTIVITIES = [
     name: 'Mist & Cards',
     desc: 'A wager game from the year 1452. Stake your Onyx against the Stranger in the Mist, draw one card, and test fate.',
     owner: 'Fortized',
-    ownerVerified: true,
     category: 'Games',
     players: 'You vs The Stranger',
     tags: ['cards', 'wager', 'mystery'],
@@ -15830,7 +15824,7 @@ function _renderDiscoverActivities() {
   if (!grid) return;
   grid.innerHTML = FORTIZED_ACTIVITIES.map(act => {
     const [r,g,b] = act.dominantRgb;
-    const ownerBadge = act.ownerVerified ? _verifiedBadge(11) : '';
+    const ownerBadge = '';
     return `<div class="ac" onclick="openActivityOverview('${act.id}')" style="cursor:pointer;">
       ${act.comingSoon ? `<div style="position:absolute;top:8px;right:8px;z-index:3;background:rgba(0,0,0,.6);backdrop-filter:none;border-radius:6px;padding:3px 9px;font-size:9px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.06em;text-transform:uppercase;">Soon</div>` : ''}
       <div class="ac-banner">${_actBanner(act)}</div>
@@ -15923,7 +15917,6 @@ function openActivityOverview(id) {
           <div class="act-ov-name">${escapeHTML(act.name)}</div>
           <div class="act-ov-sub">
             <span onclick="viewUserProfile('${escapeHTML(act.owner)}')" style="cursor:pointer;color:rgba(255,249,62,.7);font-weight:600;transition:color .15s;" onmouseover="this.style.color='rgba(255,249,62,.95)'" onmouseout="this.style.color='rgba(255,249,62,.7)'">${escapeHTML(act.owner)}</span>
-            ${act.ownerVerified ? _verifiedBadge(11) : ''}
             <span style="color:rgba(255,255,255,.15);">·</span>
             <span style="font-weight:500;">${escapeHTML(act.category)}</span>
           </div>
@@ -21400,7 +21393,6 @@ async function _cmCreateAd() {
       title: title,
       ratio: ratio,
       customLink: customLink || undefined,
-      ownerVerified: !!CU.verified,
       status: 'active',
       createdAt: new Date().toISOString(),
       // Superadmin ads never expire.
@@ -31280,7 +31272,6 @@ async function _renderAdminAds(main, silent) {
     let baseW = 1;
     if (role === 'superadmin') baseW = 5;
     else if (role === 'admin') baseW = 3;
-    else if (a.ownerVerified) baseW = 2;
     const boost = Math.max(0.1, Math.min(10, Number(a.adminBoost) || 1));
     const effW = baseW * boost;
     return { ad: a, role, baseW, boost, effW };
@@ -31307,7 +31298,6 @@ async function _renderAdminAds(main, silent) {
       <div class="adm-ads-legend">
         <span class="adm-ads-dot" style="background:#fff93e"></span> Superadmin (×5)
         <span class="adm-ads-dot" style="background:#60a5fa"></span> Admin (×3)
-        <span class="adm-ads-dot" style="background:#4ecdc4"></span> Verified (×2)
         <span class="adm-ads-dot" style="background:#9ca3af"></span> Regular (×1)
         <span style="margin-left:auto;color:var(--muted);font-size:11px;">Auto-refresh · 5s · rotation every 75s</span>
       </div>
@@ -31329,7 +31319,7 @@ function _renderAdminAdRow(m, totalWeight) {
   const ratio = ad.ratio || 'banner';
   const img = ad.image || ad.bastionIcon || '/Fortized banner.png?v=2';
   const target = ad.customLink || (ad.bastionName ? `@${ad.bastionName}` : (ad.bastionId || '—'));
-  const roleColor = m.role === 'superadmin' ? '#fff93e' : m.role === 'admin' ? '#60a5fa' : ad.ownerVerified ? '#4ecdc4' : '#9ca3af';
+  const roleColor = m.role === 'superadmin' ? '#fff93e' : m.role === 'admin' ? '#60a5fa' : '#9ca3af';
   const expires = ad.expiresAt ? new Date(ad.expiresAt) : null;
   const expiresLabel = _isAdOwnerSuperadmin(ad) ? 'Never' : (expires ? expires.toLocaleDateString() : '—');
   const adId = ad.id || '';
@@ -31340,7 +31330,7 @@ function _renderAdminAdRow(m, totalWeight) {
         <div class="adm-ads-row-title">${escapeHTML(ad.title || ad.bastionName || 'Untitled ad')}</div>
         <div class="adm-ads-row-meta">
           <span class="adm-ads-ratio adm-ads-ratio--${ratio}">${ratio === 'rectangle' ? 'Rectangle 300×250' : 'Banner 728×90'}</span>
-          <span class="adm-ads-owner" style="color:${roleColor};">${escapeHTML(ad.owner || 'unknown')}${m.role !== 'user' ? ` · ${m.role}` : ''}${ad.ownerVerified && m.role === 'user' ? ' · verified' : ''}</span>
+          <span class="adm-ads-owner" style="color:${roleColor};">${escapeHTML(ad.owner || 'unknown')}${m.role !== 'user' ? ` · ${m.role}` : ''}</span>
         </div>
         <div class="adm-ads-row-target">→ ${escapeHTML(target)}</div>
       </div>
@@ -32049,7 +32039,6 @@ async function _updateUserPreview(username) {
       pfp.innerHTML = avHTML;
       name.textContent = (u.displayName && u.displayName !== u.username ? u.displayName + ' ' : '') + '@' + u.username;
       const badges = [];
-      if (u.verified) badges.push('<span style="color:#3b82f6;">✓ Verified</span>');
       if (u.radiance) badges.push('<span style="color:#ffd93e;">✦ Radiance</span>');
       if (u.banned) badges.push('<span style="color:#ff0033;">🔨 Banned</span>');
       if (u.suspension) { const su = new Date(u.suspension.until); if (su > new Date()) badges.push('<span style="color:#a855f7;">⏳ Suspended</span>'); }
@@ -32106,7 +32095,6 @@ async function _loadPlatformStats() {
     const bastions = Object.values(bastionsData||{});
     const totalUsers = users.length;
     const onlineUsers = users.filter(u => u.lastSeen && Date.now() - new Date(u.lastSeen).getTime() < 300000).length;
-    const verifiedUsers = users.filter(u => u.verified).length;
     const bannedUsers = users.filter(u => u.banned || bans.some(b => b.username === u.username)).length;
     const suspendedUsers = users.filter(u => u.suspension && new Date(u.suspension.until) > new Date()).length;
     const radianceUsers = users.filter(u => u.radianceUntil && new Date(u.radianceUntil) > new Date()).length;
@@ -32124,7 +32112,6 @@ async function _loadPlatformStats() {
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;">
         <div class="sc-stat"><div class="sc-stat-val" style="color:#60a5fa;font-size:28px;">${totalUsers.toLocaleString()}</div><div class="sc-stat-lbl">Total Accounts</div></div>
         <div class="sc-stat"><div class="sc-stat-val" style="color:#3ecf6e;font-size:28px;">${onlineUsers.toLocaleString()}</div><div class="sc-stat-lbl">Online Now</div></div>
-        <div class="sc-stat"><div class="sc-stat-val" style="color:#60a5fa;font-size:28px;">${verifiedUsers.toLocaleString()}</div><div class="sc-stat-lbl">Verified Users</div></div>
         <div class="sc-stat"><div class="sc-stat-val" style="color:#ffd93e;font-size:28px;">${radianceUsers.toLocaleString()}</div><div class="sc-stat-lbl">Radiance Subscribers</div></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;">
@@ -33170,7 +33157,6 @@ async function adminSearchUser(usernameArg, targetEl) {
           ${!isMe && !alreadyFriends?`<button class="sc-act sc-act--good" onclick="adminForceFriend('${escapeHTML(username)}')"><i class="fas fa-user-plus"></i>Force friend</button>`:''}
           <button class="sc-act sc-act--grant" onclick="adminActionUser('${escapeHTML(username)}','give_onyx')"><span class="icon-onyx" style="width:14px;height:14px;"></span>Give Onyx</button>
           <button class="sc-act sc-act--radiance" onclick="adminActionUser('${escapeHTML(username)}','radiance')"><img src="${_SC_RADIANCE_URL}" alt="" style="height:14px;width:auto;object-fit:contain;" onerror="this.style.display='none'">Radiance</button>
-          ${isSuperAdmin()?`<button class="sc-act sc-act--grant" onclick="adminActionUser('${escapeHTML(username)}','${u.verified?'unverify':'verify'}')"><i class="fas fa-circle-check"></i>${u.verified?'Unverify':'Verify'}</button>`:''}
           ${!isMe?`<button class="sc-act sc-act--danger" onclick="adminActionUser('${escapeHTML(username)}','force_logout')"><i class="fas fa-right-from-bracket"></i>Force logout</button>`:''}
         `:''}
         <button class="sc-act sc-act--blue" onclick="openDMView('${escapeHTML(username)}');_closeStaffConsole();"><i class="fas fa-comment"></i>Message</button>
@@ -33189,7 +33175,6 @@ async function adminSearchUser(usernameArg, targetEl) {
               ['fa-cake-candles', ageLabel, ageDisplay, '#a78bfa'],
               ['fa-calendar-day','Joined', u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Unknown', '#5b9dff'],
               ['__radiance','Radiance', (hasRadiancePlus||hasRadiance) ? 'Active' : 'None', (hasRadiancePlus||hasRadiance) ? '#ffd93e' : '#6b7280'],
-              ['fa-circle-check','Verified', u.verified ? 'Yes' : 'No', u.verified ? '#fff93e' : '#6b7280'],
               ['fa-flag','Reports against', reportsAgainst.length, reportsAgainst.length > 0 ? '#ff0033' : '#3ecf6e'],
               ...(canSeeEmail ? [['fa-envelope','Email', u.email || 'N/A', '#38bdf8']] : []),
               ...(canSeeFullData ? [
@@ -33328,27 +33313,6 @@ function _scActionCard(opts) {
 // own). The AUTOMOD, by contrast, generates its reason with the AI.
 const _MOD_REASON_PRESETS = ['Harassment or bullying', 'Hate speech or slurs', 'Threats or violence', 'Encouraging self-harm', 'Sexual harassment', 'Doxxing / sharing private info', 'Spam or scams', 'NSFW or inappropriate content', 'Impersonation', 'Ban evasion', 'Violating the Terms of Use'];
 function adminActionUser(username, action) {
-  if (action === 'verify') {
-    if (!isSuperAdmin()) { toast('Only superadmins can verify users', 'error'); return; }
-    showCustomConfirm(`Verify ${username}? They will receive a verified badge.`, async () => {
-      await FortizedSocial.adminUpdateUserField(username, 'verified', true);
-      await FortizedSocial.addNotification(username, { type: 'system', text: 'Your account has been verified by Fortized staff! You now have a verified badge.' }).catch(()=>{});
-      logAudit('verify_user', username, 'Verified by ' + CU.username);
-      toast(`${username} is now verified`, 'success');
-      adminSearchUser();
-    });
-    return;
-  }
-  if (action === 'unverify') {
-    if (!isSuperAdmin()) { toast('Only superadmins can unverify users', 'error'); return; }
-    showCustomConfirm(`Remove verification from ${username}?`, async () => {
-      await FortizedSocial.adminUpdateUserField(username, 'verified', false);
-      logAudit('unverify_user', username, 'Unverified by ' + CU.username);
-      toast(`${username} is no longer verified`, 'info');
-      adminSearchUser();
-    });
-    return;
-  }
   if (action === 'ban') {
     _scActionCard({
       icon:'fa-ban', accent:'#ff0033', danger:true,
@@ -50038,13 +50002,21 @@ function _fsOpenRedeem() {
 // the light source is fixed in the room, so as the card turns, the reflection
 // sweeps across it — that's what sells it as a physical object. (Pinning the
 // highlight to the cursor instead makes it read as a torch you're carrying.)
-function _fsWireCardTilt(scope) {
-  const art = scope && scope.querySelector('.fs-redeem-art');
-  const card = art && art.querySelector('.fs-redeem-card');
+// ⚠️ Takes SELECTORS so more than one surface can wear it — the Onyx card and
+// the Radiance gift card run the same code. `stage` is the element that owns
+// the perspective and hears the pointer; `card` is the thing that rotates
+// inside it. A wide banner wants a gentler lean than a small card, hence the
+// tunable angles: rotate something 372px wide by 12° and it reads as a glitch.
+function _fsWireCardTilt(scope, o) {
+  const opt = o || {};
+  const art = scope && scope.querySelector(opt.stage || '.fs-redeem-art');
+  const card = art && art.querySelector(opt.card || '.fs-redeem-card');
   if (!card) return;
   try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch {}
   card.classList.add('is-tilt');           // hands the hover effect to JS
-  const MAX_Y = 12, MAX_X = 8;             // degrees of lean
+  const MAX_Y = opt.maxY || 12, MAX_X = opt.maxX || 8;   // degrees of lean
+  const LIFT = opt.lift == null ? 6 : opt.lift;          // px risen on hover
+  const GROW = opt.grow == null ? 0.03 : opt.grow;       // scale added on hover
   let tRX = 0, tRY = 0, tOn = 0;           // targets
   let rX = 0, rY = 0, on = 0;              // current
   let raf = 0, hovering = false;
@@ -50054,7 +50026,7 @@ function _fsWireCardTilt(scope) {
     on += (tOn - on) * k;
     card.style.transform =
       `rotateX(${rX.toFixed(3)}deg) rotateY(${rY.toFixed(3)}deg) `
-      + `translateY(${(on * -6).toFixed(2)}px) scale(${(1 + on * 0.03).toFixed(4)})`;
+      + `translateY(${(on * -LIFT).toFixed(2)}px) scale(${(1 + on * GROW).toFixed(4)})`;
     // rotateY > 0 swings the right edge away, so the face still square-on to the
     // light is the LEFT one — the highlight slides opposite the lean. Likewise
     // rotateX > 0 tips the top back, pushing the reflection down.
@@ -50558,19 +50530,24 @@ function renderAtelierTab(tab) {
           }).join('')}
         </div>
 
-        <div class="rad-giftbanner">
-          <div class="rad-giftbanner-text">
-            <div class="rad-giftbanner-title">Gift <img class="rad-giftbanner-word" src="${_CDN}radianceText.png" alt="Radiance" onerror="this.replaceWith(document.createTextNode('Radiance'))"></div>
-            <p class="rad-giftbanner-desc">Gift someone Radiance to give them access to profile customisation, custom emojis and bigger uploads.</p>
-            <button class="rad-cta rad-cta--primary rad-giftbanner-btn" onclick="openRadianceGiftModal()"><i class="fa-solid fa-gift"></i> Gift Radiance</button>
+        <div class="rad-giftstage">
+          <div class="rad-giftbanner">
+            <div class="rad-giftbanner-text">
+              <div class="rad-giftbanner-title">Gift <img class="rad-giftbanner-word" src="${_CDN}radianceText.png" alt="Radiance" onerror="this.replaceWith(document.createTextNode('Radiance'))"></div>
+              <p class="rad-giftbanner-desc">Gift someone Radiance to give them access to profile customisation, custom emojis and bigger uploads.</p>
+              <button class="rad-cta rad-cta--primary rad-giftbanner-btn" onclick="openRadianceGiftModal()"><i class="fa-solid fa-gift"></i> Gift Radiance</button>
+            </div>
+            <img class="rad-giftbanner-art" src="${_CDN}RadianceShare.png" alt="" draggable="false" onerror="this.style.display='none'">
           </div>
-          <img class="rad-giftbanner-art" src="${_CDN}RadianceShare.png" alt="" draggable="false" onerror="this.style.display='none'">
         </div>
       </section>
     </div>`;
 
     _radBindScrollSpy();
     _radCarouselInit();
+    // Same physical lean as the Onyx card, dialled down — the gift card is wide,
+    // so the same 12°/8° would read as a glitch rather than a tilt.
+    _fsWireCardTilt(el, { stage: '.rad-giftstage', card: '.rad-giftbanner', maxY: 7, maxX: 4, lift: 4, grow: 0.012 });
   }
 
   // ── QUESTS ────────────────────────────────────────────────
@@ -52483,7 +52460,6 @@ async function _forumHydratePfps(root) {
           user: u ? {
             username: a,
             isBot: !!u.isBot,
-            verified: !!u.verified,
             radianceUntil: u.radianceUntil || null,
             radiancePlus:  u.radiancePlus  || null, // legacy field, _hasRadiance handles it
             dailyStreak: +u.dailyStreak || 0,
@@ -52898,7 +52874,7 @@ function _forumShowCreatePost(preselectedCategory) {
                 <span>Before you post</span>
               </div>
               <p>Your post must follow the <a href="https://fortized.com/legal/" target="_blank" rel="noopener">Terms of Service &amp; Terms of Use</a>. Violations may result in content removal, warnings, suspensions, or permanent bans.</p>
-              <p class="fnp-side-note"><strong>Every user is equal under these rules</strong> — regular users, verified members, moderators, and administrators. Only <strong>Superadmins</strong> are exempt.</p>
+              <p class="fnp-side-note"><strong>Every user is equal under these rules</strong> — regular users, Radiance members, moderators, and administrators. Only <strong>Superadmins</strong> are exempt.</p>
             </div>
 
             <div class="fnp-side-card">
@@ -53304,7 +53280,7 @@ function refreshAtelierBalance() {
 // ════════════════════════════════════════════════════
 // ── Badge definitions ────────────────────────────────────────────────────
 // Canonical render order (top-to-bottom = most important first):
-//   Staff → Bot → Verified → Creator → Radiance → Onyx → Dedicated Flame → Beta → Quest
+//   Staff → Bot → Creator → Radiance → Onyx → Dedicated Flame → Beta → Quest
 // A few badges have "levels" (Discord-style hover tooltip with tier info):
 //   - staff   : Moderator / Admin / Superadmin
 //   - creator : 1 / 10 / 100 / 1000+ items created
@@ -53314,7 +53290,9 @@ function refreshAtelierBalance() {
 const BADGE_DEFS = {
   staff:     { img:'/badges/staff.png',                 cls:'badge-staff',     order:0, tooltip:'Staff' },
   bot:       { img:'/badges/bot.png',                   cls:'badge-bot',       order:1, tooltip:'Bot - Automated or system-managed account.' },
-  verified:  { img:null,                                cls:'badge-verified',  order:2, tooltip:'Verified - Identity confirmed by Fortized staff.' },
+  // ⚠️ No `verified` badge. Verification is a BASTION-only concept now —
+  // a community can be confirmed as the real thing, a person cannot. The
+  // `verified` field may still sit on old user rows; nothing reads it.
   creator:   { img:'/badges/creator.png',               cls:'badge-creator',   order:3, tooltip:'Creator' },
   radiance:  { img:'/badges/radiance.png',              cls:'badge-radiance',  order:4, tooltip:'Radiance - Active Radiance subscriber.' },
   flame:     { img:'/badges/dedicated%20flame.png',     cls:'badge-flame',     order:6, tooltip:'Dedicated Flame' },
@@ -53835,10 +53813,7 @@ function getUserBadges(user) {
     badges.push({ id:'bot', ...BADGE_DEFS.bot });
   }
 
-  // 2. Verified (inline SVG)
-  if (user.verified) badges.push({ id:'verified', ...BADGE_DEFS.verified });
-
-  // 3. Creator — one item published = badge, level evolves at 1 / 10 / 100 / 1000
+  // 2. Creator — one item published = badge, level evolves at 1 / 10 / 100 / 1000
   const creatorCount = +user.creatorItemCount || 0;
   if (creatorCount >= 1) {
     const tier = _resolveTier(CREATOR_TIERS, creatorCount);
@@ -53893,14 +53868,12 @@ function renderBadgesHTML(user) {
   // gracefully via onerror so a missing asset never leaves a broken
   // square in the badge row.
   const badgesHTML = badges.map(b => {
-    const icon = b.id === 'verified'
-      ? _verifiedBadge(16)
-      : (b.img ? `<img src="${b.img}" alt="${b.id}" onerror="this.parentNode.style.display='none'">` : '');
+    const icon = b.img ? `<img src="${b.img}" alt="${b.id}" onerror="this.parentNode.style.display='none'">` : '';
     const name = escapeHTML((b.tooltip || '').split(' · ')[0] || b.id);
     const sub  = b.level ? `<span class="badge-tooltip-sub">${escapeHTML(b.level)}</span>` : '';
     const tipImg = b.img
       ? `<img class="badge-tooltip-img" src="${b.img}" alt="" onerror="this.style.display='none'">`
-      : (b.id === 'verified' ? `<span class="badge-tooltip-img" style="display:flex;align-items:center;justify-content:center;">${_verifiedBadge(28)}</span>` : '');
+      : '';
     return `<span class="ftz-badge ${b.cls}${b.level?' has-level':''}">${icon}<span class="badge-tooltip">${tipImg}<span class="badge-tooltip-name">${name}</span>${sub}</span></span>`;
   }).join('');
   return '<span class="ftz-badge-row">' + badgesHTML + '</span>';
@@ -66470,14 +66443,31 @@ function _detectCountryFromLocale() {
   } catch (_) {}
   return null;
 }
+// ⚠️ OUR OWN endpoint, not ipapi.co. The old cross-origin call was blocked
+// outright by most ad blockers and rate-limited on the free tier, so the last
+// line of defence failed exactly when it was needed. `/api/geo` is same-origin
+// (no blocker, no CORS, no quota) and usually answers straight from a CDN
+// header. ipapi.co stays as a final long-shot for a build served without our
+// own server in front of it.
 async function _detectCountryFromIP() {
+  const cached = sessionStorage.getItem('ftz_country_ip');
+  if (cached) return cached;
+  const keep = cc => {
+    if (!cc || !/^[A-Z]{2}$/.test(cc)) return null;
+    try { sessionStorage.setItem('ftz_country_ip', cc); } catch (_) {}
+    return cc;
+  };
   try {
-    const cached = sessionStorage.getItem('ftz_country_ip');
-    if (cached) return cached;
-    const res = await fetch('https://ipapi.co/country/', { cache:'no-store' });
-    if (!res.ok) return null;
-    const cc = (await res.text() || '').trim().slice(0, 2).toUpperCase();
-    if (cc && /^[A-Z]{2}$/.test(cc)) { sessionStorage.setItem('ftz_country_ip', cc); return cc; }
+    const res = await fetch('/api/geo', { cache: 'no-store' });
+    if (res.ok) {
+      const j = await res.json().catch(() => null);
+      const cc = keep(String(j?.country || '').trim().toUpperCase());
+      if (cc) return cc;
+    }
+  } catch (_) {}
+  try {
+    const res = await fetch('https://ipapi.co/country/', { cache: 'no-store' });
+    if (res.ok) return keep((await res.text() || '').trim().slice(0, 2).toUpperCase());
   } catch (_) {}
   return null;
 }
@@ -66491,8 +66481,16 @@ async function _ensureUserCountry() {
   try { saveLocal(); } catch (_) {}
   try { if (typeof saveUser === 'function') saveUser().catch(()=>{}); } catch (_) {}
 }
-// Kick off once on boot, deferred so we don't compete with init traffic.
-setTimeout(() => { _ensureUserCountry().catch(()=>{}); }, 8000);
+// ⚠️ 2s, not 8s. The timezone and locale legs are pure local reads costing
+// nothing, and at 8s anyone who bounced off a short session was never placed
+// at all. Re-armed when the tab regains focus so a dropped write (egress
+// throttling silently loses one) gets another go without waiting for a reload.
+setTimeout(() => { _ensureUserCountry().catch(() => {}); }, 2000);
+window.addEventListener('focus', () => {
+  if (CU?.username && !(CU.countryCode || '').match(/^[A-Za-z]{2}$/)) {
+    _ensureUserCountry().catch(() => {});
+  }
+});
 
 // ════════════════════════════════════════════════════════════════════
 // Phase 8 — Threat scoring engine
@@ -66923,6 +66921,7 @@ function _scMapFill(n, maxN) {
 // map and its refreshes share one users read.
 let _scCountryCounts = {};
 let _scPlacedTotal = 0;   // every member seen in that same scan, placed or not
+let _scUnplaced = [];     // the accounts carrying no country, so staff can fix them
 async function renderStaffWorldMap(mountEl, counts) {
   if (!mountEl) return;
   counts = counts || _scCountryCounts || {};
@@ -67145,9 +67144,13 @@ async function _staffOpsRefresh() {
   const list = Object.values(users);
   // Country tallies shared with the world map so it never re-scans users.
   _scCountryCounts = {};
+  _scUnplaced = [];
   list.forEach(u => {
     const cc = String(u.countryCode || '').trim().toUpperCase();
     if (/^[A-Z]{2}$/.test(cc)) _scCountryCounts[cc] = (_scCountryCounts[cc] || 0) + 1;
+    // Naming them is the whole point: "8 still unplaced" is a number you can
+    // only stare at, a list is something you can act on.
+    else _scUnplaced.push(u);
   });
   // How many accounts the map can actually speak for. Without this the map
   // looks like the whole membership when it may only be describing half of it.
@@ -67653,7 +67656,6 @@ function _stfIdent(userOrName, o) {
   const kind = _stfAccountKind(uname);
   const flags = opt.noFlags ? '' : [
     kind.short ? _stfPill(kind.short, kind.tone) : '',
-    u && u.verified ? _stfPill('Verified', 'info') : '',
   ].filter(Boolean).join('');
   return {
     av: _stfAvHTML(u, opt.size || 38, uname),
@@ -68294,7 +68296,6 @@ function _stfDossierHTML(u, bastions) {
     banInfo ? _stfPill('Banned', 'danger') : '',
     susp ? _stfPill('Suspended', 'warn') : '',
     kind.short ? _stfPill(kind.label, kind.tone) : '',
-    u.verified ? _stfPill('Verified', 'info') : '',
     radActive ? _stfPill('Radiance', 'gold') : '',
     watched ? _stfPill('Watchlisted', 'info') : '',
     warnings.length ? _stfPill(warnings.length + ' warning' + (warnings.length === 1 ? '' : 's'), 'warn') : '',
@@ -69073,6 +69074,7 @@ _STF_RENDER.monitor = async function (host, seq) {
     ${_stfPanel({ title: 'Where Fortized is being used', icon: 'fa-earth-europe', body: '<div class="stf-map" id="stf-map"></div>', flush: true })}
     ${_stfGroup('Leaderboard', 'members with a country set')}
     <div id="stf-map-top"></div>
+    <div id="stf-map-unplaced"></div>
   </div>`;
   try { await _staffOpsRefresh(); } catch (_) {}
   if (seq !== _stfSeq) return;
@@ -69108,8 +69110,56 @@ _STF_RENDER.monitor = async function (host, seq) {
     act: `<span class="stf-num">${n.toLocaleString()}</span>`,
   })).join('')}</div>` : _ftzNotFound('Nowhere yet', 'No account has a country on it.');
 
+  // ── The accounts the map can't speak for ──
+  // Detection only ever runs in that member's OWN browser, so an account that
+  // hasn't been opened since the detector shipped will never place itself.
+  // Nothing we can do server-side reaches a dormant account — so name them and
+  // let staff place them by hand.
+  const un = document.getElementById('stf-map-unplaced');
+  if (un) un.innerHTML = _scUnplaced.length ? `
+    ${_stfGroup('Unplaced', 'no country yet — they place themselves on their next visit, or set one here')}
+    ${_stfPanel({ body: `<div class="stf-rows">${_scUnplaced.slice(0, 40).map((u, i) => {
+      const name = u.username || '?';
+      const id = _stfIdent(u, { sub: '@' + escapeHTML(name) + (u.lastSeen ? ' · last seen ' + formatTimeAgo(u.lastSeen) : ' · never seen') });
+      return _stfRow({
+        i, av: id.av, name: id.name, sub: id.sub,
+        act: _stfBtn('Set country', `_stfSetCountry('${escapeHTML(name)}')`, { icon: 'fa-earth-europe', sm: true })
+           + _stfIconBtn('fa-id-badge', `_stfDossier('${escapeHTML(name)}')`, { tip: 'Dossier' }),
+      });
+    }).join('')}</div>${_scUnplaced.length > 40 ? `<div class="stf-note">Showing 40 of ${_scUnplaced.length}.</div>` : ''}` })}` : '';
+
   _stfTimer = setInterval(() => { _staffOpsRefresh().catch(() => {}); }, 15000);
 };
+
+// Every ISO country we know, as dropdown options — the same table the flag
+// emoji and the leaderboard names come off, so there's one source of truth.
+function _stfCountryOptions() {
+  return _FTZ_COUNTRY_ISO
+    .map(([iso, name]) => ({ value: String(iso).toUpperCase(), label: _isoToFlag(iso) + '  ' + name }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
+async function _stfSetCountry(username) {
+  const u = _stfUserIndex.get(String(username).toLowerCase()) || {};
+  const cur = String(u.countryCode || '').trim().toUpperCase();
+  const v = await _stfAsk({
+    icon: 'fa-earth-europe',
+    title: 'Set a country',
+    subtitle: 'Places @' + username + ' on the Global Monitor.',
+    fields: [{ id: 'cc', type: 'select', label: 'Country', value: cur || 'US', options: _stfCountryOptions() }],
+    note: 'Members normally place themselves from their timezone the first time they open the app. Setting one here is an override — if they later sign in, their own detection leaves it alone, because it only fills a country that is missing.',
+    confirmLabel: 'Set country',
+  });
+  if (!v || !v.cc) return;
+  const cc = String(v.cc).toUpperCase();
+  try {
+    await FortizedSocial.adminUpdateUserField(username, 'countryCode', cc);
+    logAudit('set_country', username, 'Country set to ' + cc + ' by ' + CU.username);
+    toast(`@${username} is now in ${_ftzCountryName(cc)}`, 'success');
+    _stfRefresh();
+  } catch (e) {
+    toast('Could not save that country: ' + (e?.message || 'unknown error'), 'error');
+  }
+}
 
 // ════════════════════════════════════════════════════════════════════
 // PAGE — Members
@@ -69225,7 +69275,6 @@ function _stfUserRender() {
       _stfSuspOn(u) ? _stfPill('Suspended', 'warn') : '',
       kind.short ? _stfPill(kind.short, kind.tone) : '',
       _stfRadOn(u) ? _stfPill('Radiance', 'gold') : '',
-      u.verified ? _stfPill('Verified', 'info') : '',
       watchSet.has((u.username || '').toLowerCase()) ? _stfPill('Watched', 'info') : '',
       warned ? _stfPill(warned + '×', 'warn') : '',
     ].filter(Boolean).join('');
@@ -70409,7 +70458,7 @@ _STF_RENDER.ads = async function (host, seq) {
   _stfUsersReady().catch(() => {});
   const withMeta = (ads || []).map(a => {
     const role = getStaffRole(a.owner || '');
-    const baseW = role === 'superadmin' ? 5 : role === 'admin' ? 3 : a.ownerVerified ? 2 : 1;
+    const baseW = role === 'superadmin' ? 5 : role === 'admin' ? 3 : 1;
     const boost = Math.max(0.1, Math.min(10, Number(a.adminBoost) || 1));
     return { ad: a, role, baseW, boost, effW: baseW * boost };
   }).sort((a, b) => b.effW - a.effW);
@@ -70424,7 +70473,7 @@ _STF_RENDER.ads = async function (host, seq) {
       ${_stfStat({ value: withMeta.length - banners, label: 'Rectangle', sub: '300×250' })}
       ${_stfStat({ value: totalW.toFixed(1), label: 'Total weight', sub: 'across every format' })}
     </div>
-    <div class="stf-note"><i class="fas fa-circle-info"></i>Weight decides how often an ad shows within its format. Superadmin ×5 · admin ×3 · verified ×2 · everyone else ×1, multiplied by any boost you set.</div>
+    <div class="stf-note"><i class="fas fa-circle-info"></i>Weight decides how often an ad shows within its format. Superadmin ×5 · admin ×3 · everyone else ×1, multiplied by any boost you set.</div>
     ${_stfGroup('Rotation', 'heaviest first')}
     ${withMeta.length ? `<div class="stf-rows">${withMeta.map((m, i) => {
       const a = m.ad, share = totalW ? (m.effW / totalW) * 100 : 0;
@@ -70433,7 +70482,7 @@ _STF_RENDER.ads = async function (host, seq) {
         i,
         av: a.image || a.bastionIcon ? `<img class="stf-sq stf-sq--ad" src="${escapeHTML(a.image || a.bastionIcon)}" alt="" onerror="this.remove()">` : `<span class="stf-sq stf-sq--ini"><i class="fas fa-rectangle-ad"></i></span>`,
         name: escapeHTML(a.title || a.bastionName || 'Untitled ad'),
-        sub: '@' + escapeHTML(a.owner || 'unknown') + (m.role && m.role !== 'user' ? ' · ' + m.role : a.ownerVerified ? ' · verified' : '') + ` · ×${m.baseW} base · ×${m.boost.toFixed(2)} boost`,
+        sub: '@' + escapeHTML(a.owner || 'unknown') + (m.role && m.role !== 'user' ? ' · ' + m.role : '') + ` · ×${m.baseW} base · ×${m.boost.toFixed(2)} boost`,
         mid: _stfPill((a.ratio || 'banner') === 'rectangle' ? 'Rectangle' : 'Banner', 'info'),
         meta: `<span class="stf-share"><span class="stf-share-n">${share.toFixed(1)}%</span><span class="stf-bar"><span style="width:${share.toFixed(1)}%;"></span></span></span>`,
         act: _stfIconBtn('fa-arrow-trend-up', `_stfAdBoost('${id}')`, { tip: 'Set boost' })
@@ -71023,7 +71072,6 @@ _STF_RENDER.stats = async function (host, seq) {
   const day = 86400000, now = Date.now(), N = _stfStatRange;
   const ts = u => new Date(u.createdAt || u.created_at || 0).getTime();
   const since = d => list.filter(u => { const t = ts(u); return t && now - t < d; }).length;
-  const verified = list.filter(u => u.verified).length;
   const withPfp = list.filter(u => u.pfp).length;
   const withBio = list.filter(u => u.about || u.bio).length;
   const withDeco = list.filter(u => u.activeDecoration).length;
@@ -71107,7 +71155,6 @@ _STF_RENDER.stats = async function (host, seq) {
       { label: 'Set an avatar', v: withPfp, display: withPfp.toLocaleString() + ' · ' + (list.length ? Math.round(withPfp / list.length * 100) : 0) + '%', tone: 'good' },
       { label: 'Wrote a bio', v: withBio, display: withBio.toLocaleString() + ' · ' + (list.length ? Math.round(withBio / list.length * 100) : 0) + '%' },
       { label: 'Equipped a decoration', v: withDeco, display: withDeco.toLocaleString() + ' · ' + (list.length ? Math.round(withDeco / list.length * 100) : 0) + '%' },
-      { label: 'Verified', v: verified, display: verified.toLocaleString() + ' · ' + (list.length ? Math.round(verified / list.length * 100) : 0) + '%' },
       { label: 'Holds Radiance', v: s.radianceCount || 0, display: (s.radianceCount || 0).toLocaleString() + ' · ' + (list.length ? ((s.radianceCount || 0) / list.length * 100).toFixed(1) : 0) + '%', tone: 'gold' },
     ]) })}
 

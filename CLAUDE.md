@@ -1,5 +1,76 @@
 # Fortized — working notes for Claude
 
+## 🟡 AWAITING APPROVAL — Discover redesign
+Plan written to **`docs/discover-redesign.md`**. The user asked for a plan they
+approve/modify BEFORE any building — **do not start implementing it** until they
+say so. Built from the app's own parts (Radiance/Fortshop/Quests language),
+referencing Discord · Osmium · Guilded (Guilded is their favourite, and its
+horizontal rails are the structural proposal). Five open questions are listed at
+the end of that doc; the two that block real work either way:
+- **🐞 The "N Online" number on every Discover card is INVENTED** —
+  `Math.max(1, Math.floor(memberCount * 0.3))`. Not a style problem, a fake stat.
+- **No bastion can set `b.category`** — there is no authoring UI, so six of the
+  seven category tabs are permanently empty. Same for tags.
+
+## 🟢 SHIPPED — Round 7 (`2026fix499`, branch `claude/ui-polish-redesigns-xf43er`)
+
+### 🌍 The 8 members with no country
+Detection only ever runs in **that member's own browser**, so nothing we do
+server-side reaches a dormant account. Three changes, and the third is the one
+that actually clears the backlog:
+- **`GET /api/geo`** (server.js) replaces ipapi.co as the network fallback.
+  ⚠️ The old call was **cross-origin**: most ad blockers killed it outright and
+  the free tier rate-limits, so the last line of defence failed exactly when it
+  was needed. Ours is same-origin — no blocker, no CORS, no quota — and usually
+  answers straight from a CDN header (`cf-ipcountry`, `cloudfront-viewer-
+  country`, `x-vercel-ip-country`, …) at **zero outbound cost**. Placeholder
+  codes `XX`/`T1` fall through to the next header; private/loopback IPs never
+  trigger a lookup; results cache per IP so a household resolves once.
+- **Detection fires at 2s, not 8s**, and re-arms on window focus while the
+  country is still missing. At 8s anyone who bounced off a short session was
+  never placed at all, and a write dropped by egress throttling got no second go
+  until a full reload.
+- **The console names them.** "8 still unplaced" is a number you can only stare
+  at. Global Monitor now carries an **Unplaced** panel — real identity, last
+  seen, **Set country** (our `.ftz-select` over the full 249-entry ISO table)
+  and a jump to the dossier. `_stfSetCountry` writes `countryCode` via
+  `adminUpdateUserField` + `logAudit`. It's an override: the member's own
+  detection only ever fills a country that is **missing**, so it won't fight it.
+
+### ✅ User verification REMOVED — bastions only
+"A community can be confirmed as the real thing, a person cannot." Gone:
+`BADGE_DEFS.verified` + its push in `getUserBadges` (it was the only badge drawn
+from an inline SVG rather than a file, so the renderer's special-casing went
+too), the superadmin verify/unverify action, the Verified Users stat, the
+dossier fact, the three `_stfPill('Verified')` sites, the Statistics meter row,
+the legacy lookup-panel line, and `_verifiedCache` (written in three places,
+**read in none** — dead since before this round).
+- **Ad rotation lost its ×2 tier.** `ownerVerified` weighted a verified owner's
+  ad ×2; with no such thing as a verified user the tier is meaningless. Removed
+  from both weighting paths, the legend, the row colour and the console note.
+  Activities stopped showing an owner badge for the same reason.
+- ⚠️ `'verified'` stays in the two refreshCU **protect lists** on purpose — old
+  rows may still carry the field and nothing reads it; leave it inert.
+- **Bastion verification is untouched** — `_verifiedBadge()` and every `b.verified`
+  site still stand.
+
+### 💠 The Radiance gift card leans like the Onyx card
+`_fsWireCardTilt` now takes **selectors** (`stage`/`card`) plus tunable
+`maxY/maxX/lift/grow`, so both surfaces run one implementation. The gift card
+gets **7°/4°** — the Onyx card's 12°/8° on something that wide reads as a glitch.
+⚠️ **The stage element is not optional:** `perspective` does not apply to the
+element's own transform, only to its children, so a self-perspectived card
+rotates flat with no depth. Hence `.rad-giftstage` wrapping `.rad-giftbanner`.
+Specular is anchored to the ROOM (derived from the card's own eased rotation),
+so leaning right slides the highlight left. Verified: `gx` 16.5% leaning right
+vs 81.9% leaning left, sheen only while hovered, transform cleared on settle,
+**and the CTA inside it is still clickable**.
+
+⚠️ **LIVE-VERIFY:** `/api/geo` on the real deploy (`curl /api/geo` → your
+country, and check `source` — a CDN header means it costs nothing); the Unplaced
+panel + Set country end to end; that no user shows a verified badge anywhere
+while bastions still do; the gift card tilt on the Radiance page.
+
 ## 🟢 SHIPPED — Round 6 (`2026fix498`, branch `claude/ui-polish-redesigns-xf43er`)
 
 ### 📢 The banner DISPLACES the view — and stays INSIDE `.main`

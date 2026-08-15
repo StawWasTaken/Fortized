@@ -442,6 +442,63 @@ app.get('/api/onyx/health', async (_req, res) => {
   res.json(out);
 });
 
+// ── GET /api/geo — which country is this request coming from? ────────
+// ⚠️ WHY THIS EXISTS. Country detection runs in the member's own browser:
+// timezone first, then the browser locale, then a network lookup. The network
+// leg used to be ipapi.co, which is cross-origin — so most ad blockers kill it
+// outright, and the free tier rate-limits. That left accounts unplaced with no
+// way to recover. This endpoint is SAME-ORIGIN: no blocker, no CORS, no quota.
+//
+// Almost always free: every CDN in front of us already resolved the country
+// and put it in a header, so the common path costs zero outbound calls. The IP
+// lookup is only for a bare origin with no CDN, and its result is cached per
+// IP so a whole household resolves once.
+const _GEO_HEADERS = [
+  'cf-ipcountry',              // Cloudflare
+  'cloudfront-viewer-country', // CloudFront
+  'x-vercel-ip-country',       // Vercel
+  'x-appengine-country',       // App Engine
+  'fastly-geo-countrycode',    // Fastly
+  'x-geo-country', 'x-country-code',
+];
+const _geoCache = new Map();   // ip → { cc, at }
+const _GEO_TTL = 24 * 60 * 60 * 1000;
+function _clientIP(req) {
+  const fwd = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  return fwd || req.socket?.remoteAddress || '';
+}
+app.get('/api/geo', async (req, res) => {
+  const ok = cc => /^[A-Z]{2}$/.test(cc) && cc !== 'XX' && cc !== 'T1';
+  for (const h of _GEO_HEADERS) {
+    const cc = String(req.headers[h] || '').trim().toUpperCase();
+    if (ok(cc)) return res.json({ country: cc, source: h });
+  }
+  const ip = _clientIP(req);
+  if (!ip) return res.json({ country: null, source: 'none' });
+  const hit = _geoCache.get(ip);
+  if (hit && Date.now() - hit.at < _GEO_TTL) {
+    return res.json({ country: hit.cc, source: hit.cc ? 'cache' : 'none' });
+  }
+  let cc = null;
+  try {
+    // A private/loopback address can't be geolocated — don't waste the call.
+    if (!/^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|::1|fc|fd)/i.test(ip)) {
+      const ctl = new AbortController();
+      const t = setTimeout(() => ctl.abort(), 2500);
+      const r = await fetch(`http://ip-api.com/json/${encodeURIComponent(ip)}?fields=countryCode`, { signal: ctl.signal });
+      clearTimeout(t);
+      if (r.ok) {
+        const j = await r.json();
+        const v = String(j?.countryCode || '').trim().toUpperCase();
+        if (ok(v)) cc = v;
+      }
+    }
+  } catch (_) { /* stays null — the client still has tz + locale */ }
+  _geoCache.set(ip, { cc, at: Date.now() });
+  if (_geoCache.size > 5000) _geoCache.delete(_geoCache.keys().next().value);
+  res.json({ country: cc, source: cc ? 'ip' : 'none' });
+});
+
 // ── Health check endpoint ─────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({

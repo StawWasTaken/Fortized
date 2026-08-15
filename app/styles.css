@@ -18936,3 +18936,90 @@ body.has-announce .main{padding-top:var(--ann-h);}
   .afr-input-row{flex-wrap:wrap;}
   .afr-send-btn{width:100%;justify-content:center;}
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   GET STARTED — the guided welcome (2026fix502)
+   One landscape card that never moves. The FRAMES slide leftwards inside it,
+   so the reader's eye stays put and only the content travels.
+   ⚠️ The card is a FIXED size. Frames differ in length, and letting the card
+   resize between them would make every Next a jolt.
+   ⚠️ The track is `width:100%` with each frame `flex:0 0 100%` — a percentage
+   translate then moves exactly one frame, whatever the card's width is.
+   ══════════════════════════════════════════════════════════════════════ */
+.gs-ov{transition:opacity .18s var(--ease-out);}
+.gs-ov.is-out{opacity:0;}
+.gs-card{max-width:760px;width:min(760px,calc(100vw - 40px));}
+.gs-x{position:absolute;top:14px;right:14px;z-index:6;}
+.gs-viewport{position:relative;overflow:hidden;height:352px;flex-shrink:0;}
+.gs-track{display:flex;height:100%;width:100%;
+  transition:transform .5s cubic-bezier(.4,0,.16,1);}
+.gs-frame{flex:0 0 100%;width:100%;height:100%;display:flex;align-items:center;
+  gap:26px;padding:34px 40px;position:relative;overflow:hidden;}
+.gs-frame--artleft{flex-direction:row;}
+
+.gs-art{flex:0 0 224px;display:flex;align-items:center;justify-content:center;}
+.gs-art img{width:100%;height:auto;max-height:258px;object-fit:contain;display:block;
+  filter:drop-shadow(0 14px 24px rgba(0,0,0,.45));}
+.gs-txt{flex:1;min-width:0;}
+.gs-eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:8px;}
+.gs-title{font-family:var(--font-display);font-size:26px;font-weight:700;color:#fff;
+  line-height:1.15;letter-spacing:-.02em;margin-bottom:11px;}
+.gs-body{margin:0;font-size:14px;line-height:1.62;color:var(--muted-light);}
+.gs-body b{color:var(--text);font-weight:700;}
+.gs-acts{display:flex;flex-wrap:wrap;gap:9px;margin-top:20px;}
+.gs-done{display:inline-flex;align-items:center;gap:8px;margin-top:20px;
+  padding:8px 15px;border-radius:100px;font-size:12.5px;font-weight:700;
+  color:var(--green);background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.22);}
+
+/* Footer: back, progress, skip, next. */
+.gs-foot{display:flex;align-items:center;gap:14px;padding:14px 22px;
+  border-top:2px solid var(--border);background:rgba(255,255,255,.02);flex-shrink:0;}
+.gs-back{width:34px;height:34px;flex-shrink:0;border-radius:50%;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:12px;
+  background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted-light);
+  transition:color .14s,background .14s,transform .12s;}
+.gs-back:hover{color:var(--text);background:rgba(255,255,255,.1);transform:translateY(-1px);}
+.gs-back:active{transform:translateY(1px);}
+.gs-dots{display:flex;align-items:center;gap:6px;flex:1;min-width:0;flex-wrap:wrap;}
+.gs-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.16);
+  transition:background .25s,width .25s;}
+.gs-dot.is-past{background:rgba(255,255,255,.34);}
+.gs-dot.is-on{width:20px;border-radius:100px;background:var(--accent);}
+.gs-skip{background:none;border:none;cursor:pointer;color:var(--muted-light);
+  font-family:var(--font-ui);font-size:12.5px;font-weight:600;padding:8px 6px;
+  transition:color .14s;flex-shrink:0;}
+.gs-skip:hover{color:var(--text);}
+.gs-next{flex-shrink:0;min-width:104px;justify-content:center;}
+
+@media(max-width:640px){
+  /* Stacked: art on top, copy under it. The slide is unchanged. */
+  .gs-viewport{height:auto;max-height:min(60vh,440px);}
+  .gs-frame{flex-direction:column!important;text-align:center;gap:14px;padding:26px 22px;
+    justify-content:flex-start;overflow-y:auto;}
+  .gs-art{flex:0 0 auto;width:150px;}
+  .gs-acts{justify-content:center;}
+  .gs-title{font-size:21px;}
+  .gs-body{font-size:13px;}
+  .gs-foot{padding:12px 16px;gap:10px;}
+  .gs-next{min-width:88px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .gs-track{transition:none;}
+}
+/* The Radiance frame speaks in Radiance's own colour, not the brand yellow. */
+.gs-frame.ftz-ov-rad .gs-eyebrow{color:var(--rad-pink,#ef5fb0);}
+
+/* Way back into the welcome guide, on the Quests page where the onboarding
+   quests used to sit. */
+.qst-guideback{display:flex;align-items:center;gap:16px;margin:26px 0 8px;padding:14px 18px;
+  border-radius:var(--radius-lg);border:2px solid var(--border);background:var(--panel);
+  cursor:pointer;transition:transform .13s var(--ease-out),border-color .15s,background .15s;}
+.qst-guideback:hover{transform:translateY(-2px);border-color:var(--surface-border-hover);}
+.qst-guideback:active{transform:translateY(1px);}
+.qst-guideback img{width:56px;height:auto;object-fit:contain;flex-shrink:0;}
+.qst-guideback > div{flex:1;min-width:0;}
+.qst-guideback-t{font-family:var(--font-display);font-size:14.5px;font-weight:700;color:var(--text);}
+.qst-guideback-s{font-size:12.5px;color:var(--muted-light);margin-top:2px;}
+.qst-guideback > i{color:var(--muted);font-size:12px;flex-shrink:0;transition:transform .15s,color .15s;}
+.qst-guideback:hover > i{color:var(--accent);transform:translateX(3px);}

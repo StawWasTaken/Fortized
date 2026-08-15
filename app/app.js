@@ -17556,7 +17556,7 @@ function initFortizedUXResilience() {
               'createdAt','customStatus','verified','appearance','badges',
               'completedQuests','questsRewarded','questsDailyLog','dailyStreak','streakDate',
               'questsWeekly','questOnyxEarned','questsAccepted','questsClaimedCount',
-              'lastDailyReward','lastDaily',
+              'lastDailyReward','lastDaily','guide',
               // Cross-device cosmetics — see protectFields explainer above.
               'cursor','density','scale'
             ];
@@ -18763,6 +18763,11 @@ function initFortizedUXResilience() {
   // ban/suspension checks above take precedence, and a release card that lands
   // on top of a half-drawn app is worse than one that waits three seconds.
   setTimeout(() => { try { _ftzMaybeShowWhatsNew(); } catch(e) { _wrn('[init] whatsNew:', e); } }, 3000);
+  // …then the welcome guide, for anyone who hasn't finished it. It checks for an
+  // open card first, so on the one boot where both would qualify the release
+  // card wins and the guide waits for the next one. In practice they never
+  // collide: a brand-new account is marked read on What's New silently.
+  setTimeout(() => { try { _ftzMaybeShowGetStarted(); } catch(e) { _wrn('[init] getStarted:', e); } }, 3600);
   // Listen for force-refresh and session-clear signals from admin
   try { _listenForceRefresh(); } catch(e) { _wrn('[init] _listenForceRefresh:', e); }
   try { _listenClearSessions(); } catch(e) { _wrn('[init] _listenClearSessions:', e); }
@@ -19642,11 +19647,9 @@ async function createBastion() {
   renderRailBastions();
   cbIconData = null;
   cbSelectedEmoji = null;
-  // Track create_bastion quest completion
-  if (!CU.completedQuests?.includes('create_bastion')) {
-    CU.completedQuests = [...(CU.completedQuests||[]), 'create_bastion'];
-    saveUser(true);
-  }
+  // The create_bastion QUEST is retired (the welcome guide covers it), but the
+  // guide's own step still wants to know this happened.
+  if (!CU.guide?.bastion) { CU.guide = { ...(CU.guide||{}), bastion:true }; saveUser(true); }
   toast(`${name} created!`, 'success');
   showFeedbackToast('creating a Bastion', 'bastion_create');
   openBastion(CU.bastions.length - 1);
@@ -33278,6 +33281,267 @@ function _ftzShowWhatsNew(rel) {
 // Openable on demand, so it isn't a one-shot you can never look at again.
 window._ftzShowWhatsNew = _ftzShowWhatsNew;
 
+// ══════════════════════════════════════════════════════════════════════
+// GET STARTED — the guided welcome
+// ══════════════════════════════════════════════════════════════════════
+// One landscape card. The card never moves or resizes; the FRAMES slide
+// leftwards inside it, so the reader's eye stays put and only the content
+// travels. Explanation first, then four things to actually do, then a sign-off.
+//
+// ⚠️ THIS REPLACES THE "JOURNEY" QUESTS. Six one-time quests used to pay out
+// 115 Onyx for what is really just onboarding (set a picture, write a bio, add
+// a friend, join a bastion, send a GIF, make a bastion) and crowded the Quests
+// page with tasks nobody returns to. They're gone; the guide covers the same
+// ground once and pays a single, smaller completion reward.
+//
+// ⚠️ Nothing here TRAPS anyone. Every step can be passed — the ones the user
+// called out as skippable say "Skip", the rest say "Later" — because a modal
+// you cannot leave until you've made a bastion is a worse first impression than
+// no guide at all.
+const _FTZ_GS_REWARD = 50;
+
+function _gsName() {
+  const n = (CU?.displayName || CU?.username || '').trim();
+  return n ? n.split(/\s+/)[0] : 'traveller';
+}
+
+function _gsFrames() {
+  const cu = (typeof CU !== 'undefined' && CU) ? CU : {};
+  const g = cu.guide || {};
+  return [
+    { art: 'celebrate', side: 'right',
+      eyebrow: 'Welcome', title: `Good to have you, ${escapeHTML(_gsName())}.`,
+      body: 'Two minutes and you\'ll know your way around. You can leave at any point — this waits for you.' },
+
+    { art: 'device', side: 'left',
+      eyebrow: 'What this is', title: 'Fortized is where your people are.',
+      body: 'Message friends one to one, start a group, or gather everyone in a <b>bastion</b> — a community with its own channels, roles and emojis.' },
+
+    { art: 'point', side: 'right',
+      eyebrow: 'What you can do', title: 'Make it yours.',
+      body: 'Pick a font, an effect and a colour for your name. Wear a nameplate, an avatar decoration, a whole new look for the app. None of it is behind a paywall.' },
+
+    // The herald, not the celebration knight — this frame is an announcement,
+    // and celebrate is already the welcome frame three cards back.
+    { art: 'announce', side: 'left', overlay: 'rad',
+      eyebrow: 'Radiance', title: 'The membership, if you want it.',
+      body: 'Bigger uploads, animated banners and emojis anywhere, custom cursors, early access — and 10% off everything in the Fortshop. Everything above stays free either way.' },
+
+    { art: 'onyx', side: 'right',
+      eyebrow: 'Onyx', title: 'The realm\'s currency.',
+      body: 'Quests pay it out — a little every day, more each week. Claim them from the <b>Quests</b> page; nothing pays out silently. Spend it in the Fortshop.' },
+
+    { art: 'point', side: 'left', step: 'friend', skip: 'Skip',
+      eyebrow: 'Step 1 of 4', title: 'Find someone you know.',
+      body: 'Add them by username, or send them your invite link and let them come to you.',
+      acts: [
+        { label: 'Add a friend', fn: "_gsAct('addfriend')", primary: true },
+        { label: 'Copy my invite link', fn: "_gsAct('invite')" },
+      ] },
+
+    { art: 'onyx', side: 'right', step: 'quest', skip: 'Later',
+      eyebrow: 'Step 2 of 4', title: 'Claim a quest.',
+      body: 'Your daily claim is waiting. It takes one click and it\'s the fastest Onyx you\'ll ever make.',
+      acts: [{ label: 'Open Quests', fn: "_gsAct('quests')", primary: true }] },
+
+    { art: 'device', side: 'left', step: 'shop', skip: 'Later',
+      eyebrow: 'Step 3 of 4', title: 'Star something you want.',
+      body: 'Have a wander round the Fortshop and heart one thing. It\'ll be waiting in your wishlist when you can afford it.',
+      acts: [{ label: 'Open the Fortshop', fn: "_gsAct('shop')", primary: true }] },
+
+    { art: 'battle', side: 'right', step: 'bastion', skip: 'Skip',
+      eyebrow: 'Step 4 of 4', title: 'Raise your own bastion.',
+      body: 'Or don\'t — plenty of people never make one. If you do, it\'s yours to name, decorate and run however you like.',
+      acts: [
+        { label: 'Create a bastion', fn: "_gsAct('create')", primary: true },
+        { label: 'Find one to join', fn: "_gsAct('discover')" },
+      ] },
+
+    { art: 'celebrate', side: 'left',
+      eyebrow: 'Well done', title: 'That\'s the tour.',
+      body: `You've got the shape of it. Everything else you'll find as you go — and the ${g.skipped ? 'steps you skipped are' : 'quests are'} always there when you want them.` },
+
+    { art: 'onyx', side: 'right', last: true,
+      eyebrow: 'All set', title: 'All set!',
+      body: `Here's ${_FTZ_GS_REWARD} Onyx to start you off. Go and find your people.` },
+  ];
+}
+
+let _gsIdx = 0;
+
+// Real state, not a checkbox: if the account already has a friend, that step is
+// done whether or not it was done from in here.
+function _gsStepDone(step) {
+  const cu = (typeof CU !== 'undefined' && CU) ? CU : {};
+  const g = cu.guide || {};
+  if (g[step]) return true;
+  if (step === 'friend')  return (cu.friends || []).length > 0;
+  if (step === 'bastion') return (cu.bastions || []).length > 0;
+  if (step === 'shop')    return (cu.wishlist || []).length > 0;
+  if (step === 'quest')   return (cu.questsClaimedCount || 0) > 0
+    || (cu.questsRewarded || []).length > 0;
+  return false;
+}
+
+function _gsMark(step) {
+  if (!CU) return;
+  CU.guide = { ...(CU.guide || {}), [step]: true };
+  try { saveUser(); } catch (_) {}
+}
+
+// Taking a step means LEAVING the card. Progress is stored first so the guide
+// can pick up exactly where it was when they come back.
+function _gsAct(what) {
+  if (CU) { CU.guide = { ...(CU.guide || {}), at: _gsIdx }; try { saveUser(); } catch (_) {} }
+  const step = _gsFrames()[_gsIdx]?.step;
+  if (step && what !== 'invite') _gsMark(step);
+  if (what === 'invite') { _gsCopyInvite(); return; }   // stays put — nothing to navigate to
+  _gsClose(false);
+  switch (what) {
+    case 'addfriend': openModal('modal-add-friend'); break;
+    case 'quests':    showView('quests'); break;
+    case 'shop':      showView('fortshop'); break;
+    case 'create':    openModal('modal-create-bastion'); break;
+    case 'discover':  showView('discover'); break;
+  }
+}
+
+function _gsCopyInvite() {
+  const code = CU?.personalInviteCode;
+  const link = code ? (location.origin + location.pathname + '?ref=' + code) : location.origin;
+  navigator.clipboard?.writeText(link).then(() => {
+    _gsMark('friend');
+    toast('Invite link copied — send it to anyone', 'success');
+    _gsPaint();
+  }).catch(() => toast('Could not copy the link', 'error'));
+}
+
+function _gsGo(d) {
+  const frames = _gsFrames();
+  const next = _gsIdx + d;
+  if (next < 0) return;
+  if (next >= frames.length) { _gsFinish(); return; }
+  _gsIdx = next;
+  if (CU) { CU.guide = { ...(CU.guide || {}), at: _gsIdx }; }
+  _gsPaint();
+}
+
+async function _gsFinish() {
+  const already = CU?.guide?.done;
+  if (CU && !already) {
+    CU.guide = { ...(CU.guide || {}), done: true, at: 0 };
+    CU.onyx = (CU.onyx || 0) + _FTZ_GS_REWARD;
+    try { _fsLogTx('quest', _FTZ_GS_REWARD, 'Welcome guide'); } catch (_) {}
+    try { await saveUser(); } catch (_) {}
+    try { updateOnyxDisplay?.(); } catch (_) {}
+  }
+  _gsClose(true);
+  if (!already) { try { _fsOnyxReward?.(_FTZ_GS_REWARD, 'Welcome aboard'); } catch (_) {} }
+}
+
+function _gsClose(finished) {
+  if (CU && !finished) { CU.guide = { ...(CU.guide || {}), at: _gsIdx }; try { saveUser(); } catch (_) {} }
+  const ov = document.getElementById('ftz-gs');
+  if (!ov) return;
+  ov.classList.add('is-out');
+  setTimeout(() => ov.remove(), 180);
+}
+
+function _gsFrameHTML(f, i) {
+  const done = f.step && _gsStepDone(f.step);
+  const art = `<div class="gs-art"><img src="${_ftzCharSrc(f.art)}" alt="" draggable="false"
+      onerror="this.style.visibility='hidden'"></div>`;
+  const txt = `
+    <div class="gs-txt">
+      <div class="gs-eyebrow">${escapeHTML(f.eyebrow)}</div>
+      <div class="gs-title">${f.title}</div>
+      <p class="gs-body">${f.body}</p>
+      ${done ? `<div class="gs-done"><i class="fa-solid fa-circle-check"></i>Done</div>` : ''}
+      ${!done && f.acts ? `<div class="gs-acts">${f.acts.map(a =>
+        `<button class="fs-btn${a.primary ? ' fs-btn--primary' : ''}" onclick="${a.fn}">${escapeHTML(a.label)}</button>`).join('')}</div>` : ''}
+    </div>`;
+  return `<div class="gs-frame${f.side === 'left' ? ' gs-frame--artleft' : ''}${f.overlay ? ' ftz-ov-' + f.overlay : ''}"
+               data-i="${i}" aria-hidden="${i === _gsIdx ? 'false' : 'true'}">
+    ${f.side === 'left' ? art + txt : txt + art}
+  </div>`;
+}
+
+function _gsPaint() {
+  const ov = document.getElementById('ftz-gs');
+  if (!ov) return;
+  const frames = _gsFrames();
+  const f = frames[_gsIdx];
+  const track = ov.querySelector('.gs-track');
+  // Only the frame that changed is re-rendered; the rest keep their DOM so the
+  // slide is a pure transform and nothing reflows underneath it.
+  const cur = track.querySelector(`.gs-frame[data-i="${_gsIdx}"]`);
+  if (cur) cur.outerHTML = _gsFrameHTML(f, _gsIdx);
+  track.style.transform = `translateX(${-_gsIdx * 100}%)`;
+  track.querySelectorAll('.gs-frame').forEach((el, i) => el.setAttribute('aria-hidden', i === _gsIdx ? 'false' : 'true'));
+  ov.querySelectorAll('.gs-dot').forEach((d, i) => {
+    d.classList.toggle('is-on', i === _gsIdx);
+    d.classList.toggle('is-past', i < _gsIdx);
+  });
+  const back = ov.querySelector('.gs-back');
+  back.style.visibility = _gsIdx === 0 ? 'hidden' : '';
+  const skip = ov.querySelector('.gs-skip');
+  const skippable = f.step && !_gsStepDone(f.step);
+  skip.style.visibility = skippable ? '' : 'hidden';
+  skip.textContent = f.skip || 'Skip';
+  const next = ov.querySelector('.gs-next');
+  next.textContent = f.last ? 'Start exploring' : (f.step ? (_gsStepDone(f.step) ? 'Next!' : 'Next!') : 'Next!');
+}
+
+function _ftzShowGetStarted(startAt) {
+  document.getElementById('ftz-gs')?.remove();
+  const frames = _gsFrames();
+  _gsIdx = Math.min(Math.max(0, startAt ?? (CU?.guide?.at || 0)), frames.length - 1);
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay gs-ov';
+  ov.id = 'ftz-gs';
+  ov.innerHTML = `
+    <div class="ftz-confirm-card ftz-ac-card gs-card" role="dialog" aria-label="Get started">
+      <button class="ftz-close-btn ftz-ac-x gs-x" aria-label="Close">&times;</button>
+      <div class="gs-viewport">
+        <div class="gs-track">${frames.map((f, i) => _gsFrameHTML(f, i)).join('')}</div>
+      </div>
+      <div class="gs-foot">
+        <button class="gs-back" aria-label="Back"><i class="fa-solid fa-arrow-left"></i></button>
+        <div class="gs-dots">${frames.map(() => '<span class="gs-dot"></span>').join('')}</div>
+        <button class="gs-skip">Skip</button>
+        <button class="fs-btn fs-btn--primary gs-next">Next!</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('.gs-x').onclick = () => _gsClose(false);
+  ov.querySelector('.gs-back').onclick = () => _gsGo(-1);
+  ov.querySelector('.gs-skip').onclick = () => _gsGo(1);
+  ov.querySelector('.gs-next').onclick = () => _gsGo(1);
+  // ⚠️ No click-outside-to-close. This is the first thing a new account sees and
+  // a stray click on the backdrop dismissing it reads as the app breaking.
+  const key = e => {
+    if (e.key === 'Escape') { _gsClose(false); document.removeEventListener('keydown', key); }
+    else if (e.key === 'ArrowRight') _gsGo(1);
+    else if (e.key === 'ArrowLeft') _gsGo(-1);
+  };
+  document.addEventListener('keydown', key);
+  _gsPaint();
+}
+
+// Opens itself once, for accounts that haven't finished it. Runs AFTER What's
+// New has had its turn — a brand-new account is silently marked read there, so
+// in practice only one of the two ever appears.
+function _ftzMaybeShowGetStarted() {
+  try {
+    if (!CU?.username) return;
+    if (CU.guide?.done) return;
+    if (document.getElementById('maintenance-overlay')) return;
+    if (document.querySelector('.modal.show, .modal-overlay.open, .ftz-confirm-overlay')) return;
+    _ftzShowGetStarted();
+  } catch (_) {}
+}
+window._ftzShowGetStarted = _ftzShowGetStarted;
+
 // ── Consolidated global settings poller (maintenance + announcement) ──
 // Instead of separate intervals each fetching global settings, use ONE.
 let _dismissedAnnouncement = null;
@@ -43386,11 +43650,8 @@ function sendGifDirectly(id, inputId, url) {
   document.getElementById('giphy-picker')?.remove();
   const gifUrl = url || '';
   if (!gifUrl) return;
-  // Track send_gif quest completion
-  if (CU && !CU.completedQuests?.includes('send_gif')) {
-    CU.completedQuests = [...(CU.completedQuests||[]), 'send_gif'];
-    saveUser(true);
-  }
+  // (The send_gif quest is retired — the welcome guide replaced the onboarding
+  // tier, so there is nothing to record here any more.)
   // Use [FTZGIF] token so parseMD renders it inline directly
   const token = '[FTZGIF:' + gifUrl + ']';
   // Inject into chat input and trigger send
@@ -48586,13 +48847,16 @@ function _questCatalogue() {
     { id:'w_loyal',  tier:'weekly', ic:'fa-calendar-check', title:'Loyal Return', desc:'Claim your daily reward on 5 days this week.',   reward:25, unit:'Onyx', goal:{ cur:Math.min(wb.claimDays.length, 5), target:5 }, met:wb.claimDays.length>=5, done:isWeeklyQuestDone('w_loyal'),  action:"showView('quests')",  cta:'Track' },
     { id:'w_social', tier:'weekly', ic:'fa-comments',      title:'Realm Voice',  desc:'Send messages on 3 different days this week.',  reward:20, unit:'Onyx', goal:{ cur:Math.min(wb.msgDays.length, 3),  target:3 }, met:wb.msgDays.length>=3,  done:isWeeklyQuestDone('w_social'), action:"showView('quests')", cta:'Track' },
     // ── MILESTONES (one-time) — one-off, so a bit more ──
-    { id:'set_pfp',        tier:'journey', ic:'fa-image',        title:'Show Your Face',   desc:'Upload a profile picture to stand out.',   reward:15, unit:'Onyx', met:(completed.includes('set_pfp') || !!cu.pfp),         done:rewarded.includes('set_pfp'),        action:"showView('profile')",             cta:'Set avatar' },
-    { id:'set_bio',        tier:'journey', ic:'fa-feather',      title:'Tell Your Tale',   desc:'Write a custom bio for your profile.',     reward:15, unit:'Onyx', met:(completed.includes('set_bio') || !!cu.bio),         done:rewarded.includes('set_bio'),        action:"showView('profile')",             cta:'Write bio' },
-    { id:'add_friend',     tier:'journey', ic:'fa-user-group',   title:'First Ally',       desc:'Send your first friend request.',          reward:15, unit:'Onyx', met:(completed.includes('add_friend') || friends > 0),   done:rewarded.includes('add_friend'),     action:"openModal('modal-add-friend')",    cta:'Add friend' },
-    { id:'join_bastion',   tier:'journey', ic:'fa-dungeon',      title:'Enter a Bastion',  desc:'Find and join any public Bastion.',        reward:20, unit:'Onyx', met:(completed.includes('join_bastion') || bastions > 0),done:rewarded.includes('join_bastion'),   action:"showView('discover')",             cta:'Discover' },
-    { id:'send_gif',       tier:'journey', ic:'fa-film',         title:'Say It With a GIF',desc:'Send your first GIF in a conversation.',   reward:10, unit:'Onyx', met:completed.includes('send_gif'),                      done:rewarded.includes('send_gif'),       action:"showView('dms')",                  cta:'Open chats' },
+    // ⚠️ THE ONBOARDING QUESTS ARE GONE. set_pfp, set_bio, add_friend,
+    // join_bastion, send_gif and create_bastion paid 115 Onyx between them for
+    // things the WELCOME GUIDE now walks everyone through once — and they sat
+    // on the Quests page forever, crowding out the quests people actually come
+    // back for. The guide pays a single, smaller reward instead.
+    // Old `completedQuests`/`questsRewarded` entries are simply never read
+    // again; nothing needs migrating.
+    // What survives is the one that ISN'T onboarding: five friends is a real
+    // goal you work at, not a first-five-minutes step.
     { id:'five_friends',   tier:'journey', ic:'fa-people-group', title:'Rally the Banners',desc:'Grow your circle to 5 friends.',           reward:30, unit:'Onyx', goal:{ cur:Math.min(friends, 5), target:5 }, met:(friends>=5), done:rewarded.includes('five_friends'), action:"openModal('modal-add-friend')", cta:'Add friends' },
-    { id:'create_bastion', tier:'journey', ic:'fa-chess-rook',   title:'Raise a Fortress', desc:'Create your own Bastion community.',        reward:40, unit:'Onyx', met:completed.includes('create_bastion'),                done:rewarded.includes('create_bastion'), action:"openModal('modal-create-bastion')", cta:'Create' },
   ];
   return raw.map(q => ({ ...q, claimable: !!q.met && !q.done, accepted: accepted.includes(q.id) }));
 }
@@ -51404,6 +51668,18 @@ function renderAtelierTab(tab) {
           (aWeekly.length  ? `${groupLabel('Weekly')}<div class="qst-qgrid">${aWeekly.map(qCard).join('')}</div>` : '') +
           (aJourney.length ? `${groupLabel('Milestones')}<div class="qst-qgrid">${aJourney.map(qCard).join('')}</div>` : '');
       }
+      // The welcome guide replaced the onboarding quests, so it needs a door
+      // back in — otherwise it's a one-shot nobody can ever look at again.
+      body += `
+        <div class="qst-guideback" onclick="_ftzShowGetStarted(0)" role="button" tabindex="0"
+             onkeydown="if(event.key==='Enter'||event.key===' ')_ftzShowGetStarted(0)">
+          <img src="${_ftzCharSrc('point')}" alt="" draggable="false" onerror="this.style.display='none'">
+          <div>
+            <div class="qst-guideback-t">New here, or need a refresher?</div>
+            <div class="qst-guideback-s">Take the two-minute tour of Fortized again.</div>
+          </div>
+          <i class="fa-solid fa-chevron-right"></i>
+        </div>`;
     }
 
     el.innerHTML = `<div class="atelier-content-inner qst-page">

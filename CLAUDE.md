@@ -1,5 +1,15 @@
 # Fortized — working notes for Claude
 
+## 🔵 OPEN — carried into the next session
+- **A HOME FOR `PlayComputer.png`.** It is now used as the guide's `device`
+  frames ("what Fortized is", "the Fortshop"), but the user wants it somewhere
+  it genuinely belongs — devices, games, accounts. Still looking.
+- **GET STARTED FOR A NEW BASTION.** The user's second onboarding flow: a
+  setup/customise guide that runs once you're INSIDE a bastion you just made
+  (not during creation). Deferred — *"we'll see that later we didn't even
+  redesign the bastion & its system yet."* Reuse `.gs-*` verbatim; only the
+  frames change.
+
 ## 🔵 NEXT UP — Activities (Discord's "Apps" equivalent)
 The user has an existing project idea for **Activities** on the Discover page and
 wants it worked on next. The page already has an Activities tab (hidden behind
@@ -7,6 +17,104 @@ wants it worked on next. The page already has an Activities tab (hidden behind
 `_renderDiscoverActivities`, an overview screen and a full-screen overlay — so
 this is a rework of something half-built, not a green field. **Ask what they want
 it to be before building.**
+
+## 🟢 SHIPPED — Round 10 (`2026fix502`, branch `claude/ui-polish-redesigns-xf43er`)
+
+### 🧭 GET STARTED — the guided welcome (`_ftzShowGetStarted`)
+One landscape card that NEVER moves or resizes; the **frames slide leftwards
+inside it** (`.gs-track{transform:translateX(-N*100%)}`, each frame
+`flex:0 0 100%` so one translate = exactly one frame at any width). 11 frames:
+welcome · what Fortized is · make it yours · Radiance (carries `.ftz-ov-rad`,
+eyebrow in `--rad-pink`) · Onyx · 4 steps · well done · All set.
+- **⚠️ THIS REPLACED THE "JOURNEY" QUESTS.** `set_pfp`, `set_bio`, `add_friend`,
+  `join_bastion`, `send_gif`, `create_bastion` paid **115 Onyx between them** for
+  what is just onboarding, and sat on the Quests page forever crowding out the
+  quests people come back for. Deleted; the guide pays **one 50 Onyx** reward at
+  the end. `five_friends` survives — it's a real goal, not a first-five-minutes
+  step. Old `completedQuests`/`questsRewarded` entries are simply never read
+  again; **nothing needs migrating**. The two writers that recorded
+  `create_bastion` / `send_gif` were repointed/removed.
+- **Nothing traps anyone.** The two steps the user called skippable say **Skip**;
+  the other two say **Later**. A step already true of the account (has a friend,
+  has a bastion, has a wishlist item, has claimed a quest) renders as **Done**
+  with no buttons — `_gsStepDone` reads real state, not a checkbox.
+- **Taking a step LEAVES the card**, stores `CU.guide.at`, and reopening resumes
+  on that exact frame. State is `CU.guide` (raw JSONB, **added to the refreshCU
+  protect list**).
+- **🐞 THE ACTION BUTTONS WERE DEAD ON ARRIVAL** — `fn: '_gsAct("addfriend")'`
+  emitted into `onclick="${fn}"`, so the double quote closed the attribute and
+  the page threw `Unexpected end of input`. Inline handlers built from data must
+  use the OTHER quote. Caught only because the harness clicked them.
+- A **way back in** (`.qst-guideback`) sits on the Quests page where the
+  onboarding quests used to be — a one-shot with no door back is a dead end.
+
+### 📜 What's New — now a three-beat cinematic
+The herald walks on **centre stage**, steps aside **left**, cries "Hear ye, hear
+ye!", and only then does the announcement appear. Acts are classes on a timeline
+(`_WN_ACTS`); clicking anywhere skips to the end.
+- ⚠️ **Every beat is a transform or an opacity.** Animating width/left/height on
+  a 640px card judders and would move the stage under the herald mid-walk.
+- ⚠️ **His travel (`--wn-dx`) is MEASURED off the real DOM boxes**, not a
+  constant — his resting place is the actual left column, and the distance to
+  the card's centre depends on the rendered width.
+- ⚠️ The bubble hangs off the **figure** (`.ftz-wn-fig`), not the column: the
+  column is as tall as the card, so a bubble anchored to it floated a hundred
+  pixels above his head and collided with the title.
+
+### 🧭 Discover round 2
+- **🐞 THE SORT DROPDOWN COULD NOT BE USED.** `.disc-filters` and `#disc-body`
+  both sat at `z-index:2`, and **on a tie the later element in the DOM paints on
+  top** — so the open menu rendered UNDER the card grid and every click landed on
+  a bastion card. Filters are `z-index:5` now.
+- **🐞 THE SEARCH WAS GLITCHY BECAUSE THE HERO REBUILT ITSELF.** The clear button
+  appearing on the first keystroke re-rendered the whole hero, destroying and
+  recreating **the input being typed into** (caret restored by hand, focus
+  juggled, stat counters restarted). The button now always exists and is only
+  shown/hidden; typing touches nothing but the results.
+- No `DISCOVER` eyebrow; **"Find your place." / "Browse what's out there."**
+  ("Find your folks" read as a Friends page, per the user). Stats **count up
+  from 0** (easeInOutQuart, tabular-nums so the plate can't resize) and *members*
+  → **total members** (it's a SUM across bastions — a reach figure, and the user
+  wants it that way). Hide-joined wears the gift picker's `.nm-check`.
+  Hero 436px with a longer ramp, `.disc-rowwrap{margin-top:-232px}` tuned so the
+  **first rail** crosses the hero's bottom edge. Topbar is the uniformized one
+  (compass + "Discover", separator, then icon-less tabs).
+- Featured + Verified rails honour the sort control; Rising/Fresh keep their own
+  order because that ordering IS the rail.
+
+### 🔗 Invite links, end to end
+- **"I have an invite"** in the Discover topbar → paste card → `joinByInvite`.
+  `_inviteCodeFrom` accepts every shape: `?invite=`, `invite.fortized.com/CODE`,
+  `/invite/CODE`, `/i/CODE`, or the bare code. ⚠️ A segment containing a dot is a
+  hostname — that's what stops a bare `fortized.com` reading as an invite.
+- **server.js**: `/invite/:code` and `/i/:code` redirect to `/app?invite=CODE`;
+  `/:code` only fires when the request actually arrived on `invite.*`, so it can
+  never shadow a real page. ⚠️ Needs the subdomain pointed at the server.
+- **parseMD** rewrites the short forms to the canonical `?invite=` shape before
+  the embed pass, so ONE embed path serves them all. ⚠️ The subdomain or an
+  `/invite//i/` segment is REQUIRED in that regex — matching any fortized.com
+  path would swallow `/app`, `/login` and every other link.
+- **🐞 TWO MORE INVENTED "N ONLINE" NUMBERS.** The invite card printed the
+  MEMBER count as "N Online" (so every invite claimed the whole roster was
+  online), and the chat embed used `floor(members*0.3)` in three places. Same
+  fabrication removed from the Discover cards in round 9. Gone.
+
+### 🙋 Add Friend
+🐞 Joyster was `position:absolute; top:1px` against the card's edge, so the modal
+**clipped his hat** and the subtitle ran underneath him. He stands in a header
+band with headroom and a reserved lane now. Thicker strokes, title off 900, a
+real close button, and **your own handle with a copy button** — adding a friend
+has two halves and the card only did one of them.
+
+### 🎭 Character art sizes
+`_ftzNotFound` tags the block `ftz-nf--<art>`. The art is **not drawn at a
+uniform scale**: the battle knight is a whole figure mid-charge and turns to mush
+at the 132px that suits the search knight's crate → 210px.
+
+⚠️ **LIVE-VERIFY:** the guide end to end on a fresh account (each step's button,
+Skip vs Later, resume after leaving, the 50 Onyx paid once); the What's New walk;
+Discover's dropdown + search + counting stats; an invite link through all three
+doors (URL, paste card, chat embed).
 
 ## 🟢 SHIPPED — Round 9 (`2026fix501`, branch `claude/ui-polish-redesigns-xf43er`)
 

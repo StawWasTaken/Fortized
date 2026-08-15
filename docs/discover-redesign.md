@@ -1,8 +1,8 @@
 # Discover — redesign plan
 
-**Status: awaiting approval. Nothing below is built yet.**
-Edit this file freely — strike out what you don't want, add what's missing, and
-I'll build exactly what survives.
+**Status: APPROVED and BUILT (`2026fix501`).** Kept as the record of what was
+decided and why. Two things landed differently from the plan below — see
+§4.1 and §6 for the honest version.
 
 ---
 
@@ -130,17 +130,18 @@ Same shape as Guilded/Discord, our materials:
 Three of these are what separate a redesign from a rework. All are egress-safe —
 they read data the page already fetches, or write one small row.
 
-### 4.1 🐞 Kill the fake "Online" number
-Delete it. Two honest options, pick one:
+### 4.1 🐞 Kill the fake "Online" number — DONE, with a correction
+Deleted. **But (a) as written above was not available**: it assumed a
+"bastion's real last-message timestamp", and no such field exists. Creating one
+means a `saveGlobalBastion` read-modify-write per message — egress we can't
+spend, and a last-write-wins clobber risk against a concurrent rename.
 
-- **(a) Ship without it** — show `N members` and an **Active / Quiet** state
-  derived from the bastion's real last-message timestamp. Zero new reads.
-- **(b) Real presence** — count members currently online from the presence data
-  we already hold. Accurate, but only for members the client has presence for,
-  so it under-reports.
+So the card claims only what is genuinely measured: **members**, a **New** badge
+off the real `createdAt`, and boost tier. Inventing an "Active" label from
+nothing would have been the same bug in a new costume.
 
-**My recommendation: (a).** "Active" from a real timestamp is truthful; a
-precise-looking number that is under-counted is worse than no number.
+An honest activity signal needs a cheap per-bastion write path first. Worth
+doing later; it wasn't worth faking now.
 
 ### 4.2 Rising = actual growth
 Store a **weekly member-count snapshot** per bastion (one small `admin_kv` row
@@ -164,22 +165,30 @@ dossier in the console.
 
 ---
 
-## 6. Open questions for you
+## 6. How the open questions were resolved
 
-1. **Rails or grid?** I've proposed Guilded-style rails with a grid on
-   search/filter. Say the word if you'd rather it stay one grid throughout.
-2. **The Online number** — (a) drop it for Active/Quiet, or (b) real presence?
-   I recommend (a).
-3. **Category + tag authoring in Bastion Settings** — in scope for this round,
-   or a separate one? The filters are dead until it lands.
-4. **Featured** — staff-picked from the console (my assumption), or automatic?
-5. Anything from the three screenshots I've under-weighted?
+Approved as a whole, so these went with the recommendation in the plan:
+
+1. **Rails**, collapsing to one grid on search or a category filter.
+2. **The Online number** — dropped. Active/Quiet turned out to be unavailable
+   too; see §4.1.
+3. **Category + tag authoring** — built this round, in Bastion Settings →
+   Overview. Without it the filters could never have worked.
+4. **Featured** — staff-picked, off the `featured` flag the console already
+   wrote and nothing read. Fixing `_syncBastionToGlobal` was required to make it
+   stick: an owner saving their settings was silently wiping it.
 
 ---
 
-## 7. Suggested order of work
+## 7. What shipped
 
-1. Card + hero + filter row on the app's components (pure visual, no data)
-2. Rails structure + Featured/Verified/Fresh (data we already have)
-3. Category + tag authoring in Bastion Settings → the filters go live
-4. Rising snapshots (needs a week of data before the rail appears)
+All four steps, in `2026fix501`:
+
+1. ✅ Card + hero + filter row on the app's components
+2. ✅ Rails: Featured / Verified / Fresh arrivals / per category / everything else
+3. ✅ Category + tag authoring in Bastion Settings → the filters are live
+4. ✅ Rising snapshots — **the rail stays hidden until a week of history exists**,
+   so expect it to appear on its own about seven days after deploy
+
+Still open: an honest activity signal (§4.1), and the **Activities** sub-page,
+which the user wants reworked next.

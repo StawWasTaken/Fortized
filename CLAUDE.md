@@ -1,16 +1,116 @@
 # Fortized — working notes for Claude
 
-## 🟡 AWAITING APPROVAL — Discover redesign
-Plan written to **`docs/discover-redesign.md`**. The user asked for a plan they
-approve/modify BEFORE any building — **do not start implementing it** until they
-say so. Built from the app's own parts (Radiance/Fortshop/Quests language),
-referencing Discord · Osmium · Guilded (Guilded is their favourite, and its
-horizontal rails are the structural proposal). Five open questions are listed at
-the end of that doc; the two that block real work either way:
-- **🐞 The "N Online" number on every Discover card is INVENTED** —
-  `Math.max(1, Math.floor(memberCount * 0.3))`. Not a style problem, a fake stat.
-- **No bastion can set `b.category`** — there is no authoring UI, so six of the
-  seven category tabs are permanently empty. Same for tags.
+## 🔵 NEXT UP — Activities (Discord's "Apps" equivalent)
+The user has an existing project idea for **Activities** on the Discover page and
+wants it worked on next. The page already has an Activities tab (hidden behind
+`display:none` on `#dsub-activities`), `FORTIZED_ACTIVITIES`, `ACTIVITY_PERMISSIONS`,
+`_renderDiscoverActivities`, an overview screen and a full-screen overlay — so
+this is a rework of something half-built, not a green field. **Ask what they want
+it to be before building.**
+
+## 🟢 SHIPPED — Round 9 (`2026fix501`, branch `claude/ui-polish-redesigns-xf43er`)
+
+### 🧭 DISCOVER — rebuilt on the app's own parts
+Plan (approved) in `docs/discover-redesign.md`. It was the oldest page left:
+inline `style="…"` on nearly every element, hand-rolled gradients and
+`onmouseenter="this.style.transform=…"`, so it ignored the appearance themes
+completely — recolour the app and Discover stayed the same.
+- **Hero = the Fortshop treatment**, including its depth move. Full-bleed cover
+  through `.fs-hero-bg::after`'s 15-stop `color-mix` ramp, title ON the art, and
+  `.disc-rowwrap{margin-top:-150px}` pulls search + stats + filters + the first
+  rail UP so they sit half on the art, half on the page (the user asked for
+  exactly this twice: "a hero like we have in the fortshop", then "half normal
+  background, half hero thing"). ⚠️ `.fs-hero`'s negative margin is tuned to the
+  Fortshop scroller's own -28/-32px padding; Discover's has none, so it's reset
+  to 0. ⚠️ A **horizontal scrim** (`.disc-hero2 .fs-hero-bg::before`, the same
+  move `.qst-banner` makes) is required — the cover is the busy Fortized banner,
+  not a designed collection cover, and the title competed with floating
+  gamepads. **No z-index on it**: `::before` must paint UNDER `::after` or the
+  vertical dissolve lands beneath the scrim.
+- **Guilded rails**: Featured · Rising · Verified · Fresh arrivals · one per live
+  category, then "Everything else". Nothing appears twice, nothing is dropped.
+  **Search or a category collapses them into ONE grid** — a query wants an
+  answer, not five scrollers hiding most of it off-screen.
+- **🐞 THE "N ONLINE" NUMBER WAS INVENTED** — `Math.max(1, Math.floor(mc*0.3))`,
+  so a 10-member bastion always read "3 Online" whether anyone was there or not.
+  Deleted. ⚠️ **There is no honest replacement available**: no per-bastion
+  activity timestamp exists, and creating one means a `saveGlobalBastion`
+  read-modify-write per message (egress, plus last-write-wins clobbering a
+  concurrent rename). The card claims only what's measured — members, a **New**
+  badge off the real `createdAt`, boost tier.
+- **🐞 SIX OF THE SEVEN CATEGORY TABS COULD NEVER MATCH ANYTHING** — nothing
+  could set `b.category`, there was no authoring UI. **Bastion Settings →
+  Overview now has category chips + tags** (`_bsPickCategory`, saved in
+  `saveBastionOverview`), and Discover only draws a chip for a category that
+  **exists in the data**, with a count.
+- **Rising is real or absent.** `_discSnapshot()` keeps a daily member-count
+  snapshot for ALL bastions in ONE `admin_kv` row (`bastion_growth`), written by
+  whichever client opens Discover first — one small read + at most one small
+  write per DAY for the whole platform. The rail hides until a week of history
+  exists; a "rising" list off one data point is just the member-count list in a
+  hat.
+- **🐞 `_syncBastionToGlobal` WIPED STAFF FIELDS.** It copies the OWNER's local
+  bastion object over the global row, and the owner's copy has never seen
+  `featured` — so an ordinary "Save Changes" silently un-featured a bastion.
+  `verified` was already preserved; `featured`/`flagged`/`staffNote` now are too.
+- Empty states say the REAL reason: "hide joined" emptying a shelf you're
+  already in is not the same as that shelf being empty.
+
+## 🟢 SHIPPED — Round 8 (`2026fix500`, same branch)
+
+### 🎭 One character-icon registry
+The user moved the art to **`Icons/CharacterIcons/`** on `main`, which left three
+paths 404 on the live deploy: `/JoysterPoint.png`, `/Icons/ClaimOnyx.png` and
+`/Icons/MediaNotFound.png` — the last being **every empty state in the app**.
+Rather than repoint three strings, all character art now resolves through
+`_FTZ_CHARS` / `_ftzCharSrc(name)`, keyed by **mood, not filename**:
+`search · point · onyx · battle · device · celebrate · announce`.
+- **`_ftzNotFound(title, sub, {art})`** takes a character. ⚠️ **Not every empty
+  state is a failure** — "Inbox zero", "Clean record", "No bans on record" and
+  "Queue is clear" are WINS, and a defeated knight over good news reads as an
+  error; those carry `celebrate`. Somewhere you haven't started (no trades yet,
+  nothing claimed, no codes) carries `battle`. The whimsical fallback lines are
+  written for the search knight and only fill in for that one.
+- ⚠️ `PlayComputer.png` (devices/games/accounts) is registered as `device` but
+  **not used anywhere yet** — no current surface fits it.
+
+### 📜 What's New — the release card, shown once
+`_FTZ_WHATS_NEW` in the bundle (release copy changes on deploy; reading it from
+the server would cost a fetch per boot to usually learn nothing). Announcement
+herald over the top, "Hear ye, hear ye!", pinned header/footer with only the
+middle scrolling. **To announce a release: add an entry at the TOP with a fresh
+`id`** — ⚠️ the `id` IS the mechanism, so don't recycle one to fix a typo unless
+you want the card shown again. Never opens over maintenance or another modal,
+and **an account that joined AFTER the release is marked read silently** rather
+than handed a changelog for features it has always had. `_ftzShowWhatsNew()` is
+exposed so it can be reopened on demand.
+
+### 💠 The gift card tilt is on the IMAGE
+The user meant the **artwork**, not the panel — rotating the whole banner moved
+the copy and the CTA with it, which is not what a gift card does.
+`_fsWireCardTilt` gained an optional **`hover`** surface so the picture answers
+to the cursor anywhere along the banner while the perspective stays centred on
+the art. ⚠️ Perspective can't go on the banner: it never applies to an element's
+own transform, and its origin defaults to the element's centre — from the middle
+of a wide banner the art sits far to one side and shears. ⚠️ The specular is
+**masked to the artwork's silhouette** (`--art`) and the shadow is
+`filter:drop-shadow`, because over a transparent PNG a rect sheen is a floating
+white rectangle and a `box-shadow` draws the shadow of a rectangle that isn't
+there. Verified: gx 14% leaning right vs 87% leaning left, banner transform
+stays `none`, CTA still clickable.
+
+### 🐞 A stray `}` in styles.css
+Left by round 7's block swap. The CSS parser discards up to the next rule while
+recovering, which had silently swallowed a comment **and a whole rule**
+(`.ftz-wn{max-width:560px}` — the What's New card came out at the 440px default).
+Same family as the `</style>` incident: **when a rule doesn't apply, check the
+sheet actually parsed it** (`[...document.styleSheets[0].cssRules]`) before
+blaming specificity.
+
+⚠️ **LIVE-VERIFY:** Discover end to end (hero straddle, rails, search→grid, the
+category chips after setting a category in Bastion Settings); that no empty
+state anywhere shows a broken image; the What's New card on first load after
+deploy; the gift artwork tilt on the Radiance page.
 
 ## 🟢 SHIPPED — Round 7 (`2026fix499`, branch `claude/ui-polish-redesigns-xf43er`)
 

@@ -10211,19 +10211,41 @@ button[style*="background: var(--accent)"]:active {
 .caf-cmd:hover .caf-cmd-go{opacity:1;color:var(--accent);}
 .caf-empty{padding:20px 12px;text-align:center;color:var(--muted);font-size:12.5px;}
 
-/* ── Close button (modal X buttons) ── */
+/* ── Close button — THE close control for every card popup ──
+   ⚠️ One button, one glyph, everywhere. Card popups used to close with a bare
+   `&times;`, which is the thin multiplication sign, while the Add Friend card
+   used FontAwesome's solid `xmark`. Side by side they are obviously different
+   controls, and the thick one is the one that reads as a button. Every popup
+   now carries the same INLINE FontAwesome `xmark` path.
+   ⚠️ Inline, NOT `<i class="fa-solid fa-xmark">`, even though that is what the
+   card this was copied from used: FontAwesome comes off a CDN, and the one
+   control that must never fail to draw is the way out of a modal. Identical
+   glyph, identical path data, no network.
+   ⚠️ Size is driven by `font-size` (the svg is sized in `em`), so every
+   existing `.ftz-ac-x` / bare-`.ftz-close-btn` size relationship survives.
+   ⚠️ Colour is mixed from `var(--text)`, not hardcoded white: the appearance
+   system repaints the surface under this button, and a fixed white X can only
+   ever be right for one theme. */
 .ftz-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* The glyph keeps its size; the BOX grows, so the thing is actually easy to
+     hit. Nothing moves, because it grows around its own centre. */
+  width: 1.5em;
+  height: 1.5em;
   background: none;
   border: none;
-  color: rgba(255,255,255,.3);
+  color: color-mix(in srgb, var(--text) 38%, transparent);
   cursor: pointer;
   font-size: 20px;
-  padding: 4px;
+  padding: 0;
   line-height: 1;
-  transition: color .15s;
+  transition: color .15s, transform .12s;
 }
-.ftz-close-btn:hover { color: rgba(255,255,255,.6); }
-.ftz-close-btn:active { color: rgba(255,255,255,.8); }
+.ftz-close-btn svg { height: .66em; width: auto; display: block; fill: currentColor; }
+.ftz-close-btn:hover { color: var(--text); }
+.ftz-close-btn:active { color: var(--text); transform: scale(.9); }
 
 /* ── Emoji cells (picker grid items) — corporate-clean ──────── */
 .emoji-cell {
@@ -18648,8 +18670,10 @@ body.has-announce .main{padding-top:var(--ann-h);}
    vertical dissolve still lands on top. */
 .disc-hero2 .fs-hero-bg::before{content:'';position:absolute;inset:0;
   background:linear-gradient(100deg,
-    rgba(9,10,14,.90) 0%, rgba(9,10,14,.78) 30%,
-    rgba(9,10,14,.44) 58%, rgba(9,10,14,.12) 100%);}
+    color-mix(in srgb, var(--bg), transparent 10%) 0%,
+    color-mix(in srgb, var(--bg), transparent 22%) 30%,
+    color-mix(in srgb, var(--bg), transparent 56%) 58%,
+    color-mix(in srgb, var(--bg), transparent 88%) 100%);}
 
 /* The overlap. Rides up over the fading cover, and everything below it inherits
    the position — the first rail lands half on art, half on page. */
@@ -18815,35 +18839,64 @@ body.has-announce .main{padding-top:var(--ann-h);}
 /* Tuned so the FIRST RAIL crosses the hero's bottom edge, not just the search
    row — that's the "half normal background, half hero" the page is after. */
 .disc-rowwrap{margin-top:-232px;}
-/* Softer horizontal scrim — it only has to seat the text, and at .90 it was
-   fighting the vertical ramp for the same pixels and muddying both. */
+/* ⚠️ APPEARANCE-SAFE. Both hero layers used to be hardcoded near-black
+   (`rgba(9,10,14,…)`), which only ever matched the default theme. Under any
+   other appearance the scrim was a different colour from the page it dissolves
+   into, so the art met the page at a visible seam. Every stop on both layers is
+   now mixed from `var(--bg)`, which the appearance system rewrites, so the
+   dissolve always lands on exactly the colour underneath it. */
 .disc-hero2 .fs-hero-bg::before{
   background:linear-gradient(100deg,
-    rgba(9,10,14,.82) 0%, rgba(9,10,14,.66) 32%,
-    rgba(9,10,14,.34) 62%, rgba(9,10,14,.06) 100%);}
-/* A longer, later-starting ramp: the art stays clean through the title, then
-   gives way over the bottom half. Same smoothstep shape as `.fs-hero-bg`, just
-   stretched over more pixels. */
+    color-mix(in srgb, var(--bg), transparent 18%) 0%,
+    color-mix(in srgb, var(--bg), transparent 34%) 32%,
+    color-mix(in srgb, var(--bg), transparent 66%) 62%,
+    color-mix(in srgb, var(--bg), transparent 94%) 100%);}
+/* A true smoothstep (t²(3-2t)) sampled at 21 even steps from 15% to the bottom.
+   The previous ramp was hand-picked stops, and hand-picked stops have kinks in
+   them: the slope jumped around the middle, and a slope change in a gradient is
+   exactly what the eye reads as a band. Longer + evenly sampled = no edge. */
 .disc-hero2 .fs-hero-bg::after{
   background:linear-gradient(to bottom,
-    color-mix(in srgb, var(--bg), transparent 100%) 0%,
-    color-mix(in srgb, var(--bg), transparent 99.6%) 18%,
-    color-mix(in srgb, var(--bg), transparent 98%) 30%,
-    color-mix(in srgb, var(--bg), transparent 95%) 40%,
-    color-mix(in srgb, var(--bg), transparent 90%) 48%,
-    color-mix(in srgb, var(--bg), transparent 83%) 56%,
-    color-mix(in srgb, var(--bg), transparent 73%) 63%,
-    color-mix(in srgb, var(--bg), transparent 61%) 70%,
-    color-mix(in srgb, var(--bg), transparent 47%) 77%,
-    color-mix(in srgb, var(--bg), transparent 33%) 83%,
-    color-mix(in srgb, var(--bg), transparent 21%) 88%,
-    color-mix(in srgb, var(--bg), transparent 11%) 93%,
-    color-mix(in srgb, var(--bg), transparent 4%)  97%,
+    color-mix(in srgb, var(--bg), transparent 100%)  15%,
+    color-mix(in srgb, var(--bg), transparent 99.3%) 19.3%,
+    color-mix(in srgb, var(--bg), transparent 97.2%) 23.5%,
+    color-mix(in srgb, var(--bg), transparent 93.9%) 27.8%,
+    color-mix(in srgb, var(--bg), transparent 89.6%) 32%,
+    color-mix(in srgb, var(--bg), transparent 84.4%) 36.3%,
+    color-mix(in srgb, var(--bg), transparent 78.4%) 40.5%,
+    color-mix(in srgb, var(--bg), transparent 71.8%) 44.8%,
+    color-mix(in srgb, var(--bg), transparent 64.8%) 49%,
+    color-mix(in srgb, var(--bg), transparent 57.5%) 53.3%,
+    color-mix(in srgb, var(--bg), transparent 50%)   57.5%,
+    color-mix(in srgb, var(--bg), transparent 42.5%) 61.8%,
+    color-mix(in srgb, var(--bg), transparent 35.2%) 66%,
+    color-mix(in srgb, var(--bg), transparent 28.2%) 70.3%,
+    color-mix(in srgb, var(--bg), transparent 21.6%) 74.5%,
+    color-mix(in srgb, var(--bg), transparent 15.6%) 78.8%,
+    color-mix(in srgb, var(--bg), transparent 10.4%) 83%,
+    color-mix(in srgb, var(--bg), transparent 6.1%)  87.3%,
+    color-mix(in srgb, var(--bg), transparent 2.8%)  91.5%,
+    color-mix(in srgb, var(--bg), transparent 0.7%)  95.8%,
     var(--bg) 100%);}
 
 /* Counting numbers must not resize their plate as the digits roll. */
 .disc-hstat b{font-variant-numeric:tabular-nums;font-size:21px;}
-.disc-hstat{min-width:104px;}
+
+/* 🐞 THE THREE PLATES DID NOT MATCH EACH OTHER. At `rgba(0,0,0,.45)` the plate
+   was more art than plate, so whichever one happened to sit over the bright
+   yellow gamepad came out a different colour from its neighbours — the same
+   component reading as three different components. They are now built from
+   `var(--bg)` at 93% (so they theme, instead of being black over a themed
+   page), and the little that still shows through is blurred hard and drained of
+   colour, which is what keeps all three identical wherever they land. */
+.disc-hstat,.disc-hero-search{
+  background:color-mix(in srgb, var(--bg) 93%, transparent);
+  -webkit-backdrop-filter:blur(16px) saturate(.55);
+  backdrop-filter:blur(16px) saturate(.55);}
+.disc-hstat{min-width:104px;border-color:color-mix(in srgb, var(--text) 15%, transparent);}
+.disc-hero-search{border-color:color-mix(in srgb, var(--text) 17%, transparent);}
+.disc-hero-search:focus-within{
+  background:color-mix(in srgb, var(--bg) 97%, transparent);border-color:var(--accent);}
 
 /* The clear button keeps its box when hidden, so the field doesn't jump the
    moment the first character lands. */
@@ -18857,31 +18910,34 @@ body.has-announce .main{padding-top:var(--ann-h);}
 .disc-toggle.is-on .nm-check{background:var(--accent);border-color:var(--accent);color:var(--ink);}
 .disc-toggle.is-on{color:var(--text);border-color:var(--surface-border-hover);}
 
-/* Topbar: brand + tabs, then the invite door pinned right. */
+/* Topbar: brand + tabs, then the invite door pinned right.
+   It wears `.fs-btn.fs-tradebtn` — literally the Fortshop's Trade button — so
+   the two page topbars carry the same 3D control instead of one raised and one
+   flat. Everything here is sizing; the press comes from `.fs-btn`. */
 .disc-subnav-spacer{flex:1;min-width:8px;}
-.disc-inv-btn{display:inline-flex;align-items:center;gap:8px;flex-shrink:0;
-  padding:7px 14px;border-radius:100px;background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.1);color:var(--muted-light);cursor:pointer;
-  font-family:var(--font-ui);font-size:12.5px;font-weight:600;
-  transition:background .15s,color .15s,border-color .15s,transform .12s;}
-.disc-inv-btn i{font-size:12px;}
-.disc-inv-btn:hover{background:rgba(255,255,255,.1);color:var(--text);
-  border-color:rgba(255,255,255,.18);transform:translateY(-1px);}
-.disc-inv-btn:active{transform:translateY(1px);}
-@media(max-width:720px){.disc-inv-btn span,.disc-inv-btn{font-size:0;gap:0;padding:7px 11px;}
-  .disc-inv-btn i{font-size:13px;}}
+.disc-inv-btn{margin-left:0;flex-shrink:0;}
+.disc-inv-btn svg{height:14px;width:auto;flex-shrink:0;}
+@media(max-width:720px){
+  .disc-inv-btn span{display:none;}
+  .disc-inv-btn{padding:0 11px;gap:0;}}
 
-/* ── "I have an invite" ── */
-.ftz-invpaste{max-width:460px;}
-.ftz-invpaste-h{display:flex;align-items:center;gap:14px;padding:24px 26px 0;}
-.ftz-invpaste-ic{width:46px;height:46px;flex-shrink:0;border-radius:14px;
-  display:flex;align-items:center;justify-content:center;font-size:19px;
-  background:var(--accent-dim);color:var(--accent);border:2px solid var(--accent-mid);}
-.ftz-invpaste-t{font-family:var(--font-display);font-size:19px;font-weight:700;color:var(--text);}
-.ftz-invpaste-s{font-size:13px;color:var(--muted-light);margin-top:2px;line-height:1.45;}
-.ftz-invpaste-b{padding:18px 26px 4px;}
-.ftz-invpaste-b .settings-input{width:100%;}
-.ftz-invpaste-err{min-height:18px;font-size:12px;color:#ff5470;margin-top:7px;}
+/* ── "I have an invite" ──
+   Wears `.fs-redeem` wholesale. Only the art column is different: the Onyx card
+   is a landscape bitmap with its own baked corner radius (hence the percentage
+   `border-radius` further up, which would deform a character cut-out), while
+   this is a transparent PNG that just stands there. */
+.ftz-invpaste{max-width:660px!important;}
+.ftz-invpaste .fs-redeem-split{grid-template-columns:1fr 200px;gap:20px;}
+.ftz-invpaste-art{align-items:flex-end;}
+/* ⚠️ `.fs-redeem-art img` carries the gift card's ink FRAME (2px border + a 6px
+   hard drop). Around a landscape bitmap that reads as the edge of a card;
+   around a cut-out character it reads as a box someone has been put in. */
+.ftz-invpaste-art img{border:none;box-shadow:none;border-radius:0;
+  max-height:250px;width:auto;max-width:100%;}
+@media(max-width:760px){
+  .ftz-invpaste .fs-redeem-split{grid-template-columns:1fr;}
+  .ftz-invpaste-art{align-items:center;}
+  .ftz-invpaste-art img{max-height:150px;margin:0 auto;}}
 
 /* Character art is not drawn at a uniform scale — `_ftzNotFound` now tags the
    block with which one it used so each can be sized honestly. The battle
@@ -18951,15 +19007,20 @@ body.has-announce .main{padding-top:var(--ann-h);}
 .gs-card{max-width:760px;width:min(760px,calc(100vw - 40px));}
 .gs-x{position:absolute;top:14px;right:14px;z-index:6;}
 .gs-viewport{position:relative;overflow:hidden;height:352px;flex-shrink:0;}
+/* ⚠️ The CURVE is what makes this read as a slide rather than a cut. The first
+   pass used `cubic-bezier(.4,0,.16,1)`, which eases IN as well as out: measured
+   frame by frame it sat still for ~100ms after the click, then crossed 500px in
+   the next 100ms, then crawled into place. Nothing physical moves like that, so
+   it read as a jump. A pure ease-OUT leaves the instant you press Next and
+   decelerates into the stop, which is the movement the eye expects. */
 .gs-track{display:flex;height:100%;width:100%;
-  transition:transform .5s cubic-bezier(.4,0,.16,1);}
+  transition:transform .58s cubic-bezier(.22,.9,.24,1);}
 .gs-frame{flex:0 0 100%;width:100%;height:100%;display:flex;align-items:center;
   gap:26px;padding:34px 40px;position:relative;overflow:hidden;}
 .gs-frame--artleft{flex-direction:row;}
 
 .gs-art{flex:0 0 224px;display:flex;align-items:center;justify-content:center;}
-.gs-art img{width:100%;height:auto;max-height:258px;object-fit:contain;display:block;
-  filter:drop-shadow(0 14px 24px rgba(0,0,0,.45));}
+.gs-art img{width:100%;height:auto;max-height:258px;object-fit:contain;display:block;}
 .gs-txt{flex:1;min-width:0;}
 .gs-eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   color:var(--accent);margin-bottom:8px;}

@@ -18,6 +18,69 @@ wants it worked on next. The page already has an Activities tab (hidden behind
 this is a rework of something half-built, not a green field. **Ask what they want
 it to be before building.**
 
+## 🟢 SHIPPED — Round 11 (`2026fix503`, branch `claude/ui-polish-redesigns-xf43er`)
+
+### ❌ ONE CLOSE BUTTON, EVERYWHERE — `.ftz-close-btn` + the inline FA `xmark`
+The user loved Add Friend's close button and wanted it on every card popup. The
+difference was never CSS: **31 popups closed with a bare `&times;`** (the thin
+multiplication sign) and exactly **one** used FontAwesome's solid `xmark`. All
+44 sites now carry the **same inline `xmark` path**, plus the four bespoke
+closers (`trade-close`, `sim-close`, `simple-modal-close`, `ch-modal-close`) and
+three hand-styled inline ones. **Adding a card? `<button class="ftz-close-btn
+ftz-ac-x">` + that svg, nothing else.**
+- ⚠️ **INLINE, not `<i class="fa-solid fa-xmark">`** — even though that's what
+  the loved card used. FA is a CDN dependency, and the one control that must
+  never fail to draw is the way OUT of a modal. Identical glyph, no network.
+- ⚠️ The svg is sized in `em`, so every existing `.ftz-ac-x` (24px) vs bare
+  (20px) relationship survives untouched. Colour is `color-mix(var(--text) 38%)`
+  — the old hardcoded `rgba(255,255,255,.3)` could only be right in one theme.
+- Box grew to `1.5em` square for a real hit area; the glyph did not move.
+
+### 🧭 Get Started — the slide, the voice, the art
+- **🐞 IT SLID, BUT ON THE WRONG CURVE.** `cubic-bezier(.4,0,.16,1)` eases IN as
+  well as out: measured frame by frame it **sat still for ~100ms after the
+  click, crossed 500px in the next 100ms**, then crawled in. Nothing physical
+  moves like that, so it read as a cut. Now `.58s cubic-bezier(.22,.9,.24,1)` —
+  a pure ease-out; at 98ms it has already travelled, then decelerates. Verified
+  by sampling the track matrix: 31 distinct positions, both frames on screen
+  mid-flight.
+- **Drop-shadow removed** from the character art.
+- **Copy rewritten**: no em dashes anywhere (the user finds them AI-ish), warmer
+  and less corny, light kingdom flavour without the costume. 13–32 words a frame.
+- **The 50 Onyx cannot be farmed.** `guide.done` now goes in the **same write**
+  as the balance and the write is checked: if it fails, **both halves roll back**
+  and the card says so. Marking second would pay out on every replay whenever a
+  write was dropped, which on this egress budget is not hypothetical. Plus a
+  `_gsPaying` re-entrancy latch for the double-click.
+
+### 🧭 Discover round 3
+- **"I have an invite" is the Fortshop's Trade button** — literally
+  `.fs-btn.fs-tradebtn` — so both page topbars carry the same 3D control instead
+  of one raised and one flat. Icon is the user's supplied FA id-card SVG.
+- **🐞 THE THREE STAT PLATES DID NOT MATCH.** At `rgba(0,0,0,.45)` a plate was
+  more art than plate, so the one over the bright yellow gamepad came out a
+  different colour from its neighbours: one component reading as three. Now
+  `color-mix(var(--bg) 93%)` with `blur(16px) saturate(.55)` — verified all three
+  compute an identical signature.
+- **⚠️ THE HERO WAS NEVER APPEARANCE-SAFE.** Both layers were hardcoded
+  `rgba(9,10,14,…)`, so under any other appearance the scrim was a different
+  colour from the page it dissolves into and the art met the page at a seam.
+  Every stop on both layers is now mixed from `var(--bg)`.
+- **The ramp is a real smoothstep** (`t²(3-2t)`, 21 stops, 15%→100%). Hand-picked
+  stops have kinks, and a slope change in a gradient is exactly what the eye
+  reads as a band.
+- **"communities" → "bastions".**
+
+### 🔗 "I have an invite" rebuilt on the Redeem Onyx Codes card
+Wears `.fs-redeem` wholesale (split, hero, labelled input, note, footer) because
+both cards do the same job: take a string, check it, open a door.
+⚠️ `.fs-redeem-art img` carries the gift card's **ink frame** (2px border + 6px
+hard drop) — correct around a landscape bitmap, but around a cut-out character it
+draws a box round him. Overridden off.
+
+⚠️ **LIVE-VERIFY:** the guide's slide on a real machine; the close button on a
+dozen different popups; the Discover hero under each appearance; the invite card.
+
 ## 🟢 SHIPPED — Round 10 (`2026fix502`, branch `claude/ui-polish-redesigns-xf43er`)
 
 ### 🧭 GET STARTED — the guided welcome (`_ftzShowGetStarted`)

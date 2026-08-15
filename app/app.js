@@ -5640,7 +5640,7 @@ function _streakInfoCard() {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card fs-streakcard" role="dialog" aria-label="How streaks work">
-      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('ftz-streak-info')?.remove()">&times;</button>
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('ftz-streak-info')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="fs-sk-head">
         <span class="fs-sk-flame">${typeof _streakFlameSvg === 'function' ? _streakFlameSvg(30) : '<i class="fa-solid fa-fire"></i>'}</span>
         <span class="fs-sk-n">${_ftzCompactNum(streak)}</span>
@@ -14073,7 +14073,7 @@ function deleteMsg(msgId, context) {
   overlay.innerHTML = `<div class="ftz-confirm-card ftz-del-card" style="max-width:472px;">
     <div class="ftz-del-head">
       <div class="ftz-confirm-title" style="margin-bottom:0;">Delete Message</div>
-      <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn">&times;</button>
+      <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
     </div>
     <div class="ftz-del-sub">Are you sure you want to delete this message?</div>
     ${previewHTML}
@@ -15452,7 +15452,7 @@ function _confirmAcceptFriendRequest(username){
     overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:480px;">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;">
         <div class="ftz-confirm-title" style="margin-bottom:0;">Accept friend request?</div>
-        <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn">&times;</button>
+        <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       </div>
       <div class="ftz-confirm-text">This may be someone you don't know. You don't share any mutual friends or small mutual bastions with them.</div>
       <div class="ftz-modal-foot">
@@ -15816,7 +15816,7 @@ function _discRenderHero() {
                   onclick="filterDiscover('')" aria-label="Clear search"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="disc-hero2-stats">
-          <div class="disc-hstat"><b data-n="${total}">0</b><span>communities</span></div>
+          <div class="disc-hstat"><b data-n="${total}">0</b><span>bastions</span></div>
           <div class="disc-hstat"><b data-n="${members}">0</b><span>total members</span></div>
           <div class="disc-hstat"><b data-n="${mine}">0</b><span>joined by you</span></div>
         </div>
@@ -16161,30 +16161,40 @@ function _invOpenPaste() {
   const ov = document.createElement('div');
   ov.className = 'ftz-confirm-overlay';
   ov.id = 'ftz-inv-paste';
+  // Built on the Redeem Onyx Codes card (`.fs-redeem`), not a shape of its own:
+  // both cards do exactly the same job — take a string, check it, open a door —
+  // so they should look like the same component. Only the art column differs,
+  // because a character PNG is not a landscape gift card.
   ov.innerHTML = `
-    <div class="ftz-confirm-card ftz-ac-card ftz-invpaste" role="dialog" aria-label="Redeem an invite">
-      <button class="ftz-close-btn ftz-ac-x" onclick="document.getElementById('ftz-inv-paste').remove()" aria-label="Close">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-      <div class="ftz-invpaste-h">
-        <div class="ftz-invpaste-ic"><i class="fa-solid fa-envelope-open-text"></i></div>
-        <div>
-          <div class="ftz-invpaste-t">Got an invite?</div>
-          <div class="ftz-invpaste-s">Paste the link or the code and we'll find the bastion.</div>
+    <div class="ftz-confirm-card ftz-ac-card fs-redeem ftz-invpaste" role="dialog" aria-label="Redeem an invite">
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('ftz-inv-paste')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
+      <div class="fs-redeem-split">
+        <div class="fs-redeem-main">
+          <div class="fs-redeem-hero">
+            <div class="ftz-ac-title">Got an invite?</div>
+            <div class="ftz-ac-sub">Paste it in and we'll walk you to the gate.</div>
+          </div>
+          <label class="fs-redeem-lb" for="inv-paste-in">Invite link or code</label>
+          <input id="inv-paste-in" class="settings-input fs-redeem-in" type="text" placeholder="Paste your invite"
+                 autocomplete="off" spellcheck="false"
+                 oninput="document.getElementById('inv-paste-go').disabled=!this.value.trim();document.getElementById('inv-paste-err')?.classList.remove('show')"
+                 onkeydown="if(event.key==='Enter'&&!document.getElementById('inv-paste-go').disabled)_invSubmitPaste()">
+          <div class="fs-redeem-err" id="inv-paste-err"></div>
+          <div class="fs-redeem-note"><i class="fa-solid fa-circle-info"></i><span>Any shape works: a full link, an <b>invite.fortized.com</b> address, or just the code on its own.</span></div>
+        </div>
+        <div class="fs-redeem-art ftz-invpaste-art">
+          <img src="${_ftzCharSrc('point')}" alt="" draggable="false" onerror="this.closest('.fs-redeem-art')?.remove()">
         </div>
       </div>
-      <div class="ftz-invpaste-b">
-        <input class="settings-input" id="inv-paste-in" placeholder="invite.fortized.com/…"
-               autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')_invSubmitPaste()">
-        <div class="ftz-invpaste-err" id="inv-paste-err"></div>
-      </div>
-      <div class="ftz-modal-foot">
-        <button class="fs-btn" onclick="document.getElementById('ftz-inv-paste').remove()">Cancel</button>
-        <button class="fs-btn fs-btn--primary" onclick="_invSubmitPaste()">Proceed</button>
+      <div class="fs-redeem-acts">
+        <button class="fs-btn" onclick="document.getElementById('ftz-inv-paste')?.remove()">Cancel</button>
+        <button class="fs-btn fs-btn--primary" id="inv-paste-go" disabled onclick="_invSubmitPaste()">Proceed</button>
       </div>
     </div>`;
   ov.addEventListener('mousedown', e => { if (e.target === ov) ov.remove(); });
   document.body.appendChild(ov);
+  ov.tabIndex = -1;
+  ov.addEventListener('keydown', e => { if (e.key === 'Escape') ov.remove(); });
   setTimeout(() => document.getElementById('inv-paste-in')?.focus(), 40);
 }
 
@@ -16193,7 +16203,8 @@ function _invSubmitPaste() {
   const err = document.getElementById('inv-paste-err');
   const code = _inviteCodeFrom(inp?.value);
   if (!code) {
-    if (err) err.textContent = "That doesn't look like an invite link.";
+    // `.fs-redeem-err` is opacity:0 until it's told to show.
+    if (err) { err.textContent = "That doesn't look like an invite. Check the link and try again."; err.classList.add('show'); }
     inp?.focus();
     return;
   }
@@ -19680,7 +19691,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
     <div style="padding:26px 28px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
         <div style="font-family:var(--font-display);font-size:19px;font-weight:800;color:#fff;">Create Channel</div>
-        <button id="crm-close" class="ftz-close-btn">&times;</button>
+        <button id="crm-close" class="ftz-close-btn"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       </div>
       <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:20px;">in ${escapeHTML(b.name)}</div>
       <div style="font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:10px;">Channel Type</div>
@@ -22028,7 +22039,7 @@ async function _cmBoostAd(adIdx) {
         <div class="ftz-confirm-title" style="margin-bottom:2px;">Boost this ad</div>
         <div style="font-size:12px;color:var(--muted-light);">Spend Onyx to push <strong style="color:#fff;">${escapeHTML(ad.title||'Untitled')}</strong> higher in rotation.</div>
       </div>
-      <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn">&times;</button>
+      <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin:14px 0 12px;padding:9px 12px;background:rgba(255,249,62,.05);border:1px solid rgba(255,249,62,.12);border-radius:10px;font-size:12px;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--accent)"><circle cx="12" cy="12" r="10"/></svg>
@@ -27248,7 +27259,7 @@ function _showAvatarPickerModal() {
   ov.innerHTML = `<div class="ftz-confirm-card" style="max-width:520px;padding:0;overflow:hidden;">
     <div style="padding:20px 24px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.04);">
       <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;">Select Avatar</div>
-      <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn">&times;</button>
+      <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
     </div>
     <div style="padding:0 24px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div onclick="this.closest('.ftz-confirm-overlay').remove();document.getElementById('pfp-file-inp')?.click();" style="padding:32px 16px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;transition:all .15s;" onmouseover="this.style.borderColor='rgba(255,249,62,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'">
@@ -27721,7 +27732,7 @@ function _showBannerPickerMenu(event) {
   ov.innerHTML = `<div class="ftz-confirm-card" style="max-width:520px;padding:0;overflow:hidden;">
     <div style="padding:20px 24px 16px;display:flex;align-items:center;justify-content:space-between;">
       <div style="font-family:var(--font-display);font-size:18px;font-weight:800;">Choose a Banner</div>
-      <button onclick="this.closest('.ftz-confirm-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;">&times;</button>
+      <button class="ftz-close-btn" aria-label="Close" onclick="this.closest('.ftz-confirm-overlay').remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
     </div>
     <div style="padding:0 24px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div onclick="this.closest('.ftz-confirm-overlay').remove();document.getElementById('banner-file-inp')?.click();" style="padding:24px 16px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;transition:border-color .15s,background .15s;" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.background='rgba(255,249,62,.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='rgba(255,255,255,.03)'">
@@ -27881,7 +27892,7 @@ async function toggleNotifPanel() {
       <span style="color:inherit;display:inline-flex;"><svg width="18" height="18" viewBox="0 0 512 512" fill="currentColor"><path d="M91.8 32C59.9 32 32.9 55.4 28.4 86.9L.6 281.2c-.4 3-.6 6-.6 9.1L0 416c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-125.7c0-3-.2-6.1-.6-9.1L483.6 86.9C479.1 55.4 452.1 32 420.2 32L91.8 32zm0 64l328.5 0 27.4 192-59.9 0c-12.1 0-23.2 6.8-28.6 17.7l-14.3 28.6c-5.4 10.8-16.5 17.7-28.6 17.7l-120.4 0c-12.1 0-23.2-6.8-28.6-17.7l-14.3-28.6c-5.4-10.8-16.5-17.7-28.6-17.7L64.3 288 91.8 96z"/></svg></span>
       <h3>${_t('notif.inbox')}</h3>
       <button class="fs-btn npv-mark" onclick="markAllRead()">${_t('notif.mark_all')}</button>
-      <button class="ftz-close-btn ftz-ac-x npv-x" aria-label="Close" onclick="_closeEl('notif-panel-v2');_closeEl('notif-panel-v2-overlay');notifPanelOpen=false">&times;</button>
+      <button class="ftz-close-btn ftz-ac-x npv-x" aria-label="Close" onclick="_closeEl('notif-panel-v2');_closeEl('notif-panel-v2-overlay');notifPanelOpen=false"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
     </div>
     <div class="npv-tabs" id="npv-tabs">
       <button class="npv-tab${_notifTabFilter === 'all' ? ' active' : ''}" onclick="_setNotifTab('all',this)">${_t('notif.tab.all')}</button>
@@ -29326,7 +29337,7 @@ function swiftawLifecheck(opts = {}) {
     overlay.onclick = e => { if (e.target === overlay) done(false); };
     overlay.innerHTML = `
       <div class="ftz-confirm-card lc-card ftz-ov-swft" role="dialog" aria-label="Verify you are human">
-        <button class="ftz-close-btn lc-x" aria-label="Close">&times;</button>
+        <button class="ftz-close-btn lc-x" aria-label="Close"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
         <div class="lc-head">
           <div class="lc-title">${escapeHTML(opts.title || 'Quick human check')}</div>
           <div class="lc-sub">${escapeHTML(opts.reason || 'Confirm you’re human to continue.')}</div>
@@ -29796,7 +29807,7 @@ function showReport(opts) {
           <div class="ftz-rc-title">${escapeHTML(opts.title || 'Report')}</div>
           <div class="ftz-rc-sub">${escapeHTML(opts.subtitle || 'Help us keep Fortized safe')}</div>
         </div>
-        <button class="ftz-close-btn" aria-label="Close" onclick="this.closest('.ftz-confirm-overlay').remove()">&times;</button>
+        <button class="ftz-close-btn" aria-label="Close" onclick="this.closest('.ftz-confirm-overlay').remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       </div>
       <div class="ftz-rc-body">
         ${subjectHTML}
@@ -33209,7 +33220,7 @@ function _ftzShowWhatsNew(rel) {
   ov.onclick = e => { if (e.target === ov) close(); };
   ov.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card ftz-wn" role="dialog" aria-label="What's New">
-      <button class="ftz-close-btn ftz-ac-x" aria-label="Close">&times;</button>
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="ftz-wn-stage">
         <div class="ftz-wn-spot" aria-hidden="true"></div>
         <div class="ftz-wn-herald">
@@ -33311,25 +33322,25 @@ function _gsFrames() {
   return [
     { art: 'celebrate', side: 'right',
       eyebrow: 'Welcome', title: `Good to have you, ${escapeHTML(_gsName())}.`,
-      body: 'Two minutes and you\'ll know your way around. You can leave at any point — this waits for you.' },
+      body: 'A quick walk round the realm and you\'ll know where everything is. Step out whenever you like; this waits for you.' },
 
     { art: 'device', side: 'left',
-      eyebrow: 'What this is', title: 'Fortized is where your people are.',
-      body: 'Message friends one to one, start a group, or gather everyone in a <b>bastion</b> — a community with its own channels, roles and emojis.' },
+      eyebrow: 'What this is', title: 'It\'s a place to talk.',
+      body: 'Message a friend, start a group, or gather everyone into a <b>bastion</b>: a community with its own channels, roles and emojis.' },
 
     { art: 'point', side: 'right',
       eyebrow: 'What you can do', title: 'Make it yours.',
-      body: 'Pick a font, an effect and a colour for your name. Wear a nameplate, an avatar decoration, a whole new look for the app. None of it is behind a paywall.' },
+      body: 'Choose a font, an effect and a colour for your name. Add a nameplate, an avatar decoration, or reskin the whole app. None of that costs real money.' },
 
-    // The herald, not the celebration knight — this frame is an announcement,
+    // The herald, not the celebration knight: this frame is an announcement,
     // and celebrate is already the welcome frame three cards back.
     { art: 'announce', side: 'left', overlay: 'rad',
-      eyebrow: 'Radiance', title: 'The membership, if you want it.',
-      body: 'Bigger uploads, animated banners and emojis anywhere, custom cursors, early access — and 10% off everything in the Fortshop. Everything above stays free either way.' },
+      eyebrow: 'Radiance', title: 'The membership, if you fancy it.',
+      body: 'Bigger uploads, animated banners, your emojis anywhere, custom cursors, early access, and 10% off the Fortshop. Everything on the last card stays free either way.' },
 
     { art: 'onyx', side: 'right',
       eyebrow: 'Onyx', title: 'The realm\'s currency.',
-      body: 'Quests pay it out — a little every day, more each week. Claim them from the <b>Quests</b> page; nothing pays out silently. Spend it in the Fortshop.' },
+      body: 'Quests pay it out, a little each day and more each week. You claim it yourself from the <b>Quests</b> page; nothing ever pays out behind your back. Spend it in the Fortshop.' },
 
     { art: 'point', side: 'left', step: 'friend', skip: 'Skip',
       eyebrow: 'Step 1 of 4', title: 'Find someone you know.',
@@ -33341,17 +33352,17 @@ function _gsFrames() {
 
     { art: 'onyx', side: 'right', step: 'quest', skip: 'Later',
       eyebrow: 'Step 2 of 4', title: 'Claim a quest.',
-      body: 'Your daily claim is waiting. It takes one click and it\'s the fastest Onyx you\'ll ever make.',
+      body: 'Your daily claim is sitting there waiting. One click, and it\'s the easiest Onyx you\'ll ever earn.',
       acts: [{ label: 'Open Quests', fn: "_gsAct('quests')", primary: true }] },
 
     { art: 'device', side: 'left', step: 'shop', skip: 'Later',
       eyebrow: 'Step 3 of 4', title: 'Star something you want.',
-      body: 'Have a wander round the Fortshop and heart one thing. It\'ll be waiting in your wishlist when you can afford it.',
+      body: 'Have a wander round the Fortshop and heart one thing. It\'ll be in your wishlist when you can afford it.',
       acts: [{ label: 'Open the Fortshop', fn: "_gsAct('shop')", primary: true }] },
 
     { art: 'battle', side: 'right', step: 'bastion', skip: 'Skip',
       eyebrow: 'Step 4 of 4', title: 'Raise your own bastion.',
-      body: 'Or don\'t — plenty of people never make one. If you do, it\'s yours to name, decorate and run however you like.',
+      body: 'Or don\'t. Plenty of people never do. If you go for it, it\'s yours to name, decorate and rule however you like.',
       acts: [
         { label: 'Create a bastion', fn: "_gsAct('create')", primary: true },
         { label: 'Find one to join', fn: "_gsAct('discover')" },
@@ -33359,11 +33370,11 @@ function _gsFrames() {
 
     { art: 'celebrate', side: 'left',
       eyebrow: 'Well done', title: 'That\'s the tour.',
-      body: `You've got the shape of it. Everything else you'll find as you go — and the ${g.skipped ? 'steps you skipped are' : 'quests are'} always there when you want them.` },
+      body: `You've got the shape of it. The rest you'll pick up as you go, and ${g.skipped ? 'anything you skipped is' : 'the quests are'} still there when you want them.` },
 
     { art: 'onyx', side: 'right', last: true,
       eyebrow: 'All set', title: 'All set!',
-      body: `Here's ${_FTZ_GS_REWARD} Onyx to start you off. Go and find your people.` },
+      body: `Here's ${_FTZ_GS_REWARD} Onyx to start you off. Now go and find your folks.` },
   ];
 }
 
@@ -33411,7 +33422,7 @@ function _gsCopyInvite() {
   const link = code ? (location.origin + location.pathname + '?ref=' + code) : location.origin;
   navigator.clipboard?.writeText(link).then(() => {
     _gsMark('friend');
-    toast('Invite link copied — send it to anyone', 'success');
+    toast('Invite link copied. Send it to anyone.', 'success');
     _gsPaint();
   }).catch(() => toast('Could not copy the link', 'error'));
 }
@@ -33426,13 +33437,39 @@ function _gsGo(d) {
   _gsPaint();
 }
 
+// The completion reward is paid EXACTLY ONCE per account, ever. The guide can
+// be reopened from the Quests page as often as anyone likes; it never pays
+// twice, so there is nothing here to farm.
+//
+// ⚠️ `guide.done` is the entire mechanism, so it goes into the SAME write as the
+// balance: either the account is marked as having taken the tour AND is 50 Onyx
+// richer, or neither happened and the tour can be finished again later. Marking
+// second would hand out the reward on every replay whenever a write was dropped
+// — which, on this project's egress budget, is not hypothetical.
+// ⚠️ `_gsPaying` closes the other door: `_gsFinish` awaits, and without it a
+// double-click on "Start exploring" could enter twice before the flag lands.
+let _gsPaying = false;
+
 async function _gsFinish() {
-  const already = CU?.guide?.done;
+  if (_gsPaying) return;
+  const already = !!CU?.guide?.done;
   if (CU && !already) {
+    _gsPaying = true;
+    const prevGuide = CU.guide, prevOnyx = CU.onyx || 0;
     CU.guide = { ...(CU.guide || {}), done: true, at: 0 };
-    CU.onyx = (CU.onyx || 0) + _FTZ_GS_REWARD;
+    CU.onyx = prevOnyx + _FTZ_GS_REWARD;
+    let ok = false;
+    try { ok = (await saveUser(true)) !== false; } catch (_) { ok = false; }
+    _gsPaying = false;
+    if (!ok) {
+      // Neither half happened. Say so rather than showing a balance that will
+      // evaporate on the next refresh.
+      CU.guide = prevGuide; CU.onyx = prevOnyx;
+      _gsClose(true);
+      toast('Could not save that just now. Your reward is still waiting for you.', 'error');
+      return;
+    }
     try { _fsLogTx('quest', _FTZ_GS_REWARD, 'Welcome guide'); } catch (_) {}
-    try { await saveUser(); } catch (_) {}
     try { updateOnyxDisplay?.(); } catch (_) {}
   }
   _gsClose(true);
@@ -33501,7 +33538,7 @@ function _ftzShowGetStarted(startAt) {
   ov.id = 'ftz-gs';
   ov.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card gs-card" role="dialog" aria-label="Get started">
-      <button class="ftz-close-btn ftz-ac-x gs-x" aria-label="Close">&times;</button>
+      <button class="ftz-close-btn ftz-ac-x gs-x" aria-label="Close"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="gs-viewport">
         <div class="gs-track">${frames.map((f, i) => _gsFrameHTML(f, i)).join('')}</div>
       </div>
@@ -33762,7 +33799,7 @@ function showFeedbackToast(actionLabel, actionType, meta) {
   el.dataset.actionType = actionType;
   el.dataset.context = context;
   el.innerHTML = `
-    <button class="ftz-close-btn ftz-ac-x fb-x" aria-label="No thanks" onclick="_fbDismiss(this)">&times;</button>
+    <button class="ftz-close-btn ftz-ac-x fb-x" aria-label="No thanks" onclick="_fbDismiss(this)"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
     <div class="fb-title">How did that go?</div>
     <div class="fb-sub">You just used <b>${escapeHTML(actionLabel)}</b>. Tell us how it felt — or close this, it's genuinely optional.</div>
     <div class="fb-rates">
@@ -34954,7 +34991,7 @@ async function _showInviteFriendsPanel() {
     <div style="padding:20px 20px 14px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
         <h3 style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin:0;letter-spacing:-.02em;">Invite people to Fortized</h3>
-        <button onclick="this.closest('.input-dialog-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:4px 8px;border-radius:8px;transition:all .15s;">&times;</button>
+        <button class="ftz-close-btn" aria-label="Close" onclick="this.closest('.input-dialog-overlay').remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       </div>
       <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:16px;">You earn <strong style="color:var(--accent);">9 Onyx</strong> for each friend who joins!</div>
       <div style="padding:16px;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);">
@@ -35061,7 +35098,7 @@ async function openRadianceGiftModal() {
           Gift Radiance
         </div>
       </div>
-      <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn">&times;</button>
+      <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
     </div>
     <div style="font-size:13px;color:rgba(255,255,255,.55);margin-bottom:16px;">Select up to 5 friends to send them a 30-day Radiance subscription.</div>
 
@@ -35286,7 +35323,7 @@ async function showBastionInviteUI(bastionIdx) {
     <div style="padding:20px 20px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
         <h3 style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin:0;letter-spacing:-.02em;">Invite friends to ${escapeHTML(b.name)}</h3>
-        <button onclick="this.closest('.input-dialog-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:4px 8px;border-radius:8px;transition:all .15s;">&times;</button>
+        <button class="ftz-close-btn" aria-label="Close" onclick="this.closest('.input-dialog-overlay').remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       </div>
       <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:14px;display:flex;align-items:center;gap:8px;">${b.icon?`<img src="${escapeHTML(b.icon)}" style="width:18px;height:18px;border-radius:6px;object-fit:cover;">`:`<span style="font-family:var(--font-display);font-weight:800;font-size:14px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`} <span style="font-weight:600;color:rgba(255,255,255,.6);">${escapeHTML(b.name)}</span></div>
       <div style="position:relative;margin-bottom:14px;">
@@ -40324,7 +40361,7 @@ function _openSafetyActionCard(kind, username) {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card ftz-ac-card--${kind}" role="dialog" aria-label="${escapeHTML(primaryLabel + ' ' + username)}">
-      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="this.closest('.ftz-confirm-overlay').remove()">&times;</button>
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="this.closest('.ftz-confirm-overlay').remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="ftz-ac-hero">
         <div class="ftz-ac-av">${buildAvatarHTML(pfp, dn, 72)}${_acGlyphHTML(kind)}</div>
         <div class="ftz-ac-title"><span class="ftz-ac-verb">${primaryLabel}</span> <span class="ftz-ac-name">${escapeHTML(dn)}</span></div>
@@ -44081,7 +44118,7 @@ function _showUploadLimitCard() {
   ov.innerHTML = `<div class="ftz-confirm-card ftz-uplimit-card">
     <div class="ftz-uplimit-head">
       <div class="ftz-confirm-title" style="margin:0;">Too many uploads!</div>
-      <button class="ftz-close-btn" onclick="this.closest('.ftz-confirm-overlay').remove()" aria-label="Close">&times;</button>
+      <button class="ftz-close-btn" onclick="this.closest('.ftz-confirm-overlay').remove()" aria-label="Close"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
     </div>
     <div class="ftz-uplimit-body">You can only upload ${_ATT_MAX} files at a time.</div>
     <button class="btn-yellow ftz-uplimit-btn" onclick="this.closest('.ftz-confirm-overlay').remove()">Got it</button>
@@ -49691,7 +49728,7 @@ function _fsOpenBundle(id, idx) {
       <div class="fs-di-right">
         <div class="fs-di-right-bg" style="${col && col.coverImg ? `background-image:url('${col.coverImg}')` : `background-image:${col ? col.cover : (item.gradient || 'linear-gradient(120deg,#14161d,#1f232b)')}`}"></div>
         <div class="fs-di-collection"><i class="fa-solid fa-layer-group"></i> ${escapeHTML(item.name)}</div>
-        <button class="ftz-close-btn ftz-ac-x fs-di-x" aria-label="Close" onclick="document.getElementById('fs-item-modal')?.remove()">&times;</button>
+        <button class="ftz-close-btn ftz-ac-x fs-di-x" aria-label="Close" onclick="document.getElementById('fs-item-modal')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
         <div class="fs-di-stage fs-di-stage--${item.kind}">${_fsRightPanel(item)}</div>
         ${n > 1 ? `<button class="fs-bd-arr fs-bd-arr--l" onclick="_fsOpenBundle('${bd.id}',${idx - 1})" aria-label="Previous item">${chev('l')}</button>
         <button class="fs-bd-arr fs-bd-arr--r" onclick="_fsOpenBundle('${bd.id}',${idx + 1})" aria-label="Next item">${chev('r')}</button>` : ''}
@@ -50088,7 +50125,7 @@ function _fsTradeRender() {
   const out = _fsTrades('out').filter(t => t.status === 'pending');
   const tb = (id, label, n) => `<button class="fs-trade-tab${tab === id ? ' active' : ''}" onclick="_fsTradeSetTab('${id}')">${label}${n ? `<span class="fs-trade-n">${n}</span>` : ''}</button>`;
   card.innerHTML = `
-    <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-trade-modal')?.remove();_fsTradeReset()">&times;</button>
+    <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-trade-modal')?.remove();_fsTradeReset()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
     <div class="ftz-ac-hero ftz-ac-hero--noicon">
       <div class="ftz-ac-title">Trades</div>
       <div class="ftz-ac-sub">Swap Onyx and Fortshop items with other players.</div>
@@ -50558,7 +50595,7 @@ function _fsTxRender() {
     ? _ftzSelectHTML('fs-txrange', rid, _FS_TX_RANGES.map(r => ({ value: r.id, label: r.label })), "_fsSetTxRange(__VALUE__)")
     : '';
   card.innerHTML = `
-    <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-tx-modal')?.remove()">&times;</button>
+    <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-tx-modal')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
     <div class="ftz-ac-hero ftz-ac-hero--noicon">
       <div class="ftz-ac-title">My Transactions</div>
       <div class="ftz-ac-sub">Where your Onyx came from, and where it went.</div>
@@ -50630,7 +50667,7 @@ function _fsSendCard(to) {
   // surfaces wear — this is a Radiance perk, so it wears it too.
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card ftz-ov-rad fs-send" role="dialog" aria-label="Send Onyx">
-      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="_fsSendClose()">&times;</button>
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="_fsSendClose()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="ftz-ac-hero ftz-ac-hero--noicon">
         <div class="fs-send-mark">${_FS_SEND_SVG}</div>
         <div class="ftz-ac-title">Send Onyx</div>
@@ -50881,7 +50918,7 @@ function _fsSendOnyxUpsell(to) {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card ftz-ov-rad fs-send fs-send--locked" role="dialog" aria-label="Sending Onyx requires Radiance">
-      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-send-modal')?.remove()">&times;</button>
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-send-modal')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="ftz-ac-hero ftz-ac-hero--noicon">
         <div class="fs-send-mark">${_FS_SEND_SVG}</div>
         <div class="ftz-ac-title">Sending Onyx requires Radiance</div>
@@ -50939,7 +50976,7 @@ function _fsOpenRedeem() {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card fs-redeem" role="dialog" aria-label="Redeem Onyx codes">
-      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-redeem-modal')?.remove()">&times;</button>
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-redeem-modal')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="fs-redeem-split">
         <div class="fs-redeem-main">
           <div class="fs-redeem-hero">
@@ -51068,7 +51105,7 @@ function _fsOpenBuyOnyx() {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card" role="dialog" aria-label="Buy Onyx">
-      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-buyonyx-modal')?.remove()">&times;</button>
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-buyonyx-modal')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="ftz-ac-hero ftz-ac-hero--noicon">
         <div class="ftz-ac-title">Buy Onyx</div>
         <div class="ftz-ac-sub">Onyx packs aren’t on sale yet.</div>
@@ -51099,7 +51136,7 @@ function _fsNotEnoughOnyx(cost, opts) {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card fs-nef" role="dialog" aria-label="Not enough Onyx">
-      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-nef-modal')?.remove()">&times;</button>
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-nef-modal')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="fs-nef-art"><img src="/fortized emojis/ohno.png" alt="" draggable="false"
         onerror="this.closest('.fs-nef-art')?.remove()"></div>
       <div class="ftz-ac-hero ftz-ac-hero--noicon">
@@ -51151,7 +51188,7 @@ function _fsOnyxReward(amount, sourceLabel, opts) {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card fs-reward" role="dialog" aria-label="Onyx earned">
-      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-reward-modal')?.remove()">&times;</button>
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-reward-modal')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="fs-reward-art"><img src="${_ftzCharSrc('onyx')}" alt="" draggable="false" onerror="this.closest('.fs-reward-art')?.remove()"></div>
       <div class="fs-reward-amt">${_FS_ONYX_IC}<b>+${_ftzCompactNum(amount)}</b></div>
       <div class="fs-reward-t">${o.code ? 'Code redeemed' : 'Quest complete'}</div>
@@ -51210,7 +51247,7 @@ function _fsOpenItem(id) {
         <div class="fs-di-tools">
           ${owned || equipped ? '' : `<button class="fs-di-tool ${onWL ? 'on' : ''}" title="${onWL ? 'In wishlist' : 'Add to wishlist'}" onclick="toggleWishlist('${item.id}');this.classList.toggle('on')">${_svgIcon('heart', 15)}</button>`}
         </div>
-        <button class="ftz-close-btn ftz-ac-x fs-di-x" aria-label="Close" onclick="document.getElementById('fs-item-modal')?.remove()">&times;</button>
+        <button class="ftz-close-btn ftz-ac-x fs-di-x" aria-label="Close" onclick="document.getElementById('fs-item-modal')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
         <div class="fs-di-stage fs-di-stage--${item.kind}">${_fsRightPanel(item)}</div>
       </div>
     </div>`;
@@ -51249,7 +51286,7 @@ function _fsPurchaseConfirm(opts) {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card fs-buy-card${rad ? ' fs-buy-card--rad ftz-ov-rad' : ''}" role="dialog" aria-label="Confirm purchase">
-      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-buy-modal')?.remove()">&times;</button>
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-buy-modal')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="ftz-ac-hero ftz-ac-hero--noicon">
         <div class="ftz-ac-title">Confirm purchase</div>
         <div class="ftz-ac-sub">Review your order before you spend your Onyx.</div>
@@ -52260,9 +52297,7 @@ function openCreateAdModal() {
           <div class="ch-editor-title">New Ad</div>
           <div class="ch-editor-sub">Configure how your ad will appear across the realm.</div>
         </div>
-        <button class="ch-modal-close" aria-label="Close" onclick="document.getElementById('modal-create-ad').remove()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+        <button class="ftz-close-btn" aria-label="Close" onclick="document.getElementById('modal-create-ad').remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       </div>
       <div class="ch-editor" style="padding:22px 24px;overflow-y:auto;flex:1;">
         <div class="ch-editor-form" style="background:transparent;border:none;padding:0;">
@@ -52417,9 +52452,7 @@ function openCreateApiKeyModal() {
           <div class="ch-editor-title">New API Key</div>
           <div class="ch-editor-sub">A name and a set of scopes. The key itself is shown once.</div>
         </div>
-        <button class="ch-modal-close" aria-label="Close" onclick="document.getElementById('modal-create-key').remove()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+        <button class="ftz-close-btn" aria-label="Close" onclick="document.getElementById('modal-create-key').remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       </div>
       <div style="padding:20px 24px;overflow-y:auto;">
         <div class="ch-field">
@@ -55326,7 +55359,7 @@ function _showRateLimitPopup() {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card fs-rl" role="dialog" aria-label="Slow down">
-      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('rate-limit-popup')?.remove()">&times;</button>
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('rate-limit-popup')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="fs-rl-art"><img src="/fortized%20emojis/knight_angry.png" alt="" draggable="false" onerror="this.closest('.fs-rl-art')?.remove()"></div>
       <div class="ftz-ac-hero ftz-ac-hero--noicon">
         <div class="ftz-ac-title">Whoa, easy there!</div>
@@ -57114,7 +57147,7 @@ function cancelRadiance() {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card ftz-ac-card--rad ftz-ov-rad" role="dialog" aria-label="Cancel Radiance">
-      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="this.closest('.ftz-confirm-overlay').remove()">&times;</button>
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="this.closest('.ftz-confirm-overlay').remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="ftz-ac-hero">
         <img class="ftz-ac-logo" src="/radiance-logo.png" alt="Radiance" onerror="this.remove()">
         <div class="ftz-ac-title">Cancel <img class="ftz-ac-word" src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/radianceText.png" alt="Radiance" onerror="this.replaceWith(document.createTextNode('Radiance'))">?</div>
@@ -65073,7 +65106,7 @@ function _renderTradeModalHTML() {
 
   return `
     <div class="trade-card" onclick="event.stopPropagation()">
-      <button class="trade-close" onclick="document.getElementById('trade-modal-overlay').remove()" aria-label="Close">×</button>
+      <button class="ftz-close-btn ftz-ac-x" onclick="document.getElementById('trade-modal-overlay').remove()" aria-label="Close"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="trade-hero">
         <div class="trade-hero-kicker">New Trade Offer</div>
         <div class="trade-hero-title">Swap Onyx & items with another user</div>
@@ -65985,7 +66018,7 @@ function _fsRenderItemDetail(it, kind) {
     : finalPrice.toLocaleString();
   return `
     <div class="sim-card" onclick="event.stopPropagation()">
-      <button class="sim-close" onclick="document.getElementById('shop-item-modal').remove()" aria-label="Close">×</button>
+      <button class="ftz-close-btn ftz-ac-x" onclick="document.getElementById('shop-item-modal').remove()" aria-label="Close"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="sim-hero sim-hero--${escapeHTML(rarity)}">
         ${isRareOrEvent ? `<div class="sim-hero-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>${escapeHTML(rarityLabel)}</div>` : ''}
         <div class="sim-hero-preview">${preview}</div>
@@ -66368,7 +66401,7 @@ function openShopBundleModal(id) {
   const safeId = escapeHTML(bundle.id).replace(/'/g, "\\'");
   overlay.innerHTML = `
     <div class="sim-card sim-card--bundle sim-hero--${escapeHTML(bundle.theme || 'onyx')}" onclick="event.stopPropagation()">
-      <button class="sim-close" onclick="document.getElementById('shop-item-modal').remove()" aria-label="Close">×</button>
+      <button class="ftz-close-btn ftz-ac-x" onclick="document.getElementById('shop-item-modal').remove()" aria-label="Close"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="sim-hero sim-hero--${escapeHTML(bundle.theme || 'onyx')}">
         <div class="sim-hero-badge">Bundle · save ${savingsPct}%</div>
         <div class="sim-hero-meta" style="max-width:none;">
@@ -66547,7 +66580,7 @@ function openSimpleModal(html) {
   m.className = 'simple-modal-wrap';
   m.id = 'simple-modal';
   m.innerHTML = `<div class="simple-modal-card">
-    <button class="simple-modal-close" onclick="closeSimpleModal()">×</button>
+    <button class="ftz-close-btn ftz-ac-x" onclick="closeSimpleModal()" aria-label="Close"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
     ${html}
   </div>`;
   m.onclick = (e) => { if (e.target === m) closeSimpleModal(); };
@@ -68836,7 +68869,7 @@ function _stfAsk(o) {
     ov.id = 'stf-ask';
     ov.innerHTML = `
       <div class="ftz-confirm-card ftz-ac-card stf-ask${opt.wide ? ' stf-ask--wide' : ''}" role="dialog" aria-label="${escapeHTML(opt.title || 'Action')}">
-        <button class="ftz-close-btn ftz-ac-x" aria-label="Close" data-act="cancel">&times;</button>
+        <button class="ftz-close-btn ftz-ac-x" aria-label="Close" data-act="cancel"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
         <div class="stf-ask-h">
           <span class="stf-ask-ic${opt.danger ? ' is-danger' : ''}">${opt.iconHTML || `<i class="fas ${opt.icon || 'fa-bolt'}"></i>`}</span>
           <span class="stf-ask-tx">
@@ -69247,7 +69280,7 @@ function _stfDossierShell(kind, key, title, icon) {
     d.id = 'stf-dossier';
     d.className = 'ftz-confirm-overlay stf-dossier-ov';
     d.innerHTML = `<div class="ftz-confirm-card ftz-ac-card stf-doss" role="dialog" aria-label="${escapeHTML(title)}">
-        <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="_stfDossierClose()">&times;</button>
+        <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="_stfDossierClose()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
         <div class="stf-doss-b" id="stf-doss-b">${_stfSkeleton(3)}</div>
       </div>`;
     document.body.appendChild(d);

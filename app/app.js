@@ -17805,12 +17805,19 @@ function initFortizedUXResilience() {
         if (data.text) {
           const existing = document.getElementById('sys-announce-bar');
           if (existing) existing.remove();
+          document.body.classList.remove('has-announce');
           _dismissedAnnouncement = null;
-          _listenAnnouncement();
+          // ⚠️ `_listenAnnouncement` is a no-op now — the poller owns the bar.
+          // Clearing the signature is what actually makes it repaint; without
+          // this the node was torn down here and the poller, still holding the
+          // old signature, considered itself up to date and never rebuilt it.
+          _lastAnnText = null;
         }
       },
       onAnnouncementCleared: function() {
         const bar = document.getElementById('sys-announce-bar');
+        document.body.classList.remove('has-announce');
+        _lastAnnText = null;
         if (bar) { bar.style.opacity='0'; bar.style.transform='translateY(-100%)'; setTimeout(()=>bar.remove(),300); }
       },
       onProfileUpdate: function(data) {
@@ -27508,12 +27515,14 @@ async function buildNotifList() {
     trade_accepted: 'fa-circle-check',
     trade_declined: 'fa-circle-xmark',
     trade_cancelled:'fa-circle-xmark',
+    onyx_received:  'fa-gem',
   };
   const colors = {
     friend_request:'#60a5fa', friend_accept:'#3ecf6e', dm:'#a78bfa',
     mention:'#ffd93e', bastion:'var(--accent)', call:'#3ecf6e', support_ticket:'#38bdf8',
     trade:'var(--accent)', trade_offer:'var(--accent)', trade_accepted:'#3ecf6e',
     trade_declined:'#ff0033', trade_cancelled:'#ff0033',
+    onyx_received:'var(--accent)',
   };
   // Pre-fetch user pfps for notifications that have a 'from' user
   const _notifUsers = {};
@@ -27575,6 +27584,13 @@ async function buildNotifList() {
     else if(n.type==='trade_accepted') text='<strong>'+escapeHTML(n.from||'')+'</strong> accepted your trade — check your inventory';
     else if(n.type==='trade_declined') text=(n.data?.reason==='expired'?'Your trade offer expired':'<strong>'+escapeHTML(n.from||'')+'</strong> declined your trade offer');
     else if(n.type==='trade_cancelled') text='<strong>'+escapeHTML(n.from||'')+'</strong> cancelled their trade offer';
+    else if(n.type==='onyx_received') {
+      // Money arriving is worth more than a generic line — say the amount, in
+      // the same glyph the wallet uses.
+      const amt = Number(n.amount) || 0;
+      text = '<strong>'+escapeHTML(n.from||'Someone')+'</strong> sent you '
+        + '<span class="np-onyx"><span class="rad-onyx-ic"></span>'+escapeHTML(_ftzFullNum(amt))+'</span>';
+    }
     else text=escapeHTML(n.text||'')||'New notification';
     const _alreadyFriends = n.type==='friend_request' && (CU?.friends||[]).includes(n.from);
     const _stillPending = n.type==='friend_request' && !_alreadyFriends && (CU?.friendRequestsReceived||[]).includes(n.from);
@@ -27593,6 +27609,8 @@ async function buildNotifList() {
              <button class="fs-btn np-ghost" onclick="event.stopPropagation();toggleNotifPanel();_fsOpenTrade('in')">View trade</button>
            </div>`
         : '<div class="np-actions"><span class="np-done">Already answered</span></div>';
+    } else if (n.type === 'onyx_received') {
+      actions = `<div class="np-actions"><button class="fs-btn np-ghost" onclick="event.stopPropagation();toggleNotifPanel();_fsOpenTransactions()">My transactions</button></div>`;
     } else if (n.type === 'trade_offer' && n.data) {
       const offer = n.data;
       const expired = offer.expires_at && Date.now() > offer.expires_at;
@@ -32630,39 +32648,53 @@ function _listenGlobalSettingsConsolidated() {
       // Every client's poller reaches the same conclusion on its own.
       const until = gs?.announcementUntil ? Date.parse(gs.announcementUntil) : 0;
       const expired = !!until && Date.now() > until;
+      // A start date lets a banner be written now and appear on the day — the
+      // same reason the take-down date exists, at the other end.
+      const from = gs?.announcementFrom ? Date.parse(gs.announcementFrom) : 0;
+      const early = !!from && Date.now() < from;
       const linkUrl = gs?.announcementLinkUrl || '';
       const linkLabel = gs?.announcementLinkLabel || (linkUrl ? 'Read more' : '');
       const canDismiss = gs?.announcementDismissible !== false;
-      const sig = (text && !expired) ? [text, colour, icon, linkUrl, linkLabel, canDismiss].join(' ') : null;
+      const lead = gs?.announcementLabel || '';
+      const flat = gs?.announcementFlat === true;
+      const live = !!text && !expired && !early;
+      const sig = live ? [text, colour, icon, linkUrl, linkLabel, lead, canDismiss, flat].join(' ') : null;
 
       if (sig !== _lastAnnText) {
         _lastAnnText = sig;
         const existing = document.getElementById('sys-announce-bar');
-        if (!text || expired) {
+        if (!live) {
           if (existing) { existing.style.opacity='0'; existing.style.transform='translateY(-100%)'; setTimeout(()=>existing.remove(),300); }
+          // Take the padding back the moment it goes, not 300ms later — the
+          // strip is already sliding out from under the app by then.
+          document.body.classList.remove('has-announce');
           _dismissedAnnouncement = null;
         } else if (text !== _dismissedAnnouncement) {
           if (existing) existing.remove();
-          const main = document.querySelector('.main');
-          if (!main) return;
 
-          // Overlay the top of `.main` — part of the layout, above its children.
+          // ⚠️ A fixed strip on <body>, NOT an absolute overlay inside `.main`.
+          // Sitting inside `.main` meant it covered the top of whatever was on
+          // screen; `body.has-announce` pads the shell down instead, so the bar
+          // displaces the app rather than hiding part of it.
           const bar = document.createElement('div');
           bar.id = 'sys-announce-bar';
-          bar.className = 'sys-announce-bar';
-          bar.style.cssText = 'position:absolute;top:0;left:0;right:0;height:40px;z-index:100;--ann:' + colour + ';';
+          bar.className = 'sys-announce-bar' + (flat ? ' is-flat' : '');
+          bar.style.setProperty('--ann', colour);
           // ⚠️ The glyph used to be rendered as `<img src="${gs.announcementIcon}">`
           // with an inline SVG STRING as its default — which is not a URL, so
           // every announcement drew a broken image. It is a Font Awesome class
           // now, drawn as an <i>, chosen by staff in the console.
           const safeLink = /^(https?:\/\/|\/)/i.test(linkUrl) ? linkUrl : '';
-          bar.innerHTML = (canDismiss ? `<button class="sa-close" onclick="_dismissAnnouncement()" aria-label="Dismiss">×</button>` : '')
-            + `<div class="sa-icon"><i class="fas ${escapeHTML(icon)}"></i></div>`
+          bar.innerHTML = `<div class="sa-icon"><i class="fas ${escapeHTML(icon)}"></i></div>`
+            + (lead ? `<span class="sa-label">${escapeHTML(lead)}</span><span class="sa-divider"></span>` : '')
             + `<span class="sa-text">${escapeHTML(text)}</span>`
-            + (safeLink ? `<a class="sa-link" href="${escapeHTML(safeLink)}"${/^https?:/i.test(safeLink) ? ' target="_blank" rel="noopener noreferrer"' : ''}>${escapeHTML(linkLabel)} <i class="fas fa-arrow-right"></i></a>` : '');
+            // Always a new tab. Reading a banner is an interruption already;
+            // following its link should never also throw away where you were.
+            + (safeLink ? `<a class="sa-link" href="${escapeHTML(safeLink)}" target="_blank" rel="noopener noreferrer">${escapeHTML(linkLabel)} <i class="fas fa-arrow-right"></i></a>` : '')
+            + (canDismiss ? `<button class="sa-close" onclick="_dismissAnnouncement()" aria-label="Dismiss">×</button>` : '');
 
-          if (main.firstChild) main.insertBefore(bar, main.firstChild);
-          else main.appendChild(bar);
+          document.body.appendChild(bar);
+          document.body.classList.add('has-announce');
         }
       }
     } catch (e) { console.warn('[Broadcast] Error:', e); }
@@ -32703,6 +32735,9 @@ function _dismissAnnouncement() {
   if (bar) {
     _dismissedAnnouncement = bar.querySelector('.sa-text')?.textContent || null;
     bar.style.opacity='0'; bar.style.transform='translateY(-100%)';
+    // The app closes the gap immediately and the strip slides out of it —
+    // waiting for the animation would leave a 38px band of nothing behind.
+    document.body.classList.remove('has-announce');
     setTimeout(()=>bar.remove(),300);
   }
 }
@@ -49830,17 +49865,24 @@ async function _fsSendOnyxGo(to) {
     // 401 on a transfer reads like a refusal rather than a missing token.
     await _fsEnsureSession();
     const r = await _fsTradeFetch('/api/onyx/send', { to, amount, note });
+    // ⚠️ THE TRANSFER IS DONE at this line. Everything below is bookkeeping,
+    // and none of it may throw into the catch — an `await` that rejected here
+    // used to abandon the rest of the block, so the Onyx had already moved but
+    // the receipt was never posted and the card said "that did not go through".
+    // Each step now stands on its own and the receipt goes FIRST, because it is
+    // the only part the other person can see.
     CU.onyx = typeof r.balance === 'number' ? r.balance : Math.max(0, (CU.onyx || 0) - amount);
-    await _fsLogTx('send', -amount, 'Sent to @' + to + (note ? ' · ' + note : ''));
-    try { await saveUser(true); } catch {}
-    if (typeof updateOnyxDisplay === 'function') updateOnyxDisplay();
-    FortizedSocial.addNotification?.(to, {
-      type: 'onyx_received', from: CU.username, amount,
-      text: '@' + CU.username + ' sent you ' + amount + ' Onyx.' + (note ? ' “' + note + '”' : ''),
-      time: new Date().toISOString(), at: Date.now(),
-    }).catch(() => {});
-    // The receipt goes in the DM, where both of you will actually look for it.
     _fsSendPostReceipt(to, amount, note).catch(() => {});
+    try { await _fsLogTx('send', -amount, 'Sent to @' + to + (note ? ' · ' + note : '')); } catch (_) {}
+    try { await saveUser(true); } catch {}
+    try { if (typeof updateOnyxDisplay === 'function') updateOnyxDisplay(); } catch (_) {}
+    try {
+      FortizedSocial.addNotification?.(to, {
+        type: 'onyx_received', from: CU.username, amount,
+        text: '@' + CU.username + ' sent you ' + amount + ' Onyx.' + (note ? ' “' + note + '”' : ''),
+        time: new Date().toISOString(), at: Date.now(),
+      })?.catch?.(() => {});
+    } catch (_) {}
     _fsSendClose();
     toast('Sent ' + _ftzFullNum(amount) + ' Onyx to @' + to, 'success');
   } catch (e) {
@@ -49860,14 +49902,31 @@ async function _fsSendPostReceipt(to, amount, note) {
   const token = `[FTZONYXSEND:${amount}|${CU.username}|${to}]`;
   const text = note ? note + '\n' + token : token;
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+  // Show it immediately if their DM is the open conversation.
   try {
-    // Show it immediately if their DM is the open conversation.
     if ((curDM || '').toLowerCase() === String(to).toLowerCase() && typeof appendMessage === 'function') {
       appendMessage({ id, from: CU.username, text, timestamp: new Date().toISOString(), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }, 'dm');
     }
-    await FortizedSocial.sendDMMessage(CU.username, to, text, { id });
-    try { FortizedSocial.socketEmit?.('message', { to, from: CU.username, text, id, context: 'dm' }); } catch (_) {}
   } catch (_) {}
+  // Fire the socket FIRST so the recipient sees it in the same beat — the row
+  // insert is what makes it survive a reload, not what delivers it.
+  try { FortizedSocial.socketEmit?.('message', { to, from: CU.username, text, id, context: 'dm' }); } catch (_) {}
+  // ⚠️ This used to be one silent `catch {}` around everything, so a receipt
+  // that failed to persist left no trace anywhere — the money moved and the
+  // conversation showed nothing, with no way to tell why. One retry (the
+  // failures worth surviving are transient) and a real console line otherwise.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      await FortizedSocial.sendDMMessage(CU.username, to, text, { id });
+      return true;
+    } catch (e) {
+      if (attempt === 0) { await new Promise(r => setTimeout(r, 700)); continue; }
+      console.error('[onyx/send] receipt not saved — the transfer went through, the DM message did not:', e?.message || e);
+      toast('Onyx sent, but the receipt message failed to post.', 'error');
+      return false;
+    }
+  }
+  return false;
 }
 
 // Non-members get the pitch, not a dead button.
@@ -67754,7 +67813,9 @@ function _stfAsk(o) {
           ${Array.isArray(f.presets) && f.presets.length ? `<span class="stf-presets">${f.presets.map(p => `<button type="button" class="stf-preset" onclick="_stfPreset('${fid}','${p}')">${escapeHTML(String(p))}</button>`).join('')}</span>` : ''}
         </span>`;
       }
-      return `<label class="stf-field${f.wide ? ' is-wide' : ''}">${lbl}${ctl}${hint}</label>`;
+      // `half` puts a field on a shared row with its neighbour — for pairs that
+      // are really one setting split in two (a link and the words on it).
+      return `<label class="stf-field${f.wide ? ' is-wide' : ''}${f.half ? ' is-half' : ''}">${lbl}${ctl}${hint}</label>`;
     }).join('');
 
     const ov = document.createElement('div');
@@ -67770,15 +67831,21 @@ function _stfAsk(o) {
             ${opt.subtitle ? `<span class="stf-ask-s">${escapeHTML(opt.subtitle)}</span>` : ''}
           </span>
         </div>
-        ${opt.bodyHTML ? `<div class="stf-ask-b">${opt.bodyHTML}</div>` : ''}
-        ${fieldHTML ? `<div class="stf-ask-b">${fieldHTML}</div>` : ''}
-        ${opt.note ? `<div class="stf-ask-note"><i class="fas fa-circle-info"></i>${escapeHTML(opt.note)}</div>` : ''}
+        <div class="stf-ask-scroll" id="stf-ask-scroll">
+          ${opt.bodyHTML ? `<div class="stf-ask-b">${opt.bodyHTML}</div>` : ''}
+          ${fieldHTML ? `<div class="stf-ask-b">${fieldHTML}</div>` : ''}
+          ${opt.note ? `<div class="stf-ask-note"><i class="fas fa-circle-info"></i>${escapeHTML(opt.note)}</div>` : ''}
+        </div>
         <div class="ftz-modal-foot stf-ask-f">
           <button class="fs-btn stf-btn--sm" data-act="cancel">${escapeHTML(opt.cancelLabel || 'Cancel')}</button>
           <button class="fs-btn stf-btn--sm ${opt.danger ? 'stf-btn--danger' : 'fs-btn--primary'}" data-act="ok">${escapeHTML(opt.confirmLabel || 'Confirm')}</button>
         </div>
       </div>`;
     document.body.appendChild(ov);
+    // ⚠️ The picker menu and the calendar are portalled to <body> and placed
+    // from their field's viewport rect, so scrolling the card would leave them
+    // hanging where the field used to be. Re-place them on every scroll.
+    ov.querySelector('.stf-ask-scroll')?.addEventListener('scroll', _stfPortalReflow, { passive: true });
 
     const val = id => (document.getElementById(id)?.value || '').trim();
     const gather = () => {
@@ -67824,6 +67891,10 @@ function _stfToggle(fid, btn) {
   const on = !el.value;
   el.value = on ? '1' : '';
   btn.classList.toggle('is-on', on);
+  // A hidden input set from script fires no `input` event, so a live preview
+  // watching the fields would never hear about a toggle. Same nudge the
+  // swatch and glyph pickers give it.
+  try { _stfAnnPreview(); } catch (_) {}
 }
 
 // ── Number stepper ─────────────────────────────────────────────────
@@ -67917,6 +67988,14 @@ function _stfPickPlace(id) {
   const h = m.offsetHeight || 220;
   const room = window.innerHeight - r.bottom;
   m.style.top = Math.round((room < h + 14 && r.top > h + 14) ? r.top - h - 6 : r.bottom + 6) + 'px';
+}
+// Both portalled surfaces re-derive their position from their field's current
+// viewport rect, so this is all it takes to keep them glued through a scroll.
+function _stfPortalReflow() {
+  document.querySelectorAll('body > .stf-pick-menu').forEach(m => {
+    if (!m.hidden) _stfPickPlace(m.id.replace(/-menu$/, ''));
+  });
+  if (_stfCalId) _stfCalPaint();
 }
 // Any open picker menu is orphaned the moment its card goes away — nothing
 // else would ever remove it, so it would hang over the app.
@@ -70596,12 +70675,30 @@ const _STF_ANN_ICONS = [
   { value: 'fa-shield-halved', label: 'Safety' },
   { value: 'fa-heart-pulse', label: 'Status' },
 ];
+// A banner can be scheduled at both ends, so the panel has to say when it is
+// actually on screen — otherwise "Showing" is a guess, and a banner written for
+// next Tuesday looks identical to one that is live right now.
+function _stfAnnWindowNote(s) {
+  const day = iso => { const d = new Date(iso); return isNaN(+d) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); };
+  const from = s.announcementFrom ? Date.parse(s.announcementFrom) : 0;
+  const until = s.announcementUntil ? Date.parse(s.announcementUntil) : 0;
+  const now = Date.now();
+  let line;
+  if (from && now < from) line = `Scheduled — it appears on ${day(s.announcementFrom)}.`;
+  else if (until && now > until) line = `Expired on ${day(s.announcementUntil)}. It is no longer on anyone's screen.`;
+  else if (until) line = `Live now, and it takes itself down at the end of ${day(s.announcementUntil)}.`;
+  else line = 'Live now, and it stays up until someone takes it down.';
+  return `<div class="stf-drnote">${escapeHTML(line)}</div>`;
+}
+
+// `lead` fills the bar's lead-in chip, and `flat` drops the stripes — an
+// incident notice reads calmer without them.
 const _STF_ANN_PRESETS = [
-  { label: 'Scheduled maintenance', text: 'Fortized goes down for scheduled maintenance shortly. Finish what you are doing and we will be right back.', colour: '#fff93e', icon: 'fa-screwdriver-wrench' },
-  { label: 'We are back', text: 'Everything is back to normal. Thanks for waiting.', colour: '#3ecf6e', icon: 'fa-circle-info' },
-  { label: 'Investigating an issue', text: 'We are looking into a problem some of you are hitting. Updates on the status page.', colour: '#ff0033', icon: 'fa-triangle-exclamation' },
-  { label: 'New release', text: 'A new version of Fortized just landed. Reload to pick it up.', colour: '#2caefc', icon: 'fa-rocket' },
-  { label: 'Event live', text: 'The event is live — head to Quests to take part.', colour: '#ff77e4', icon: 'fa-champagne-glasses' },
+  { label: 'Scheduled maintenance', lead: 'Maintenance', text: 'Fortized goes down for scheduled maintenance shortly. Finish what you are doing and we will be right back.', colour: '#fff93e', icon: 'fa-screwdriver-wrench' },
+  { label: 'We are back', lead: '', text: 'Everything is back to normal. Thanks for waiting.', colour: '#3ecf6e', icon: 'fa-circle-info' },
+  { label: 'Investigating an issue', lead: 'Incident', flat: true, text: 'We are looking into a problem some of you are hitting. Updates on the status page.', colour: '#ff0033', icon: 'fa-triangle-exclamation' },
+  { label: 'New release', lead: 'Update', text: 'A new version of Fortized just landed. Reload to pick it up.', colour: '#2caefc', icon: 'fa-rocket' },
+  { label: 'Event live', lead: 'Event', text: 'The event is live — head to Quests to take part.', colour: '#ff77e4', icon: 'fa-champagne-glasses' },
 ];
 
 _STF_RENDER.system = async function (host, seq) {
@@ -70635,11 +70732,18 @@ _STF_RENDER.system = async function (host, seq) {
 
     ${_stfPanel({
       title: 'Announcement banner', icon: 'fa-bullhorn',
-      act: ann ? _stfPill('Showing', 'info') : _stfPill('Off'),
-      body: `${ann ? `<div class="stf-annprev" style="--ann:${escapeHTML(annColour)}">
+      act: !ann ? _stfPill('Off')
+        : (settings.announcementFrom && Date.now() < Date.parse(settings.announcementFrom)) ? _stfPill('Scheduled', 'warn')
+        : (settings.announcementUntil && Date.now() > Date.parse(settings.announcementUntil)) ? _stfPill('Expired')
+        : _stfPill('Showing', 'info'),
+      body: `${ann ? `<div class="stf-annprev${settings.announcementFlat === true ? ' is-flat' : ''}" style="--ann:${escapeHTML(annColour)}">
           <span class="stf-annprev-ic"><i class="fas ${escapeHTML(annIcon)}"></i></span>
+          ${settings.announcementLabel ? `<span class="stf-annprev-lb">${escapeHTML(settings.announcementLabel)}</span><span class="stf-annprev-div"></span>` : ''}
           <span class="stf-annprev-tx">${escapeHTML(String(ann).slice(0, 200))}</span>
-        </div>` : '<div class="stf-drnote">No banner is showing. Post one and every member sees it at the top of the app.</div>'}
+          ${settings.announcementLinkUrl ? `<span class="stf-annprev-link">${escapeHTML(settings.announcementLinkLabel || 'Read more')} <i class="fas fa-arrow-right"></i></span>` : ''}
+          ${settings.announcementDismissible !== false ? '<span class="stf-annprev-x">&times;</span>' : ''}
+        </div>
+        ${_stfAnnWindowNote(settings)}` : '<div class="stf-drnote">No banner is showing. Post one and every member sees it at the top of the app.</div>'}
       <div class="stf-acts">
         ${_stfBtn(ann ? 'Edit banner' : 'Post a banner', '_stfAnnounce()', { primary: true, icon: 'fa-pen', sm: true })}
         ${ann ? _stfBtn('Take it down', '_stfAnnounceClear()', { danger: true, icon: 'fa-xmark', sm: true }) : ''}
@@ -70754,13 +70858,19 @@ function _stfAnnPreview() {
   const icon = document.getElementById('stfq-icon')?.value || 'fa-bullhorn';
   const url = document.getElementById('stfq-linkUrl')?.value || '';
   const label = document.getElementById('stfq-linkLabel')?.value || (url ? 'Read more' : '');
+  const lead = document.getElementById('stfq-label')?.value || '';
+  const striped = !!document.getElementById('stfq-flat')?.value;
+  const canDismiss = !!document.getElementById('stfq-dismissible')?.value;
   box.style.setProperty('--ann', colour);
-  // The preview carries the bar's real furniture — dismiss cross on the left,
-  // link on the right — so what you approve is what members get.
-  box.innerHTML = `<span class="stf-annprev-x">&times;</span>`
-    + `<span class="stf-annprev-ic"><i class="fas ${escapeHTML(icon)}"></i></span>`
+  box.classList.toggle('is-flat', !striped);
+  // The preview carries the bar's real furniture, in the bar's real order —
+  // so what you approve is what members get, down to the dismiss cross being
+  // absent on a banner nobody is allowed to hide.
+  box.innerHTML = `<span class="stf-annprev-ic"><i class="fas ${escapeHTML(icon)}"></i></span>`
+    + (lead ? `<span class="stf-annprev-lb">${escapeHTML(lead)}</span><span class="stf-annprev-div"></span>` : '')
     + `<span class="stf-annprev-tx">${escapeHTML(text)}</span>`
-    + (url ? `<span class="stf-annprev-link">${escapeHTML(label)} <i class="fas fa-arrow-right"></i></span>` : '');
+    + (url ? `<span class="stf-annprev-link">${escapeHTML(label)} <i class="fas fa-arrow-right"></i></span>` : '')
+    + (canDismiss ? `<span class="stf-annprev-x">&times;</span>` : '');
   const count = document.getElementById('stf-ann-count');
   if (count) {
     const over = raw.length > _STF_ANN_MAX;
@@ -70773,6 +70883,16 @@ function _stfAnnPreset(i) {
   const t = document.getElementById('stfq-text'); if (t) t.value = p.text;
   const c = document.getElementById('stfq-colour'); if (c) c.value = p.colour;
   const ic = document.getElementById('stfq-icon'); if (ic) ic.value = p.icon;
+  const lb = document.getElementById('stfq-label'); if (lb) lb.value = p.lead || '';
+  // The stripes toggle is a real button + hidden input pair, so both halves
+  // have to be set — the input alone would leave the switch showing the
+  // opposite of what it now holds.
+  const fl = document.getElementById('stfq-flat');
+  if (fl) {
+    const striped = !p.flat;
+    fl.value = striped ? '1' : '';
+    fl.parentElement?.querySelector('.stf-toggle')?.classList.toggle('is-on', striped);
+  }
   document.querySelectorAll('.stf-swatch').forEach(b => b.classList.toggle('is-on', b.style.getPropertyValue('--sw').trim() === p.colour));
   document.querySelectorAll('.stf-iconb').forEach(b => b.classList.toggle('is-on', !!b.querySelector('.' + p.icon)));
   document.querySelectorAll('.stf-preset--ann').forEach((b, bi) => b.classList.toggle('is-on', bi === i));
@@ -70802,35 +70922,52 @@ async function _stfAnnounce() {
     fields: [
       { id: 'text', type: 'textarea', label: 'Message', rows: 2, value: cur.announcement || '', placeholder: 'Fortized 3.4 is here.', wide: true,
         hint: 'The bar is one line — anything past about ' + _STF_ANN_MAX + ' characters gets cut off with an ellipsis.' },
+      { id: 'label', type: 'text', label: 'Lead-in', optional: true, value: cur.announcementLabel || '',
+        placeholder: 'Maintenance', presets: ['Update', 'Maintenance', 'Incident', 'Event'],
+        hint: 'A short word set in caps before the message, with a divider after it.' },
       { id: 'colour', type: 'colour', label: 'Colour', value: cur.announcementColour || '#fff93e', options: _STF_ANN_COLOURS },
       { id: 'icon', type: 'icon', label: 'Glyph', value: cur.announcementIcon2 || 'fa-bullhorn', options: _STF_ANN_ICONS },
-      { id: 'linkLabel', type: 'text', label: 'Link label', optional: true, value: cur.announcementLinkLabel || '',
-        placeholder: 'Read more', hint: 'Leave both link fields empty for a plain banner.' },
-      { id: 'linkUrl', type: 'text', label: 'Link', optional: true, value: cur.announcementLinkUrl || '',
-        placeholder: 'https://fortized.com/status', presets: ['/support/status/', '/newsroom/'] },
-      { id: 'until', type: 'date', label: 'Take it down on', emptyLabel: 'Stays until cleared', value: cur.announcementUntil ? String(cur.announcementUntil).slice(0, 10) : '',
+      // The label and the URL are one setting wearing two fields — they belong
+      // on the same row, and neither one means anything without the other.
+      { id: 'linkLabel', type: 'text', label: 'Link label', optional: true, half: true, value: cur.announcementLinkLabel || '',
+        placeholder: 'Read more' },
+      { id: 'linkUrl', type: 'text', label: 'Link', optional: true, half: true, value: cur.announcementLinkUrl || '',
+        placeholder: 'https://fortized.com/status', presets: ['/support/status/', '/newsroom/'],
+        hint: 'Opens in a new tab. Leave both empty for a plain banner.' },
+      { id: 'from', type: 'date', label: 'Start showing on', half: true, emptyLabel: 'Right away', value: cur.announcementFrom ? String(cur.announcementFrom).slice(0, 10) : '',
+        hint: 'Write it now, let it appear on the day.' },
+      { id: 'until', type: 'date', label: 'Take it down on', half: true, emptyLabel: 'Stays until cleared', value: cur.announcementUntil ? String(cur.announcementUntil).slice(0, 10) : '',
         hint: 'It clears itself at the end of that day, everywhere, without anyone having to remember.' },
-      { id: 'dismissible', type: 'toggle', label: 'Members can dismiss it', onLabel: 'Dismissible',
+      { id: 'dismissible', type: 'toggle', label: 'Members can dismiss it', onLabel: 'Dismissible', half: true,
         value: cur.announcementDismissible !== false,
         hint: 'Turn this off for something nobody should be able to hide — an incident, or maintenance about to start.' },
+      { id: 'flat', type: 'toggle', label: 'Diagonal stripes', onLabel: 'Striped', half: true,
+        value: cur.announcementFlat !== true,
+        hint: 'On for news and events. Off reads calmer, which suits an incident notice.' },
     ],
     confirmLabel: 'Post banner',
     onReady: (ov) => {
       _stfAnnPreview();
-      ['#stfq-text', '#stfq-linkLabel', '#stfq-linkUrl'].forEach(sel =>
+      ['#stfq-text', '#stfq-label', '#stfq-linkLabel', '#stfq-linkUrl'].forEach(sel =>
         ov.querySelector(sel)?.addEventListener('input', _stfAnnPreview));
     },
   });
   if (!v) return;
   if (!v.text) { toast('Write something first', 'error'); return; }
   if (v.linkUrl && !/^(https?:\/\/|\/)/i.test(v.linkUrl)) { toast('The link needs to start with https:// or /', 'error'); return; }
+  if (v.from && v.until && v.from > v.until) { toast('It cannot come down before it goes up', 'error'); return; }
   cur.announcement = v.text;
   cur.announcementColour = v.colour || '#fff93e';
+  cur.announcementLabel = v.label || '';
   cur.announcementLinkUrl = v.linkUrl || '';
   cur.announcementLinkLabel = (v.linkLabel || (v.linkUrl ? 'Read more' : ''));
-  // End of day, so "take it down on the 20th" leaves it up all of the 20th.
+  // Start of day going up, end of day coming down — so "the 20th" means the
+  // whole of the 20th at both ends rather than the instant it turns midnight.
+  cur.announcementFrom = v.from ? new Date(v.from + 'T00:00:00.000Z').toISOString() : '';
   cur.announcementUntil = v.until ? new Date(v.until + 'T23:59:59.999Z').toISOString() : '';
   cur.announcementDismissible = !!v.dismissible;
+  // Stored inverted: the field asks for stripes, the renderer asks for flat.
+  cur.announcementFlat = !v.flat;
   // ⚠️ `announcementIcon` was an IMAGE URL in the old banner renderer (it was
   // rendered as `<img src>`), and the default it shipped with was an inline
   // SVG string — which is not a URL, so the banner drew a broken image on
@@ -70851,7 +70988,8 @@ async function _stfAnnounce() {
 async function _stfAnnounceClear() {
   const cur = (await FortizedSocial.adminGetGlobalSettings().catch(() => ({}))) || {};
   ['announcement', 'announcementColour', 'announcementIcon2', 'announcementIcon',
-   'announcementLinkUrl', 'announcementLinkLabel', 'announcementUntil', 'announcementDismissible',
+   'announcementLabel', 'announcementLinkUrl', 'announcementLinkLabel',
+   'announcementFrom', 'announcementUntil', 'announcementDismissible', 'announcementFlat',
   ].forEach(k => { delete cur[k]; });
   await FortizedSocial.adminSaveGlobalSettings(cur).catch(() => {});
   try { localStorage.setItem('ftz_global_settings', JSON.stringify(cur)); _globalSettings = cur; } catch (_) {}

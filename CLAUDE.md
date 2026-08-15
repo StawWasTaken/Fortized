@@ -1,5 +1,68 @@
 # Fortized — working notes for Claude
 
+## 🟢 SHIPPED — Round 6 (`2026fix497`, branch `claude/ui-polish-redesigns-xf43er`)
+
+### 📢 The banner DISPLACES the app instead of covering it
+It was `position:absolute` inside `.main`, so it laid over the top of whatever
+was on screen. It's now a **fixed strip on `<body>` + `body.has-announce{padding-
+top:var(--ann-h)}`** — `body` is the flex row holding the rail and the main
+column and everything is `border-box`, so the padding shortens both columns by
+exactly the bar's height and the whole app moves down together. Height lives in
+`--ann-h` so the bar and the padding can't disagree. **Dismiss moved to the
+right**; the bar carries 46px of padding on both sides so a long message can
+never run under it. The link is **always `target="_blank"`**.
+- 🐞 `onAnnouncementNew`/`onAnnouncementCleared` tore the node down but left
+  `_lastAnnText` holding the old signature, so the poller thought it was already
+  up to date and never rebuilt the bar. Both now null it.
+
+### 📢 Composer: it SCROLLS, and four more controls
+`.ftz-ac-card` is `max-height:90vh; overflow:hidden`, so a tall card was simply
+**cut** — last fields and footer unreachable, no scrollbar to hint at it. Header
+and footer are pinned now and only `.stf-ask-scroll` moves (`min-height:0` is the
+part that lets a flex child shrink below its content). ⚠️ The picker menu and the
+calendar are portalled to `<body>` and placed off their field's viewport rect, so
+the scroll handler calls `_stfPortalReflow()` to keep them glued.
+- New `half:true` on a field → it shares its row. `.stf-ask-b` is a wrapping ROW
+  now; anything without `half` still takes the full width. ⚠️ In half width an
+  input and its preset chips can't share a line (the input collapsed to two
+  characters) — the input takes the line, chips wrap under.
+- New fields, all reaching the live bar: **lead-in chip** (`.sa-label` +
+  `.sa-divider` were styled in the base rule and had never been rendered by
+  anything), **stripes on/off**, **start showing on** to pair with the take-down
+  date. Presets carry lead + stripes. The System panel now shows the real
+  furniture and says *when* it's on screen — "Showing" alone was a guess.
+- 🐞 `_stfToggle` writes a hidden input from script, which fires no `input`
+  event, so the live preview never heard about a toggle. It nudges the preview.
+
+### 💸 The Onyx receipt DM
+The transfer succeeds, then `await _fsLogTx(...)` — unguarded — could reject and
+abandon the rest of the block: money moved, no receipt, and the card said "that
+did not go through". Everything after the API call is bookkeeping now, each step
+guarded on its own, and **the receipt goes first** because it's the only part the
+other person can see. `_fsSendPostReceipt` retries once and logs loudly instead
+of one silent `catch {}`. The `onyx_received` inbox notification got a real
+branch (glyph, amount, a jump to My Transactions) instead of falling through to
+the generic line.
+
+### 🗣️ Feedback card
+Art back at its **normal `.72`** — dimming it to `.22` solved the wrong half. The
+TEXT changed instead: title `#fff`, body `--text`, labels one step up from the
+usual greys (`--muted` is a dark slate that vanishes over art), and a neutral
+(never coloured) shadow to seat them. ⚠️ Verified against a deliberately harsh
+stand-in image — the real Swiftaw art is CDN-blind in-sandbox and still wants a
+live look.
+
+### 💸 More menu
+`.fpp-menu__item--onyx` and `.fpp-menu__send` no longer set a colour at all.
+`.fpp-menu__item` is `var(--text)` and the glyph inherits via `fill:currentColor`
+— `#fff` was brighter than `--text`, so the row still stood out from Ignore and
+Invite to Bastion. **Anything set there is by definition a mismatch.**
+
+⚠️ **LIVE-VERIFY:** post a banner with a lead-in, a link and an expiry (it must
+push the app down, not cover it; link opens a new tab; dismiss on the right);
+scroll the composer end to end; send Onyx and check the DM receipt lands for
+BOTH people; the feedback card over the real art.
+
 ## 🟢 SHIPPED — Round 5 (`2026fix496`, branch `claude/ui-polish-redesigns-xf43er`)
 
 ### 🐞 "YOU CANNOT SEND ONYX TO YOURSELF" — while sending to someone else

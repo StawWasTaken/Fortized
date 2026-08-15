@@ -17796,7 +17796,11 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .stf-annprev-tx{flex:1;min-width:0;line-height:1.45;}
 /* The preview shows the bar's real furniture — the dismiss cross and the link
    chip — so what you approve in the composer is what members actually get. */
-.stf-annprev-x{font-size:17px;line-height:1;opacity:.5;flex-shrink:0;margin-right:2px;}
+.stf-annprev-x{font-size:17px;line-height:1;opacity:.5;flex-shrink:0;margin-left:2px;}
+.stf-annprev.is-flat{background-image:none;}
+.stf-annprev-lb{font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:.06em;
+  text-transform:uppercase;white-space:nowrap;flex-shrink:0;}
+.stf-annprev-div{width:1px;height:14px;background:rgba(0,0,0,.25);flex-shrink:0;margin:0 -3px;}
 .stf-annprev-link{display:inline-flex;align-items:center;gap:6px;flex-shrink:0;
   padding:3px 10px;border-radius:100px;background:rgba(0,0,0,.14);border:1.5px solid rgba(0,0,0,.28);
   font-family:var(--font-display);font-size:11px;font-weight:700;}
@@ -17827,7 +17831,23 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .stf-ask-tx{display:flex;flex-direction:column;gap:3px;min-width:0;padding-right:26px;}
 .stf-ask-t{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text);line-height:1.3;}
 .stf-ask-s{font-size:12.5px;color:var(--muted);line-height:1.55;}
-.stf-ask-b{padding:14px 22px 4px;display:flex;flex-direction:column;gap:13px;}
+/* ⚠️ The card is `max-height:90vh` with `overflow:hidden`, so a tall composer
+   was simply CUT — the last fields and the footer were unreachable, with no
+   scrollbar to tell you anything was missing. The header and the footer stay
+   pinned and only the middle scrolls, which is what makes a long form usable
+   rather than just taller. `min-height:0` is the part that actually lets a
+   flex child shrink below its content. */
+.stf-ask-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;}
+/* Row-based, not a column, so a field can opt into sharing its row (`is-half`).
+   Everything without it still takes the full width, exactly as before. */
+.stf-ask-b{padding:14px 22px 4px;display:flex;flex-wrap:wrap;gap:13px;}
+.stf-ask-b > .stf-field{flex:1 1 100%;min-width:0;}
+.stf-ask-b > .stf-field.is-half{flex:1 1 calc(50% - 7px);}
+/* In half the width there is no room for an input and its preset chips on the
+   same line — the input collapsed to a couple of characters. The field takes
+   the line, the chips wrap under it. */
+.stf-ask-b > .stf-field.is-half .stf-frow > .settings-input{flex:1 1 100%;}
+@media(max-width:560px){ .stf-ask-b > .stf-field.is-half{flex:1 1 100%;} }
 .stf-ask-note{margin:8px 22px 0;display:block;position:relative;padding:10px 13px 10px 34px;
   border-radius:var(--radius-md);background:var(--panel2,var(--panel));border:2px solid var(--border);
   font-size:12px;color:var(--muted-light);line-height:1.55;}
@@ -18075,6 +18095,42 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
   transition:background .13s,transform .1s;}
 .sys-announce-bar .sa-link:hover{background:rgba(0,0,0,.24);transform:translateY(-1px);}
 .sys-announce-bar .sa-link i{font-size:9px;}
+/* A short bold lead-in before the message — "MAINTENANCE · we're back at 14:00".
+   Both this and the divider were already styled in the base rule and had never
+   been rendered by anything. */
+.sys-announce-bar .sa-label{margin-left:2px;letter-spacing:.06em;text-transform:uppercase;}
+.sys-announce-bar .sa-divider{margin:0 11px;}
+/* Stripes are the bar's default face, but an incident notice reads better flat,
+   so the composer can turn them off. */
+.sys-announce-bar.is-flat{background-image:none !important;}
+
+/* ── Where the bar LIVES ───────────────────────────────────────────────
+   ⚠️ It is a fixed strip at the very top of the window and the app shell is
+   padded down to meet it — it must never cover UI. It used to be
+   `position:absolute` inside `.main`, which laid it over the top of whatever
+   was on screen (a channel header, the first message) and hid it. `body` is
+   the flex row that holds the rail and the main column, and everything is
+   `border-box`, so padding on it shortens both columns by exactly the bar's
+   height and the whole app moves down together.
+   The height lives in a variable so the bar and the padding can never
+   disagree. */
+:root{--ann-h:38px;}
+body.has-announce{padding-top:var(--ann-h);}
+.sys-announce-bar{position:fixed;top:0;left:0;right:0;z-index:60;
+  height:var(--ann-h) !important;min-height:var(--ann-h) !important;
+  /* Room for the dismiss button on the right so a long message can never run
+     underneath it; matched on the left so the text stays optically centred. */
+  padding:0 46px;}
+/* Dismiss sits on the RIGHT, where every other close control in the app is,
+   and in the same ink as the message rather than a flat black. */
+.sys-announce-bar .sa-close{left:auto;right:0;width:46px;height:var(--ann-h);
+  color:#13161d;opacity:.55;font-size:20px;border-radius:0;
+  transition:opacity .12s,background .12s;}
+.sys-announce-bar .sa-close:hover{opacity:1;background:rgba(0,0,0,.12);}
+@media(max-width:640px){
+  .sys-announce-bar{padding:0 40px 0 12px;}
+  .sys-announce-bar .sa-link{margin:0 8px;}
+}
 
 /* ── Responsive ────────────────────────────────────────────────────── */
 @media(max-width:1080px){
@@ -18146,9 +18202,11 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 /* Send Onyx in the profile More menu */
 .fpp-menu__send{width:15px;height:15px;display:inline-flex;flex-shrink:0;}
 .fpp-menu__send svg{width:15px;height:15px;}
-/* Reads white like every other row in the menu — the accent is a spice, and a
-   yellow label made this one item shout over the rest. The glyph inherits it. */
-.fpp-menu__item--onyx{color:#fff;}
+/* ⚠️ NO colour of its own. `.fpp-menu__item` is already `var(--text)`, and the
+   glyph inherits that through `fill:currentColor` — exactly like Ignore and
+   Invite to Bastion. This rule used to force the accent (a yellow row that
+   shouted over the rest), then `#fff` (brighter than `--text`, so it still
+   stood out). Anything set here is by definition a mismatch. */
 .fpp-menu__rad{margin-left:auto;font-size:10px;color:var(--rad-pink,#ef5fb0);}
 
 /* Trades are items-only now — the note that says where Onyx went */
@@ -18204,15 +18262,18 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .fs-nef-way-tx i{font-style:normal;font-size:11px;color:var(--muted);}
 .fs-nef-way > i:last-child{font-size:11px;color:var(--muted);flex-shrink:0;}
 
+/* An amount inside an inbox line — the glyph takes the number's colour, same
+   rule the wallet and the quest cards follow. */
+.np-onyx{display:inline-flex;align-items:center;gap:5px;font-weight:800;color:var(--text);}
+.np-onyx .rad-onyx-ic{width:14px;height:14px;}
+
 /* ── Quick feedback ──────────────────────────────────────────────── */
 /* ⚠️ It carries `.ftz-confirm-card` on purpose. The overlay art
    (`.ftz-ov-swft::before`) needs a SOLID surface underneath to read against —
    the earlier version painted it onto translucent `--glass-heavy` behind a
    `backdrop-filter`, which washed it out until it may as well not have been
    there. On the Lifecheck card's own surface it renders exactly as it does on
-   Lifecheck.
-   Centred and fading in, as asked — but with NO backdrop scrim, so asking for
-   feedback still never stands between someone and what they were doing. */
+   Lifecheck. */
 /* The scrim + centring come from `.ftz-confirm-overlay`, and the entrance is
    the app's own `modalCardIn` off `.ftz-confirm-card` — no bespoke transform
    animation, so this card opens exactly like every other card. */
@@ -18221,16 +18282,24 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
   padding:22px 24px 22px;border:2px solid var(--border);border-radius:var(--radius-lg,18px);
   background:var(--panel);box-shadow:0 28px 70px rgba(0,0,0,.6);
   -webkit-backdrop-filter:none;backdrop-filter:none;}
-/* ⚠️ The art is dialled well back HERE and nowhere else. Lifecheck can carry it
-   at full strength because its content sits on nested solid sub-panels; this
-   card puts body text straight onto the surface, and at .6 the art fought the
-   words. It reads as a tint now, which is all it needs to do. */
-.ftz-feedback-toast::before{opacity:.22;filter:brightness(.9) saturate(1.05);}
-.fb-x{top:10px;right:12px;}
-.fb-title{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text);
+/* The art runs at its normal strength here, same as Lifecheck — an earlier pass
+   dimmed it to a tint to win back legibility, which solved the wrong half of
+   the problem. The TEXT is what changes instead: Lifecheck gets away with
+   `--muted-light` body copy because its content sits on nested solid panels,
+   and this card doesn't, so every line here is pulled up to a colour that
+   holds against the art, with a neutral (never coloured) shadow to seat it. */
+.ftz-feedback-toast .fb-title,
+.ftz-feedback-toast .fb-sub,
+.ftz-feedback-toast .fb-more-lb,
+.ftz-feedback-toast .fb-done{text-shadow:0 1px 3px rgba(0,0,0,.65);}
+/* The shared close button rests at 30% white, which is tuned for a plain panel
+   and disappears into the art here. */
+.fb-x{top:10px;right:12px;color:rgba(255,255,255,.55);text-shadow:0 1px 3px rgba(0,0,0,.65);}
+.fb-x:hover{color:#fff;}
+.fb-title{font-family:var(--font-display);font-size:17px;font-weight:700;color:#fff;
   padding-right:30px;margin-bottom:6px;}
-.fb-sub{font-size:12.5px;color:var(--muted-light);line-height:1.5;margin-bottom:13px;}
-.fb-sub b{color:var(--text);font-weight:700;}
+.fb-sub{font-size:12.5px;color:var(--text);line-height:1.5;margin-bottom:13px;}
+.fb-sub b{color:#fff;font-weight:700;}
 .fb-rates{display:flex;gap:7px;}
 .fb-rate{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 6px;cursor:pointer;
   border:2px solid var(--border);border-radius:13px;background:var(--panel2);color:var(--muted-light);
@@ -18248,9 +18317,11 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
    thank-you would both sit there from the start. Explicit override. */
 .ftz-feedback-toast [hidden]{display:none !important;}
 .fb-more{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+/* One step up from the usual label greys — `--muted` in particular is a dark
+   slate that all but vanishes once the art is behind it. */
 .fb-more-lb{font-family:var(--font-display);font-size:10px;font-weight:800;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--muted-light);}
-.fb-more-lb em{font-style:normal;font-weight:600;letter-spacing:.04em;color:var(--muted);text-transform:none;}
+  text-transform:uppercase;color:var(--text);}
+.fb-more-lb em{font-style:normal;font-weight:600;letter-spacing:.04em;color:var(--muted-light);text-transform:none;}
 .fb-note{resize:none;font-family:var(--font-ui);font-size:12.5px;line-height:1.45;}
 .fb-more-acts{display:flex;gap:8px;justify-content:flex-end;}
 .fb-btn-sm{padding:7px 15px;font-size:12px;}
@@ -18278,9 +18349,11 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .fs-rad-mark--white{background-color:#fff;}
 .fs-rad-mark--pink{background-color:var(--rad-pink,#ef5fb0);}
 
-/* The More-menu entry: the vault glyph reads WHITE like every other item in
-   that menu, and the Radiance hint beside it is the logo in pink. */
-.fpp-menu__send{color:#fff;}
+/* The More-menu entry: the vault glyph takes the ROW's colour, same as every
+   other glyph in that menu (`.fpp-menu__item svg{fill:currentColor}`). Pinning
+   it to `#fff` made this one row read brighter than Ignore or Invite to
+   Bastion. The Radiance hint beside it is the logo in pink — that one is
+   deliberately its own colour, because it is a mark, not a glyph. */
 .fpp-menu__send svg{width:15px;height:15px;fill:currentColor;}
 .fpp-menu__rad{margin-left:auto;width:13px;height:13px;flex-shrink:0;
   background-color:var(--rad-pink,#ef5fb0);

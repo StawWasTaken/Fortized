@@ -32672,10 +32672,15 @@ function _listenGlobalSettingsConsolidated() {
         } else if (text !== _dismissedAnnouncement) {
           if (existing) existing.remove();
 
-          // ⚠️ A fixed strip on <body>, NOT an absolute overlay inside `.main`.
-          // Sitting inside `.main` meant it covered the top of whatever was on
-          // screen; `body.has-announce` pads the shell down instead, so the bar
-          // displaces the app rather than hiding part of it.
+          // ⚠️ It lives INSIDE `.main`, and `body.has-announce` pads `.main`
+          // down by the bar's height so it displaces the view instead of
+          // covering it. The old build put it here too but padded nothing, so
+          // it laid over the top of whatever was on screen; the round after
+          // that padded `body` and put the bar across the whole window, above
+          // the rail and the topbar. This is the middle: inside the main area,
+          // and nothing hidden behind it.
+          const main = document.querySelector('.main');
+          if (!main) return;
           const bar = document.createElement('div');
           bar.id = 'sys-announce-bar';
           bar.className = 'sys-announce-bar' + (flat ? ' is-flat' : '');
@@ -32693,7 +32698,7 @@ function _listenGlobalSettingsConsolidated() {
             + (safeLink ? `<a class="sa-link" href="${escapeHTML(safeLink)}" target="_blank" rel="noopener noreferrer">${escapeHTML(linkLabel)} <i class="fas fa-arrow-right"></i></a>` : '')
             + (canDismiss ? `<button class="sa-close" onclick="_dismissAnnouncement()" aria-label="Dismiss">×</button>` : '');
 
-          document.body.appendChild(bar);
+          main.insertBefore(bar, main.firstChild);
           document.body.classList.add('has-announce');
         }
       }

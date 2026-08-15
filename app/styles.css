@@ -18105,18 +18105,24 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .sys-announce-bar.is-flat{background-image:none !important;}
 
 /* ── Where the bar LIVES ───────────────────────────────────────────────
-   ⚠️ It is a fixed strip at the very top of the window and the app shell is
-   padded down to meet it — it must never cover UI. It used to be
-   `position:absolute` inside `.main`, which laid it over the top of whatever
-   was on screen (a channel header, the first message) and hid it. `body` is
-   the flex row that holds the rail and the main column, and everything is
-   `border-box`, so padding on it shortens both columns by exactly the bar's
-   height and the whole app moves down together.
-   The height lives in a variable so the bar and the padding can never
-   disagree. */
+   ⚠️ INSIDE `.main` — not across the top of the window, and not over the
+   content either. Two rules do it together and neither works alone:
+   `.main` is a `border-box` flex ROW, so `padding-top` on it shortens the
+   secondary sidebar and the view by exactly the bar's height and starts them
+   below it; the bar itself is absolute in the band that padding opens up.
+   Put the bar in the flow instead and it would become a COLUMN beside the
+   sidebar — which is why the old build reached for `position:absolute` and
+   ended up laying it over the top of whatever was on screen.
+   The height lives in a variable so the bar and the padding can't disagree,
+   and `.main`'s `overflow:hidden` + rounded top-left clip the bar to the
+   card, so it reads as part of it. */
 :root{--ann-h:38px;}
-body.has-announce{padding-top:var(--ann-h);}
-.sys-announce-bar{position:fixed;top:0;left:0;right:0;z-index:60;
+/* `.main` is the bar's containing block. Unconditional, so nothing inside it
+   shifts the moment a banner appears — and a no-op for descendants that
+   already have a nearer positioned ancestor. */
+.main{position:relative;}
+body.has-announce .main{padding-top:var(--ann-h);}
+.sys-announce-bar{position:absolute;top:0;left:0;right:0;z-index:60;
   height:var(--ann-h) !important;min-height:var(--ann-h) !important;
   /* Room for the dismiss button on the right so a long message can never run
      underneath it; matched on the left so the text stays optically centred. */

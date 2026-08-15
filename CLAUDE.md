@@ -1,16 +1,23 @@
 # Fortized — working notes for Claude
 
-## 🟢 SHIPPED — Round 6 (`2026fix497`, branch `claude/ui-polish-redesigns-xf43er`)
+## 🟢 SHIPPED — Round 6 (`2026fix498`, branch `claude/ui-polish-redesigns-xf43er`)
 
-### 📢 The banner DISPLACES the app instead of covering it
-It was `position:absolute` inside `.main`, so it laid over the top of whatever
-was on screen. It's now a **fixed strip on `<body>` + `body.has-announce{padding-
-top:var(--ann-h)}`** — `body` is the flex row holding the rail and the main
-column and everything is `border-box`, so the padding shortens both columns by
-exactly the bar's height and the whole app moves down together. Height lives in
-`--ann-h` so the bar and the padding can't disagree. **Dismiss moved to the
-right**; the bar carries 46px of padding on both sides so a long message can
-never run under it. The link is **always `target="_blank"`**.
+### 📢 The banner DISPLACES the view — and stays INSIDE `.main`
+Three placements before this one landed, so don't re-litigate it: it was
+`position:absolute` inside `.main` with nothing padded (laid over the top of
+whatever was on screen); then a fixed strip on `<body>` with `body` padded
+(spanned the whole window ABOVE the rail and the topbar — the user rejected
+that); now **absolute inside `.main` + `body.has-announce .main{padding-
+top:var(--ann-h)}`**. `.main` is a `border-box` flex ROW, so the padding
+shortens `.sidebar-ctx` and the view by exactly the bar's height and starts
+them below it, while the rail and topbar don't move at all. ⚠️ It can't be an
+ordinary flow child — in a row container it would become a COLUMN beside the
+sidebar, which is what pushed the old build to `position:absolute` in the first
+place. `.main{position:relative}` is set unconditionally so nothing inside it
+shifts the moment a banner appears. `.main`'s `overflow:hidden` + rounded
+top-left clip the bar into the card. **Dismiss moved to the right**; 46px of
+padding both sides so a long message can never run under it. The link is
+**always `target="_blank"`**.
 - 🐞 `onAnnouncementNew`/`onAnnouncementCleared` tore the node down but left
   `_lastAnnText` holding the old signature, so the poller thought it was already
   up to date and never rebuilt the bar. Both now null it.

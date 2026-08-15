@@ -1483,6 +1483,29 @@ app.get('/app/fortshop', (_req, res) => sendHtmlNoCache(res, path.join(__dirname
 app.get('/app/quests',   (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
 app.get('/app/creator',  (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
 app.get('/app/bastion',  (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
+// ── Short invite links ────────────────────────────────────────────────
+// Everything lands on /app?invite=CODE, which the client already resolves
+// (checkInviteLink -> joinByInvite -> the invite card). These are only nicer
+// front doors onto that one path.
+//   fortized.com/invite/CODE
+//   fortized.com/i/CODE
+//   invite.fortized.com/CODE   ← needs the subdomain pointed at this server
+// ⚠️ A code is [A-Za-z0-9_-] only. Anything else falls through to the normal
+// routes, so a stray /i/… can never shadow a real page.
+const INVITE_CODE_RE = /^[\w-]{3,64}$/;
+function sendInvite(res, code) { res.redirect(302, '/app?invite=' + encodeURIComponent(code)); }
+app.get('/invite/:code', (req, res, next) =>
+  INVITE_CODE_RE.test(req.params.code) ? sendInvite(res, req.params.code) : next());
+app.get('/i/:code', (req, res, next) =>
+  INVITE_CODE_RE.test(req.params.code) ? sendInvite(res, req.params.code) : next());
+// The subdomain form: only when the request actually arrived on invite.*, so
+// this can't hijack a root-level path on the main host.
+app.get('/:code', (req, res, next) => {
+  const host = String(req.headers.host || '').toLowerCase();
+  if (!host.startsWith('invite.')) return next();
+  return INVITE_CODE_RE.test(req.params.code) ? sendInvite(res, req.params.code) : next();
+});
+
 // Backwards-compat: /blog -> /newsroom (folder was renamed)
 app.get('/blog', (_req, res) => res.redirect(301, '/newsroom'));
 app.get('/blog/{*rest}', (req, res) => res.redirect(301, '/newsroom'));

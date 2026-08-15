@@ -15762,10 +15762,33 @@ function _discIsFresh(b) {
   return !!t && (Date.now() - t) < 30 * 86400000;
 }
 
+// Rolls a stat up from zero: slow off the mark, quick through the middle, and
+// a gentle landing. Runs ONCE per element — the hero is not re-rendered while
+// someone types any more, but a tab switch shouldn't restart the count either.
+function _discCountUp(el, target) {
+  if (!el || el.dataset.counted === '1') return;
+  el.dataset.counted = '1';
+  const n = Number(target) || 0;
+  if (n <= 0 || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    el.textContent = _ftzCompactNum(n); return;
+  }
+  const dur = 1100, t0 = performance.now();
+  const tick = (now) => {
+    const p = Math.min(1, (now - t0) / dur);
+    const e = p < .5 ? 8 * p * p * p * p : 1 - Math.pow(-2 * p + 2, 4) / 2;  // easeInOutQuart
+    el.textContent = _ftzCompactNum(Math.round(n * e));
+    if (p < 1) requestAnimationFrame(tick); else el.textContent = _ftzCompactNum(n);
+  };
+  requestAnimationFrame(tick);
+}
+
 function _discRenderHero() {
   const el = document.getElementById('disc-hero-host');
   if (!el) return;
   const total = discoverData.length;
+  // ⚠️ Deliberately the SUM of every bastion's roster, so a member of three
+  // bastions is counted three times. It's a reach figure, not a headcount —
+  // hence "total members" rather than "members".
   const members = discoverData.reduce((s, b) => s + (b.memberCount || 1), 0);
   const mine = discoverData.filter(_discJoined).length;
   // The Fortshop hero, including its depth move: the art is full-bleed and tall
@@ -15778,9 +15801,8 @@ function _discRenderHero() {
         <div class="fs-hero-bg" style="background-image:url('/Fortized banner.png?v=2')"></div>
         <div class="fs-hero-inner disc-hero2-inner">
           <div class="disc-hero2-left">
-            <div class="qst-banner-eyebrow">DISCOVER</div>
-            <div class="fs-hero-lg-txt disc-hero2-title">Find your people.</div>
-            <div class="disc-hero2-sub">Every public bastion in the realm, in one place.</div>
+            <div class="fs-hero-lg-txt disc-hero2-title">Find your place.</div>
+            <div class="disc-hero2-sub">Browse what's out there.</div>
           </div>
         </div>
       </div>
@@ -15790,15 +15812,17 @@ function _discRenderHero() {
           <input type="text" id="disc-search-input" placeholder="Scout the realm…"
                  value="${escapeHTML(_discQuery)}" autocomplete="off" spellcheck="false"
                  oninput="filterDiscover(this.value)">
-          ${_discQuery ? `<button class="disc-hero-x" onclick="filterDiscover('')" aria-label="Clear search"><i class="fa-solid fa-xmark"></i></button>` : ''}
+          <button class="disc-hero-x${_discQuery ? '' : ' is-hidden'}" id="disc-search-x"
+                  onclick="filterDiscover('')" aria-label="Clear search"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="disc-hero2-stats">
-          <div class="disc-hstat"><b>${_ftzCompactNum(total)}</b><span>communities</span></div>
-          <div class="disc-hstat"><b>${_ftzCompactNum(members)}</b><span>members</span></div>
-          <div class="disc-hstat"><b>${_ftzCompactNum(mine)}</b><span>joined by you</span></div>
+          <div class="disc-hstat"><b data-n="${total}">0</b><span>communities</span></div>
+          <div class="disc-hstat"><b data-n="${members}">0</b><span>total members</span></div>
+          <div class="disc-hstat"><b data-n="${mine}">0</b><span>joined by you</span></div>
         </div>
       </div>
     </div>`;
+  el.querySelectorAll('.disc-hstat b').forEach(b => _discCountUp(b, b.dataset.n));
 }
 
 function _discRenderFilters() {
@@ -15825,7 +15849,7 @@ function _discRenderFilters() {
       </div>
       <div class="disc-filter-right">
         <button class="disc-toggle${_discHideJoined ? ' is-on' : ''}" onclick="_discToggleJoined()">
-          <i class="fa-solid ${_discHideJoined ? 'fa-square-check' : 'fa-square'}"></i>Hide joined
+          <span class="nm-check" aria-hidden="true">${_discHideJoined ? _GIFT_CHECK_SVG : ''}</span>Hide joined
         </button>
         ${_ftzSelectHTML('disc-sort', _discSort, [
           { value: 'members', label: 'Most members' },
@@ -15916,7 +15940,11 @@ function _discRenderBody() {
   };
   const rails = [];
 
-  const featured = take(pool.filter(b => b.featured), 12);
+  // Featured and Verified have no order of their own, so they honour the sort
+  // control — otherwise picking "A – Z" appears to do nothing until you scroll
+  // past them. Rising and Fresh DO have one (growth, age); that ordering is the
+  // whole point of those rails, so the control leaves them alone.
+  const featured = take(_discSortList(pool.filter(b => b.featured)), 12);
   if (featured.length) rails.push({ t: 'Featured', s: 'Picked by the Fortized team', l: featured });
 
   if (_discGrowth) {
@@ -15926,7 +15954,7 @@ function _discRenderBody() {
     if (rising.length) rails.push({ t: 'Rising', s: 'Grew the most this week', l: rising, growth: true });
   }
 
-  const verified = take(pool.filter(b => b.verified), 12);
+  const verified = take(_discSortList(pool.filter(b => b.verified)), 12);
   if (verified.length) rails.push({ t: 'Verified', s: 'Confirmed as the real thing', l: verified });
 
   const fresh = take(pool.filter(_discIsFresh)
@@ -16075,35 +16103,103 @@ function _discAfterPaint() {
 function setDiscoverTab(tab, btn) {
   discoverTab = tab || 'all';
   _discQuery = '';
+  // The hero stays put (see filterDiscover) — clear the field in place.
+  const inp = document.getElementById('disc-search-input');
+  if (inp) inp.value = '';
+  document.getElementById('disc-search-x')?.classList.add('is-hidden');
   _discRenderFilters();
   _discRenderBody();
   const sc = document.getElementById('discover-scroll');
   if (sc) sc.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ⚠️ The hero is NEVER re-rendered from here. The old version rebuilt it the
+// moment the clear button needed to appear or disappear, which destroyed and
+// recreated the very input being typed into — caret restored by hand, focus
+// juggled, stat counters restarted. That was the "glitchy search". The clear
+// button now always exists and is only shown or hidden, so typing touches
+// nothing but the results.
 function filterDiscover(q) {
   _discQuery = (q || '').trim();
   const inp = document.getElementById('disc-search-input');
   if (inp && inp.value !== (q || '')) inp.value = q || '';
+  document.getElementById('disc-search-x')?.classList.toggle('is-hidden', !_discQuery);
   clearTimeout(window._discSearchT);
-  window._discSearchT = setTimeout(() => {
-    // Re-rendering the hero would steal focus mid-type, so only the clear
-    // button's presence is patched in place.
-    const host = document.getElementById('disc-hero-host');
-    const has = !!host?.querySelector('.disc-hero-x');
-    if (!!_discQuery !== has) {
-      const sel = document.getElementById('disc-search-input');
-      const pos = sel?.selectionStart;
-      _discRenderHero();
-      const next = document.getElementById('disc-search-input');
-      if (next && sel === document.activeElement) { next.focus(); try { next.setSelectionRange(pos, pos); } catch (_) {} }
-    }
-    _discRenderBody();
-  }, 120);
+  window._discSearchT = setTimeout(() => { _discRenderBody(); }, 140);
 }
 
 // Kept for callers outside Discover (the grid id is gone; the page owns itself).
 function renderDiscoverGrid() { _discRenderBody(); }
+
+// ══════════════════════════════════════════════════════════════════════
+// "I have an invite"
+// Every route into a bastion converges on joinByInvite(code) → the invite
+// card. This is the third door: someone was handed a link out of band (a
+// screenshot, a voice call, a note) and has nowhere to type it.
+// ══════════════════════════════════════════════════════════════════════
+
+// Accepts every shape we hand out, and the bare code on its own.
+//   https://invite.fortized.com/ABC-123
+//   https://fortized.com/app?invite=ABC-123
+//   fortized.com/i/ABC-123
+//   ABC-123
+function _inviteCodeFrom(raw) {
+  const s = String(raw || '').trim();
+  if (!s) return '';
+  // ?invite= is the canonical query shape, and it can carry other params.
+  const q = s.match(/[?&]invite=([\w-]+)/i);
+  if (q) return q[1];
+  // Otherwise: drop the scheme and the query, then take the last path segment.
+  // A segment containing a dot is a hostname, not a code — that's what stops a
+  // bare "fortized.com" being read as an invite.
+  const seg = s.replace(/^[a-z]+:\/\//i, '').replace(/[?#].*$/, '').replace(/\/+$/, '').split('/').pop() || '';
+  return (/^[\w-]{3,64}$/.test(seg) && !seg.includes('.')) ? seg : '';
+}
+
+function _invOpenPaste() {
+  document.getElementById('ftz-inv-paste')?.remove();
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay';
+  ov.id = 'ftz-inv-paste';
+  ov.innerHTML = `
+    <div class="ftz-confirm-card ftz-ac-card ftz-invpaste" role="dialog" aria-label="Redeem an invite">
+      <button class="ftz-close-btn ftz-ac-x" onclick="document.getElementById('ftz-inv-paste').remove()" aria-label="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="ftz-invpaste-h">
+        <div class="ftz-invpaste-ic"><i class="fa-solid fa-envelope-open-text"></i></div>
+        <div>
+          <div class="ftz-invpaste-t">Got an invite?</div>
+          <div class="ftz-invpaste-s">Paste the link or the code and we'll find the bastion.</div>
+        </div>
+      </div>
+      <div class="ftz-invpaste-b">
+        <input class="settings-input" id="inv-paste-in" placeholder="invite.fortized.com/…"
+               autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')_invSubmitPaste()">
+        <div class="ftz-invpaste-err" id="inv-paste-err"></div>
+      </div>
+      <div class="ftz-modal-foot">
+        <button class="fs-btn" onclick="document.getElementById('ftz-inv-paste').remove()">Cancel</button>
+        <button class="fs-btn fs-btn--primary" onclick="_invSubmitPaste()">Proceed</button>
+      </div>
+    </div>`;
+  ov.addEventListener('mousedown', e => { if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
+  setTimeout(() => document.getElementById('inv-paste-in')?.focus(), 40);
+}
+
+function _invSubmitPaste() {
+  const inp = document.getElementById('inv-paste-in');
+  const err = document.getElementById('inv-paste-err');
+  const code = _inviteCodeFrom(inp?.value);
+  if (!code) {
+    if (err) err.textContent = "That doesn't look like an invite link.";
+    inp?.focus();
+    return;
+  }
+  document.getElementById('ftz-inv-paste')?.remove();
+  joinByInvite(code);
+}
 
 // ── Activities ─────────────────────────────────────────────────────────────
 // ── Activity icon SVGs (Lucide-style, 20×20) ──
@@ -29411,8 +29507,25 @@ function _lcBuiltInChallenge(overlay, done) {
 // ════════════════════════════════════════════
 // MODALS
 // ════════════════════════════════════════════
+// Adding a friend has two halves — finding them, and being findable. The card
+// shows your own handle so you can hand it over without leaving.
+function _afrCopyHandle() {
+  const h = '@' + (CU?.username || '');
+  navigator.clipboard?.writeText(h).then(() => {
+    const b = document.getElementById('afr-copy-btn');
+    if (!b) return;
+    const span = b.querySelector('span'), was = span.textContent;
+    span.textContent = 'Copied'; b.classList.add('is-done');
+    setTimeout(() => { span.textContent = was; b.classList.remove('is-done'); }, 1400);
+  }).catch(() => toast('Could not copy', 'error'));
+}
+
 function openModal(id){
   if (id === 'modal-new-dm') { setTimeout(() => switchNewDMTab('dm'), 10); }
+  if (id === 'modal-add-friend') {
+    const h = document.getElementById('afr-my-handle');
+    if (h) h.textContent = '@' + (CU?.username || '');
+  }
   const el=document.getElementById(id);if(!el)return;
   // Single-modal policy — close any other currently-open .modal-overlay
   // (except the one we're opening and any tagged with data-modal-stack="1"
@@ -33059,6 +33172,24 @@ function _ftzMaybeShowWhatsNew() {
   } catch (_) {}
 }
 
+// The card arrives in three beats: the herald walks on in the middle of an
+// empty stage, steps aside to the left and cries out, and only then does the
+// announcement itself appear.
+//
+// ⚠️ The herald's travel is measured, not hardcoded. His resting place is the
+// real left column of the layout; act 1 just TRANSFORMS him to the card's
+// centre, so the distance depends on the card's actual width and has to be read
+// off the DOM. A magic number here breaks the moment the card is resized or the
+// text wraps to another line.
+// ⚠️ Transform only — never width/left. Animating layout on a card this size
+// would judder, and the stage's height must not change under the herald.
+const _WN_ACTS = [
+  ['wn-a1',  90],   // herald fades up, centre stage
+  ['wn-a2', 900],   // …steps left
+  ['wn-a3', 1320],  // …and cries out
+  ['wn-a4', 1620],  // the announcement itself
+];
+
 function _ftzShowWhatsNew(rel) {
   const r = rel || _ftzWhatsNewLatest();
   if (!r) return;
@@ -33076,23 +33207,30 @@ function _ftzShowWhatsNew(rel) {
   ov.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card ftz-wn" role="dialog" aria-label="What's New">
       <button class="ftz-close-btn ftz-ac-x" aria-label="Close">&times;</button>
-      <div class="ftz-wn-head">
-        <div class="ftz-wn-h-t">What’s New</div>
-        <div class="ftz-wn-h-d">${escapeHTML(r.date || '')}</div>
-      </div>
-      <div class="ftz-wn-scroll">
-        <div class="ftz-wn-art">
-          <img src="${_ftzCharSrc('announce')}" alt="" draggable="false"
-               onerror="this.closest('.ftz-wn-art')?.remove()">
-          <div class="ftz-wn-cry">Hear ye, hear ye!</div>
+      <div class="ftz-wn-stage">
+        <div class="ftz-wn-spot" aria-hidden="true"></div>
+        <div class="ftz-wn-herald">
+          <div class="ftz-wn-fig">
+            <div class="ftz-wn-bubble">Hear ye, hear ye!</div>
+            <img class="ftz-wn-herald-img" src="${_ftzCharSrc('announce')}" alt="" draggable="false"
+                 onerror="this.style.visibility='hidden'">
+          </div>
         </div>
-        ${r.lead ? `<p class="ftz-wn-lead">${escapeHTML(r.lead)}</p>` : ''}
-        <div class="ftz-wn-list">
-          ${(r.entries || []).map(e => `
-            <div class="ftz-wn-item">
-              <div class="ftz-wn-i-t">${escapeHTML(e.title)}</div>
-              <div class="ftz-wn-i-b">${escapeHTML(e.body)}</div>
-            </div>`).join('')}
+        <div class="ftz-wn-panel">
+          <div class="ftz-wn-head">
+            <div class="ftz-wn-h-t">What’s New</div>
+            ${r.date ? `<div class="ftz-wn-h-d">${escapeHTML(r.date)}</div>` : ''}
+          </div>
+          <div class="ftz-wn-scroll">
+            ${r.lead ? `<p class="ftz-wn-lead">${escapeHTML(r.lead)}</p>` : ''}
+            <div class="ftz-wn-list">
+              ${(r.entries || []).map((e, i) => `
+                <div class="ftz-wn-item" style="--i:${i}">
+                  <div class="ftz-wn-i-t">${escapeHTML(e.title)}</div>
+                  <div class="ftz-wn-i-b">${escapeHTML(e.body)}</div>
+                </div>`).join('')}
+            </div>
+          </div>
         </div>
       </div>
       <div class="ftz-modal-foot ftz-wn-foot">
@@ -33100,10 +33238,42 @@ function _ftzShowWhatsNew(rel) {
       </div>
     </div>`;
   document.body.appendChild(ov);
+  const card = ov.querySelector('.ftz-wn');
+  const herald = ov.querySelector('.ftz-wn-herald');
+
+  // Measure the herald's journey: from where he rests, to the middle of the card.
+  const measure = () => {
+    const c = card.getBoundingClientRect(), h = herald.getBoundingClientRect();
+    if (!c.width || !h.width) return;
+    card.style.setProperty('--wn-dx', ((c.left + c.width / 2) - (h.left + h.width / 2)).toFixed(1) + 'px');
+  };
+  measure();
+
+  const timers = [];
+  const finish = () => {
+    timers.forEach(clearTimeout); timers.length = 0;
+    _WN_ACTS.forEach(([c]) => card.classList.add(c));
+    card.classList.add('wn-done');
+  };
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) finish();
+  else _WN_ACTS.forEach(([cls, at]) => timers.push(setTimeout(() => card.classList.add(cls), at)));
+
+  // Impatience is not an error: clicking the card, or the button, skips to the
+  // end rather than doing nothing until the herald finishes his walk.
+  card.addEventListener('click', e => {
+    if (!card.classList.contains('wn-done') && !e.target.closest('.ftz-ac-x')) { e.stopPropagation(); finish(); }
+  }, true);
+
   ov.querySelector('.ftz-ac-x').onclick = close;
-  ov.querySelector('.ftz-wn-ok').onclick = close;
-  const esc = e => { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); } };
+  ov.querySelector('.ftz-wn-ok').onclick = () => (card.classList.contains('wn-done') ? close() : finish());
+  const esc = e => {
+    if (e.key !== 'Escape') return;
+    document.removeEventListener('keydown', esc);
+    close();
+  };
   document.addEventListener('keydown', esc);
+  window.addEventListener('resize', measure, { passive: true });
 }
 // Openable on demand, so it isn't a one-shot you can never look at again.
 window._ftzShowWhatsNew = _ftzShowWhatsNew;
@@ -35359,7 +35529,10 @@ async function showBastionInviteDialog(bastion, inviterName, inviteCode) {
         <div class="invite-subtitle">Accept <strong>${escapeHTML(inviterName)}</strong>'s invite to join</div>
         <div class="invite-bastion-name">${escapeHTML(bastion.name)} ${verifiedBadge}</div>
         <div class="invite-meta">
-          <span style="display:flex;align-items:center;gap:5px;"><span class="invite-dot online"></span> ${memberCount} Online</span>
+          <!-- ⚠️ There was an "N Online" here too, and it printed the MEMBER
+               count — so every invite claimed the whole roster was online. Same
+               fabrication we removed from the Discover cards; nothing measures
+               per-bastion presence, so the card claims only what it knows. -->
           <span style="display:flex;align-items:center;gap:5px;"><span class="invite-dot"></span> ${memberCount} Member${memberCount!==1?'s':''}</span>
         </div>
         ${bastion.desc ? `<div class="invite-desc">${escapeHTML(bastion.desc)}</div>` : ''}
@@ -38190,7 +38363,14 @@ function parseMD(s) {
       footerText: 'open.spotify.com',
     });
   });
-  // 5. Fortized invite/bastion link — unified embed card
+  // 5. Fortized invite/bastion link — unified embed card.
+  // Short forms first: invite.fortized.com/CODE, fortized.com/invite/CODE and
+  // /i/CODE are rewritten to the canonical ?invite= shape so ONE embed path
+  // handles every link we hand out. ⚠️ The subdomain or an /invite//i/ segment
+  // is REQUIRED — matching any fortized.com path would swallow /app, /login and
+  // every other ordinary link on the site.
+  s = s.replace(/https?:\/\/(?:invite\.fortized\.com|(?:www\.)?fortized\.com\/(?:invite|i))\/([\w-]{3,64})\b/gi,
+    (m, code) => location.origin + '/app?invite=' + code);
   s = s.replace(/https?:\/\/[^\s]*[?&]invite=([\w-]+)[^\s]*/gi, (url, code) => {
     let localBastion = null;
     (CU?.bastions||[]).forEach(ub => { if ((ub.invites||[]).some(inv=>inv.code===code)) localBastion = ub; });
@@ -38200,8 +38380,9 @@ function parseMD(s) {
     // If user is already a member and we have local data, render immediately (no async needed)
     if (localBastion) {
       const b = localBastion;
+      // ⚠️ No "N Online" — nothing measures per-bastion presence (see the
+      // Discover cards). The old line printed floor(members * 0.3).
       const mc = b.memberCount || Object.keys(b.memberRoles||{}).length || 1;
-      const oc = Math.max(1,Math.floor(mc*0.3));
       const iconHTML = b.icon ? `<img src="${escapeHTML(b.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">` : `<div class="bie-fallback">${(b.name||'B')[0]}</div>`;
       const bannerHTML = b.banner ? `<img src="${escapeHTML(b.banner)}" draggable="false">` : '';
       return `<div class="bastion-invite-embed" onclick="joinByInvite('${escapeHTML(code)}')">
@@ -38212,7 +38393,7 @@ function parseMD(s) {
             <div class="bie-icon">${iconHTML}</div>
             <div class="bie-text">
               <div class="bie-name">${escapeHTML(b.name||'Bastion')}</div>
-              <div class="bie-stats"><div class="bie-stat"><span class="bie-dot online"></span>${oc} Online</div><div class="bie-stat"><span class="bie-dot total"></span>${mc} Member${mc!==1?'s':''}</div></div>
+              <div class="bie-stats"><div class="bie-stat"><span class="bie-dot total"></span>${mc} Member${mc!==1?'s':''}</div></div>
             </div>
           </div>
           <button class="bie-join joined">Joined</button>
@@ -38285,7 +38466,7 @@ function parseMD(s) {
       const iconEl = el.querySelector('.bie-icon'); if (iconEl) iconEl.innerHTML = b.icon ? `<img src="${escapeHTML(b.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" onerror="this.parentElement.innerHTML='<div class=bie-fallback>${(b.name||'B')[0]}</div>'">` : `<div class="bie-fallback">${(b.name||'B')[0]}</div>`;
       const bannerEl = el.querySelector('.bie-banner'); if (bannerEl && b.banner) bannerEl.innerHTML = `<img src="${escapeHTML(b.banner)}" draggable="false">`;
       const descEl = el.querySelector('.bie-desc'); if (descEl && (b.desc||b.description)) { descEl.textContent = b.desc||b.description; descEl.style.display = ''; }
-      const statsEl = el.querySelector('.bie-stats'); if (statsEl) { const mc = b.memberCount || Object.keys(b.memberRoles||{}).length || 1; const oc = Math.max(1,Math.floor(mc*0.3)); statsEl.innerHTML = `<div class="bie-stat"><span class="bie-dot online"></span>${oc} Online</div><div class="bie-stat"><span class="bie-dot total"></span>${mc} Member${mc!==1?'s':''}</div>`; }
+      const statsEl = el.querySelector('.bie-stats'); if (statsEl) { const mc = b.memberCount || Object.keys(b.memberRoles||{}).length || 1; statsEl.innerHTML = `<div class="bie-stat"><span class="bie-dot total"></span>${mc} Member${mc!==1?'s':''}</div>`; }
     }, 200);
     return `<div class="bastion-invite-embed" id="${embedId}" onclick="joinByInvite('${escapeHTML(code)}')">
       <div class="bie-banner"></div>
@@ -38296,8 +38477,7 @@ function parseMD(s) {
           <div class="bie-text">
             <div class="bie-name">Loading...</div>
             <div class="bie-stats">
-              <div class="bie-stat"><span class="bie-dot online"></span>...</div>
-              <div class="bie-stat"><span class="bie-dot total"></span>...</div>
+              <div class="bie-stat"><span class="bie-dot total"></span>…</div>
             </div>
           </div>
         </div>
@@ -48947,7 +49127,10 @@ function _ftzNotFound(title, sub, opts) {
   const line = (o.sub === undefined && art === 'search')
     ? _FTZ_NOT_FOUND_LINES[Math.floor(Math.random() * _FTZ_NOT_FOUND_LINES.length)]
     : o.sub;
-  return `<div class="ftz-nf${o.compact ? ' ftz-nf--sm' : ''}${o.cls ? ' ' + o.cls : ''}">
+  // Tag the block with WHICH character it drew. The art isn't drawn at a
+  // uniform scale — the battle knight in particular is a full figure mid-charge
+  // and loses its detail at the size that suits the search knight's crate.
+  return `<div class="ftz-nf ftz-nf--${art}${o.compact ? ' ftz-nf--sm' : ''}${o.cls ? ' ' + o.cls : ''}">
     <img class="ftz-nf-img" src="${_ftzCharSrc(art)}" alt="" draggable="false" onerror="this.style.display='none'">
     <div class="ftz-nf-t">${escapeHTML(title || 'Nothing found')}</div>
     ${sub || line ? `<div class="ftz-nf-s">${escapeHTML(sub || line)}</div>` : ''}

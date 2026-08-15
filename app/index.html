@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix501';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix502';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix501';
+    s4.src = '/firebase-compat-shim.js?v=2026fix502';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix501">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix502">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix501', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix502', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix501"></script>
+<script src="/app/utils.js?v=2026fix502"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -455,17 +455,17 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
     <div class="view" id="view-discover" style="position:relative;overflow:hidden;display:flex;flex-direction:column;">
       <!-- Discover Topbar — styled like room-topbar; transforms when activity is running -->
       <div class="disc-subnav" id="disc-subnav">
-        <!-- Normal mode: Bastions / Activities tabs -->
+        <!-- Normal mode: brand, then tabs — the same shape as Friends, Quests
+             and the Fortshop (icon + page title, separator, then plain tabs
+             with no icons of their own). -->
         <div class="disc-subnav-normal" id="disc-subnav-normal">
-          <button class="disc-subnav-btn active" id="dsub-bastions" onclick="setDiscoverSubPage('bastions',this)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            Bastions
-          </button>
+          <span class="fr-subnav-brand"><svg viewBox="0 0 512 512" fill="currentColor"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369.3 160.9l-48 128c-2.4 6.5-7.6 11.7-14.1 14.1l-128 48c-8.3 3.1-17.6 1.1-23.9-5.2s-8.3-15.6-5.2-23.9l48-128c2.4-6.5 7.6-11.7 14.1-14.1l128-48c8.3-3.1 17.6-1.1 23.9 5.2s8.3 15.6 5.2 23.9zM288 256a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/></svg><span>Discover</span></span>
+          <span class="disc-subnav-sep"></span>
+          <button class="disc-subnav-btn active" id="dsub-bastions" onclick="setDiscoverSubPage('bastions',this)">Bastions</button>
           <!-- Activities tab hidden until feature is ready -->
-          <button class="disc-subnav-btn" id="dsub-activities" onclick="setDiscoverSubPage('activities',this)" style="display:none;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            Activities
-          </button>
+          <button class="disc-subnav-btn" id="dsub-activities" onclick="setDiscoverSubPage('activities',this)" style="display:none;">Activities</button>
+          <div class="disc-subnav-spacer"></div>
+          <button class="disc-inv-btn" onclick="_invOpenPaste()"><i class="fa-solid fa-envelope-open-text"></i>I have an invite</button>
         </div>
         <!-- Activity mode: shown when an activity is running -->
         <div class="disc-subnav-act" id="disc-subnav-act" style="display:none;">
@@ -869,12 +869,14 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
 
 <!-- ADD FRIEND -->
 <div class="modal-overlay" role="dialog" id="modal-add-friend">
+  <!-- ⚠️ Joyster is drawn INSIDE a header band of his own with room above him.
+       He used to be absolutely positioned against the card's top edge, which
+       clipped his hat off and ran the subtitle underneath him. -->
   <div class="modal afr-modal" style="max-width:560px;">
     <div class="modal-bar"></div>
+    <button class="ftz-close-btn ftz-ac-x afr-x" onclick="closeModal('modal-add-friend')" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
     <div class="modal-body" style="padding:0;">
-      <!-- Add Friend Section -->
       <div class="afr-head">
-        <div class="afr-head__icon"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></div>
         <div class="afr-head__text">
           <div class="afr-head__title" data-i18n="friends.add">Add Friend</div>
           <div class="afr-head__sub" data-i18n="modal.add_friend.desc">You can add friends with their Fortized usernames.</div>
@@ -885,7 +887,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
         <div class="afr-input-row">
           <i class="fa-solid fa-at afr-input-at" aria-hidden="true"></i>
           <input id="friend-target" placeholder="Enter a username..." data-i18n-placeholder="modal.add_friend.placeholder" autocomplete="off" spellcheck="false" oninput="checkFriendTarget(this.value)" onkeydown="if(event.key==='Enter')sendFriendRequest()">
-          <button class="btn-a afr-send-btn" id="friend-send-btn" onclick="sendFriendRequest()"><svg viewBox="0 0 576 512" fill="currentColor" style="width:1em;height:1em;" aria-hidden="true"><path d="M536.4-26.3c9.8-3.5 20.6-1 28 6.3s9.8 18.2 6.3 28l-178 496.9c-5 13.9-18.1 23.1-32.8 23.1-14.2 0-27-8.6-32.3-21.7l-64.2-158c-4.5-11-2.5-23.6 5.2-32.6l94.5-112.4c5.1-6.1 4.7-15-.9-20.6s-14.6-6-20.6-.9L229.2 276.1c-9.1 7.6-21.6 9.6-32.6 5.2L38.1 216.8c-13.1-5.3-21.7-18.1-21.7-32.3 0-14.7 9.2-27.8 23.1-32.8l496.9-178z"/></svg><span data-i18n="modal.add_friend.send">Send Friend Request</span></button>
+          <button class="fs-btn fs-btn--primary afr-send-btn" id="friend-send-btn" onclick="sendFriendRequest()"><svg viewBox="0 0 576 512" fill="currentColor" style="width:1em;height:1em;" aria-hidden="true"><path d="M536.4-26.3c9.8-3.5 20.6-1 28 6.3s9.8 18.2 6.3 28l-178 496.9c-5 13.9-18.1 23.1-32.8 23.1-14.2 0-27-8.6-32.3-21.7l-64.2-158c-4.5-11-2.5-23.6 5.2-32.6l94.5-112.4c5.1-6.1 4.7-15-.9-20.6s-14.6-6-20.6-.9L229.2 276.1c-9.1 7.6-21.6 9.6-32.6 5.2L38.1 216.8c-13.1-5.3-21.7-18.1-21.7-32.3 0-14.7 9.2-27.8 23.1-32.8l496.9-178z"/></svg><span data-i18n="modal.add_friend.send">Send Friend Request</span></button>
         </div>
         <div id="friend-target-preview" class="afr-preview">
           <div class="afr-preview__empty">
@@ -896,6 +898,17 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
         <div id="friend-target-hint" style="font-size:11px;min-height:14px;margin-top:8px;transition:color .15s;"></div>
         <div class="modal-error" id="friend-error"></div>
         <div class="modal-success" id="friend-success"></div>
+      </div>
+      <!-- The other half of adding a friend: being findable. Without this the
+           card only works if you already know someone's exact username. -->
+      <div class="afr-mine">
+        <div class="afr-mine__txt">
+          <div class="afr-mine__k">Your username</div>
+          <div class="afr-mine__v" id="afr-my-handle">@you</div>
+        </div>
+        <button class="fs-btn afr-mine__copy" id="afr-copy-btn" onclick="_afrCopyHandle()">
+          <i class="fa-solid fa-copy" aria-hidden="true"></i><span>Copy</span>
+        </button>
       </div>
     </div>
   </div>
@@ -1141,10 +1154,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix501"></script>
-<script src="/app/app.js?v=2026fix501"></script>
-<script src="/app/joy-system.js?v=2026fix501"></script>
-<script src="/app/chronicle-games.js?v=2026fix501"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix502"></script>
+<script src="/app/app.js?v=2026fix502"></script>
+<script src="/app/joy-system.js?v=2026fix502"></script>
+<script src="/app/chronicle-games.js?v=2026fix502"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

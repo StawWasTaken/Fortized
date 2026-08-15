@@ -55,6 +55,47 @@ app.use((req, res, next) => {
   next();
 });
 
+// ── invite.fortized.com — a front door, NOT a second copy of the site ──────
+// ⚠️ Express does not care which hostname a request arrived on: every route in
+// this file answers on every domain pointed at the service. So the moment
+// invite.fortized.com resolved here it published a COMPLETE duplicate of
+// fortized.com on a second hostname — every page, the whole app, the login
+// form, all of it. That is three separate problems, not a cosmetic one:
+//   · Search engines see two hosts serving identical pages and split or
+//     penalise the ranking of both.
+//   · A browser treats it as a DIFFERENT ORIGIN. Cookies, localStorage, the
+//     service worker and the logged-in session on www do not exist over there,
+//     so the "same" app behaves like a stranger's first visit — which is
+//     exactly why animations that had already played on www played again here.
+//   · Anyone who lands on it is browsing a copy that nothing else links to.
+//
+// This runs BEFORE any route that serves a page, so the invite host answers
+// exactly two things: a code, or a way back to the real site. It never serves
+// HTML of its own, which also keeps the session on ONE origin.
+const INVITE_CODE_RE = /^[\w-]{3,64}$/;
+const MAIN_ORIGIN = (process.env.FTZ_MAIN_ORIGIN || 'https://www.fortized.com').replace(/\/+$/, '');
+// ⚠️ On the invite host ANY single segment would otherwise read as a code, so
+// someone typing invite.fortized.com/login would be told their invite is
+// invalid instead of being shown the login page. These names are pages, never
+// codes; they get sent to the real page on the main site.
+const INVITE_HOST_RESERVED = new Set([
+  'app', 'login', 'signup', 'newsroom', 'support', 'download', 'privacy',
+  'terms', 'legal', 'blog', 'invite', 'i', 'join', 'api', 'discover',
+]);
+app.use((req, res, next) => {
+  // Strip the port: a Host header is `invite.fortized.com:443` behind some proxies.
+  const host = String(req.headers.host || '').toLowerCase().split(':')[0];
+  if (!host.startsWith('invite.')) return next();
+  const seg = req.path.replace(/^\/+|\/+$/g, '');
+  if (INVITE_CODE_RE.test(seg) && !INVITE_HOST_RESERVED.has(seg.toLowerCase())) {
+    // 302, not 301: a code can be revoked, and a permanent redirect would be
+    // cached in the browser forever pointing at a dead invite.
+    return res.redirect(302, MAIN_ORIGIN + '/app?invite=' + encodeURIComponent(seg));
+  }
+  // A real page name keeps its path; anything else goes to the front door.
+  return res.redirect(301, MAIN_ORIGIN + (INVITE_HOST_RESERVED.has(seg.toLowerCase()) ? '/' + seg : '/'));
+});
+
 // ══════════════════════════════════════════════════════════════════════════
 // TRADING — server-authoritative.
 //
@@ -1489,22 +1530,16 @@ app.get('/app/bastion',  (_req, res) => sendHtmlNoCache(res, path.join(__dirname
 // front doors onto that one path.
 //   fortized.com/invite/CODE
 //   fortized.com/i/CODE
-//   invite.fortized.com/CODE   ← needs the subdomain pointed at this server
-// ⚠️ A code is [A-Za-z0-9_-] only. Anything else falls through to the normal
-// routes, so a stray /i/… can never shadow a real page.
-const INVITE_CODE_RE = /^[\w-]{3,64}$/;
+//   invite.fortized.com/CODE   ← handled by the host guard near the top of this
+//                                file, which never reaches these routes.
+// ⚠️ A code is [A-Za-z0-9_-] only (INVITE_CODE_RE, defined with that guard).
+// Anything else falls through to the normal routes, so a stray /i/… can never
+// shadow a real page.
 function sendInvite(res, code) { res.redirect(302, '/app?invite=' + encodeURIComponent(code)); }
 app.get('/invite/:code', (req, res, next) =>
   INVITE_CODE_RE.test(req.params.code) ? sendInvite(res, req.params.code) : next());
 app.get('/i/:code', (req, res, next) =>
   INVITE_CODE_RE.test(req.params.code) ? sendInvite(res, req.params.code) : next());
-// The subdomain form: only when the request actually arrived on invite.*, so
-// this can't hijack a root-level path on the main host.
-app.get('/:code', (req, res, next) => {
-  const host = String(req.headers.host || '').toLowerCase();
-  if (!host.startsWith('invite.')) return next();
-  return INVITE_CODE_RE.test(req.params.code) ? sendInvite(res, req.params.code) : next();
-});
 
 // Backwards-compat: /blog -> /newsroom (folder was renamed)
 app.get('/blog', (_req, res) => res.redirect(301, '/newsroom'));

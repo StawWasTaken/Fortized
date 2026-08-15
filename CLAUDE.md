@@ -18,6 +18,89 @@ wants it worked on next. The page already has an Activities tab (hidden behind
 this is a rework of something half-built, not a green field. **Ask what they want
 it to be before building.**
 
+## 🟢 SHIPPED — Round 12 (`2026fix504`, branch `claude/ui-polish-redesigns-xf43er`)
+
+### 🌐 `invite.fortized.com` WAS SERVING A SECOND COPY OF THE WHOLE SITE
+Express doesn't care which hostname a request arrived on, so the moment the
+subdomain resolved to the service **every route answered on it** — the homepage,
+the app, the login form, all of it. Three real problems, not cosmetics:
+- Search engines see two hosts serving identical pages.
+- A browser treats it as a **different ORIGIN**: separate cookies, localStorage,
+  service worker and session. ⚠️ **That is the answer to "why does invite. have
+  animations and www doesn't"** — nothing was different about the code; the
+  invite host was simply a first visit, with none of the state www had built up.
+- Anyone landing there browsed a copy nothing links to.
+
+**Fixed with one host guard placed BEFORE any page-serving route** (`server.js`,
+just after the security headers). `invite.*` now answers exactly two things: a
+code → `302` to `MAIN_ORIGIN/app?invite=CODE`, anything else → `301` home. It
+**never serves HTML**, so the session stays on one origin.
+- ⚠️ `INVITE_HOST_RESERVED` exists because on that host ANY single segment would
+  read as a code — `invite.fortized.com/login` would have said "invalid invite"
+  instead of showing the login page. Reserved names keep their path.
+- `302` for a code, not `301`: a code can be revoked, and a permanent redirect
+  would be cached in the browser forever pointing at a dead invite.
+- Host is lowercased and the **port stripped** (`invite.fortized.com:443`).
+- `MAIN_ORIGIN` is overridable via `FTZ_MAIN_ORIGIN`.
+- The old `app.get('/:code')` host-gated route is deleted — the guard now runs
+  first, so it was unreachable. `/invite/:code` + `/i/:code` on the main host are
+  untouched.
+- **`/PIXELFORGE` was never a real code** — it was the placeholder from the test
+  harness. The redirect worked; `joinByInvite` then correctly said the invite was
+  invalid, via a small toast that reads like nothing happened.
+
+### 🚫 Idle animations off the character art
+Kept every **arrival** animation, removed every **loop**:
+- `ftzNfBob` off `.ftz-nf-img` — the Heroic Search knight, i.e. **every empty
+  state in the app**. An empty state can sit on screen indefinitely, so a
+  permanent bob is a permanent distraction. `ftzNfIn` (the arrival) stays.
+- `joysterIdle` + `joysterBubblePulse` off the Friends page, plus Joyster's
+  **accent-coloured drop-shadow** (a glow, against the standing rule). His
+  `revealUp` arrival and the hover scale stay.
+- `ftz-knight-drift` + `ftz-knight-tremble` off the atelier promo knight.
+- `subtleFloat` off `.empty-state .ei`.
+- The What's New herald keeps his walk-on (the user asked for that one).
+
+### 🧭 Boot popups: ONE at a time, and the interests card is gone
+- **DELETED the "Personalize Your Experience" interests picker** from boot. The
+  Get Started guide is the welcome now. `showOnboarding()` is left defined but
+  **unreferenced** (the console's `_loadAdminOnboardingStats` still reads
+  historical answers); safe to delete in a later pass.
+- 🐞 **THE STACKING BUG.** Each card ran on its own `setTimeout` and checked
+  `querySelector('.modal.show, .ftz-confirm-overlay')` to stay out of the way —
+  which only works if every card answers one of those selectors. The interests
+  picker wore `.ftz-onboarding-overlay`, so it was **invisible to that test**,
+  and a new account could get three cards stacked in the first four seconds.
+- **`_ftzBootPopups`** is now the single entry point (one `setTimeout` at 3s).
+  A card's turn doesn't come until the previous one's **DOM node disappears**.
+  ⚠️ It polls for that rather than hooking the close button: these cards are
+  removed by many paths (X, Escape, backdrop, finishing the guide, taking a step
+  out of it) and a queue that hears about only one of them strands the list. The
+  node's absence is the one signal every path produces. Capped at 5 min.
+  **Anything that can open a card on boot must be registered here.**
+- Verified: `WN → GS`, never both, guide waits ~2.5s+ until What's New is closed.
+
+### 🔗 "I have an invite" rebuilt again — text only
+The Redeem-card version was rejected. Now Add Friend's `.afr-head` +
+`.afr-input-row` (button inside the field) with the Redeem card's `.fs-redeem-lb`
+label, `.fs-redeem-err` and `.fs-redeem-note`, plus an `.afr-places` "No invite?"
+footer. **Zero images** — a character beside a single field crowded the one thing
+the card is for. 470×424.
+- 🐞 **"Browse bastions" did nothing off the Discover page.** `setDiscoverSubPage`
+  only swaps the sub-page INSIDE Discover, it does not navigate there. New
+  `_invBrowse()` calls `showView('discover')` first.
+
+### 📜 Herald + em dashes
+Drop-shadow off the herald; bubble is **white on dark ink**, ⚠️ including the
+`::after` tail (a rotated square that keeps its own colour and otherwise reads as
+a stray chip beside his head). Em dashes stripped from the What's New entries and
+three member-facing strings. **Still to sweep: the staff-console prose** (`'—'`
+used as an empty-value placeholder is fine, that's a glyph not prose).
+
+⚠️ **LIVE-VERIFY:** `invite.fortized.com/<a REAL code>` lands in the app;
+`invite.fortized.com/login` shows the login page; the whole site is no longer
+reachable on that host; a fresh account gets ONE card at a time.
+
 ## 🟢 SHIPPED — Round 11 (`2026fix503`, branch `claude/ui-polish-redesigns-xf43er`)
 
 ### ❌ ONE CLOSE BUTTON, EVERYWHERE — `.ftz-close-btn` + the inline FA `xmark`

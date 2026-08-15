@@ -877,16 +877,20 @@ body.is-desktop-app .topbar{padding-right:0;}
 .hero-btn-create:hover{background:var(--panel2);}
 /* Joyster character */
 .hero-joyster-wrap{position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:center;height:170px;width:160px;animation:revealUp .6s cubic-bezier(.22,1,.36,1) .1s both;}
-.hero-joyster-img{height:150px;object-fit:contain;filter:drop-shadow(0 8px 28px rgba(255,249,62,.15)) drop-shadow(0 4px 12px rgba(0,0,0,.4));animation:joysterIdle 4s ease-in-out infinite;cursor:pointer;transition:transform .2s;}
+/* ⚠️ No idle float and no yellow halo. He stands on the Friends page for the
+   whole session, so a permanent bob is permanent motion in the corner of the
+   eye; the accent-coloured drop-shadow was a glow, which is out everywhere.
+   `.hero-joyster-wrap` still carries the arrival (`revealUp`), and he still
+   answers the cursor on hover. */
+.hero-joyster-img{height:150px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4));cursor:pointer;transition:transform .2s;}
 .hero-joyster-img:hover{transform:scale(1.05);}
-@keyframes joysterIdle{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
 /* Joyster speech bubble — sits inside .home-hero, positioned absolute */
 .joyster-bubble{position:absolute;top:10px;right:110px;transform:scale(.85) translateY(10px);background:linear-gradient(135deg,rgba(18,22,34,.97),rgba(12,15,24,.98));border:1.5px solid rgba(255,249,62,.25);border-radius:16px;padding:10px 18px;font-size:13px;font-style:italic;color:rgba(255,255,255,.88);width:max-content;max-width:260px;white-space:normal;word-wrap:break-word;opacity:0;transition:opacity .4s ease, transform .45s cubic-bezier(.22,1,.36,1), box-shadow .4s ease;pointer-events:none;z-index:10;box-shadow:0 8px 32px rgba(0,0,0,.45),0 0 20px rgba(255,249,62,.06);text-align:center;backdrop-filter:none;letter-spacing:.01em;line-height:1.5;}
 .joyster-bubble::before{content:'';position:absolute;inset:0;border-radius:16px;background:radial-gradient(ellipse at 50% 0%,rgba(255,249,62,.06),transparent 60%);pointer-events:none;}
 .joyster-bubble::after{content:'';position:absolute;bottom:-7px;right:30px;border:7px solid transparent;border-top-color:rgba(18,22,34,.97);filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));}
 .joyster-bubble.show{opacity:1;transform:scale(1) translateY(0);box-shadow:0 10px 40px rgba(0,0,0,.5),0 0 30px rgba(255,249,62,.08);}
-@keyframes joysterBubblePulse{0%,100%{box-shadow:0 10px 40px rgba(0,0,0,.5),0 0 30px rgba(255,249,62,.08);}50%{box-shadow:0 10px 40px rgba(0,0,0,.5),0 0 40px rgba(255,249,62,.12);}}
-.joyster-bubble.show{animation:joysterBubblePulse 3s ease-in-out infinite;}
+/* The bubble used to breathe a yellow halo forever (`joysterBubblePulse`) —
+   an idle loop AND a coloured glow. It still fades and scales in via `.show`. */
 /* Knight background ghost */
 .hero-knight-bg{position:absolute;right:-30px;bottom:-20px;height:280px;max-height:280px;max-width:300px;opacity:.06;filter:blur(1.5px) grayscale(.4);pointer-events:none;z-index:0;object-fit:contain;overflow:hidden;}
 body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bottom:-10px;}
@@ -897,7 +901,8 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .btn-a::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);transform:translateX(-100%);transition:none;}
 .btn-a:hover::after{animation:btnShimmer .6s ease forwards;}
 @keyframes btnShimmer{to{transform:translateX(100%);}}
-.empty-state .ei{animation:subtleFloat 4s ease-in-out infinite;}
+/* (`.empty-state .ei` used to float here on a loop — an empty state can sit on
+   screen indefinitely, so it doesn't get a permanent animation.) */
 /* Warm greeting wave animation */
 @keyframes wave{0%,100%{transform:rotate(0);}25%{transform:rotate(20deg);}75%{transform:rotate(-10deg);}}
 .hero-greeting .wave-emoji{display:inline-block;animation:wave 2s ease-in-out 1;}
@@ -3926,12 +3931,11 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .atelier-promo__sub{font-size:12.5px;color:rgba(58,27,58,.75);line-height:1.45;margin-bottom:12px;}
 .atelier-promo__cta{padding:9px 20px;background:#fff;color:#a020a0;border:none;border-radius:999px;font-family:var(--font-display);font-size:13px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:transform .12s, background .12s;box-shadow:0 3px 10px rgba(160,32,160,.18);}
 .atelier-promo__cta:hover{background:#fff5fc;transform:scale(1.03);}
-/* Two-layer motion: outer wrapper drifts back+forward slowly (we and
-   the knight are flying at matched speed but he wobbles in the wind),
-   inner <img> trembles fast like a small engine vibration. The two
-   transforms compose because they're on different elements. */
-.atelier-promo__knight-wrap{position:absolute;left:-10px;bottom:-14px;width:160px;height:160px;pointer-events:none;z-index:4;animation:ftz-knight-drift 7s ease-in-out infinite;will-change:transform;}
-.atelier-promo__knight{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(58,27,58,.28));animation:ftz-knight-tremble .18s linear infinite;will-change:transform;display:block;}
+/* ⚠️ He used to drift and tremble on a permanent loop (`ftz-knight-drift` on
+   the wrapper, `ftz-knight-tremble` on the image). Both are gone: idle motion
+   on a character stays out of the app unless it was asked for. */
+.atelier-promo__knight-wrap{position:absolute;left:-10px;bottom:-14px;width:160px;height:160px;pointer-events:none;z-index:4;}
+.atelier-promo__knight{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(58,27,58,.28));display:block;}
 @keyframes ftz-knight-drift{
   0%,100%{transform:translateX(0);}
   35%{transform:translateX(-10px);}
@@ -16595,8 +16599,12 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
    empty crate whenever a search comes back with nothing. */
 .ftz-nf{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
   padding:38px 22px 42px;gap:4px;width:100%;grid-column:1/-1;animation:ftzNfIn .32s var(--ease-out) both;}
+/* ⚠️ NO IDLE ANIMATION. The knight used to bob forever (`ftzNfBob`), and an
+   empty state is on screen for as long as the search stays empty — so a
+   permanent loop is a permanent distraction in the corner of the eye. The block
+   still ARRIVES with `ftzNfIn`; it just stops moving once it has landed. */
 .ftz-nf-img{width:132px;height:auto;object-fit:contain;margin-bottom:12px;
-  filter:drop-shadow(0 10px 22px rgba(0,0,0,.45));animation:ftzNfBob 3.6s ease-in-out infinite;}
+  filter:drop-shadow(0 10px 22px rgba(0,0,0,.45));}
 .ftz-nf-t{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--text);}
 .ftz-nf-s{font-size:12.5px;color:var(--muted-light);max-width:300px;line-height:1.5;}
 .ftz-nf--sm{padding:22px 16px 26px;}
@@ -18575,19 +18583,20 @@ body.has-announce .main{padding-top:var(--ann-h);}
    collide with the "What's New" title. Anchored to the figure it always sits
    just over him, wherever he is standing. */
 .ftz-wn-fig{position:relative;width:100%;display:flex;justify-content:center;}
-.ftz-wn-herald-img{width:100%;height:auto;max-height:250px;object-fit:contain;display:block;
-  filter:drop-shadow(0 14px 22px rgba(0,0,0,.45));}
+.ftz-wn-herald-img{width:100%;height:auto;max-height:250px;object-fit:contain;display:block;}
 
 /* The cry — pops only AFTER he has taken his place. */
 .ftz-wn-bubble{position:absolute;bottom:calc(100% - 10px);left:50%;z-index:2;
   padding:9px 15px;border-radius:16px;white-space:nowrap;
-  background:var(--accent);color:var(--ink);
+  background:#fff;color:#13161d;
   font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:.01em;
   box-shadow:0 6px 14px rgba(0,0,0,.35);
   opacity:0;transform-origin:50% 100%;transform:translate(-50%,8px) scale(.6);
   transition:opacity .2s var(--ease-out), transform .42s cubic-bezier(.2,1.5,.4,1);}
+/* The tail is a rotated square, so it has to be repainted with the bubble or it
+   stays the old colour and reads as a stray chip beside his head. */
 .ftz-wn-bubble::after{content:'';position:absolute;left:calc(50% - 6px);bottom:-5px;
-  width:13px;height:13px;background:var(--accent);border-radius:0 0 4px 0;
+  width:13px;height:13px;background:#fff;border-radius:0 0 4px 0;
   transform:rotate(45deg) skew(6deg,6deg);}
 .ftz-wn.wn-a3 .ftz-wn-bubble{opacity:1;transform:translate(-50%,0) scale(1);}
 
@@ -18922,22 +18931,27 @@ body.has-announce .main{padding-top:var(--ann-h);}
   .disc-inv-btn{padding:0 11px;gap:0;}}
 
 /* ── "I have an invite" ──
-   Wears `.fs-redeem` wholesale. Only the art column is different: the Onyx card
-   is a landscape bitmap with its own baked corner radius (hence the percentage
-   `border-radius` further up, which would deform a character cut-out), while
-   this is a transparent PNG that just stands there. */
-.ftz-invpaste{max-width:660px!important;}
-.ftz-invpaste .fs-redeem-split{grid-template-columns:1fr 200px;gap:20px;}
-.ftz-invpaste-art{align-items:flex-end;}
-/* ⚠️ `.fs-redeem-art img` carries the gift card's ink FRAME (2px border + a 6px
-   hard drop). Around a landscape bitmap that reads as the edge of a card;
-   around a cut-out character it reads as a box someone has been put in. */
-.ftz-invpaste-art img{border:none;box-shadow:none;border-radius:0;
-  max-height:250px;width:auto;max-width:100%;}
-@media(max-width:760px){
-  .ftz-invpaste .fs-redeem-split{grid-template-columns:1fr;}
-  .ftz-invpaste-art{align-items:center;}
-  .ftz-invpaste-art img{max-height:150px;margin:0 auto;}}
+   Add Friend's header and inline input row, with the Redeem card's field label,
+   error line and footnote. Both of those cards take a string somebody pasted,
+   check it, and open a door — so this one is built from their parts instead of
+   being given a look of its own. Text only: a character standing beside a single
+   field crowded the one thing the card exists to do. */
+.ftz-invp{max-width:470px!important;}
+.ftz-invp .afr-head{padding:22px 56px 10px 24px;}
+/* `.afr-head__title` is a legacy 900. Standing direction is 500–700. */
+.ftz-invp .afr-head__title{font-weight:700;}
+/* `.afr-head__icon` sizes an `<i>` by font-size; this one is an inline svg. */
+.ftz-invp .afr-head__icon svg{height:17px;width:auto;display:block;}
+.ftz-invp-zone{padding:0 24px 4px;}
+.ftz-invp-zone .fs-redeem-lb{display:block;margin-bottom:7px;}
+/* The button lives INSIDE the field row, so it can't carry the 3D recipe's
+   4px drop without hanging past the row's own rounded edge. */
+.ftz-invp-zone .afr-send-btn{box-shadow:0 3px 0 0 var(--ink);}
+.ftz-invp-zone .afr-send-btn:active{box-shadow:0 1px 0 0 var(--ink);}
+.ftz-invp-zone .fs-redeem-err{margin:8px 0 0;}
+.ftz-invp-zone .fs-redeem-note{margin-top:12px;}
+.ftz-invp-foot{margin-top:14px;}
+.ftz-invp-browse{width:100%;justify-content:center;}
 
 /* Character art is not drawn at a uniform scale — `_ftzNotFound` now tags the
    block with which one it used so each can be sized honestly. The battle

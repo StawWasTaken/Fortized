@@ -1,0 +1,264 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="/app/styles.css">
+<style>html,body{margin:0;height:100%;background:var(--bg);font-family:var(--font-ui)}</style>
+<script>
+const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+window.CU={username:'staw',joinedAt:'2020-01-01',guide:{}};
+const toast=()=>{},joinByInvite=c=>{window.__code=c;},setDiscoverSubPage=p=>{window.__disc=p;};
+const _wrn=()=>{},_ftzMaybeShowGetStarted=()=>{};
+const _FTZ_CHAR_DIR = '/Icons/CharacterIcons/';
+const _FTZ_CHARS = {
+  search:    'MediaNotFound.png',   // peering into an empty crate — nothing found
+  point:     'JoysterPoint.png',    // pointing the way — invitations, prompts
+  onyx:      'ClaimOnyx.png',       // hoisting the reward — payouts
+  battle:    'ToBattle.png',        // charging off — get started, first step
+  device:    'PlayComputer.png',    // at the machine — games, devices, accounts
+  celebrate: 'Celebration.png',     // a win worth marking
+  announce:  'Announcement.png',    // herald with a scroll — news, what's new
+};
+function _ftzCharSrc(name) { return _FTZ_CHAR_DIR + (_FTZ_CHARS[name] || _FTZ_CHARS.search); }
+
+function _inviteCodeFrom(raw) {
+  const s = String(raw || '').trim();
+  if (!s) return '';
+  // ?invite= is the canonical query shape, and it can carry other params.
+  const q = s.match(/[?&]invite=([\w-]+)/i);
+  if (q) return q[1];
+  // Otherwise: drop the scheme and the query, then take the last path segment.
+  // A segment containing a dot is a hostname, not a code — that's what stops a
+  // bare "fortized.com" being read as an invite.
+  const seg = s.replace(/^[a-z]+:\/\//i, '').replace(/[?#].*$/, '').replace(/\/+$/, '').split('/').pop() || '';
+  return (/^[\w-]{3,64}$/.test(seg) && !seg.includes('.')) ? seg : '';
+}
+
+function _invOpenPaste() {
+  document.getElementById('ftz-inv-paste')?.remove();
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay';
+  ov.id = 'ftz-inv-paste';
+  // Add Friend's head + inline input row, with the Redeem card's label, error
+  // line and footnote. Both of those cards do the same job this one does — take
+  // a string someone pasted, check it, open a door — so it is assembled from
+  // their parts rather than given a shape of its own.
+  // ⚠️ No artwork. A character standing next to a single text field crowded the
+  // one thing the card is for, and the two cards this is modelled on don't carry
+  // one either.
+  ov.innerHTML = `
+    <div class="ftz-confirm-card ftz-ac-card ftz-invp" role="dialog" aria-label="Redeem an invite">
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('ftz-inv-paste')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
+      <div class="afr-head">
+        <div class="afr-head__icon"><svg viewBox="0 0 576 512" fill="currentColor" aria-hidden="true"><path d="M528 32c26.5 0 48 21.5 48 48l0 352c0 26.5-21.5 48-48 48L48 480c-26.5 0-48-21.5-48-48L0 80C0 53.5 21.5 32 48 32l480 0zM376 144c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-80 0zm0 96c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-80 0zM128 288a64 64 0 1 0 0-128 64 64 0 1 0 0 128zm-32 32c-44.2 0-80 35.8-80 80 0 8.8 7.2 16 16 16l192 0c8.8 0 16-7.2 16-16 0-44.2-35.8-80-80-80l-64 0z"/></svg></div>
+        <div class="afr-head__text">
+          <div class="afr-head__title">Have an invite?</div>
+          <div class="afr-head__sub">Paste the link or the code and we'll take you to the gate.</div>
+        </div>
+      </div>
+      <div class="afr-input-zone ftz-invp-zone">
+        <label class="fs-redeem-lb" for="inv-paste-in">Invite link or code</label>
+        <div class="afr-input-row">
+          <input id="inv-paste-in" type="text" placeholder="invite.fortized.com/…"
+                 autocomplete="off" spellcheck="false"
+                 oninput="document.getElementById('inv-paste-go').disabled=!this.value.trim();document.getElementById('inv-paste-err')?.classList.remove('show')"
+                 onkeydown="if(event.key==='Enter'&&!document.getElementById('inv-paste-go').disabled)_invSubmitPaste()">
+          <button class="fs-btn fs-btn--primary afr-send-btn" id="inv-paste-go" disabled onclick="_invSubmitPaste()">Proceed</button>
+        </div>
+        <div class="fs-redeem-err" id="inv-paste-err"></div>
+        <div class="fs-redeem-note"><i class="fa-solid fa-circle-info"></i><span>Any shape works: a full link, an <b>invite.fortized.com</b> address, or just the code on its own.</span></div>
+      </div>
+      <div class="afr-places ftz-invp-foot">
+        <div class="afr-places__title">No invite?</div>
+        <div class="afr-places__sub">Plenty of bastions are open to anyone. Have a look around and join whichever you like.</div>
+        <button class="fs-btn ftz-invp-browse" onclick="_invBrowse()">Browse bastions</button>
+      </div>
+    </div>`;
+  ov.addEventListener('mousedown', e => { if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
+  ov.tabIndex = -1;
+  ov.addEventListener('keydown', e => { if (e.key === 'Escape') ov.remove(); });
+  setTimeout(() => document.getElementById('inv-paste-in')?.focus(), 40);
+}
+
+// ⚠️ `setDiscoverSubPage` only swaps the sub-page INSIDE Discover; it does not
+// navigate there. The card is usually opened from the Discover topbar, so on its
+// own it looked right — but opened from anywhere else the button did nothing at
+// all. Go to the view first, then pick the sub-page.
+function _invBrowse() {
+  document.getElementById('ftz-inv-paste')?.remove();
+  try { showView('discover'); } catch (_) {}
+  setTimeout(() => { try { setDiscoverSubPage('bastions'); } catch (_) {} }, 60);
+}
+
+function _invSubmitPaste() {
+  const inp = document.getElementById('inv-paste-in');
+  const err = document.getElementById('inv-paste-err');
+  const code = _inviteCodeFrom(inp?.value);
+  if (!code) {
+    // `.fs-redeem-err` is opacity:0 until it's told to show.
+    if (err) { err.textContent = "That doesn't look like an invite. Check the link and try again."; err.classList.add('show'); }
+    inp?.focus();
+    return;
+  }
+  document.getElementById('ftz-inv-paste')?.remove();
+  joinByInvite(code);
+}
+
+const _FTZ_WHATS_NEW = [
+  {
+    id: '2026-08-15',
+    date: ' 15 August 2026',
+    lead: 'Onyx can change hands, the Fortshop has real collections, and staff finally have a console worth the name.',
+    entries: [
+      {
+        title: 'Send Onyx to anyone',
+        body: 'Radiance members can send Onyx straight from someone’s profile card. Open the More menu and pick Send Onyx. Both of you get a receipt in your DMs, and every movement is itemised in My Transactions.',
+      },
+      {
+        title: 'The Fortshop has collections',
+        body: 'Nameplates, avatar decorations and appearances now arrive together in themed collections with their own artwork. Bundles are picked for you and rotate monthly, and Radiance takes 10% off the whole shop.',
+      },
+      {
+        title: 'Quests you claim',
+        body: 'Nothing pays out silently any more. Finish a quest and it waits to be collected, from the Quests page or the widget above your name, so you always see what you earned.',
+      },
+      {
+        title: 'Redeem codes',
+        body: 'Onyx codes are live. Right-click your Onyx balance and choose Redeem Onyx Codes.',
+      },
+    ],
+  },
+];
+function _ftzWhatsNewLatest() { return _FTZ_WHATS_NEW[0] || null; }
+
+// Shows at most once per release. Two things it must never do: interrupt a
+// brand-new account with news about features they have never not had, and
+// reappear because a release went out while somebody was mid-session.
+function _ftzMaybeShowWhatsNew() {
+  try {
+    const rel = _ftzWhatsNewLatest();
+    if (!rel || !CU?.username) return;
+    const key = 'ftz_whatsnew_seen';
+    const seen = localStorage.getItem(key);
+    if (seen === rel.id) return;
+    // ⚠️ First run on this browser with no record at all: an account that
+    // joined AFTER the release never knew the old app, so "what's new" is
+    // meaningless to them — mark it read silently rather than opening with a
+    // changelog. Only members who predate the release get shown it.
+    if (!seen) {
+      const joined = Date.parse(CU.joinedAt || CU.createdAt || '') || 0;
+      const cut = Date.parse(rel.id) || 0;
+      if (joined && cut && joined > cut) { localStorage.setItem(key, rel.id); return; }
+    }
+    // Never on top of something else — a takeover, a modal, or an unfinished
+    // sentence in the chatbar. It waits for the next quiet boot instead.
+    if (document.getElementById('maintenance-overlay')) return;
+    if (document.querySelector('.modal.show, .ftz-confirm-overlay')) return;
+    _ftzShowWhatsNew(rel);
+  } catch (_) {}
+}
+
+// The card arrives in three beats: the herald walks on in the middle of an
+// empty stage, steps aside to the left and cries out, and only then does the
+// announcement itself appear.
+//
+// ⚠️ The herald's travel is measured, not hardcoded. His resting place is the
+// real left column of the layout; act 1 just TRANSFORMS him to the card's
+// centre, so the distance depends on the card's actual width and has to be read
+// off the DOM. A magic number here breaks the moment the card is resized or the
+// text wraps to another line.
+// ⚠️ Transform only — never width/left. Animating layout on a card this size
+// would judder, and the stage's height must not change under the herald.
+const _WN_ACTS = [
+  ['wn-a1',  90],   // herald fades up, centre stage
+  ['wn-a2', 900],   // …steps left
+  ['wn-a3', 1320],  // …and cries out
+  ['wn-a4', 1620],  // the announcement itself
+];
+
+function _ftzShowWhatsNew(rel) {
+  const r = rel || _ftzWhatsNewLatest();
+  if (!r) return;
+  document.getElementById('ftz-wn-modal')?.remove();
+  const close = () => {
+    try { localStorage.setItem('ftz_whatsnew_seen', r.id); } catch (_) {}
+    document.getElementById('ftz-wn-modal')?.remove();
+  };
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay';
+  ov.id = 'ftz-wn-modal';
+  // Dismissing ANY way marks it read — closing the card IS the acknowledgement,
+  // so it can't come back tomorrow because somebody hit Escape instead of Got it.
+  ov.onclick = e => { if (e.target === ov) close(); };
+  ov.innerHTML = `
+    <div class="ftz-confirm-card ftz-ac-card ftz-wn" role="dialog" aria-label="What's New">
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
+      <div class="ftz-wn-stage">
+        <div class="ftz-wn-spot" aria-hidden="true"></div>
+        <div class="ftz-wn-herald">
+          <div class="ftz-wn-fig">
+            <div class="ftz-wn-bubble">Hear ye, hear ye!</div>
+            <img class="ftz-wn-herald-img" src="${_ftzCharSrc('announce')}" alt="" draggable="false"
+                 onerror="this.style.visibility='hidden'">
+          </div>
+        </div>
+        <div class="ftz-wn-panel">
+          <div class="ftz-wn-head">
+            <div class="ftz-wn-h-t">What’s New</div>
+            ${r.date ? `<div class="ftz-wn-h-d">${escapeHTML(r.date)}</div>` : ''}
+          </div>
+          <div class="ftz-wn-scroll">
+            ${r.lead ? `<p class="ftz-wn-lead">${escapeHTML(r.lead)}</p>` : ''}
+            <div class="ftz-wn-list">
+              ${(r.entries || []).map((e, i) => `
+                <div class="ftz-wn-item" style="--i:${i}">
+                  <div class="ftz-wn-i-t">${escapeHTML(e.title)}</div>
+                  <div class="ftz-wn-i-b">${escapeHTML(e.body)}</div>
+                </div>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ftz-modal-foot ftz-wn-foot">
+        <button class="fs-btn fs-btn--primary ftz-wn-ok">Got it</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  const card = ov.querySelector('.ftz-wn');
+  const herald = ov.querySelector('.ftz-wn-herald');
+
+  // Measure the herald's journey: from where he rests, to the middle of the card.
+  const measure = () => {
+    const c = card.getBoundingClientRect(), h = herald.getBoundingClientRect();
+    if (!c.width || !h.width) return;
+    card.style.setProperty('--wn-dx', ((c.left + c.width / 2) - (h.left + h.width / 2)).toFixed(1) + 'px');
+  };
+  measure();
+
+  const timers = [];
+  const finish = () => {
+    timers.forEach(clearTimeout); timers.length = 0;
+    _WN_ACTS.forEach(([c]) => card.classList.add(c));
+    card.classList.add('wn-done');
+  };
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) finish();
+  else _WN_ACTS.forEach(([cls, at]) => timers.push(setTimeout(() => card.classList.add(cls), at)));
+
+  // Impatience is not an error: clicking the card, or the button, skips to the
+  // end rather than doing nothing until the herald finishes his walk.
+  card.addEventListener('click', e => {
+    if (!card.classList.contains('wn-done') && !e.target.closest('.ftz-ac-x')) { e.stopPropagation(); finish(); }
+  }, true);
+
+  ov.querySelector('.ftz-ac-x').onclick = close;
+  ov.querySelector('.ftz-wn-ok').onclick = () => (card.classList.contains('wn-done') ? close() : finish());
+  const esc = e => {
+    if (e.key !== 'Escape') return;
+    document.removeEventListener('keydown', esc);
+    close();
+  };
+  document.addEventListener('keydown', esc);
+  window.addEventListener('resize', measure, { passive: true });
+}
+// Openable on demand, so it isn't a one-shot you can never look at again.
+window._ftzShowWhatsNew=_ftzShowWhatsNew; window._ftzMaybeShowWhatsNew=_ftzMaybeShowWhatsNew;
+</script>

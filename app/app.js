@@ -16161,34 +16161,39 @@ function _invOpenPaste() {
   const ov = document.createElement('div');
   ov.className = 'ftz-confirm-overlay';
   ov.id = 'ftz-inv-paste';
-  // Built on the Redeem Onyx Codes card (`.fs-redeem`), not a shape of its own:
-  // both cards do exactly the same job — take a string, check it, open a door —
-  // so they should look like the same component. Only the art column differs,
-  // because a character PNG is not a landscape gift card.
+  // Add Friend's head + inline input row, with the Redeem card's label, error
+  // line and footnote. Both of those cards do the same job this one does — take
+  // a string someone pasted, check it, open a door — so it is assembled from
+  // their parts rather than given a shape of its own.
+  // ⚠️ No artwork. A character standing next to a single text field crowded the
+  // one thing the card is for, and the two cards this is modelled on don't carry
+  // one either.
   ov.innerHTML = `
-    <div class="ftz-confirm-card ftz-ac-card fs-redeem ftz-invpaste" role="dialog" aria-label="Redeem an invite">
+    <div class="ftz-confirm-card ftz-ac-card ftz-invp" role="dialog" aria-label="Redeem an invite">
       <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('ftz-inv-paste')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
-      <div class="fs-redeem-split">
-        <div class="fs-redeem-main">
-          <div class="fs-redeem-hero">
-            <div class="ftz-ac-title">Got an invite?</div>
-            <div class="ftz-ac-sub">Paste it in and we'll walk you to the gate.</div>
-          </div>
-          <label class="fs-redeem-lb" for="inv-paste-in">Invite link or code</label>
-          <input id="inv-paste-in" class="settings-input fs-redeem-in" type="text" placeholder="Paste your invite"
+      <div class="afr-head">
+        <div class="afr-head__icon"><svg viewBox="0 0 576 512" fill="currentColor" aria-hidden="true"><path d="M528 32c26.5 0 48 21.5 48 48l0 352c0 26.5-21.5 48-48 48L48 480c-26.5 0-48-21.5-48-48L0 80C0 53.5 21.5 32 48 32l480 0zM376 144c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-80 0zm0 96c-13.3 0-24 10.7-24 24s10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-80 0zM128 288a64 64 0 1 0 0-128 64 64 0 1 0 0 128zm-32 32c-44.2 0-80 35.8-80 80 0 8.8 7.2 16 16 16l192 0c8.8 0 16-7.2 16-16 0-44.2-35.8-80-80-80l-64 0z"/></svg></div>
+        <div class="afr-head__text">
+          <div class="afr-head__title">Have an invite?</div>
+          <div class="afr-head__sub">Paste the link or the code and we'll take you to the gate.</div>
+        </div>
+      </div>
+      <div class="afr-input-zone ftz-invp-zone">
+        <label class="fs-redeem-lb" for="inv-paste-in">Invite link or code</label>
+        <div class="afr-input-row">
+          <input id="inv-paste-in" type="text" placeholder="invite.fortized.com/…"
                  autocomplete="off" spellcheck="false"
                  oninput="document.getElementById('inv-paste-go').disabled=!this.value.trim();document.getElementById('inv-paste-err')?.classList.remove('show')"
                  onkeydown="if(event.key==='Enter'&&!document.getElementById('inv-paste-go').disabled)_invSubmitPaste()">
-          <div class="fs-redeem-err" id="inv-paste-err"></div>
-          <div class="fs-redeem-note"><i class="fa-solid fa-circle-info"></i><span>Any shape works: a full link, an <b>invite.fortized.com</b> address, or just the code on its own.</span></div>
+          <button class="fs-btn fs-btn--primary afr-send-btn" id="inv-paste-go" disabled onclick="_invSubmitPaste()">Proceed</button>
         </div>
-        <div class="fs-redeem-art ftz-invpaste-art">
-          <img src="${_ftzCharSrc('point')}" alt="" draggable="false" onerror="this.closest('.fs-redeem-art')?.remove()">
-        </div>
+        <div class="fs-redeem-err" id="inv-paste-err"></div>
+        <div class="fs-redeem-note"><i class="fa-solid fa-circle-info"></i><span>Any shape works: a full link, an <b>invite.fortized.com</b> address, or just the code on its own.</span></div>
       </div>
-      <div class="fs-redeem-acts">
-        <button class="fs-btn" onclick="document.getElementById('ftz-inv-paste')?.remove()">Cancel</button>
-        <button class="fs-btn fs-btn--primary" id="inv-paste-go" disabled onclick="_invSubmitPaste()">Proceed</button>
+      <div class="afr-places ftz-invp-foot">
+        <div class="afr-places__title">No invite?</div>
+        <div class="afr-places__sub">Plenty of bastions are open to anyone. Have a look around and join whichever you like.</div>
+        <button class="fs-btn ftz-invp-browse" onclick="_invBrowse()">Browse bastions</button>
       </div>
     </div>`;
   ov.addEventListener('mousedown', e => { if (e.target === ov) ov.remove(); });
@@ -16196,6 +16201,16 @@ function _invOpenPaste() {
   ov.tabIndex = -1;
   ov.addEventListener('keydown', e => { if (e.key === 'Escape') ov.remove(); });
   setTimeout(() => document.getElementById('inv-paste-in')?.focus(), 40);
+}
+
+// ⚠️ `setDiscoverSubPage` only swaps the sub-page INSIDE Discover; it does not
+// navigate there. The card is usually opened from the Discover topbar, so on its
+// own it looked right — but opened from anywhere else the button did nothing at
+// all. Go to the view first, then pick the sub-page.
+function _invBrowse() {
+  document.getElementById('ftz-inv-paste')?.remove();
+  try { showView('discover'); } catch (_) {}
+  setTimeout(() => { try { setDiscoverSubPage('bastions'); } catch (_) {} }, 60);
 }
 
 function _invSubmitPaste() {
@@ -17794,8 +17809,12 @@ function initFortizedUXResilience() {
     }
   });
 
-  // Trigger new onboarding for first-time users
-  setTimeout(showOnboarding, 600);
+  // ⚠️ The "Personalize Your Experience" interests picker used to open here, 600ms
+  // after boot. It is gone: the Get Started guide is the welcome now, and the
+  // picker fired on its own timer without checking whether anything else was on
+  // screen — so a new account could be handed the interests card, the release
+  // card and the guide, stacked, in the first four seconds. Boot cards go through
+  // `_ftzBootPopups` instead, one at a time.
   initFortizedUXResilience();
 
   try { saveCurrentToAccounts(); } catch(e) { console.warn('[init] saveCurrentToAccounts:', e); }
@@ -18770,15 +18789,9 @@ function initFortizedUXResilience() {
   setTimeout(() => {
     try { _listenGlobalSettingsConsolidated(); } catch(e) { console.warn('[init] delayed broadcast check:', e); }
   }, 500);
-  // What's New, once per release. Deliberately late (3s): the maintenance and
-  // ban/suspension checks above take precedence, and a release card that lands
-  // on top of a half-drawn app is worse than one that waits three seconds.
-  setTimeout(() => { try { _ftzMaybeShowWhatsNew(); } catch(e) { _wrn('[init] whatsNew:', e); } }, 3000);
-  // …then the welcome guide, for anyone who hasn't finished it. It checks for an
-  // open card first, so on the one boot where both would qualify the release
-  // card wins and the guide waits for the next one. In practice they never
-  // collide: a brand-new account is marked read on What's New silently.
-  setTimeout(() => { try { _ftzMaybeShowGetStarted(); } catch(e) { _wrn('[init] getStarted:', e); } }, 3600);
+  // Everything that may open a card on boot goes through ONE queue. See
+  // `_ftzBootPopups`.
+  setTimeout(() => { try { _ftzBootPopups(); } catch(e) { _wrn('[init] bootPopups:', e); } }, 3000);
   // Listen for force-refresh and session-clear signals from admin
   try { _listenForceRefresh(); } catch(e) { _wrn('[init] _listenForceRefresh:', e); }
   try { _listenClearSessions(); } catch(e) { _wrn('[init] _listenClearSessions:', e); }
@@ -33140,7 +33153,7 @@ const _FTZ_WHATS_NEW = [
     entries: [
       {
         title: 'Send Onyx to anyone',
-        body: 'Radiance members can send Onyx straight from someone’s profile card — open the More menu and pick Send Onyx. Both of you get a receipt in your DMs, and every movement is itemised in My Transactions.',
+        body: 'Radiance members can send Onyx straight from someone’s profile card. Open the More menu and pick Send Onyx. Both of you get a receipt in your DMs, and every movement is itemised in My Transactions.',
       },
       {
         title: 'The Fortshop has collections',
@@ -33148,7 +33161,7 @@ const _FTZ_WHATS_NEW = [
       },
       {
         title: 'Quests you claim',
-        body: 'Nothing pays out silently any more. Finish a quest and it waits to be collected — from the Quests page or the widget above your name — so you always see what you earned.',
+        body: 'Nothing pays out silently any more. Finish a quest and it waits to be collected, from the Quests page or the widget above your name, so you always see what you earned.',
       },
       {
         title: 'Redeem codes',
@@ -33565,9 +33578,52 @@ function _ftzShowGetStarted(startAt) {
   _gsPaint();
 }
 
-// Opens itself once, for accounts that haven't finished it. Runs AFTER What's
-// New has had its turn — a brand-new account is silently marked read there, so
-// in practice only one of the two ever appears.
+// ── Boot popups: one at a time, in priority order ──────────────────────────
+// ⚠️ Every card that can open by itself on boot MUST be registered here, and
+// nothing may schedule itself on its own `setTimeout` again. Each used to run
+// on a private timer and check `document.querySelector('.modal.show, …')` to
+// decide whether to stay out of the way — which only works if every card
+// answers one of those selectors. The interests picker did not (it wore
+// `.ftz-onboarding-overlay`), so it was invisible to that test and a new
+// account could get three cards stacked in the first four seconds.
+//
+// Here, a card's turn simply doesn't come until the one before it has been
+// closed: `_ftzBootNext` waits for the DOM node to disappear before asking the
+// next candidate. Nothing has to know about anything else in the list.
+const _FTZ_BOOT_POPUPS = [
+  { id: 'ftz-wn-modal', run: () => _ftzMaybeShowWhatsNew() },
+  { id: 'ftz-gs',       run: () => _ftzMaybeShowGetStarted() },
+];
+function _ftzBootBusy() {
+  // Anything already holding the screen: a takeover, a modal, or any card.
+  return !!(document.getElementById('maintenance-overlay')
+    || document.querySelector('.modal.show, .modal-overlay.open, .ftz-confirm-overlay'));
+}
+function _ftzBootPopups(i) {
+  let n = i || 0;
+  if (n >= _FTZ_BOOT_POPUPS.length) return;
+  const step = _FTZ_BOOT_POPUPS[n];
+  // Something unrelated is open (a violation notice, a maintenance takeover).
+  // Don't queue behind it — these are all "next quiet boot" cards.
+  if (_ftzBootBusy()) return;
+  try { step.run(); } catch (e) { _wrn('[boot popup] ' + step.id + ':', e); }
+  const el = document.getElementById(step.id);
+  // It declined its turn (already seen, already done) — go straight on.
+  if (!el) return _ftzBootPopups(n + 1);
+  // ⚠️ Poll rather than hook the close button: these cards are removed from the
+  // DOM by several different paths (the X, Escape, the backdrop, finishing the
+  // guide, taking a step out of it), and a queue that only hears about one of
+  // them strands the rest of the list. The node's absence is the one signal
+  // every path produces. Capped so a card left open forever costs nothing.
+  let ticks = 0;
+  const t = setInterval(() => {
+    if (!document.body.contains(el)) { clearInterval(t); setTimeout(() => _ftzBootPopups(n + 1), 450); }
+    else if (++ticks > 600) clearInterval(t); // 5 min
+  }, 500);
+}
+
+// Opens itself once, for accounts that haven't finished it. Its turn only comes
+// after What's New has been closed — see `_ftzBootPopups`.
 function _ftzMaybeShowGetStarted() {
   try {
     if (!CU?.username) return;
@@ -40322,12 +40378,12 @@ function _openSafetyActionCard(kind, username) {
   // Consequence rows per action.
   const rows = isBlock ? [
     { type: 'check', title: 'Stop all direct contact', desc: 'Neither of you can message or send friend requests.' },
-    { type: 'check', title: 'Hide their messages from you', desc: 'Their messages are blurred everywhere — reveal any time.' },
+    { type: 'check', title: 'Hide their messages from you', desc: 'Their messages are blurred everywhere. Reveal any time.' },
     isFriend
       ? { type: 'warn', title: 'Removes them from your friends', desc: 'You’d both have to add each other again.' }
       : { type: 'info', title: 'They won’t be notified', desc: 'Blocking is completely silent.' },
   ] : [
-    { type: 'check', title: 'Hide their profile and messages', desc: 'Blurred everywhere — you can reveal them any time.' },
+    { type: 'check', title: 'Hide their profile and messages', desc: 'Blurred everywhere. You can reveal them any time.' },
     { type: 'check', title: 'Mute their notifications', desc: 'You won’t hear a ping from them while ignored.' },
     { type: 'info', title: 'They can still message you', desc: 'They won’t know you’ve ignored them.' },
   ];
@@ -71791,7 +71847,7 @@ const _STF_ANN_PRESETS = [
   { label: 'We are back', lead: '', text: 'Everything is back to normal. Thanks for waiting.', colour: '#3ecf6e', icon: 'fa-circle-info' },
   { label: 'Investigating an issue', lead: 'Incident', flat: true, text: 'We are looking into a problem some of you are hitting. Updates on the status page.', colour: '#ff0033', icon: 'fa-triangle-exclamation' },
   { label: 'New release', lead: 'Update', text: 'A new version of Fortized just landed. Reload to pick it up.', colour: '#2caefc', icon: 'fa-rocket' },
-  { label: 'Event live', lead: 'Event', text: 'The event is live — head to Quests to take part.', colour: '#ff77e4', icon: 'fa-champagne-glasses' },
+  { label: 'Event live', lead: 'Event', text: 'The event is live. Head to Quests to take part.', colour: '#ff77e4', icon: 'fa-champagne-glasses' },
 ];
 
 _STF_RENDER.system = async function (host, seq) {

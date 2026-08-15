@@ -18457,44 +18457,95 @@ body.has-announce .main{padding-top:var(--ann-h);}
   outline:none !important;}
 
 /* ══════════════════════════════════════════════════════════════════════
-   RADIANCE GIFT CARD — the Onyx card's 3D lean (2026fix499)
-   ──────────────────────────────────────────────────────────────────────
-   Same treatment as `.fs-redeem-card`, same JS (`_fsWireCardTilt`), just
-   pointed at a different pair of elements and dialled down: the gift card is
-   a wide banner, and the Onyx card's 12°/8° on something this wide reads as a
-   glitch rather than a tilt.
+   RADIANCE GIFT ART — the 3D lean lives on the PICTURE (2026fix500)
+   The Onyx card and this run the same JS (`_fsWireCardTilt`); here it's aimed
+   at the artwork rather than the panel around it. Rotating the whole banner
+   moved the copy and the CTA with it, which is not what a gift card does — the
+   card IS the picture, so the picture is what turns.
 
-   ⚠️ The stage exists ONLY to own the perspective and hear the pointer. It
-   can't be the banner itself — `perspective` on an element does not apply to
-   that element's own transform, only to its children, so a self-perspectived
-   card rotates flat with no depth at all.
+   ⚠️ Perspective sits on `.rad-giftstage`, which wraps ONLY the art. Two
+   reasons it can't go on the banner: `perspective` never applies to an
+   element's own transform (only to its children), and its origin defaults to
+   the element's centre — from the middle of a wide banner the art sits far off
+   to the right and would be viewed at a steep angle, shearing it. Wrapping the
+   art keeps the viewer square-on to it.
    ══════════════════════════════════════════════════════════════════════ */
-.rad-giftstage{perspective:1400px;}
-.rad-giftbanner{transform-origin:50% 50%;
-  transition:transform .5s var(--ease-out),box-shadow .45s var(--ease-out);}
+.rad-giftstage{perspective:900px;flex-shrink:0;max-width:44%;display:flex;
+  align-items:center;justify-content:center;}
+.rad-giftart{position:relative;display:inline-flex;transform-origin:50% 50%;
+  transition:transform .5s var(--ease-out),filter .45s var(--ease-out);}
 /* JS owns the motion once `.is-tilt` lands — a CSS transition re-times itself
    on every mousemove, which is exactly what makes a tracked tilt feel rubbery.
    Kept as the no-JS / reduced-motion fallback. */
-.rad-giftbanner.is-tilt{transition:box-shadow .45s var(--ease-out);}
-.rad-giftstage:hover .rad-giftbanner{box-shadow:0 26px 50px rgba(0,0,0,.5);}
+.rad-giftart.is-tilt{transition:filter .45s var(--ease-out);}
+/* ⚠️ `filter:drop-shadow`, never `box-shadow`. The art is a transparent PNG, so
+   a box-shadow would draw the shadow of a RECTANGLE behind a character with no
+   rectangle in it. drop-shadow follows the alpha silhouette. */
+.rad-giftbanner:hover .rad-giftart{filter:drop-shadow(0 22px 26px rgba(0,0,0,.45));}
+.rad-giftbanner-art{display:block;max-height:200px;max-width:100%;object-fit:contain;
+  pointer-events:none;}
 
 /* Specular highlight, anchored to the ROOM rather than the cursor: `--gx/--gy`
-   come off the card's own eased rotation, so the light stays put and the card
+   come off the art's own eased rotation, so the light stays put and the picture
    turns under it. A tight dot would read as a torch you're carrying, so it's a
-   broad soft ellipse — that reads as a lit surface. `.rad-giftbanner` already
-   clips its overflow, so the sheen stops at the rounded corners on its own. */
-.rad-giftbanner::after{content:'';position:absolute;inset:0;pointer-events:none;
-  border-radius:inherit;z-index:2;
+   broad soft ellipse — that reads as a lit surface.
+   ⚠️ Masked to `--art` (the same file as the <img>), because an unmasked sheen
+   over a transparent PNG is a floating white RECTANGLE. The mask makes the
+   light land on the character and nothing else. */
+.rad-giftart::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
   background:radial-gradient(72% 118% at var(--gx,50%) var(--gy,50%),
-    rgba(255,255,255,.16) 0%,rgba(255,255,255,.06) 30%,rgba(255,255,255,0) 62%);
+    rgba(255,255,255,.30) 0%,rgba(255,255,255,.10) 32%,rgba(255,255,255,0) 64%);
+  -webkit-mask:var(--art) center/contain no-repeat;mask:var(--art) center/contain no-repeat;
   opacity:var(--sheen,0);transition:opacity .28s var(--ease-out);}
 
-/* The card carries a real button. Keeping the text layer above the sheen means
-   the CTA never sits under a wash of white. */
-.rad-giftbanner-text{z-index:3;}
+/* The art's own sizing moved up onto the stage, so the older
+   `.rad-giftbanner-art{max-width:44%}` (and its 760px counterpart) now measure
+   against the stage instead of the banner — restated here so the narrow layout
+   keeps the size it had. */
+@media (max-width:760px){
+  .rad-giftstage{max-width:72%;}
+  .rad-giftbanner-art{max-height:160px;}
+}
 
 @media(prefers-reduced-motion:reduce){
   .rad-giftstage{perspective:none;}
-  .rad-giftbanner,.rad-giftbanner.is-tilt{transition:none;transform:none !important;}
-  .rad-giftbanner::after{display:none;}
+  .rad-giftart,.rad-giftart.is-tilt{transition:none;transform:none !important;}
+  .rad-giftart::after{display:none;}
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   WHAT'S NEW — the release card (2026fix500)
+   Same .ftz-confirm-card.ftz-ac-card family as every other popup, widened,
+   with the herald over the top. Header and footer are PINNED and only the
+   middle scrolls — a release with six entries would otherwise be cut off by
+   `.ftz-ac-card`'s max-height:90vh with no scrollbar to hint at it.
+   ⚠️ `min-height:0` on the scroller is the part that matters: without it a
+   flex child refuses to shrink below its content and the clipping comes back.
+   ══════════════════════════════════════════════════════════════════════ */
+.ftz-wn{max-width:560px;}
+.ftz-wn-head{flex-shrink:0;text-align:center;padding:20px 56px 16px;
+  border-bottom:1px solid var(--border);}
+.ftz-wn-h-t{font-family:var(--font-display);font-size:21px;font-weight:700;color:#fff;
+  letter-spacing:-.01em;}
+.ftz-wn-h-d{font-size:12.5px;color:var(--muted-light);margin-top:3px;}
+.ftz-wn-scroll{flex:1;min-height:0;overflow-y:auto;padding:0 0 6px;}
+
+/* The herald sits on his own tinted shelf so the art has a surface to stand on
+   rather than floating in the middle of the copy. */
+.ftz-wn-art{display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:22px 24px 18px;background:rgba(255,255,255,.02);
+  border-bottom:1px solid var(--border);}
+.ftz-wn-art img{width:132px;height:auto;object-fit:contain;display:block;}
+.ftz-wn-cry{font-family:var(--font-display);font-size:15px;font-weight:700;
+  color:var(--accent);letter-spacing:.01em;}
+.ftz-wn-lead{margin:0;padding:18px 26px 2px;font-size:13.5px;line-height:1.6;
+  color:var(--text);}
+.ftz-wn-list{padding:8px 26px 18px;}
+.ftz-wn-item{padding:14px 0;}
+.ftz-wn-item + .ftz-wn-item{border-top:1px solid var(--border);}
+.ftz-wn-i-t{font-family:var(--font-display);font-size:14.5px;font-weight:700;
+  color:#fff;margin-bottom:4px;}
+.ftz-wn-i-b{font-size:12.5px;line-height:1.55;color:var(--muted-light);}
+/* One button, and it's the acknowledgement — so it sits on the right on its own
+   rather than pretending there's a choice to make. */
+.ftz-wn-foot{justify-content:flex-end;flex-shrink:0;}

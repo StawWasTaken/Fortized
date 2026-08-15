@@ -18310,6 +18310,10 @@ function initFortizedUXResilience() {
   setTimeout(() => {
     try { _listenGlobalSettingsConsolidated(); } catch(e) { console.warn('[init] delayed broadcast check:', e); }
   }, 500);
+  // What's New, once per release. Deliberately late (3s): the maintenance and
+  // ban/suspension checks above take precedence, and a release card that lands
+  // on top of a half-drawn app is worse than one that waits three seconds.
+  setTimeout(() => { try { _ftzMaybeShowWhatsNew(); } catch(e) { _wrn('[init] whatsNew:', e); } }, 3000);
   // Listen for force-refresh and session-clear signals from admin
   try { _listenForceRefresh(); } catch(e) { _wrn('[init] _listenForceRefresh:', e); }
   try { _listenClearSessions(); } catch(e) { _wrn('[init] _listenClearSessions:', e); }
@@ -32602,6 +32606,120 @@ function _maintenanceTick(gs) {
     else if (!on && overlay) { location.reload(); }
   } catch (_) {}
 }
+
+// ══════════════════════════════════════════════════════════════════════
+// WHAT'S NEW — the release card, shown once
+// ══════════════════════════════════════════════════════════════════════
+// Ships IN the bundle rather than coming from the database: it's release copy,
+// it changes when we deploy, and reading it from the server would mean a fetch
+// on every boot to usually learn nothing. Zero egress this way.
+//
+// To announce a release: add an entry at the TOP of `_FTZ_WHATS_NEW` with a
+// fresh `id`. Everyone who has already seen the previous one gets this one once.
+// ⚠️ `id` is the whole mechanism — bump it and the card returns for everybody,
+// so don't recycle one to fix a typo unless you actually want it shown again.
+const _FTZ_WHATS_NEW = [
+  {
+    id: '2026-08-15',
+    date: ' 15 August 2026',
+    lead: 'Onyx can change hands, the Fortshop has real collections, and staff finally have a console worth the name.',
+    entries: [
+      {
+        title: 'Send Onyx to anyone',
+        body: 'Radiance members can send Onyx straight from someone’s profile card — open the More menu and pick Send Onyx. Both of you get a receipt in your DMs, and every movement is itemised in My Transactions.',
+      },
+      {
+        title: 'The Fortshop has collections',
+        body: 'Nameplates, avatar decorations and appearances now arrive together in themed collections with their own artwork. Bundles are picked for you and rotate monthly, and Radiance takes 10% off the whole shop.',
+      },
+      {
+        title: 'Quests you claim',
+        body: 'Nothing pays out silently any more. Finish a quest and it waits to be collected — from the Quests page or the widget above your name — so you always see what you earned.',
+      },
+      {
+        title: 'Redeem codes',
+        body: 'Onyx codes are live. Right-click your Onyx balance and choose Redeem Onyx Codes.',
+      },
+    ],
+  },
+];
+function _ftzWhatsNewLatest() { return _FTZ_WHATS_NEW[0] || null; }
+
+// Shows at most once per release. Two things it must never do: interrupt a
+// brand-new account with news about features they have never not had, and
+// reappear because a release went out while somebody was mid-session.
+function _ftzMaybeShowWhatsNew() {
+  try {
+    const rel = _ftzWhatsNewLatest();
+    if (!rel || !CU?.username) return;
+    const key = 'ftz_whatsnew_seen';
+    const seen = localStorage.getItem(key);
+    if (seen === rel.id) return;
+    // ⚠️ First run on this browser with no record at all: an account that
+    // joined AFTER the release never knew the old app, so "what's new" is
+    // meaningless to them — mark it read silently rather than opening with a
+    // changelog. Only members who predate the release get shown it.
+    if (!seen) {
+      const joined = Date.parse(CU.joinedAt || CU.createdAt || '') || 0;
+      const cut = Date.parse(rel.id) || 0;
+      if (joined && cut && joined > cut) { localStorage.setItem(key, rel.id); return; }
+    }
+    // Never on top of something else — a takeover, a modal, or an unfinished
+    // sentence in the chatbar. It waits for the next quiet boot instead.
+    if (document.getElementById('maintenance-overlay')) return;
+    if (document.querySelector('.modal.show, .ftz-confirm-overlay')) return;
+    _ftzShowWhatsNew(rel);
+  } catch (_) {}
+}
+
+function _ftzShowWhatsNew(rel) {
+  const r = rel || _ftzWhatsNewLatest();
+  if (!r) return;
+  document.getElementById('ftz-wn-modal')?.remove();
+  const close = () => {
+    try { localStorage.setItem('ftz_whatsnew_seen', r.id); } catch (_) {}
+    document.getElementById('ftz-wn-modal')?.remove();
+  };
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay';
+  ov.id = 'ftz-wn-modal';
+  // Dismissing ANY way marks it read — closing the card IS the acknowledgement,
+  // so it can't come back tomorrow because somebody hit Escape instead of Got it.
+  ov.onclick = e => { if (e.target === ov) close(); };
+  ov.innerHTML = `
+    <div class="ftz-confirm-card ftz-ac-card ftz-wn" role="dialog" aria-label="What's New">
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close">&times;</button>
+      <div class="ftz-wn-head">
+        <div class="ftz-wn-h-t">What’s New</div>
+        <div class="ftz-wn-h-d">${escapeHTML(r.date || '')}</div>
+      </div>
+      <div class="ftz-wn-scroll">
+        <div class="ftz-wn-art">
+          <img src="${_ftzCharSrc('announce')}" alt="" draggable="false"
+               onerror="this.closest('.ftz-wn-art')?.remove()">
+          <div class="ftz-wn-cry">Hear ye, hear ye!</div>
+        </div>
+        ${r.lead ? `<p class="ftz-wn-lead">${escapeHTML(r.lead)}</p>` : ''}
+        <div class="ftz-wn-list">
+          ${(r.entries || []).map(e => `
+            <div class="ftz-wn-item">
+              <div class="ftz-wn-i-t">${escapeHTML(e.title)}</div>
+              <div class="ftz-wn-i-b">${escapeHTML(e.body)}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="ftz-modal-foot ftz-wn-foot">
+        <button class="fs-btn fs-btn--primary ftz-wn-ok">Got it</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('.ftz-ac-x').onclick = close;
+  ov.querySelector('.ftz-wn-ok').onclick = close;
+  const esc = e => { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); } };
+  document.addEventListener('keydown', esc);
+}
+// Openable on demand, so it isn't a one-shot you can never look at again.
+window._ftzShowWhatsNew = _ftzShowWhatsNew;
 
 // ── Consolidated global settings poller (maintenance + announcement) ──
 // Instead of separate intervals each fetching global settings, use ONE.
@@ -48403,10 +48521,29 @@ function _fsCard(item) {
 function _fsGroup(title, right) {
   return `<div class="qst-group"><span class="qst-group-t">${title}</span>${right || ''}</div>`;
 }
+// ── The character art ──
+// One folder, one registry. Every hand-drawn knight in the app resolves through
+// here, so moving the art is a one-line change instead of a hunt through
+// 70k lines. Keys describe the MOOD, not the filename — a call site asks for
+// 'celebrate', and if the art behind it is ever redrawn nothing else moves.
+const _FTZ_CHAR_DIR = '/Icons/CharacterIcons/';
+const _FTZ_CHARS = {
+  search:    'MediaNotFound.png',   // peering into an empty crate — nothing found
+  point:     'JoysterPoint.png',    // pointing the way — invitations, prompts
+  onyx:      'ClaimOnyx.png',       // hoisting the reward — payouts
+  battle:    'ToBattle.png',        // charging off — get started, first step
+  device:    'PlayComputer.png',    // at the machine — games, devices, accounts
+  celebrate: 'Celebration.png',     // a win worth marking
+  announce:  'Announcement.png',    // herald with a scroll — news, what's new
+};
+function _ftzCharSrc(name) { return _FTZ_CHAR_DIR + (_FTZ_CHARS[name] || _FTZ_CHARS.search); }
+
 // ── Heroic Search — the shared empty state ──
 // Every dead-end search shows the knight peering into an empty crate. Empty
 // states read better when they're expressive rather than a bare "no results".
-const _FTZ_NOT_FOUND_IMG = '/Icons/MediaNotFound.png';
+// ⚠️ Not every empty state is a FAILURE. "Inbox zero" and "no warnings on file"
+// are wins, and a defeated knight over good news reads as an error. Those pass
+// `art:'celebrate'`; somewhere you haven't started yet passes `art:'battle'`.
 const _FTZ_NOT_FOUND_LINES = [
   'The knight searched far and wide — nothing.',
   'Empty crate. Not even a spider.',
@@ -48417,11 +48554,14 @@ const _FTZ_NOT_FOUND_LINES = [
 ];
 function _ftzNotFound(title, sub, opts) {
   const o = opts || {};
-  const line = o.sub === undefined
+  // The whimsical fallback lines are written for the SEARCH knight; over any
+  // other character they make no sense, so they only fill in for that one.
+  const art = o.art || 'search';
+  const line = (o.sub === undefined && art === 'search')
     ? _FTZ_NOT_FOUND_LINES[Math.floor(Math.random() * _FTZ_NOT_FOUND_LINES.length)]
     : o.sub;
   return `<div class="ftz-nf${o.compact ? ' ftz-nf--sm' : ''}${o.cls ? ' ' + o.cls : ''}">
-    <img class="ftz-nf-img" src="${_FTZ_NOT_FOUND_IMG}" alt="" draggable="false" onerror="this.style.display='none'">
+    <img class="ftz-nf-img" src="${_ftzCharSrc(art)}" alt="" draggable="false" onerror="this.style.display='none'">
     <div class="ftz-nf-t">${escapeHTML(title || 'Nothing found')}</div>
     ${sub || line ? `<div class="ftz-nf-s">${escapeHTML(sub || line)}</div>` : ''}
   </div>`;
@@ -49124,7 +49264,7 @@ function _fsTradeRender() {
 }
 
 function _fsTradeList(list, dir) {
-  if (!list.length) return _ftzNotFound(dir === 'in' ? 'No incoming trades' : 'No trades sent', dir === 'in' ? 'When someone offers you a trade, it lands here.' : 'Offers you send will show up here until they’re answered.');
+  if (!list.length) return _ftzNotFound(dir === 'in' ? 'No incoming trades' : 'No trades sent', dir === 'in' ? 'When someone offers you a trade, it lands here.' : 'Offers you send will show up here until they’re answered.', { art: 'battle' });
   return `<div class="fs-trade-list">${list.map(t => {
     const who = escapeHTML(t.with || '');
     const sum = (onyx, ids) => {
@@ -49167,7 +49307,7 @@ function _fsTradeBuilder() {
           <span class="fs-tb-friend-tx"><span class="fs-trade-fn">${escapeHTML(n)}</span><span class="fs-tb-friend-s">Open the offer table</span></span>
           <span class="fs-tb-friend-go"><i class="fa-solid fa-arrow-right"></i></span>
         </button>`).join('')
-      : _ftzNotFound('No friends to trade with', 'Add a friend first — trades only travel between people who know each other.', { compact: true });
+      : _ftzNotFound('No friends to trade with', 'Add a friend first — trades only travel between people who know each other.', { compact: true, art: 'point' });
     return `<div class="fs-trade-step">
       <div class="fs-tb-lead">
         <div class="fs-tb-lead-t">Who are you trading with?</div>
@@ -50003,15 +50143,20 @@ function _fsOpenRedeem() {
 // sweeps across it — that's what sells it as a physical object. (Pinning the
 // highlight to the cursor instead makes it read as a torch you're carrying.)
 // ⚠️ Takes SELECTORS so more than one surface can wear it — the Onyx card and
-// the Radiance gift card run the same code. `stage` is the element that owns
-// the perspective and hears the pointer; `card` is the thing that rotates
-// inside it. A wide banner wants a gentler lean than a small card, hence the
-// tunable angles: rotate something 372px wide by 12° and it reads as a glitch.
+// the Radiance gift artwork run the same code. `stage` owns the perspective,
+// `card` is the thing that rotates inside it, and `hover` (optional) is the
+// surface that hears the pointer when it should be WIDER than the stage — the
+// gift art is a third of its banner, but the lean should answer to the cursor
+// anywhere along the row. Angles are tunable because size changes what reads as
+// a tilt: rotate something 372px wide by 12° and it looks like a glitch.
 function _fsWireCardTilt(scope, o) {
   const opt = o || {};
   const art = scope && scope.querySelector(opt.stage || '.fs-redeem-art');
   const card = art && art.querySelector(opt.card || '.fs-redeem-card');
   if (!card) return;
+  // The pointer surface defaults to the stage; a wider one still drives the
+  // same stage, so the perspective stays centred on the thing that moves.
+  const hit = (opt.hover && (scope.querySelector(opt.hover) || art.closest(opt.hover))) || art;
   try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch {}
   card.classList.add('is-tilt');           // hands the hover effect to JS
   const MAX_Y = opt.maxY || 12, MAX_X = opt.maxX || 8;   // degrees of lean
@@ -50038,16 +50183,20 @@ function _fsWireCardTilt(scope, o) {
     raf = 0; card.style.transform = ''; card.style.removeProperty('--sheen');
   };
   const kick = () => { if (!raf) raf = requestAnimationFrame(step); };
-  art.addEventListener('pointerenter', () => { hovering = true; tOn = 1; kick(); });
-  art.addEventListener('pointermove', e => {
-    const r = card.getBoundingClientRect(); if (!r.width || !r.height) return;
+  hit.addEventListener('pointerenter', () => { hovering = true; tOn = 1; kick(); });
+  hit.addEventListener('pointermove', e => {
+    // Measured against the HIT surface, not the card: when they're the same
+    // element this is identical, and when the surface is wider the cursor still
+    // maps edge-to-edge across it instead of pinning the moment it leaves the
+    // artwork's own box.
+    const r = hit.getBoundingClientRect(); if (!r.width || !r.height) return;
     const px = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
     const py = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
     tRY = (px - .5) * 2 * MAX_Y;    // cursor right → card leans right
     tRX = -(py - .5) * 2 * MAX_X;   // cursor down  → top edge tips away
     kick();
   });
-  art.addEventListener('pointerleave', () => {
+  hit.addEventListener('pointerleave', () => {
     hovering = false; tRX = 0; tRY = 0; tOn = 0; kick();
   });
 }
@@ -50090,7 +50239,7 @@ function _fsOpenBuyOnyx() {
         <div class="ftz-ac-title">Buy Onyx</div>
         <div class="ftz-ac-sub">Onyx packs aren’t on sale yet.</div>
       </div>
-      <div class="ftz-ac-body">${_ftzNotFound('Not open yet', 'Onyx packs land here when we start selling. For now, quests are the way.')}</div>
+      <div class="ftz-ac-body">${_ftzNotFound('Not open yet', 'Onyx packs land here when we start selling. For now, quests are the way.', { art: 'battle' })}</div>
     </div>`;
   document.body.appendChild(overlay);
 }
@@ -50169,7 +50318,7 @@ function _fsOnyxReward(amount, sourceLabel, opts) {
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card fs-reward" role="dialog" aria-label="Onyx earned">
       <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-reward-modal')?.remove()">&times;</button>
-      <div class="fs-reward-art"><img src="/Icons/ClaimOnyx.png" alt="" draggable="false" onerror="this.closest('.fs-reward-art')?.remove()"></div>
+      <div class="fs-reward-art"><img src="${_ftzCharSrc('onyx')}" alt="" draggable="false" onerror="this.closest('.fs-reward-art')?.remove()"></div>
       <div class="fs-reward-amt">${_FS_ONYX_IC}<b>+${_ftzCompactNum(amount)}</b></div>
       <div class="fs-reward-t">${o.code ? 'Code redeemed' : 'Quest complete'}</div>
       <div class="fs-reward-s">${o.code ? `<b>${escapeHTML(o.code)}</b> paid out — nice find.` : `Nice work on <b>${escapeHTML(sourceLabel || 'that quest')}</b> — it’s all yours.`}</div>
@@ -50530,14 +50679,16 @@ function renderAtelierTab(tab) {
           }).join('')}
         </div>
 
-        <div class="rad-giftstage">
-          <div class="rad-giftbanner">
-            <div class="rad-giftbanner-text">
-              <div class="rad-giftbanner-title">Gift <img class="rad-giftbanner-word" src="${_CDN}radianceText.png" alt="Radiance" onerror="this.replaceWith(document.createTextNode('Radiance'))"></div>
-              <p class="rad-giftbanner-desc">Gift someone Radiance to give them access to profile customisation, custom emojis and bigger uploads.</p>
-              <button class="rad-cta rad-cta--primary rad-giftbanner-btn" onclick="openRadianceGiftModal()"><i class="fa-solid fa-gift"></i> Gift Radiance</button>
+        <div class="rad-giftbanner">
+          <div class="rad-giftbanner-text">
+            <div class="rad-giftbanner-title">Gift <img class="rad-giftbanner-word" src="${_CDN}radianceText.png" alt="Radiance" onerror="this.replaceWith(document.createTextNode('Radiance'))"></div>
+            <p class="rad-giftbanner-desc">Gift someone Radiance to give them access to profile customisation, custom emojis and bigger uploads.</p>
+            <button class="rad-cta rad-cta--primary rad-giftbanner-btn" onclick="openRadianceGiftModal()"><i class="fa-solid fa-gift"></i> Gift Radiance</button>
+          </div>
+          <div class="rad-giftstage">
+            <div class="rad-giftart" style="--art:url('${_CDN}RadianceShare.png')">
+              <img class="rad-giftbanner-art" src="${_CDN}RadianceShare.png" alt="" draggable="false" onerror="this.closest('.rad-giftstage')?.remove()">
             </div>
-            <img class="rad-giftbanner-art" src="${_CDN}RadianceShare.png" alt="" draggable="false" onerror="this.style.display='none'">
           </div>
         </div>
       </section>
@@ -50545,9 +50696,18 @@ function renderAtelierTab(tab) {
 
     _radBindScrollSpy();
     _radCarouselInit();
-    // Same physical lean as the Onyx card, dialled down — the gift card is wide,
-    // so the same 12°/8° would read as a glitch rather than a tilt.
-    _fsWireCardTilt(el, { stage: '.rad-giftstage', card: '.rad-giftbanner', maxY: 7, maxX: 4, lift: 4, grow: 0.012 });
+    // The ARTWORK leans, not the panel around it — the card here is the picture.
+    // ⚠️ Three elements, and each one is load-bearing: `.rad-giftstage` owns the
+    // perspective (centred on the art, so the projection is square-on to it —
+    // perspective on the wide banner would view the art from far off to its
+    // left and shear it); `.rad-giftart` is what rotates and carries the
+    // specular; the <img> just sits inside. The pointer is heard on the whole
+    // BANNER, so the art answers to the cursor anywhere along the row instead
+    // of only over its own 44%.
+    _fsWireCardTilt(el, {
+      stage: '.rad-giftstage', card: '.rad-giftart', hover: '.rad-giftbanner',
+      maxY: 15, maxX: 10, lift: 6, grow: 0.04,
+    });
   }
 
   // ── QUESTS ────────────────────────────────────────────────
@@ -50649,7 +50809,7 @@ function renderAtelierTab(tab) {
       const done = cat.filter(q => q.done);
       body = done.length
         ? `<div class="qst-qgrid">${done.map(qCard).join('')}</div>`
-        : _ftzNotFound('Nothing claimed yet', 'Finish a quest in the Available tab and it earns its place here.');
+        : _ftzNotFound('Nothing claimed yet', 'Finish a quest in the Available tab and it earns its place here.', { art: 'battle' });
     } else if (qtab === 'bounties') {
       // Discord-style "Bounties incoming" row: icon + title + inline Learn More.
       // Bounties glyph rendered as a colour overlay (CSS mask tinted to the
@@ -50667,7 +50827,7 @@ function renderAtelierTab(tab) {
       const aWeekly  = cat.filter(q => q.tier === 'weekly'  && !q.done);
       const aJourney = cat.filter(q => q.tier === 'journey' && !q.done);
       if (!(aDaily.length + aWeekly.length + aJourney.length)) {
-        body = _ftzNotFound('All caught up', 'You’ve claimed every quest available. New ones arrive with each reset.');
+        body = _ftzNotFound('All caught up', 'You’ve claimed every quest available. New ones arrive with each reset.', { art: 'celebrate' });
       } else {
         body =
           (aDaily.length   ? `${groupLabel('Daily')}<div class="qst-qgrid">${aDaily.map(qCard).join('')}</div>` : '') +
@@ -68348,7 +68508,7 @@ function _stfDossierHTML(u, bastions) {
     av: `<span class="stf-ev-ic stf-tone-${w.type === 'ban' ? 'danger' : w.type === 'suspension' ? 'warn' : 'warn'}"><i class="fas ${w.type === 'ban' ? 'fa-gavel' : w.type === 'suspension' ? 'fa-hourglass-half' : 'fa-triangle-exclamation'}"></i></span>`,
     name: escapeHTML(w.reason || 'Warning'),
     sub: escapeHTML((w.issuedBy || w.source || 'staff') + (w.issuedAt ? ' · ' + formatTimeAgo(w.issuedAt) : '')),
-  })).join('') : _ftzNotFound('Clean record', 'No warnings on file.', { compact: true });
+  })).join('') : _ftzNotFound('Clean record', 'No warnings on file.', { compact: true, art: 'celebrate' });
 
   const bastionList = owns.length ? owns.slice(0, 6).map((b, i) => _stfRow({
     i,
@@ -69420,7 +69580,7 @@ function _stfQueuePaint() {
   const host = document.getElementById('stf-queue'); if (!host) return;
   const n = _stfQ.items.length;
   if (!n) {
-    host.innerHTML = _ftzNotFound('Queue is clear', _stfQ.kind === 'reports' ? 'Every report has been dealt with.' : 'Nothing is being held back for a human call.');
+    host.innerHTML = _ftzNotFound('Queue is clear', _stfQ.kind === 'reports' ? 'Every report has been dealt with.' : 'Nothing is being held back for a human call.', { art: 'celebrate' });
     return;
   }
   const item = _stfQ.items[Math.min(_stfQ.idx, n - 1)];
@@ -69541,7 +69701,7 @@ _STF_RENDER.reports = async function (host, seq) {
              + (r.type === 'bastion' && r.bastionId ? _stfIconBtn('fa-chess-rook', `_stfBastionDossier('${escapeHTML(r.bastionId)}')`, { tip: 'Bastion dossier' }) : '')
              + (isOpen ? _stfIconBtn('fa-check', `_stfRepClose('${escapeHTML(String(r.id || ''))}','resolved')`, { tip: 'Mark resolved', good: true }) : ''),
         });
-      }).join('')}</div>` : _ftzNotFound('No reports filed', 'Nobody has flagged anything yet.')}
+      }).join('')}</div>` : _ftzNotFound('No reports filed', 'Nobody has flagged anything yet.', { art: 'celebrate' })}
     </div>`;
   }
 };
@@ -69754,7 +69914,7 @@ _STF_RENDER.bans = async function (host, seq) {
         act: _stfIconBtn('fa-id-badge', `_stfDossier('${un}')`, { tip: 'Open dossier' })
            + _stfIconBtn('fa-unlock', `_stfActUnban('${un}')`, { tip: 'Lift the ban', good: true, disabled: !_stfHas('USER_UNBAN') }),
       });
-    }).join('')}</div>` : _ftzNotFound('No bans on record', 'Nobody is locked out of Fortized.')}
+    }).join('')}</div>` : _ftzNotFound('No bans on record', 'Nobody is locked out of Fortized.', { art: 'celebrate' })}
   </div>`;
 };
 
@@ -69791,7 +69951,7 @@ _STF_RENDER.suspensions = async function (host, seq) {
         act: _stfIconBtn('fa-id-badge', `_stfDossier('${un}')`, { tip: 'Open dossier' })
            + (s.active ? _stfIconBtn('fa-unlock', `_stfActUnsuspend('${un}')`, { tip: 'Lift now', good: true, disabled: !_stfHas('USER_SUSPEND') }) : ''),
       });
-    }).join('')}</div>` : _ftzNotFound('No suspensions', 'Nobody is serving a time-out.')}
+    }).join('')}</div>` : _ftzNotFound('No suspensions', 'Nobody is serving a time-out.', { art: 'celebrate' })}
   </div>`;
 };
 
@@ -69951,7 +70111,7 @@ _STF_RENDER.feedback = async function (host, seq) {
             ${_stfMyRank() >= 5 ? _stfBtn('Delete', `_stfTicket('${id}','delete')`, { sm: true, danger: true, icon: 'fa-trash-can' }) : ''}
           </div>`,
       })}</div>`;
-    }).join('') : _ftzNotFound('Inbox zero', 'No support tickets are waiting.')}
+    }).join('') : _ftzNotFound('Inbox zero', 'No support tickets are waiting.', { art: 'celebrate' })}
   </div>`;
 };
 
@@ -70079,7 +70239,7 @@ _STF_RENDER.codes = async function (host, seq) {
            + (r.revoked ? _stfIconBtn('fa-rotate-left', `_stfCodeRevoke('${code}',false)`, { tip: 'Restore', good: true })
                         : _stfIconBtn('fa-ban', `_stfCodeRevoke('${code}',true)`, { tip: 'Revoke', danger: true })),
       });
-    }).join('')}</div>` : _ftzNotFound('No codes yet', 'Create one and members can redeem it straight away.')}
+    }).join('')}</div>` : _ftzNotFound('No codes yet', 'Create one and members can redeem it straight away.', { art: 'battle' })}
   </div>`;
 };
 

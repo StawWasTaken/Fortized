@@ -1,5 +1,54 @@
 # Fortized — working notes for Claude
 
+## 🟢 SHIPPED — Round 5 (`2026fix496`, branch `claude/ui-polish-redesigns-xf43er`)
+
+### 🐞 "YOU CANNOT SEND ONYX TO YOURSELF" — while sending to someone else
+The trade/send session token lived under ONE localStorage key with no record of
+whose it was. Sign into a second account in the same browser and the FIRST
+account's token was still there, so `_readSession` on the server resolved `me`
+to the old account — sender and recipient came out equal. It also meant account
+B could act as account A on **every** trade endpoint. The token is now stamped
+with its username (`ftz_trade_session_user`) and `_fsSession()` refuses any
+token that isn't the current CU's, so the next call mints a fresh one.
+
+### 🐞 A NUL BYTE IN `app.js`
+`[text, colour, icon].join('\0')` — a literal NUL in the announcement signature.
+Harmless at runtime, but it made **git treat `app/app.js` as binary**: no diffs,
+no `grep`. Gone; the file diffs as text again. Worth checking for if `git diff`
+ever goes quiet on a source file.
+
+### 🗣️ Feedback card round 3
+Now a real `.ftz-confirm-overlay` + `.ftz-confirm-card`, so it has the black
+scrim every other card has and opens on the app's own `modalCardIn` instead of a
+bespoke transform. **The 16-second auto-dismiss is gone** — that was why it
+"closed because you switched tabs": the timer ran while you were away. The SWFT
+art is dialled to `.22` HERE only (Lifecheck can carry it at full strength
+because its content sits on nested solid sub-panels; this card puts body text
+straight on the surface).
+
+### 💸 Send Onyx
+"Send Onyx" in the More menu reads **white** — `.fpp-menu__item--onyx` was
+painting the whole row accent yellow.
+
+### 📊 Economy layout
+`.stf-cols--even` (a real 50/50 pair, stretched to equal height) instead of the
+1.35fr/1fr split meant for a wide panel beside a stack. Rates moved up next to
+the donut; Flow + the new **Minting log** panel sit as a pair below the minting
+stats; the three long lists are real panels now instead of naked `.stf-rows`.
+Stat rows pin their count (`--4`/`--5`) so none leaves an orphan.
+
+### 📢 Announcement composer
+Labelled preview carrying the bar's REAL furniture (dismiss cross, stripes, link
+chip), a live **character counter** against the 120 the bar can show, preset
+chips that carry their own colour, and four new fields that all reach the live
+bar: **link + label**, **take-it-down-on** (the poller retires it everywhere, so
+nobody has to remember), and **dismissible** (off for an incident nobody should
+be able to hide).
+
+⚠️ **LIVE-VERIFY:** send Onyx to a second account after signing in and out of
+both in one browser; the feedback card via the console tester (scrim, no
+auto-close, art readable); the economy page; a banner with a link + expiry.
+
 ## 🟢 SHIPPED — Console round 4 + Send Onyx round 3 (`2026fix495`, branch `claude/ui-polish-redesigns-xf43er`)
 
 ### 🐞 THE ONE TO REMEMBER — a stray `</style>` inside `styles.css`

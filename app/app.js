@@ -32625,12 +32625,20 @@ function _listenGlobalSettingsConsolidated() {
       // customisable now (colour + glyph), and comparing text alone meant
       // recolouring an announcement changed nothing on screen until someone
       // rewrote the words.
-      const sig = text ? [text, colour, icon].join(' ') : null;
+      // A banner with a take-down date retires itself, so nobody has to
+      // remember to clear it — including whoever is asleep when it expires.
+      // Every client's poller reaches the same conclusion on its own.
+      const until = gs?.announcementUntil ? Date.parse(gs.announcementUntil) : 0;
+      const expired = !!until && Date.now() > until;
+      const linkUrl = gs?.announcementLinkUrl || '';
+      const linkLabel = gs?.announcementLinkLabel || (linkUrl ? 'Read more' : '');
+      const canDismiss = gs?.announcementDismissible !== false;
+      const sig = (text && !expired) ? [text, colour, icon, linkUrl, linkLabel, canDismiss].join(' ') : null;
 
       if (sig !== _lastAnnText) {
         _lastAnnText = sig;
         const existing = document.getElementById('sys-announce-bar');
-        if (!text) {
+        if (!text || expired) {
           if (existing) { existing.style.opacity='0'; existing.style.transform='translateY(-100%)'; setTimeout(()=>existing.remove(),300); }
           _dismissedAnnouncement = null;
         } else if (text !== _dismissedAnnouncement) {
@@ -32647,9 +32655,11 @@ function _listenGlobalSettingsConsolidated() {
           // with an inline SVG STRING as its default — which is not a URL, so
           // every announcement drew a broken image. It is a Font Awesome class
           // now, drawn as an <i>, chosen by staff in the console.
-          bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()" aria-label="Dismiss">×</button>`
+          const safeLink = /^(https?:\/\/|\/)/i.test(linkUrl) ? linkUrl : '';
+          bar.innerHTML = (canDismiss ? `<button class="sa-close" onclick="_dismissAnnouncement()" aria-label="Dismiss">×</button>` : '')
             + `<div class="sa-icon"><i class="fas ${escapeHTML(icon)}"></i></div>`
-            + `<span class="sa-text">${escapeHTML(text)}</span>`;
+            + `<span class="sa-text">${escapeHTML(text)}</span>`
+            + (safeLink ? `<a class="sa-link" href="${escapeHTML(safeLink)}"${/^https?:/i.test(safeLink) ? ' target="_blank" rel="noopener noreferrer"' : ''}>${escapeHTML(linkLabel)} <i class="fas fa-arrow-right"></i></a>` : '');
 
           if (main.firstChild) main.insertBefore(bar, main.firstChild);
           else main.appendChild(bar);
@@ -32773,10 +32783,12 @@ function showFeedbackToast(actionLabel, actionType, meta) {
   // `.ftz-ov-swft`), because that is the one place the Swiftaw overlay renders
   // correctly. The old toast painted the overlay onto a translucent
   // `--glass-heavy` surface behind a `backdrop-filter`, so the art was washed
-  // out to nothing — the overlay was never really visible. A solid card lets
-  // the `::before` sit exactly where it does on Lifecheck.
-  // It is NOT wrapped in an overlay: it is centred and fades in, but it must
-  // never block the app behind it.
+  // out to nothing — the overlay was never really visible.
+  // It sits in a real `.ftz-confirm-overlay` and uses the app's own modal
+  // entrance, so it opens the way every other card in Fortized opens.
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay ftz-fb-ov';
+  ov.id = 'ftz-fb-ov';
   const el = document.createElement('div');
   el.className = 'ftz-feedback-toast ftz-confirm-card ftz-ov-swft';
   el.setAttribute('role', 'dialog');
@@ -32801,18 +32813,22 @@ function showFeedbackToast(actionLabel, actionType, meta) {
       </div>
     </div>
     <div class="fb-done" hidden><i class="fa-solid fa-check"></i> Thanks — that helps more than you'd think.</div>`;
-  document.body.appendChild(el);
-  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('visible')));
-  // Slides away on its own if it's being ignored. Not counted as a dismissal —
-  // ignoring isn't the same as saying no.
-  el._to = setTimeout(() => { if (el.parentElement && !el.dataset.rated) _fbClose(el); }, 16000);
+  ov.appendChild(el);
+  document.body.appendChild(ov);
+  // Clicking the scrim closes it without counting as a refusal — walking away
+  // is not the same as saying no.
+  ov.onclick = e => { if (e.target === ov) _fbClose(el); };
+
+  // ⚠️ NO AUTO-DISMISS. There used to be a 16-second timer, which is why the
+  // card seemed to "close because you switched tabs": you tabbed away, the
+  // timer ran anyway, and it was gone when you came back. It stays until it is
+  // answered or closed.
 }
 
 function _fbClose(el) {
   if (!el) return;
-  clearTimeout(el._to);
-  el.classList.remove('visible');
-  setTimeout(() => el.remove(), 300);
+  const ov = el.closest('.ftz-fb-ov') || document.getElementById('ftz-fb-ov');
+  (ov || el).remove();
 }
 function _fbDismiss(btn) {
   const el = btn.closest('.ftz-feedback-toast');
@@ -32824,7 +32840,6 @@ function _fbDismiss(btn) {
 function _selectFeedbackRating(rating, btn) {
   const el = btn.closest('.ftz-feedback-toast');
   if (!el) return;
-  clearTimeout(el._to);
   el.dataset.rated = rating;
   el.querySelectorAll('.fb-rate').forEach(b => b.classList.toggle('is-on', b === btn));
   const sub = el.querySelector('.fb-sub');
@@ -48940,7 +48955,25 @@ async function _fsTradeApiReady() {
   } catch { _fsTradeApi = false; }
   return _fsTradeApi;
 }
-function _fsSession() { try { return localStorage.getItem(_FS_SESSION_KEY) || ''; } catch { return ''; } }
+// ⚠️ THE TOKEN IS BOUND TO AN ACCOUNT. It used to be one bare key with no
+// record of whose it was, so signing into a second account in the same browser
+// left the FIRST account's token in place — every trade and send call then ran
+// as that older account. The visible symptom was "You cannot send Onyx to
+// yourself" while sending to someone else: the server saw sender == recipient
+// because `me` came from the stale token. Any token that isn't ours is dropped
+// so the next call mints a fresh one.
+const _FS_SESSION_USER_KEY = 'ftz_trade_session_user';
+function _fsSession() {
+  try {
+    const who = localStorage.getItem(_FS_SESSION_USER_KEY) || '';
+    const me = (CU?.username || '').toLowerCase();
+    if (!me || who.toLowerCase() !== me) { _fsClearSession(); return ''; }
+    return localStorage.getItem(_FS_SESSION_KEY) || '';
+  } catch { return ''; }
+}
+function _fsClearSession() {
+  try { localStorage.removeItem(_FS_SESSION_KEY); localStorage.removeItem(_FS_SESSION_USER_KEY); } catch {}
+}
 // A trade session is minted from the credentials the user signed in with.
 // We never keep the password — only the short-lived signed token comes back.
 async function _fsEnsureSession() {
@@ -48955,7 +48988,11 @@ async function _fsEnsureSession() {
     if (!r.ok) return false;
     const { session } = await r.json();
     if (!session) return false;
-    try { localStorage.setItem(_FS_SESSION_KEY, session); } catch {}
+    // Stamp WHOSE token this is, so _fsSession can refuse it after a switch.
+    try {
+      localStorage.setItem(_FS_SESSION_KEY, session);
+      localStorage.setItem(_FS_SESSION_USER_KEY, CU.username);
+    } catch {}
     return true;
   } catch { return false; }
 }
@@ -48965,7 +49002,7 @@ async function _fsTradeFetch(path, body) {
   let r = await fetch(path, opts);
   if (r.status === 401) {
     // Token expired or the server restarted without FTZ_SESSION_SECRET set.
-    try { localStorage.removeItem(_FS_SESSION_KEY); } catch {}
+    _fsClearSession();
     if (await _fsEnsureSession()) {
       opts.headers['X-Ftz-Session'] = _fsSession();
       r = await fetch(path, opts);
@@ -70146,7 +70183,7 @@ _STF_RENDER.economy = async function (host, seq) {
     `${_stfBtn('Simulate', '_stfTaxSim()', { sm: true, icon: 'fa-calculator' })}${_stfBtn('Grant Onyx', '_stfGrantPrompt()', { primary: true, icon: 'fa-plus', sm: true })}`);
 
   host.innerHTML = `<div class="stf-wrap">
-    <div class="stf-stats">
+    <div class="stf-stats stf-stats--5">
       ${_stfStat({ iconHTML: '<span class="rad-onyx-ic"></span>', value: _ftzCompactNum(total), label: 'In circulation', sub: _ftzFullNum(total) + ' Onyx', tip: 'Counted directly off every member row — always exact.' })}
       ${_stfStat({ value: holders.length.toLocaleString(), label: 'Holders', sub: 'accounts with a balance' })}
       ${_stfStat({ value: _ftzCompactNum(treasury), label: 'Treasury', sub: 'held by platform accounts' })}
@@ -70155,7 +70192,7 @@ _STF_RENDER.economy = async function (host, seq) {
     </div>
 
     ${_stfGroup('The circuit', 'every transaction is taxed ' + Math.round(FORTIZED_TAX.RATE * 100) + '%')}
-    <div class="stf-cols">
+    <div class="stf-cols stf-cols--even">
       ${_stfPanel({
         title: 'Where a 1 000 Onyx transaction goes', icon: 'fa-diagram-project',
         body: _stfDonut([
@@ -70167,8 +70204,7 @@ _STF_RENDER.economy = async function (host, seq) {
         ], { centerValue: '1 000', centerLabel: 'Onyx' })
         + `<div class="stf-note"><i class="fas fa-fire"></i>The burn is the deflationary half of the circuit — those ${model.burn} Onyx are destroyed, not banked. Without it, quests and codes would inflate the supply with nothing pulling it back.</div>`,
       })}
-      <div class="stf-colstack">
-        ${_stfPanel({
+      ${_stfPanel({
           title: 'Rates in force', icon: 'fa-percent',
           body: `<div class="stf-facts stf-facts--stack">
             <div class="stf-fact"><span class="stf-fact-k">Platform fee</span><span class="stf-fact-v">${(FORTIZED_TAX.RATE * 100).toFixed(0)}% of every transaction</span></div>
@@ -70179,8 +70215,18 @@ _STF_RENDER.economy = async function (host, seq) {
             <div class="stf-fact"><span class="stf-fact-k">Per moderator</span><span class="stf-fact-v">${modN ? Math.floor(model.modPool / modN) + ' per 1 000' : 'no moderators appointed'}</span></div>
           </div>
           <div class="stf-note"><i class="fas fa-circle-info"></i>Staff shares land in the recipient's wallet and show up in their My Transactions as <b>Staff share</b>. The pool is split equally, so appointing more staff makes each share smaller.</div>`,
-        })}
-        ${_stfPanel({
+      })}
+    </div>
+
+    ${_stfGroup('Minting and flow', 'Onyx created or destroyed, and what this browser has watched move')}
+    <div class="stf-stats stf-stats--4">
+      ${_stfStat({ value: _ftzCompactNum(minted), label: 'Minted by staff', sub: 'grants on record', tone: minted ? 'warn' : undefined })}
+      ${_stfStat({ value: _ftzCompactNum(burnedManual), label: 'Clawed back', sub: 'removed by staff' })}
+      ${_stfStat({ value: _ftzCompactNum(staffHeld), label: 'Held by staff', sub: 'across every role' })}
+      ${_stfStat({ value: total ? ((staffHeld / total) * 100).toFixed(1) + '%' : '—', label: 'Staff share', sub: 'of everything in circulation' })}
+    </div>
+    <div class="stf-cols stf-cols--even">
+      ${_stfPanel({
           title: 'Flow measured here', icon: 'fa-chart-line',
           act: `<span class="stf-count">${flow.n} transaction${flow.n === 1 ? '' : 's'}</span>`,
           body: flow.n ? _stfMeter([
@@ -70190,26 +70236,23 @@ _STF_RENDER.economy = async function (host, seq) {
           ]) + `<div class="stf-note"><i class="fas fa-circle-info"></i>Recorded by this browser only. Circulating supply above is exact — this is a sample of the flow, not the platform total.</div>`
             : _ftzNotFound('No flow recorded here', 'This browser has not processed a taxed transaction yet.', { compact: true }),
         })}
-      </div>
+      ${_stfPanel({
+        title: 'Minting log', icon: 'fa-wand-magic-sparkles',
+        act: `<span class="stf-count">${(supply || []).length} event${(supply || []).length === 1 ? '' : 's'}</span>`,
+        flush: !!(supply || []).length,
+        body: (supply || []).length ? `<div class="stf-rows">${(supply || []).slice(0, 8).map((s, i) => _stfRow({
+          i,
+          av: `<span class="stf-ev-ic stf-tone-${s.kind === 'mint' ? 'gold' : 'danger'}"><i class="fas ${s.kind === 'mint' ? 'fa-wand-magic-sparkles' : 'fa-fire'}"></i></span>`,
+          name: `<b>${s.kind === 'mint' ? 'Minted' : 'Removed'}</b> ${escapeHTML(_ftzFullNum(s.amount))} Onyx`,
+          sub: escapeHTML((s.note || '') + ' · by ' + (s.by || 'staff')),
+          meta: `<span class="stf-codewhen">${s.at ? formatTimeAgo(s.at) : ''}</span>`,
+        })).join('')}</div>` : _ftzNotFound('Nothing minted', 'No staff grant has created or removed Onyx yet.', { compact: true }),
+      })}
     </div>
-
-    ${_stfGroup('Minting', 'Onyx created or destroyed by staff')}
-    <div class="stf-stats">
-      ${_stfStat({ value: _ftzCompactNum(minted), label: 'Minted by staff', sub: 'grants on record', tone: minted ? 'warn' : undefined })}
-      ${_stfStat({ value: _ftzCompactNum(burnedManual), label: 'Clawed back', sub: 'removed by staff' })}
-      ${_stfStat({ value: _ftzCompactNum(staffHeld), label: 'Held by staff', sub: 'across every role' })}
-      ${_stfStat({ value: total ? ((staffHeld / total) * 100).toFixed(1) + '%' : '—', label: 'Staff share', sub: 'of everything in circulation' })}
-    </div>
-    ${(supply || []).length ? `<div class="stf-rows">${(supply || []).slice(0, 10).map((s, i) => _stfRow({
-      i,
-      av: `<span class="stf-ev-ic stf-tone-${s.kind === 'mint' ? 'gold' : 'danger'}"><i class="fas ${s.kind === 'mint' ? 'fa-wand-magic-sparkles' : 'fa-fire'}"></i></span>`,
-      name: `<b>${s.kind === 'mint' ? 'Minted' : 'Removed'}</b> ${escapeHTML(_ftzFullNum(s.amount))} Onyx`,
-      sub: escapeHTML((s.note || '') + ' · by ' + (s.by || 'staff')),
-      meta: `<span class="stf-codewhen">${s.at ? formatTimeAgo(s.at) : ''}</span>`,
-    })).join('')}</div>` : ''}
 
     ${_stfGroup('Largest balances', 'top 12 accounts')}
-    ${top.length ? `<div class="stf-rows">${top.map((u, i) => {
+    ${_stfPanel({ title: 'Who is holding what', icon: 'fa-ranking-star', flush: !!top.length, body:
+      top.length ? `<div class="stf-rows">${top.map((u, i) => {
       const id = _stfIdent(u, { noFlags: true });
       const share = total ? ((Number(u.onyx) || 0) / total) * 100 : 0;
       return _stfRow({
@@ -70220,16 +70263,17 @@ _STF_RENDER.economy = async function (host, seq) {
         act: _stfIconBtn('fa-id-badge', `_stfDossier('${escapeHTML(u.username)}')`, { tip: 'Dossier' })
            + _stfIconBtn('fa-plus', `_stfActOnyx('${escapeHTML(u.username)}')`, { tip: 'Adjust balance', disabled: !_stfHas('ECONOMY_GRANT') }),
       });
-    }).join('')}</div>` : _ftzNotFound('No balances yet', 'Nobody is holding Onyx.')}
+    }).join('')}</div>` : _ftzNotFound('No balances yet', 'Nobody is holding Onyx.', { compact: true }) })}
 
     ${_stfGroup('Recent grants', 'staff-issued Onyx, Radiance and codes')}
-    ${grants.length ? `<div class="stf-rows">${grants.map((e, i) => _stfRow({
-      i,
-      av: `<span class="stf-ev-ic stf-tone-gold"><i class="fas fa-gift"></i></span>`,
-      name: `<b>${escapeHTML(_stfAuditLabel(e.action))}</b> · ${escapeHTML(e.target || '?')}`,
-      sub: escapeHTML((e.note || '') + ' · by ' + (e.by || '?')),
-      meta: `<span class="stf-codewhen">${e.at ? formatTimeAgo(e.at) : ''}</span>`,
-    })).join('')}</div>` : _ftzNotFound('No grants yet', 'Staff have not handed anything out.', { compact: true })}
+    ${_stfPanel({ title: 'Handed out by staff', icon: 'fa-gift', flush: !!grants.length, body:
+      grants.length ? `<div class="stf-rows">${grants.map((e, i) => _stfRow({
+        i,
+        av: `<span class="stf-ev-ic stf-tone-gold"><i class="fas fa-gift"></i></span>`,
+        name: `<b>${escapeHTML(_stfAuditLabel(e.action))}</b> · ${escapeHTML(e.target || '?')}`,
+        sub: escapeHTML((e.note || '') + ' · by ' + (e.by || '?')),
+        meta: `<span class="stf-codewhen">${e.at ? formatTimeAgo(e.at) : ''}</span>`,
+      })).join('')}</div>` : _ftzNotFound('No grants yet', 'Staff have not handed anything out.', { compact: true }) })}
   </div>`;
 };
 
@@ -70704,11 +70748,25 @@ async function _stfMaintenance(on) {
 
 function _stfAnnPreview() {
   const box = document.getElementById('stf-annprev-live'); if (!box) return;
-  const text = document.getElementById('stfq-text')?.value || 'Your announcement will look like this.';
+  const raw = document.getElementById('stfq-text')?.value || '';
+  const text = raw || 'Your announcement will look like this.';
   const colour = document.getElementById('stfq-colour')?.value || '#fff93e';
   const icon = document.getElementById('stfq-icon')?.value || 'fa-bullhorn';
+  const url = document.getElementById('stfq-linkUrl')?.value || '';
+  const label = document.getElementById('stfq-linkLabel')?.value || (url ? 'Read more' : '');
   box.style.setProperty('--ann', colour);
-  box.innerHTML = `<span class="stf-annprev-ic"><i class="fas ${escapeHTML(icon)}"></i></span><span class="stf-annprev-tx">${escapeHTML(text)}</span>`;
+  // The preview carries the bar's real furniture — dismiss cross on the left,
+  // link on the right — so what you approve is what members get.
+  box.innerHTML = `<span class="stf-annprev-x">&times;</span>`
+    + `<span class="stf-annprev-ic"><i class="fas ${escapeHTML(icon)}"></i></span>`
+    + `<span class="stf-annprev-tx">${escapeHTML(text)}</span>`
+    + (url ? `<span class="stf-annprev-link">${escapeHTML(label)} <i class="fas fa-arrow-right"></i></span>` : '');
+  const count = document.getElementById('stf-ann-count');
+  if (count) {
+    const over = raw.length > _STF_ANN_MAX;
+    count.textContent = raw.length + ' / ' + _STF_ANN_MAX + (over ? ' — the bar will cut this off' : '');
+    count.classList.toggle('is-over', over);
+  }
 }
 function _stfAnnPreset(i) {
   const p = _STF_ANN_PRESETS[i]; if (!p) return;
@@ -70717,32 +70775,62 @@ function _stfAnnPreset(i) {
   const ic = document.getElementById('stfq-icon'); if (ic) ic.value = p.icon;
   document.querySelectorAll('.stf-swatch').forEach(b => b.classList.toggle('is-on', b.style.getPropertyValue('--sw').trim() === p.colour));
   document.querySelectorAll('.stf-iconb').forEach(b => b.classList.toggle('is-on', !!b.querySelector('.' + p.icon)));
+  document.querySelectorAll('.stf-preset--ann').forEach((b, bi) => b.classList.toggle('is-on', bi === i));
   _stfAnnPreview();
 }
 
+// One line at the top of the app for everyone is a blunt instrument, so the
+// composer carries the things that stop it being permanent furniture: how long
+// the line can be before the bar truncates it, whether people can dismiss it,
+// when it takes itself down, and somewhere for it to point.
+const _STF_ANN_MAX = 120;
 async function _stfAnnounce() {
   if (!_stfNeedCap('BROADCAST_GLOBAL')) return;
   const cur = (await FortizedSocial.adminGetGlobalSettings().catch(() => ({}))) || {};
   const v = await _stfAsk({
     icon: 'fa-bullhorn', title: 'Announcement banner', subtitle: 'One line, at the top of the app, for everyone.',
     wide: true,
-    bodyHTML: `<div class="stf-annprev" id="stf-annprev-live" style="--ann:${escapeHTML(cur.announcementColour || '#fff93e')}"></div>
-      <div class="stf-presets stf-presets--wide">${_STF_ANN_PRESETS.map((p, i) => `<button type="button" class="stf-preset" onclick="_stfAnnPreset(${i})">${escapeHTML(p.label)}</button>`).join('')}</div>`,
+    bodyHTML: `<div class="stf-annprev-wrap">
+        <span class="stf-fl">Preview</span>
+        <div class="stf-annprev" id="stf-annprev-live" style="--ann:${escapeHTML(cur.announcementColour || '#fff93e')}"></div>
+        <span class="stf-annprev-note" id="stf-ann-count"></span>
+      </div>
+      <div class="stf-annpresets">
+        <span class="stf-fl">Start from</span>
+        <div class="stf-presets stf-presets--wide">${_STF_ANN_PRESETS.map((p, i) => `<button type="button" class="stf-preset stf-preset--ann" style="--sw:${p.colour}" onclick="_stfAnnPreset(${i})"><span class="stf-preset-dot"></span>${escapeHTML(p.label)}</button>`).join('')}</div>
+      </div>`,
     fields: [
-      { id: 'text', type: 'textarea', label: 'Message', rows: 2, value: cur.announcement || '', placeholder: 'Fortized 3.4 is here.', wide: true },
+      { id: 'text', type: 'textarea', label: 'Message', rows: 2, value: cur.announcement || '', placeholder: 'Fortized 3.4 is here.', wide: true,
+        hint: 'The bar is one line — anything past about ' + _STF_ANN_MAX + ' characters gets cut off with an ellipsis.' },
       { id: 'colour', type: 'colour', label: 'Colour', value: cur.announcementColour || '#fff93e', options: _STF_ANN_COLOURS },
       { id: 'icon', type: 'icon', label: 'Glyph', value: cur.announcementIcon2 || 'fa-bullhorn', options: _STF_ANN_ICONS },
+      { id: 'linkLabel', type: 'text', label: 'Link label', optional: true, value: cur.announcementLinkLabel || '',
+        placeholder: 'Read more', hint: 'Leave both link fields empty for a plain banner.' },
+      { id: 'linkUrl', type: 'text', label: 'Link', optional: true, value: cur.announcementLinkUrl || '',
+        placeholder: 'https://fortized.com/status', presets: ['/support/status/', '/newsroom/'] },
+      { id: 'until', type: 'date', label: 'Take it down on', emptyLabel: 'Stays until cleared', value: cur.announcementUntil ? String(cur.announcementUntil).slice(0, 10) : '',
+        hint: 'It clears itself at the end of that day, everywhere, without anyone having to remember.' },
+      { id: 'dismissible', type: 'toggle', label: 'Members can dismiss it', onLabel: 'Dismissible',
+        value: cur.announcementDismissible !== false,
+        hint: 'Turn this off for something nobody should be able to hide — an incident, or maintenance about to start.' },
     ],
     confirmLabel: 'Post banner',
     onReady: (ov) => {
       _stfAnnPreview();
-      ov.querySelector('#stfq-text')?.addEventListener('input', _stfAnnPreview);
+      ['#stfq-text', '#stfq-linkLabel', '#stfq-linkUrl'].forEach(sel =>
+        ov.querySelector(sel)?.addEventListener('input', _stfAnnPreview));
     },
   });
   if (!v) return;
   if (!v.text) { toast('Write something first', 'error'); return; }
+  if (v.linkUrl && !/^(https?:\/\/|\/)/i.test(v.linkUrl)) { toast('The link needs to start with https:// or /', 'error'); return; }
   cur.announcement = v.text;
   cur.announcementColour = v.colour || '#fff93e';
+  cur.announcementLinkUrl = v.linkUrl || '';
+  cur.announcementLinkLabel = (v.linkLabel || (v.linkUrl ? 'Read more' : ''));
+  // End of day, so "take it down on the 20th" leaves it up all of the 20th.
+  cur.announcementUntil = v.until ? new Date(v.until + 'T23:59:59.999Z').toISOString() : '';
+  cur.announcementDismissible = !!v.dismissible;
   // ⚠️ `announcementIcon` was an IMAGE URL in the old banner renderer (it was
   // rendered as `<img src>`), and the default it shipped with was an inline
   // SVG string — which is not a URL, so the banner drew a broken image on
@@ -70762,7 +70850,9 @@ async function _stfAnnounce() {
 
 async function _stfAnnounceClear() {
   const cur = (await FortizedSocial.adminGetGlobalSettings().catch(() => ({}))) || {};
-  delete cur.announcement; delete cur.announcementColour; delete cur.announcementIcon2; delete cur.announcementIcon;
+  ['announcement', 'announcementColour', 'announcementIcon2', 'announcementIcon',
+   'announcementLinkUrl', 'announcementLinkLabel', 'announcementUntil', 'announcementDismissible',
+  ].forEach(k => { delete cur[k]; });
   await FortizedSocial.adminSaveGlobalSettings(cur).catch(() => {});
   try { localStorage.setItem('ftz_global_settings', JSON.stringify(cur)); _globalSettings = cur; } catch (_) {}
   logAudit('announcement_clear', 'platform', '');

@@ -17511,6 +17511,18 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 .stf-panel-act{margin-left:auto;display:flex;align-items:center;gap:7px;}
 .stf-group-act{margin-left:auto;display:flex;gap:6px;}
 .stf-cols{display:grid;grid-template-columns:1.35fr 1fr;gap:12px;align-items:start;}
+/* Two panels that carry comparable weight sit 50/50 — the 1.35fr default is
+   for a wide panel next to a stack of small ones, and using it for a pair
+   leaves the shorter one looking stranded. */
+.stf-cols--even{grid-template-columns:1fr 1fr;align-items:stretch;}
+/* Stretched, so a pair of panels reads as a pair. Left to size themselves the
+   short one floats halfway up its column next to the tall one, which is what
+   made this page look unfinished rather than dense. */
+.stf-cols--even > .stf-panel{height:100%;display:flex;flex-direction:column;}
+.stf-cols--even > .stf-panel > .stf-panel-b{flex:1;}
+/* Pinned counts, so a row of stats can't leave one orphan on its own line. */
+.stf-stats--4{grid-template-columns:repeat(4,1fr);}
+.stf-stats--5{grid-template-columns:repeat(5,1fr);}
 .stf-colstack{display:flex;flex-direction:column;gap:12px;}
 .stf-rows{display:flex;flex-direction:column;gap:6px;}
 .stf-live{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted);}
@@ -17782,6 +17794,24 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
   background-image:repeating-linear-gradient(-45deg,transparent,transparent 10px,rgba(255,255,255,.16) 10px,rgba(255,255,255,.16) 20px);}
 .stf-annprev-ic{display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
 .stf-annprev-tx{flex:1;min-width:0;line-height:1.45;}
+/* The preview shows the bar's real furniture — the dismiss cross and the link
+   chip — so what you approve in the composer is what members actually get. */
+.stf-annprev-x{font-size:17px;line-height:1;opacity:.5;flex-shrink:0;margin-right:2px;}
+.stf-annprev-link{display:inline-flex;align-items:center;gap:6px;flex-shrink:0;
+  padding:3px 10px;border-radius:100px;background:rgba(0,0,0,.14);border:1.5px solid rgba(0,0,0,.28);
+  font-family:var(--font-display);font-size:11px;font-weight:700;}
+.stf-annprev-link i{font-size:8.5px;}
+.stf-annprev-wrap,.stf-annpresets{display:flex;flex-direction:column;gap:7px;margin:0 22px 14px;}
+/* The wrapper already carries the card's gutter — .stf-presets--wide adds its
+   own 22px for use directly against the card edge, which would double it. */
+.stf-annpresets .stf-presets--wide{padding:0;}
+.stf-annprev-note{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.stf-annprev-note.is-over{color:var(--red);}
+/* Preset chips carry the colour they would apply, so the row reads as a set of
+   outcomes rather than a list of words. */
+.stf-preset--ann{display:inline-flex;align-items:center;gap:7px;}
+.stf-preset--ann .stf-preset-dot{width:9px;height:9px;border-radius:50%;background:var(--sw);flex-shrink:0;}
+.stf-preset--ann.is-on{border-color:var(--text);color:var(--text);}
 
 /* ── Action card ───────────────────────────────────────────────────── */
 /* ⚠️ .ftz-ac-card sets padding:0 (hero + foot go edge to edge), so every
@@ -18036,10 +18066,20 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
   border-bottom:1px solid rgba(0,0,0,.22) !important;gap:0;}
 .sys-announce-bar .sa-icon{margin:0 11px;font-size:15px;color:#13161d;}
 .sys-announce-bar .sa-text{color:#13161d;font-weight:600;}
+/* Optional call-to-action on the right of the bar. Sits on the banner colour,
+   so it is an outline chip rather than a coloured link. */
+.sys-announce-bar .sa-link{display:inline-flex;align-items:center;gap:6px;margin:0 14px 0 12px;
+  padding:4px 11px;border-radius:100px;flex-shrink:0;text-decoration:none;
+  background:rgba(0,0,0,.14);border:1.5px solid rgba(0,0,0,.28);color:#13161d;
+  font-family:var(--font-display);font-size:11.5px;font-weight:700;
+  transition:background .13s,transform .1s;}
+.sys-announce-bar .sa-link:hover{background:rgba(0,0,0,.24);transform:translateY(-1px);}
+.sys-announce-bar .sa-link i{font-size:9px;}
 
 /* ── Responsive ────────────────────────────────────────────────────── */
 @media(max-width:1080px){
-  .stf-cols{grid-template-columns:1fr;}
+  .stf-cols,.stf-cols--even{grid-template-columns:1fr;}
+  .stf-stats--4,.stf-stats--5{grid-template-columns:repeat(2,1fr);}
   .stf-media-wrap{grid-template-columns:1fr;}
   .stf-donut-wrap{grid-template-columns:1fr;justify-items:center;}
 }
@@ -18106,7 +18146,9 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
 /* Send Onyx in the profile More menu */
 .fpp-menu__send{width:15px;height:15px;display:inline-flex;flex-shrink:0;}
 .fpp-menu__send svg{width:15px;height:15px;}
-.fpp-menu__item--onyx{color:var(--accent);}
+/* Reads white like every other row in the menu — the accent is a spice, and a
+   yellow label made this one item shout over the rest. The glyph inherits it. */
+.fpp-menu__item--onyx{color:#fff;}
 .fpp-menu__rad{margin-left:auto;font-size:10px;color:var(--rad-pink,#ef5fb0);}
 
 /* Trades are items-only now — the note that says where Onyx went */
@@ -18171,22 +18213,19 @@ input::-webkit-scrollbar{width:8px!important;height:8px!important;}
    Lifecheck.
    Centred and fading in, as asked — but with NO backdrop scrim, so asking for
    feedback still never stands between someone and what they were doing. */
-.ftz-feedback-toast{position:fixed;top:50%;left:50%;right:auto;bottom:auto;
-  transform:translate(-50%,-50%) scale(.965);
-  z-index:7500;width:min(400px,calc(100vw - 40px));max-width:none;
+/* The scrim + centring come from `.ftz-confirm-overlay`, and the entrance is
+   the app's own `modalCardIn` off `.ftz-confirm-card` — no bespoke transform
+   animation, so this card opens exactly like every other card. */
+.ftz-fb-ov{z-index:7500;}
+.ftz-feedback-toast{position:relative;width:min(400px,calc(100vw - 40px));max-width:none;
   padding:22px 24px 22px;border:2px solid var(--border);border-radius:var(--radius-lg,18px);
-  background:var(--panel);box-shadow:0 28px 70px rgba(0,0,0,.6);opacity:0;pointer-events:none;
-  /* ⚠️ `.ftz-confirm-card` ships a `modalCardIn` animation that drives
-     `transform`. Left on, its keyframes would stamp over the translate(-50%)
-     centring for the first 200ms and the card would visibly jump into place. */
-  animation:none;
-  transition:opacity .34s var(--ease-out),transform .34s var(--ease-out);
+  background:var(--panel);box-shadow:0 28px 70px rgba(0,0,0,.6);
   -webkit-backdrop-filter:none;backdrop-filter:none;}
-.ftz-feedback-toast.visible{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto;}
-.ftz-feedback-toast::before{opacity:.6;}   /* the SWFT art, dialled back behind text */
-@media(prefers-reduced-motion:reduce){
-  .ftz-feedback-toast,.ftz-feedback-toast.visible{transform:translate(-50%,-50%);transition:opacity .2s linear;}
-}
+/* ⚠️ The art is dialled well back HERE and nowhere else. Lifecheck can carry it
+   at full strength because its content sits on nested solid sub-panels; this
+   card puts body text straight onto the surface, and at .6 the art fought the
+   words. It reads as a tint now, which is all it needs to do. */
+.ftz-feedback-toast::before{opacity:.22;filter:brightness(.9) saturate(1.05);}
 .fb-x{top:10px;right:12px;}
 .fb-title{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text);
   padding-right:30px;margin-bottom:6px;}

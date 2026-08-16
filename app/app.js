@@ -1630,19 +1630,39 @@ const FtzStatus = (() => {
 })();
 
 const ROLE_COLORS = ['#fbbf24','#f87171','#34d399','#60a5fa','#a78bfa','#f472b6','#fb923c','#22d3ee'];
+// [id, label, group, one-line explanation].  The explanation is new — a bare
+// "Manage Messages" toggle asks an owner to guess what they are handing out, and
+// the reference we are working from spells every one of them out.
+//
+// ⚠️ `view_channel` is NEW and it is the one that makes a locked channel
+// possible at all.  Until now there was no permission for seeing a channel, so
+// there was no way to build a private one: every channel in a bastion was
+// readable by every member, and the settings UI had no way to say otherwise.
 const PERMISSIONS = [
-  ['send_messages','Send Messages','General'],['read_history','Read History','General'],
-  ['add_reactions','Add Reactions','Text'],['attach_files','Attach Files','Text'],
-  ['mention_everyone','Mention Everyone','Text'],['embed_links','Embed Links','Text'],
-  ['manage_messages','Manage Messages','Moderation'],['kick_members','Kick Members','Moderation'],
-  ['ban_members','Ban Members','Moderation'],['timeout_members','Timeout Members','Moderation'],
-  ['manage_channels','Manage Channels','General'],['manage_roles','Manage Roles','General'],
-  ['connect_voice','Connect to Voice','Voice/Party'],['speak','Speak in Voice','Voice/Party'],
-  ['mute_members','Mute Members','Voice/Party'],['deafen_members','Deafen Members','Voice/Party'],
-  ['manage_events','Manage Events','Automation'],['manage_polls','Manage Polls','Automation'],
-  ['manage_bots','Manage Bots','Automation'],['view_audit_log','View Audit Log','Moderation'],
-  ['manage_emojis','Manage Emojis','Boost'],['use_custom_emojis','Use Custom Emojis','Boost'],
-  ['administrator','Administrator','General'],
+  ['view_channel','View Channels','General','See channels and read what is in them'],
+  ['send_messages','Send Messages','General','Post in channels they can see'],
+  ['read_history','Read History','General','Read messages sent before they arrived'],
+  ['manage_channels','Manage Channels','General','Create, rename, move and delete channels'],
+  ['manage_roles','Manage Roles','General','Create roles and hand them out, below their own'],
+  ['administrator','Administrator','General','Every permission, everywhere. Hand it out carefully'],
+  ['add_reactions','Add Reactions','Text','React to messages'],
+  ['attach_files','Attach Files','Text','Upload images, video and files'],
+  ['embed_links','Embed Links','Text','Links they post unfurl into cards'],
+  ['mention_everyone','Mention Everyone','Text','Ping the whole bastion or a whole role'],
+  ['connect_voice','Connect to Voice','Voice/Party','Join party and stage channels'],
+  ['speak','Speak in Voice','Voice/Party','Talk once they are in'],
+  ['mute_members','Mute Members','Voice/Party','Mute other people in a party'],
+  ['deafen_members','Deafen Members','Voice/Party','Deafen other people in a party'],
+  ['manage_events','Manage Events','Automation','Create and edit events'],
+  ['manage_polls','Manage Polls','Automation','Create polls and close them'],
+  ['manage_bots','Manage Bots','Automation','Add bots and choose where they run'],
+  ['manage_messages','Manage Messages','Moderation','Delete and pin anyone’s messages'],
+  ['kick_members','Kick Members','Moderation','Remove someone. They can come back with an invite'],
+  ['ban_members','Ban Members','Moderation','Remove someone and keep them out'],
+  ['timeout_members','Timeout Members','Moderation','Stop someone posting for a while'],
+  ['view_audit_log','View Audit Log','Moderation','See who did what in this bastion'],
+  ['manage_emojis','Manage Emojis','Boost','Add and remove the bastion’s emotes'],
+  ['use_custom_emojis','Use Custom Emojis','Boost','Use this bastion’s emotes'],
 ];
 const PERM_GROUPS = ['General','Text','Voice/Party','Automation','Moderation','Boost'];
 let activeEmojiCat = 0;
@@ -10757,6 +10777,10 @@ function _openChannel(i){
   const b=CU.bastions?.[curBastion];
   const ch=b?.channels?.[i];
   if (!ch) return;
+  // ⚠️ AT THE ACTION, NOT ONLY WHERE THE BUTTON IS DRAWN.  The sidebar not
+  // rendering a row is a drawing decision; this is the one that answers a stale
+  // sidebar, a saved last-channel, a URL, or the keyboard.
+  if (!_canSeeChannel(b, ch)) { toast('That channel is not open to you.','error'); return; }
   const t=_chType(ch.type);
   if (t.open==='forum' && typeof openForumChannel==='function') return openForumChannel(i);
   if (t.open==='poll'  && typeof openPollChannel==='function')  return openPollChannel(i);
@@ -10927,7 +10951,15 @@ function renderBastionSidebar(scroll) {
   const cats=Array.isArray(b.categories)?b.categories:[];
   const inCat=new Map(cats.map(c=>[c.id,[]]));
   const loose=[];
-  chs.forEach((ch,i)=>{ const bucket=(ch.categoryId&&inCat.get(ch.categoryId))||loose; bucket.push(i); });
+  let visible=0;
+  chs.forEach((ch,i)=>{
+    // A channel you may not view is not drawn.  Hidden, not private — the note on
+    // _bstCan says why that distinction matters and where it stops.
+    if (!_canSeeChannel(b, ch)) return;
+    visible++;
+    const bucket=(ch.categoryId&&inCat.get(ch.categoryId))||loose;
+    bucket.push(i);
+  });
 
   // Uncategorised channels sit above every category and carry no heading —
   // a bastion that has never made a category reads as one plain list, which is
@@ -10950,8 +10982,10 @@ function renderBastionSidebar(scroll) {
     </div>`;
   });
 
-  if (!chs.length) {
-    html+=`<div class="ch-none">${canManageChannels?'No channels yet. Make the first one.':'No channels here yet.'}</div>`;
+  if (!visible) {
+    // Two different situations, and telling them apart matters: an empty bastion
+    // is waiting for you, a bastion whose channels are all hidden from you is not.
+    html+=`<div class="ch-none">${!chs.length?(canManageChannels?'No channels yet. Make the first one.':'No channels here yet.'):'Nothing here is open to you yet.'}</div>`;
   }
   if (canManageChannels) {
     html+=`<div class="ch-sidebar-action ch-make" onclick="addChannel(${curBastion},null,null)">
@@ -11237,7 +11271,7 @@ function loadChatChannel(idx) {
   setTopbarChannelActions();
   const bastionBanner = b?.banner || '';
   const bannerSafe = bastionBanner ? escapeHTML(bastionBanner) : '';
-  const chTypeIcon = ch.type==='voice'?ftzIcon('mic','14'):ch.type==='forum'?ftzIcon('chat','14'):ch.type==='announcement'?ftzIcon('megaphone','14'):ch.type==='poll'?ftzIcon('ballot','14'):'#';
+  const chTypeIcon = _chTypeGlyph(ch.type,14);
   wrap.innerHTML=`
     <div class="chat-wrap">
       <div class="room-topbar">
@@ -11269,7 +11303,9 @@ function loadChatChannel(idx) {
         <div class="typing-dots"><span></span><span></span><span></span></div>
         <span id="ch-typing-text"></span>
       </div>
-      ${buildChatInputBar({inputId:'ch-input',placeholder:'Message #'+escapeHTML(ch.name)+'…',context:'ch',chIdx:idx})}
+      ${_bstCan(b,CU.username,'send_messages',ch)
+        ? buildChatInputBar({inputId:'ch-input',placeholder:'Message #'+escapeHTML(ch.name)+'…',context:'ch',chIdx:idx})
+        : `<div class="ch-nopost">${_chLockSvg()}<span>${ch.restricted||_chType(ch.type).restricted?'Only staff can post here.':'You do not have permission to post here.'}</span></div>`}
     </div>`;
   // Persistent DOM: revive the pooled #ch-msgs-<idx> for this channel if we
   // have one so scroll/video/embeds survive intact.
@@ -29722,13 +29758,93 @@ let toastTimer=null;
 // ════════════════════════════════════════════
 // UTILS
 // ════════════════════════════════════════════
-function hasPerm(perm){
+// ════════════════════════════════════════════
+// BASTION PERMISSIONS — one resolver
+// ════════════════════════════════════════════
+// ⚠️ THE OLD hasPerm DID NOT UNDERSTAND `administrator`.  It asked whether one of
+// your roles literally listed the permission being checked — and every role
+// template in the app gives its top role exactly `['administrator']` and nothing
+// else.  So an Admin/Owner/Clan Leader/Studio Lead role, applied from a template,
+// could not manage channels, delete a message or edit a role.  The permission
+// that is supposed to mean "all of them" meant none of them.
+//
+// ⚠️ AND IT ONLY EVER ANSWERED ABOUT YOU, IN THE BASTION YOU HAVE OPEN.  Nothing
+// could ask "may this OTHER member post in THIS channel", which is why no channel
+// in Fortized has ever been lockable.
+//
+// ⚠️ THE HONEST LIMIT, STATED ONCE.  This resolves on the client.  It decides
+// what the app draws and what it will do.  It is not a wall: until passwords are
+// hashed and RLS is on for `users`, anyone holding the shipped anon key can read
+// the table directly.  So a hidden channel is HIDDEN, not private, and no UI copy
+// anywhere may call it secure or private until that lands.
+
+// The permissions a per-channel override is allowed to touch.  Kicking someone is
+// not a thing you can be allowed to do "in #general".
+const _FTZ_CH_PERMS = new Set(['view_channel','send_messages','read_history','add_reactions','attach_files','embed_links','mention_everyone','use_custom_emojis','manage_messages','connect_voice','speak']);
+
+// ⚠️ WITHOUT THIS BASELINE, TURNING PERMISSIONS ON WOULD LOCK EVERY EXISTING
+// BASTION.  There is no @everyone ROLE row in the data — an ordinary member's
+// entry in `memberRoles` is an empty array — so "what may a member with no roles
+// do" had no answer at all.  It is this list, until an owner edits `b.everyone`.
+const _FTZ_BASE_PERMS = ['view_channel','send_messages','read_history','add_reactions','attach_files','embed_links','connect_voice','speak','use_custom_emojis'];
+
+// Lowest priority first, so a higher role's allow lands last.
+function _bstRolesOf(b, user){
+  const ids=(b&&b.memberRoles&&b.memberRoles[user])||[];
+  const all=(b&&b.roles)||[];
+  return ids.map(id=>all.find(r=>r&&r.id===id)).filter(Boolean).sort((a,c)=>(a.priority||0)-(c.priority||0));
+}
+function _bstIsAdmin(b, user){
+  if (!b||!user) return false;
+  if (b.owner===user) return true;
+  return _bstRolesOf(b,user).some(r=>(r.permissions||[]).includes('administrator'));
+}
+function _bstEveryone(b){ return Array.isArray(b&&b.everyone)?b.everyone:_FTZ_BASE_PERMS; }
+
+function _bstCan(b, user, perm, ch){
+  if (!b || !user) return false;
+  if (_bstIsAdmin(b, user)) return true;
+
+  const roles=_bstRolesOf(b,user);
+  let ok = _bstEveryone(b).includes(perm);
+  // A role grants; it never takes away.  Only a channel override can subtract.
+  if (roles.some(r=>(r.permissions||[]).includes(perm))) ok=true;
+
+  if (ch && _FTZ_CH_PERMS.has(perm)) {
+    const ov = ch.overrides || {};
+    const ev = ov['@everyone'];
+    if (ev){ if((ev.deny||[]).includes(perm)) ok=false; if((ev.allow||[]).includes(perm)) ok=true; }
+    // Every role's denies, then every role's allows — so holding one role that
+    // allows it beats holding another that denies it.  Anything else means a
+    // member loses access by being GIVEN a role, which reads as a bug to the
+    // person it happens to.
+    let deny=false, allow=false;
+    roles.forEach(r=>{ const o=ov[r.id]; if(!o) return;
+      if((o.deny||[]).includes(perm)) deny=true;
+      if((o.allow||[]).includes(perm)) allow=true; });
+    if (deny) ok=false;
+    if (allow) ok=true;
+    const mine = ov['user:'+user];
+    if (mine){ if((mine.deny||[]).includes(perm)) ok=false; if((mine.allow||[]).includes(perm)) ok=true; }
+  }
+
+  // A rules or announcement channel is read-only by its nature.  This was only
+  // ever enforced on the announcement SURFACE, so a rules channel — which opens
+  // the ordinary text surface — had a working composer for everyone.
+  if (perm==='send_messages' && ch && (ch.restricted || _chType(ch.type).restricted)) {
+    if (!_bstCan(b,user,'manage_messages') && !_bstCan(b,user,'manage_channels')) ok=false;
+  }
+  return ok;
+}
+
+// `ch` is optional: leave it off for a bastion-wide question ("can they manage
+// channels at all"), pass it for a channel-scoped one.
+function hasPerm(perm, ch){
   if(!CU||curBastion===null)return false;
   const b=CU.bastions[curBastion];if(!b)return false;
-  if(b.owner===CU.username)return true;
-  const memberRoles=(b.memberRoles||{})[CU.username]||[];
-  return memberRoles.some(rid=>(b.roles||[]).find(r=>r.id===rid)?.permissions?.includes(perm));
+  return _bstCan(b, CU.username, perm, ch||null);
 }
+function _canSeeChannel(b, ch){ return _bstCan(b, CU&&CU.username, 'view_channel', ch); }
 
 
 
@@ -44394,6 +44510,17 @@ async function handleChatSend(context, chIdx) {
     const _left = Math.ceil((CU.chatSuspendedUntil - Date.now()) / 60000);
     toast('Your chat is suspended for safety reasons. Try again in ' + _left + ' min.', 'error');
     return;
+  }
+  // The composer is hidden when you may not post, but hiding a control is not
+  // refusing an action: a draft restore, an Enter key on a stale surface or a
+  // console call all arrive here without touching it.
+  if (context==='ch') {
+    const _b=CU.bastions?.[curBastion];
+    const _ch=_b?.channels?.[chIdx!==undefined?chIdx:curChannel];
+    if (_b && _ch && !_bstCan(_b, CU.username, 'send_messages', _ch)) {
+      toast('You do not have permission to post in this channel.','error');
+      return;
+    }
   }
   const _atts = _pendAtts().slice(); // snapshot (up to 10)
   if (_atts.length) {

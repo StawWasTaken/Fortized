@@ -10710,6 +10710,92 @@ function openBastion(idx) {
   });
 }
 
+// ════════════════════════════════════════════
+// CHANNEL TYPES — one registry, eight kinds
+// ════════════════════════════════════════════
+// ⚠️ THIS REPLACES FIVE HAND-WRITTEN COPIES OF THE SAME TABLE.  The sidebar's
+// five hardcoded groups, the create card's picker, that card's live preview, the
+// channel context menu and the rename card each carried their own label and
+// glyph map, and they had drifted apart: the sidebar said "PARTY ROOMS", the
+// create card said "Party", the settings tab said "voice", and a wall channel
+// was "WALL ROOMS" in one place and "Wall" in another.  Adding a kind meant
+// finding all five.  A kind is one entry here now.
+//
+// ⚠️ `soon:true` means the kind is understood EVERYWHERE — the sidebar, the
+// settings tab, a Discord import or a template can all carry one and it renders
+// with the right glyph and name — but it has no surface of its own yet, so it is
+// not offered in the create card.  Offering a gallery channel that opens a plain
+// text room would be a facade, and removing facades is what this rework is for.
+//
+// `open` is the surface, not the kind: rules and announcement are text rooms
+// that only staff may post in, so they open the text surface and set
+// `restricted`.  That is a real difference in behaviour, not a relabelling.
+const _FTZ_CH_TYPES = {
+  text:         { id:'text',         label:'Text',         desc:'Messages, images, GIFs and everything else',   open:'select', vb:'0 0 448 512', d:'M181.3 32.4c17.4 2.9 29.2 19.4 26.3 36.8L197.8 128l95.1 0 11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3s29.2 19.4 26.3 36.8L357.8 128l58.2 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-68.9 0L325.8 320l58.2 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-68.9 0-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8L250.2 384l-95.1 0-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8L90.2 384 32 384c-17.7 0-32-14.3-32-32s14.3-32 32-32l68.9 0 21.3-128L64 192c-17.7 0-32-14.3-32-32s14.3-32 32-32l68.9 0 11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3zM187.1 192L165.8 320l95.1 0 21.3-128-95.1 0z' },
+  announcement: { id:'announcement', label:'Announcement', desc:'Only staff can post. Everyone can read',        open:'select', restricted:true, vb:'0 0 640 512', d:'M480 32c0-12.9-7.8-24.6-19.8-29.6s-25.7-2.2-34.9 6.9L381.7 53c-48 48-113.1 75-181 75l-8.7 0-32 0-96 0c-35.3 0-64 28.7-64 64l0 96c0 35.3 28.7 64 64 64l0 128c0 17.7 14.3 32 32 32l64 0c17.7 0 32-14.3 32-32l0-128 8.7 0c67.9 0 133 27 181 75l43.6 43.6c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6l0-147.6c18.6-8.8 32-32.5 32-60.4s-13.4-51.6-32-60.4L480 32zm-64 76.7L416 240l0 131.3C357.2 317.8 280.5 288 200.7 288l-8.7 0 0-96 8.7 0c79.8 0 156.5-29.8 215.3-83.3z' },
+  blog:         { id:'blog',         label:'Blog',         desc:'Long posts with a cover, newest first',         open:'forum',  soon:true, vb:'0 0 512 512', d:'M96 96c0-35.3 28.7-64 64-64H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128c0-17.7 14.3-32 32-32s32 14.3 32 32V416c0 8.8 7.2 16 16 16s16-7.2 16-16V96zm64 24v80c0 13.3 10.7 24 24 24H296c13.3 0 24-10.7 24-24V120c0-13.3-10.7-24-24-24H184c-13.3 0-24 10.7-24 24zm208 0c0 8.8 7.2 16 16 16h48c8.8 0 16-7.2 16-16s-7.2-16-16-16H384c-8.8 0-16 7.2-16 16zm0 64c0 8.8 7.2 16 16 16h48c8.8 0 16-7.2 16-16s-7.2-16-16-16H384c-8.8 0-16 7.2-16 16zM160 280c0 8.8 7.2 16 16 16H432c8.8 0 16-7.2 16-16s-7.2-16-16-16H176c-8.8 0-16 7.2-16 16zm0 64c0 8.8 7.2 16 16 16H432c8.8 0 16-7.2 16-16s-7.2-16-16-16H176c-8.8 0-16 7.2-16 16z' },
+  forum:        { id:'forum',        label:'Forum',        desc:'Threaded discussions, one topic per thread',    open:'forum',  vb:'0 0 640 512', d:'M208 352c114.9 0 208-78.8 208-176S322.9 0 208 0S0 78.8 0 176c0 38.6 14.7 74.3 39.6 103.4c-3.5 9.4-8.7 17.7-14.2 24.7c-4.8 6.2-9.7 11-13.3 14.3c-1.8 1.6-3.3 2.9-4.3 3.7c-.5 .4-.9 .7-1.1 .8l-.2 .2 0 0 0 0C1 327.2-1.4 334.4 .8 340.9S9.1 352 16 352c21.8 0 43.8-5.6 62.1-12.5c9.2-3.5 17.8-7.4 25.3-11.4C134.1 343.3 169.8 352 208 352zM448 176c0 112.3-99.1 196.9-216.5 207C255.8 457.4 336.4 512 432 512c38.2 0 73.9-8.7 104.7-23.9c7.5 4 16 7.9 25.2 11.4c18.3 6.9 40.3 12.5 62.1 12.5c6.9 0 13.1-4.5 15.2-11.1c2.1-6.6-.2-13.8-5.8-17.9l0 0 0 0-.2-.2c-.2-.2-.6-.4-1.1-.8c-1-.8-2.5-2-4.3-3.7c-3.6-3.3-8.5-8.1-13.3-14.3c-5.5-7-10.7-15.4-14.2-24.7C625.3 410.3 640 374.6 640 336c0-97.2-93.1-176-208-176c-.7 0-1.3 0-2 0c1.3 5.2 2 10.5 2 16z' },
+  gallery:      { id:'gallery',      label:'Gallery',      desc:'A grid of images, art and screenshots',         open:'select', soon:true, vb:'0 0 512 512', d:'M0 96C0 60.7 28.7 32 64 32H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zM323.8 202.5c-4.5-6.6-11.9-10.5-19.8-10.5s-15.4 3.9-19.8 10.5l-87 127.6L170.7 297c-4.6-5.7-11.5-9-18.7-9s-14.2 3.3-18.7 9l-64 80c-5.8 7.2-6.9 17.1-2.9 25.4s12.4 13.6 21.6 13.6h96 32H424c8.9 0 17.1-4.9 21.2-12.8s3.6-17.4-1.4-24.7l-120-176zM112 192a48 48 0 1 0 0-96 48 48 0 1 0 0 96z' },
+  voice:        { id:'voice',        label:'Voice',        desc:'Talk, and hang out together',                   open:'select', voice:true, vb:'0 0 384 512', d:'M192 0C139 0 96 43 96 96V256c0 53 43 96 96 96s96-43 96-96V96c0-53-43-96-96-96zM64 216c0-13.3-10.7-24-24-24s-24 10.7-24 24v40c0 89.1 66.2 162.7 152 174.4V464H120c-13.3 0-24 10.7-24 24s10.7 24 24 24h72 72c13.3 0 24-10.7 24-24s-10.7-24-24-24H216V430.4c85.8-11.7 152-85.3 152-174.4V216c0-13.3-10.7-24-24-24s-24 10.7-24 24v40c0 70.7-57.3 128-128 128s-128-57.3-128-128V216z' },
+  stage:        { id:'stage',        label:'Stage',        desc:'Speakers on stage, everyone else listening',    open:'select', voice:true, soon:true, vb:'0 0 640 512', d:'M144 0a80 80 0 1 1 0 160A80 80 0 1 1 144 0zM512 0a80 80 0 1 1 0 160A80 80 0 1 1 512 0zM0 298.7C0 239.8 47.8 192 106.7 192h42.7c15.9 0 31 3.5 44.6 9.7c-1.3 7.2-1.9 14.7-1.9 22.3c0 38.2 16.8 72.5 43.3 96c-.2 0-.4 0-.7 0H21.3C9.6 320 0 310.4 0 298.7zM405.3 320c-.2 0-.4 0-.7 0c26.6-23.5 43.3-57.8 43.3-96c0-7.6-.7-15-1.9-22.3c13.6-6.3 28.7-9.7 44.6-9.7h42.7C592.2 192 640 239.8 640 298.7c0 11.8-9.6 21.3-21.3 21.3H405.3zM224 224a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zM128 485.3C128 411.7 187.7 352 261.3 352H378.7C452.3 352 512 411.7 512 485.3c0 14.7-11.9 26.7-26.7 26.7H154.7c-14.7 0-26.7-11.9-26.7-26.7z' },
+  rules:        { id:'rules',        label:'Rules',        desc:'The house rules. Only staff can post',          open:'select', restricted:true, vb:'0 0 576 512', d:'M0 80l0 48c0 17.7 14.3 32 32 32l16 0 48 0 0-80c0-26.5-21.5-48-48-48S0 53.5 0 80zM112 32c10 13.4 16 30 16 48l0 304c0 35.3 28.7 64 64 64s64-28.7 64-64l0-5.3c0-32.4 26.3-58.7 58.7-58.7L480 320l0-192c0-53-43-96-96-96L112 32zM464 480c61.9 0 112-50.1 112-112c0-8.8-7.2-16-16-16l-245.3 0c-14.7 0-26.7 11.9-26.7 26.7l0 5.3c0 61.9-50.1 112-112 112l288 0z' },
+  // Legacy.  Poll rooms exist in the wild and still open, so the kind has to stay
+  // readable; it is not offered to anyone building a new channel because a poll
+  // is a message, not a room.
+  poll:         { id:'poll',         label:'Poll',         desc:'Ask a question, count the answers',             open:'poll',   soon:true, vb:'0 0 448 512', d:'M160 80c0-26.5 21.5-48 48-48l32 0c26.5 0 48 21.5 48 48l0 352c0 26.5-21.5 48-48 48l-32 0c-26.5 0-48-21.5-48-48l0-352zM0 272c0-26.5 21.5-48 48-48l32 0c26.5 0 48 21.5 48 48l0 160c0 26.5-21.5 48-48 48l-32 0c-26.5 0-48-21.5-48-48L0 272zM368 96l32 0c26.5 0 48 21.5 48 48l0 288c0 26.5-21.5 48-48 48l-32 0c-26.5 0-48-21.5-48-48l0-288c0-26.5 21.5-48 48-48z' },
+};
+function _chType(t){ return _FTZ_CH_TYPES[t||'text'] || _FTZ_CH_TYPES.text; }
+function _chTypeGlyph(t,size){ const e=_chType(t); return `<svg class="ch-ty-ico" viewBox="${e.vb}" width="${size||14}" height="${size||14}" fill="currentColor" aria-hidden="true"><path d="${e.d}"></path></svg>`; }
+function _chLockSvg(){ return '<svg viewBox="0 0 448 512" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M144 144l0 48 160 0 0-48c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192l0-48C80 64.5 144.5 0 224 0s144 64.5 144 144l0 48 16 0c35.3 0 64 28.7 64 64l0 192c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 256c0-35.3 28.7-64 64-64l16 0z"></path></svg>'; }
+function _chPlusSvg(){ return '<svg viewBox="0 0 448 512" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z"></path></svg>'; }
+function _chFolderSvg(){ return '<svg viewBox="0 0 512 512" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M64 480H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H289.9c-10.1 0-19.6-4.7-25.6-12.8L245.8 58.7C232.7 41.2 212.5 32 191.1 32H64C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64z"></path></svg>'; }
+
+// One door into a channel, whatever kind it is.  The sidebar used to carry three
+// different onclick handlers and the caller had to know which; a wall room wired
+// to selectChannel() opened an empty chat surface.
+function _openChannel(i){
+  const b=CU.bastions?.[curBastion];
+  const ch=b?.channels?.[i];
+  if (!ch) return;
+  const t=_chType(ch.type);
+  if (t.open==='forum' && typeof openForumChannel==='function') return openForumChannel(i);
+  if (t.open==='poll'  && typeof openPollChannel==='function')  return openPollChannel(i);
+  return selectChannel(i);
+}
+
+// ⚠️ THE BOOST BAR WAS `Math.floor(Math.random() * 100)`.  It drew a different
+// width on every single render, so a bastion's progress toward its next tier was
+// pure decoration — the same fabrication as the "N Online" counts that came off
+// the Discover cards.  There was nothing honest to draw it from either: a bastion
+// stored a boostLevel and no boost COUNT, so "9 / 14" could not be expressed at
+// all.
+//
+// `b.boosts` is that count.  An existing bastion has never written one, so it is
+// read back through its level — a level 2 bastion is credited with exactly the 7
+// that bought level 2, which is the least it can possibly have.  No migration,
+// and the bar is never wider than the truth.
+const _FTZ_BOOST_TIERS = [2, 7, 14];
+function _boostsForLevel(lv){ lv=Math.max(0,Math.min(_FTZ_BOOST_TIERS.length, parseInt(lv,10)||0)); return lv?_FTZ_BOOST_TIERS[lv-1]:0; }
+function _levelForBoosts(n){ let lv=0; for(let i=0;i<_FTZ_BOOST_TIERS.length;i++) if(n>=_FTZ_BOOST_TIERS[i]) lv=i+1; return lv; }
+function _bastionBoosts(b){ const n=Number(b&&b.boosts); return Number.isFinite(n)&&n>=0?Math.floor(n):_boostsForLevel(b&&b.boostLevel); }
+// The tier pill.  It was three hardcoded hex ramps — blue, purple, gold — chosen
+// before boosting was Radiance's power, and hardcoded colour is invisible to the
+// appearance system, so the pill was the same shade under every theme.  One
+// gradient now, the Radiance one, because that is what a boost is.
+function _boostPillHTML(b){
+  const p=_boostProgress(b);
+  if (!p.level) return `<span class="bm-boost bm-boost--none">${_boostSvg('10')}Boost</span>`;
+  return `<span class="bm-boost" data-tip="${p.boosts} boost${p.boosts!==1?'s':''}">${_boostSvg('10')}Level ${p.level}</span>`;
+}
+function _boostProgress(b){
+  const boosts=_bastionBoosts(b);
+  const level=_levelForBoosts(boosts);
+  const next=level<_FTZ_BOOST_TIERS.length?_FTZ_BOOST_TIERS[level]:null;
+  const from=level?_FTZ_BOOST_TIERS[level-1]:0;
+  const pct=next===null?100:Math.max(0,Math.min(100,((boosts-from)/(next-from))*100));
+  return { boosts, level, next, pct };
+}
+
 function renderBastionSidebar(scroll) {
   const b=CU.bastions?.[curBastion];
   if (!b||!scroll) return;
@@ -10747,7 +10833,7 @@ function renderBastionSidebar(scroll) {
   html+=`<div class="bastion-identity${bannerSrc?' ':' no-banner '}" style="position:relative;">
     ${bannerSrc?'':`<div class="bastion-emblem">${emblemHTML}</div>`}
     <div class="bastion-meta">
-      <div class="bm-name bm-name-clickable" id="bastion-name-toggle" onclick="toggleBastionNameDropdown(event)">${escapeHTML(b.name)}${b.verified?_verifiedBadge(14):''} ${boostLv>0?`<span style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:5px;background:linear-gradient(135deg,${boostLv===1?'#60a5fa':boostLv===2?'#a78bfa':'#fbbf24'},${boostLv===1?'#60a5fa99':boostLv===2?'#a78bfa99':'#fbbf2499'});color:#fff;letter-spacing:.03em;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2 5 5 1-4 4 1 5-4-2-4 2 1-5-4-4 5-1 2-5z"/></svg>T${boostLv}</span>`:'<span style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>Boost</span>'} <span class="bm-chevron">▼</span></div>
+      <div class="bm-name bm-name-clickable" id="bastion-name-toggle" onclick="toggleBastionNameDropdown(event)">${escapeHTML(b.name)}${b.verified?_verifiedBadge(14):''} ${_boostPillHTML(b)} <span class="bm-chevron">▼</span></div>
       ${b.tagline?`<div class="bm-tagline">${escapeHTML(b.tagline)}</div>`:''}
     </div>
     <div id="bastion-name-dd-anchor"></div>
@@ -10756,18 +10842,14 @@ function renderBastionSidebar(scroll) {
   // ── Mood Bar ──
   html+=renderMoodBar(b);
 
-  // ── Boost Progress Bar ──
-  const boostProgress = boostLv > 0 ? Math.floor(Math.random() * 100) : 0;
-  const nextTierLevel = Math.min(3, boostLv + 1);
-  const boostBarColor = boostLv === 1 ? '#60a5fa' : boostLv === 2 ? '#a78bfa' : boostLv === 3 ? '#fbbf24' : 'rgba(255,255,255,.1)';
-  html += `<div style="padding:12px 16px;border-bottom:1px solid var(--border);">
-    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
-      <span>Boost Level ${boostLv}</span>
-      <span style="color:rgba(255,255,255,.3);">→ T${nextTierLevel}</span>
+  // ── Boost progress ──
+  const bp=_boostProgress(b);
+  html+=`<div class="bst-bar">
+    <div class="bst-bar-head">
+      <span>${bp.next===null?'Fully boosted':'Boost level '+bp.level}</span>
+      <span class="bst-bar-count">${bp.boosts}${bp.next===null?'':' / '+bp.next}</span>
     </div>
-    <div style="width:100%;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;">
-      <div style="height:100%;width:${boostProgress}%;background:linear-gradient(90deg,${boostBarColor} 0%,rgba(255,119,228,.8) 55%,#ff77e4 100%);transition:width .3s ease;box-shadow:0 0 12px ${boostBarColor}99;"></div>
-    </div>
+    <div class="bst-bar-track"><div class="bst-bar-fill" style="width:${bp.pct}%;"></div></div>
   </div>`;
 
   // ── Custom Emojis Display ──
@@ -10800,95 +10882,88 @@ function renderBastionSidebar(scroll) {
 
   html+=`<div class="sidebar-divider" style="margin:4px 8px;"></div>`;
 
-  // ── Channel categories (collapsible) ──
-  const textChs=chs.filter(c=>c.type==='text'||!c.type);
-  const voiceChs=chs.filter(c=>c.type==='voice');
-  const forumChs=chs.filter(c=>c.type==='forum');
-  const announcementChs=chs.filter(c=>c.type==='announcement');
-  const pollChs=chs.filter(c=>c.type==='poll');
-
-  // Collapsed state key per bastion
+  // ── Channels, inside their real categories ──
+  // 🐞 CATEGORIES EXISTED, AND THIS FUNCTION THREW THEM AWAY.  `b.categories`
+  // and `ch.categoryId` are real: the Channels settings tab creates, renames,
+  // deletes and fills them, templates carry them, and the Discord importer maps
+  // Discord's whole category tree onto them.  And renderBastionSidebar — the
+  // ONLY place a member ever sees the channel list — ignored every bit of it and
+  // grouped by channel TYPE instead, under five hardcoded headings.  So an owner
+  // could build "Plant Hall · Book Club · plant chats" in settings, save it, and
+  // watch absolutely nothing change.  Their structure was sitting in the
+  // database, invisible.  This draws it.
   const collapseKey='ftz_cat_collapsed_'+(b.globalId||b.name||curBastion);
   let collapsedCats={};
   try{collapsedCats=JSON.parse(localStorage.getItem(collapseKey)||'{}');}catch(e){}
+  const ageTier=getAgeTier(CU?.dateOfBirth);
 
-  // Helper: collapsible category wrapper
-  function catWrap(catId, icon, label, type, contentHTML) {
-    if (!contentHTML && !canManageChannels) return '';
-    const isCollapsed=!!collapsedCats[catId];
-    return `<div class="ch-cat-wrap${isCollapsed?' collapsed':''}" data-cat="${catId}">
-      <div class="ch-category" onclick="toggleChCat(this,'${catId}')" oncontextmenu="showCategoryCtxMenu(event,'${catId}','${escapeHTML(label)}','${type}')">
-        <span class="cat-chevron">▼</span><span class="cat-icon">${icon}</span> ${label}${canManageChannels?`<button class="cat-add" onclick="event.stopPropagation();addChannel(${curBastion},'${type}')">+</button>`:''}
-      </div>
-      <div class="ch-cat-items">${contentHTML||''}</div>
+  // ONE row renderer for all eight kinds.  There were three before (text, wall,
+  // party) and they had each drifted: only the text one drew unread state, only
+  // the text one drew the NSFW tag, and only the text one carried the `ch-sb-N`
+  // id that selectChannel() uses to move the active marker — so opening a party
+  // room left the highlight behind on whatever you were reading.
+  function chRow(ch,i){
+    const t=_chType(ch.type);
+    const blocked=!!ch.nsfw&&ageTier==='child';
+    const live=t.voice&&voiceConnected&&voiceChannel===i;
+    const unread=getChannelUnread(curBastion,i);
+    const cls=['ch-item-2027'];
+    if(curChannel===i) cls.push('active');
+    if(unread.count>0&&curChannel!==i) cls.push('unread');
+    if(t.voice) cls.push('ch-item--voice');
+    if(live) cls.push('active-vc');
+    if(blocked) cls.push('ch-item--blocked');
+    return `<div class="${cls.join(' ')}" id="ch-sb-${i}" data-chtype="${t.id}"${blocked?'':` onclick="_openChannel(${i})"`} oncontextmenu="showChannelCtxMenu(event,${i})" title="${escapeHTML(ch.name)}">
+      <span class="ch-hash">${_chTypeGlyph(t.id,15)}</span>
+      <span class="ch-name">${escapeHTML(ch.name)}</span>
+      ${ch.focusMode?'<span class="focus-mode-badge">FOCUS</span>':''}
+      ${ch.nsfw?'<span class="ch-nsfw">18+</span>':''}
+      ${live?'<span class="vc-live">LIVE</span>':''}
+      ${unread.mentions>0?`<span class="ch-mention-badge">${unread.mentions>9?'9+':unread.mentions}</span>`:''}
+      ${blocked?`<span class="ch-locked" data-tip="Age restricted">${_chLockSvg()}</span>`:''}
     </div>`;
   }
 
-  // Text channels
-  let textHTML='';
-  chs.forEach((ch,i)=>{
-    if (ch.type==='voice'||ch.type==='forum'||ch.type==='announcement'||ch.type==='poll') return;
-    const tier=getAgeTier(CU?.dateOfBirth);
-    const blocked=ch.nsfw&&tier==='child';
-    const nsfwTag=ch.nsfw?`<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255, 0, 51,.1);color:rgba(255, 0, 51,.6);flex-shrink:0;">18+</span>`:'';
-    const focusBadge=ch.focusMode?'<span class="focus-mode-badge">FOCUS</span>':'';
-    const unread = getChannelUnread(curBastion, i);
-    const isUnread = unread.count > 0 && curChannel !== i;
-    const unreadClass = isUnread ? ' unread' : '';
-    const unreadBadge = unread.mentions > 0 ? `<span class="ch-mention-badge">${unread.mentions > 9 ? '9+' : unread.mentions}</span>` : '';
-    textHTML+=`<div class="ch-item-2027${curChannel===i?' active':''}${unreadClass}" id="ch-sb-${i}" ${blocked?'style="opacity:.35;pointer-events:none;"':''}onclick="selectChannel(${i})" oncontextmenu="showChannelCtxMenu(event,${i})" title="${escapeHTML(ch.name)}">
-      <span class="ch-hash">#</span><span class="ch-name">${escapeHTML(ch.name)}</span>${focusBadge}${nsfwTag}${unreadBadge}${blocked?'<span title="Age blocked" style="margin-left:auto;opacity:.4;">🔒</span>':''}
-    </div>`;
-  });
-  if (textHTML||canManageChannels) html+=catWrap('text','📝','TEXT ROOMS','text',textHTML);
+  const cats=Array.isArray(b.categories)?b.categories:[];
+  const inCat=new Map(cats.map(c=>[c.id,[]]));
+  const loose=[];
+  chs.forEach((ch,i)=>{ const bucket=(ch.categoryId&&inCat.get(ch.categoryId))||loose; bucket.push(i); });
 
-  // Walls (formerly Forums)
-  let forumHTML='';
-  forumChs.forEach(ch => {
-    const ri=chs.indexOf(ch);
-    const fu = getChannelUnread(curBastion, ri);
-    const fuClass = fu.count > 0 && curChannel !== ri ? ' unread' : '';
-    forumHTML+=`<div class="ch-item-2027${curChannel===ri?' active':''}${fuClass}" id="ch-sb-${ri}" onclick="openForumChannel(${ri})" oncontextmenu="showChannelCtxMenu(event,${ri})">
-      <span class="ch-hash">${ftzIcon('chat','14')}</span><span class="ch-name">${escapeHTML(ch.name)}</span>
-    </div>`;
-  });
-  if (forumHTML||canManageChannels) html+=catWrap('forum',ftzIcon('chat','12'),'WALL ROOMS','forum',forumHTML);
+  // Uncategorised channels sit above every category and carry no heading —
+  // a bastion that has never made a category reads as one plain list, which is
+  // what it is.  A heading over them ("Uncategorised") would invent structure
+  // the owner did not create.
+  if (loose.length) html+=`<div class="ch-loose">${loose.map(i=>chRow(chs[i],i)).join('')}</div>`;
 
-  // Voice
-  let voiceHTML='';
-  chs.forEach((ch,i)=>{
-    if (ch.type!=='voice') return;
-    const live=voiceConnected&&voiceChannel===i;
-    voiceHTML+=`<div class="vc-item-2027 ${live?'active-vc':''}" onclick="selectChannel(${i})" oncontextmenu="showChannelCtxMenu(event,${i})">
-      <span class="vc-icon">${ftzIcon('mic','14')}</span><span class="ch-name">${escapeHTML(ch.name)}</span>
-      ${live?'<span class="vc-live">LIVE</span>':''}
+  cats.forEach(c=>{
+    const idxs=inCat.get(c.id)||[];
+    // An empty category is a shelf its owner is still filling.  They need to see
+    // it; nobody else does.
+    if (!idxs.length && !canManageChannels) return;
+    const isCollapsed=!!collapsedCats[c.id];
+    html+=`<div class="ch-cat-wrap${isCollapsed?' collapsed':''}" data-cat="${escapeHTML(c.id)}">
+      <div class="ch-category" onclick="toggleChCat(this,'${escapeHTML(c.id)}')" oncontextmenu="showCategoryCtxMenu(event,this.parentElement.dataset.cat)">
+        <span class="cat-chevron">▼</span><span class="cat-label">${escapeHTML(c.name||'Category')}</span>
+        ${canManageChannels?`<button class="cat-add" data-tip="Create channel" onclick="event.stopPropagation();addChannel(${curBastion},null,'${escapeHTML(c.id)}')">+</button>`:''}
+      </div>
+      <div class="ch-cat-items">${idxs.map(i=>chRow(chs[i],i)).join('')}</div>
     </div>`;
   });
-  if (voiceHTML||canManageChannels) html+=catWrap('voice',ftzIcon('mic','12'),'PARTY ROOMS','voice',voiceHTML);
 
-  // Announcements
-  let announceHTML='';
-  announcementChs.forEach(ch => {
-    const ri=chs.indexOf(ch);
-    const au = getChannelUnread(curBastion, ri);
-    const auClass = au.count > 0 && curChannel !== ri ? ' unread' : '';
-    announceHTML+=`<div class="ch-item-2027${curChannel===ri?' active':''}${auClass}" id="ch-sb-${ri}" onclick="selectChannel(${ri})" oncontextmenu="showChannelCtxMenu(event,${ri})">
-      <span class="ch-hash">${ftzIcon('megaphone','14')}</span><span class="ch-name">${escapeHTML(ch.name)}</span>
+  if (!chs.length) {
+    html+=`<div class="ch-none">${canManageChannels?'No channels yet. Make the first one.':'No channels here yet.'}</div>`;
+  }
+  if (canManageChannels) {
+    html+=`<div class="ch-sidebar-action ch-make" onclick="addChannel(${curBastion},null,null)">
+      <span class="sa-icon">${_chPlusSvg()}</span><span>Create channel</span>
     </div>`;
-  });
-  if (announceHTML||canManageChannels) html+=catWrap('announcement',ftzIcon('megaphone','12'),'ANNOUNCEMENT ROOMS','announcement',announceHTML);
-
-  // Polls
-  let pollHTML='';
-  pollChs.forEach(ch => {
-    const ri=chs.indexOf(ch);
-    const pu = getChannelUnread(curBastion, ri);
-    const puClass = pu.count > 0 && curChannel !== ri ? ' unread' : '';
-    pollHTML+=`<div class="ch-item-2027${curChannel===ri?' active':''}${puClass}" id="ch-sb-${ri}" onclick="openPollChannel(${ri})" oncontextmenu="showChannelCtxMenu(event,${ri})">
-      <span class="ch-hash">${ftzIcon('ballot','14')}</span><span class="ch-name">${escapeHTML(ch.name)}</span>
+    // The one affordance categories never had out here.  Everything needed to
+    // build them has existed for a long time, buried three clicks deep in
+    // settings, behind a list that did not visibly do anything.
+    html+=`<div class="ch-sidebar-action ch-make" onclick="addCategoryPrompt()">
+      <span class="sa-icon">${_chFolderSvg()}</span><span>Create category</span>
     </div>`;
-  });
-  if (pollHTML||canManageChannels) html+=catWrap('poll','🗳','POLL ROOMS','poll',pollHTML);
+  }
 
 
 
@@ -19740,23 +19815,22 @@ async function createBastion() {
 // ════════════════════════════════════════════
 // CHANNEL MANAGEMENT
 // ════════════════════════════════════════════
-async function addChannel(bastionIdx, preselectedType) {
-  showCreateRoomModal(bastionIdx, preselectedType || null);
+async function addChannel(bastionIdx, preselectedType, catId) {
+  showCreateRoomModal(bastionIdx, preselectedType || null, catId || null);
 }
 
-function showCreateRoomModal(bastionIdx, preselectedType) {
+function showCreateRoomModal(bastionIdx, preselectedType, catId) {
   const b = CU.bastions?.[bastionIdx];
   if (!b) return;
   const overlay = document.createElement('div');
   overlay.className = 'input-dialog-overlay';
   overlay.style.zIndex = '9600';
-  const types = [
-    { id:'text', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`, label:'Text', desc:'Send messages, images, GIFs, and more' },
-    { id:'voice', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`, label:'Party', desc:'Voice chat and hang out together' },
-    { id:'forum', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`, label:'Wall', desc:'Organized threaded discussions' },
-    { id:'announcement', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`, label:'Announcement', desc:'Important updates — only admins can post' },
-    { id:'poll', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h2v5H7z"/><path d="M11 8h2v9h-2z"/><path d="M15 10h2v7h-2z"/></svg>`, label:'Poll', desc:'Create polls and gather opinions' },
-  ];
+  // The kinds you can actually make, straight off the registry.  A kind carrying
+  // `soon` is understood everywhere but has no surface yet, so it is not offered
+  // here — a Gallery entry that opened a plain text room would be a facade.
+  const types = Object.values(_FTZ_CH_TYPES).filter(t => !t.soon).map(t => ({
+    id: t.id, label: t.label, desc: t.desc, icon: _chTypeGlyph(t.id, 22)
+  }));
   const selType = preselectedType || 'text';
   overlay.innerHTML = `<div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.08);border-radius:20px;max-width:460px;width:92%;box-shadow:0 24px 80px rgba(0,0,0,.7);animation:embedIn .18s cubic-bezier(.22,1,.36,1) both;">
     <div style="padding:26px 28px 0;">
@@ -19826,16 +19900,9 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
     const pvIcon = overlay.querySelector('#crm-pv-icon');
     if (pvName) pvName.textContent = n;
     if (pvWelcome) pvWelcome.innerHTML = 'Welcome to <strong style="color:rgba(255,255,255,.5);">#' + escapeHTML(n) + '</strong>! This is the start of the channel.';
-    const typeLabels = {text:'Text',voice:'Party',forum:'Wall',announcement:'Announcement',poll:'Poll'};
-    const typeIcons = {
-      text:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-      voice:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>',
-      forum:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
-      announcement:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
-      poll:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h2v5H7z"/><path d="M11 8h2v9h-2z"/><path d="M15 10h2v7h-2z"/></svg>'
-    };
-    if (pvType) pvType.textContent = typeLabels[t] || t;
-    if (pvIcon) pvIcon.innerHTML = typeIcons[t] || typeIcons.text;
+    const meta = _chType(t);
+    if (pvType) pvType.textContent = meta.label;
+    if (pvIcon) pvIcon.innerHTML = _chTypeGlyph(meta.id, 18);
   };
   nameInput.addEventListener('input', () => {
     nameInput.value = nameInput.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-_]/g, '');
@@ -19851,9 +19918,14 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
     const name = nameInput.value.trim();
     if (!name) { toast('Channel name is required','error'); nameInput.focus(); return; }
     const type = overlay._selectedType;
+    const meta = _chType(type);
     const ch = { name, type, desc:'' };
-    if (type === 'announcement') ch.restricted = true;
+    if (meta.restricted) ch.restricted = true;
     if (type === 'poll') ch.polls = [];
+    // The `+` on a category header creates the channel INSIDE that category.
+    // Without this it landed at the top of the list and the owner had to go into
+    // settings to put it where they had just asked for it.
+    if (catId) ch.categoryId = catId;
     b.channels = [...(b.channels||[]), ch];
     await saveUser();
     _syncBastionToGlobal(bastionIdx);
@@ -19867,9 +19939,12 @@ function _crmSelectType(el, type) {
   const overlay = el.closest('.input-dialog-overlay');
   if (!overlay) return;
   overlay._selectedType = type;
-  const prefixes = { text:'#', voice:ftzIcon('mic','12'), forum:ftzIcon('chat','12'), announcement:ftzIcon('megaphone','12'), poll:ftzIcon('ballot','12') };
+  const meta = _chType(type);
   const prefix = overlay.querySelector('#crm-prefix');
-  if (prefix) prefix.textContent = prefixes[type] || '#';
+  // ⚠️ textContent, not innerHTML, was writing the literal SVG SOURCE into the
+  // field prefix — pick a party room and you got a wall of angle brackets where
+  // the "#" had been.
+  if (prefix) prefix.innerHTML = _chTypeGlyph(meta.id, 14);
   overlay.querySelectorAll('.crm-type-opt').forEach(opt => {
     const isThis = opt.dataset.type === type;
     opt.style.borderColor = isThis ? 'rgba(255,249,62,.35)' : 'rgba(255,255,255,.06)';
@@ -19883,18 +19958,10 @@ function _crmSelectType(el, type) {
     if (radio) { radio.style.borderColor = isThis ? '#fff93e' : 'rgba(255,255,255,.15)'; radio.children[0].style.background = isThis ? '#fff93e' : 'transparent'; }
   });
   // Update room preview
-  const typeLabels = {text:'Text',voice:'Party',forum:'Wall',announcement:'Announcement',poll:'Poll'};
-  const typeIcons = {
-    text:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-    voice:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>',
-    forum:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
-    announcement:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
-    poll:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h2v5H7z"/><path d="M11 8h2v9h-2z"/><path d="M15 10h2v7h-2z"/></svg>'
-  };
   const pvType = overlay.querySelector('#crm-pv-type');
   const pvIcon = overlay.querySelector('#crm-pv-icon');
-  if (pvType) pvType.textContent = typeLabels[type] || type;
-  if (pvIcon) pvIcon.innerHTML = typeIcons[type] || typeIcons.text;
+  if (pvType) pvType.textContent = meta.label;
+  if (pvIcon) pvIcon.innerHTML = _chTypeGlyph(meta.id, 18);
 }
 
 async function joinBastionByCode() {
@@ -20690,14 +20757,13 @@ function renderBSettingsMain(tab) {
       return `<div style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;">
           <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);flex:1;">${escapeHTML(cat.name)}</span>
-          <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="addChannelToCategory('${cat.id}','text')">+ Text Channel</button>
-          <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="addChannelToCategory('${cat.id}','voice')">+ Party Channel</button>
+          <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="addChannelToCategory('${cat.id}')">+ Channel</button>
           <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="renameCategory('${cat.id}')">✏️</button>
           <button class="btn-d" style="font-size:11px;padding:3px 8px;" onclick="deleteCategory('${cat.id}')">✕</button>
         </div>
         ${catChs.map((ch,i)=>{const realIdx=(b.channels||[]).indexOf(ch);return `
           <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;margin-left:12px;">
-            <span style="color:var(--muted);">${ch.type==='voice'?ftzIcon('mic','12'):ch.type==='forum'?ftzIcon('chat','12'):ch.type==='announcement'?ftzIcon('megaphone','12'):ch.type==='poll'?ftzIcon('ballot','12'):'#'}</span>
+            <span style="color:var(--muted);display:flex;align-items:center;" data-tip="${_chType(ch.type).label}">${_chTypeGlyph(ch.type,14)}</span>
             <span style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(ch.name)}</span>
             ${ch.focusMode?'<span class="focus-mode-badge">🧭 FOCUS</span>':''}
             ${ch.nsfw?'<span style="font-size:9px;background:rgba(255, 0, 51,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
@@ -20709,7 +20775,7 @@ function renderBSettingsMain(tab) {
     }).join('');
     const uncatHTML = uncatChs.map(ch=>{const realIdx=(b.channels||[]).indexOf(ch);return `
       <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;">
-        <span style="color:var(--muted);">${ch.type==='voice'?ftzIcon('mic','12'):ch.type==='forum'?ftzIcon('chat','12'):ch.type==='announcement'?ftzIcon('megaphone','12'):ch.type==='poll'?ftzIcon('ballot','12'):'#'}</span>
+        <span style="color:var(--muted);display:flex;align-items:center;" data-tip="${_chType(ch.type).label}">${_chTypeGlyph(ch.type,14)}</span>
         <span style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(ch.name)}</span>
         ${ch.focusMode?'<span class="focus-mode-badge">🧭 FOCUS</span>':''}
         ${ch.nsfw?'<span style="font-size:9px;background:rgba(255, 0, 51,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
@@ -20722,11 +20788,7 @@ function renderBSettingsMain(tab) {
       <div class="bs-section-desc">Create and manage your bastion's channels and categories.</div>
       <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
         <button class="btn-g" onclick="addCategoryPrompt()" style="font-size:13px;">+ Category</button>
-        <button class="btn-a" onclick="addChannel(curBastion,'text')" style="font-size:13px;">+ Text Channel</button>
-        <button class="btn-g" onclick="addChannel(curBastion,'voice')" style="font-size:13px;">+ Party Channel</button>
-        <button class="btn-g" onclick="addChannel(curBastion,'announcement')" style="font-size:13px;">+ Announcement Channel</button>
-        <button class="btn-g" onclick="addChannel(curBastion,'poll')" style="font-size:13px;">+ Poll Channel</button>
-        <button class="btn-g" onclick="addChannel(curBastion,'forum')" style="font-size:13px;">+ Wall Channel</button>
+        <button class="btn-a" onclick="addChannel(curBastion,null,null)" style="font-size:13px;">+ Channel</button>
       </div>
       ${catHTML}
       ${uncatHTML||(!cats.length?'<div style="color:var(--muted);font-size:13.5px;text-align:center;padding:20px;">No channels yet. Create some above!</div>':'')}`;
@@ -35737,10 +35799,8 @@ function showChannelCtxMenu(e, chIdx) {
   const ch = b.channels?.[chIdx]; if (!ch) return;
   const isOwner = b.owner === CU?.username;
   const canManageCh = isOwner || hasPerm('manage_channels');
-  const chType = ch.type || 'text';
-  const typeLabels = {text:'Text',voice:'Party',forum:'Wall',announcement:'Announcement',poll:'Poll'};
-  const prefix = chType === 'text' ? '#' : '';
-  const displayName = prefix + ch.name;
+  const chType = _chType(ch.type);
+  const displayName = (chType.voice ? '' : '#') + ch.name;
   const groups = [
     { label: displayName, items: [
       { icon: _ctxSvg('markRead'), label: 'Mark as Read', action: () => toast('Marked read','info') },
@@ -35770,9 +35830,8 @@ function showChannelCtxMenu(e, chIdx) {
 function _editChannelInline(chIdx) {
   const b = CU.bastions?.[curBastion]; if (!b) return;
   const ch = b.channels?.[chIdx]; if (!ch) return;
-  const chType = ch.type || 'text';
-  const typeNames = {text:'Text',voice:'Party',forum:'Wall',announcement:'Announcement',poll:'Poll'};
-  showCustomInput('Edit '+typeNames[chType]+' Channel', 'Channel name:', (newName) => {
+  const chType = _chType(ch.type);
+  showCustomInput('Edit '+chType.label+' channel', 'Channel name:', (newName) => {
     if (!newName || !newName.trim()) return;
     ch.name = newName.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-_]/g, '');
     saveUser();
@@ -35780,55 +35839,51 @@ function _editChannelInline(chIdx) {
     const scroll = document.getElementById('sidebar-scroll');
     if (scroll) renderBastionSidebar(scroll);
     if (curChannel === chIdx) loadChatChannel(chIdx);
-    toast('Channel renamed to '+(chType==='text'?'#':'')+ch.name, 'success');
+    toast('Channel renamed to '+(chType.voice?'':'#')+ch.name, 'success');
   }, ch.name);
 }
-function showCategoryCtxMenu(e, catId, label, type) {
+// ⚠️ THIS MENU USED TO ACT ON A CHANNEL TYPE, NOT A CATEGORY, AND "DELETE
+// CATEGORY" WAS DESTRUCTIVE.  Under the old type-grouping there was no such
+// thing as a category to delete, so it deleted every channel of that KIND
+// instead — right-clicking "TEXT ROOMS" and confirming wiped every text channel
+// in the bastion.  "Edit Category" was worse in the other direction: it prompted
+// for a name, threw the answer away, and toasted "Category renamed".
+// Both now go through renameCategory/deleteCategory, which have always done the
+// right thing and had no way in from here.
+function showCategoryCtxMenu(e, catId) {
   e.preventDefault(); e.stopPropagation();
   const b = CU.bastions?.[curBastion]; if (!b) return;
+  const cat = (b.categories||[]).find(c => c.id === catId); if (!cat) return;
+  const label = cat.name || 'Category';
   const isOwner = b.owner === CU?.username;
   const canManageCh = isOwner || hasPerm('manage_channels');
   const collapseKey='ftz_cat_collapsed_'+(b.globalId||b.name||curBastion);
   let collapsedCats={}; try{collapsedCats=JSON.parse(localStorage.getItem(collapseKey)||'{}');}catch(e){}
   const isCollapsed = !!collapsedCats[catId];
+  const chevron = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+  const inside = (b.channels||[]).filter(ch => ch.categoryId === catId).length;
   const groups = [
     { label: label, items: [
-      { icon: _ctxSvg('markRead'), label: 'Mark as Read', action: () => toast('Marked read','info') },
-      { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>', label: isCollapsed ? 'Expand Category' : 'Collapse Category', action: () => { const wrap = document.querySelector(`.ch-cat-wrap[data-cat="${catId}"]`); if(wrap){wrap.classList.toggle('collapsed');if(wrap.classList.contains('collapsed'))collapsedCats[catId]=true;else delete collapsedCats[catId];localStorage.setItem(collapseKey,JSON.stringify(collapsedCats));} } },
-      { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>', label: 'Collapse All Categories', action: () => { document.querySelectorAll('.ch-cat-wrap').forEach(w=>{w.classList.add('collapsed');collapsedCats[w.dataset.cat]=true;});localStorage.setItem(collapseKey,JSON.stringify(collapsedCats)); } },
+      { icon: chevron, label: isCollapsed ? 'Expand category' : 'Collapse category', action: () => {
+        const wrap = document.querySelector(`.ch-cat-wrap[data-cat="${catId}"]`);
+        if (!wrap) return;
+        wrap.classList.toggle('collapsed');
+        if (wrap.classList.contains('collapsed')) collapsedCats[catId]=true; else delete collapsedCats[catId];
+        localStorage.setItem(collapseKey, JSON.stringify(collapsedCats));
+      }},
+      { icon: chevron, label: 'Collapse all categories', action: () => {
+        document.querySelectorAll('.ch-cat-wrap').forEach(w=>{ w.classList.add('collapsed'); collapsedCats[w.dataset.cat]=true; });
+        localStorage.setItem(collapseKey, JSON.stringify(collapsedCats));
+      }},
     ]},
     ...(canManageCh ? [{
       label: 'Manage',
       items: [
-        { icon: _ctxSvg('edit'), label: 'Edit Category', action: () => {
-          showCustomInput('Edit Category', 'Category name:', (newName) => {
-            if (!newName || !newName.trim()) return;
-            // Rename matching channels' category/type grouping label - categories are virtual (text/voice/forum/announcement/poll)
-            toast('Category renamed', 'success');
-          }, label);
-        }},
-        { icon: _ctxSvg('trash'), label: 'Delete Category', danger: true, action: () => {
-          // Delete all channels in this category type
-          const delType = type || 'text';
-          const curB = CU.bastions?.[curBastion];
-          if (!curB) return;
-          const toDelete = (curB.channels||[]).filter(ch => (ch.type||'text') === delType);
-          showCustomConfirm(`Delete ${label} and its ${toDelete.length} room${toDelete.length!==1?'s':''}?`, async () => {
-            const bst = CU.bastions?.[curBastion];
-            if (!bst) return;
-            bst.channels = (bst.channels||[]).filter(ch => {
-              const chType = ch.type || 'text';
-              return chType !== delType;
-            });
-            curChannel = null;
-            saveLocal();
-            await saveUser();
-            _syncBastionToGlobal(curBastion);
-            const scroll = document.getElementById('sidebar-scroll');
-            if (scroll) renderBastionSidebar(scroll);
-            toast('Category deleted', 'info');
-          });
-        }},
+        { icon: _ctxSvg('edit'), label: 'Create channel here', action: () => addChannel(curBastion, null, catId) },
+        { icon: _ctxSvg('edit'), label: 'Rename category', action: () => renameCategory(catId) },
+        // Says what it will really do.  The channels survive; they come out of
+        // the category and sit at the top of the list.
+        { icon: _ctxSvg('trash'), label: inside ? `Delete category (keeps ${inside} channel${inside!==1?'s':''})` : 'Delete category', danger: true, action: () => deleteCategory(catId) },
       ]
     }] : []),
   ];
@@ -36128,18 +36183,11 @@ async function addCategoryPrompt() {
   });
 }
 
-async function addChannelToCategory(catId, type) {
-  const typeLabel = type==='voice'?'party':type;
-  showCustomInput('Add Channel', `Name for new ${typeLabel} room:`, async (name) => {
-    if (!name?.trim()) return;
-    const b = CU.bastions[curBastion];
-    if (!b) return;
-    b.channels = [...(b.channels||[]), { name: name.trim().toLowerCase().replace(/\s+/g,'-'), type, desc:'', categoryId: catId }];
-    await saveUser();
-    renderBastionSidebar(document.getElementById('sidebar-scroll'));
-    renderBSettingsMain('channels');
-    toast('#'+name+' created','success');
-  });
+// One create card.  This used to be a bare name prompt with the kind already
+// decided for you, so a channel made from the settings tab could never be
+// anything but the kind whose `+` you happened to click.
+function addChannelToCategory(catId, type) {
+  showCreateRoomModal(curBastion, type || null, catId || null);
 }
 
 function renameCategory(catId) {

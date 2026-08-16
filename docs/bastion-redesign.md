@@ -1,6 +1,9 @@
 # Bastion — full redesign and rework
 
 **Status: PLAN, awaiting approval. Nothing here is built yet.**
+*(Revised after the user's precisions: channels not rooms, Radiance-linked
+boosting, eight channel types, Guilded-shaped roles and member lists, and the
+bastion pages.)*
 
 The bar is the staff console rebuild: that went from *"a freaking mess"* to
 something finished, and it got there by being **assembled out of the app's own
@@ -8,9 +11,20 @@ parts** rather than given a new visual language. Same method here.
 
 ---
 
-## 1. What is actually there today
+## 1. Vocabulary — settled first, because it leaks everywhere
 
-I measured this rather than guessing. These are the numbers that matter.
+**Rooms are called channels.** Discord's and Guilded's word, and already what
+most of the app says. What is left is the sidebar's five hardcoded headings
+("TEXT ROOMS", "PARTY ROOMS", "WALL ROOMS", "ANNOUNCEMENT ROOMS", "POLL ROOMS"),
+one settings button reading "+ Party Channel", and the internal names
+`showCreateRoomModal` and `.room-topbar`. The headings are deleted outright by
+§3.1; the internals get renamed as each is rebuilt, not in a blind sweep.
+
+---
+
+## 2. What is actually there today
+
+Measured, not guessed.
 
 | Surface | Function | Size | Inline `style="` |
 |---|---|---:|---:|
@@ -18,254 +32,350 @@ I measured this rather than guessing. These are the numbers that matter.
 | Bastion overview | `renderBastionHub` | 97 lines | 27 |
 | Create-a-channel card | `showCreateRoomModal` | 119 lines | 38 |
 | Settings body (24 tabs) | `renderBSettingsMain` | ~900 lines | **401** |
-| Creation templates | `renderBastionTemplateGrid` | 30 lines | 10 |
 
-**401 inline style attributes in the settings body alone.** That is the exact
-diagnosis Discover had before its rebuild: the page is painted by hand, so it
-cannot answer the appearance system. Recolour the app and bastion settings stay
-the same.
+**401 inline style attributes in the settings body alone.** The exact diagnosis
+Discover had: the page is painted by hand, so it cannot answer the appearance
+system. Recolour the app and bastion settings stay the same.
 
-### The five real problems, not cosmetics
+### 🐞 The headline bug: categories already exist, and the sidebar ignores them
 
-**① You cannot make your own channel categories.** This is the big one. The
-sidebar's categories are **hardcoded by channel type** — `catWrap('text',…)`,
-`'TEXT ROOMS'`, `'WALL ROOMS'`, `'PARTY ROOMS'`, `'ANNOUNCEMENT ROOMS'`,
-`'POLL ROOMS'`. Look at your own screenshot: *Plant Hall*, *Book Club*, *plant
-chats*, each holding a **mix** of text and voice rooms. That is how people
-actually organise a community, and today it is impossible — a voice room can
-never sit next to the text room it belongs with. Two of the five headings are
-labelled with OS emoji (`📝`, `🗳`) instead of icons.
+This is not a missing feature. It is a **disconnected one**.
 
-**② There are no per-channel permissions.** `restricted` exists but only means
-*age-restricted*. There is no way to say "this channel is for Moderators", which
-is the single most-asked thing of any role system. Your Discord screenshot has a
-`#plant-mods` channel with a lock on it; we cannot draw that lock because we
-cannot express it.
+- `b.categories` is real. `ch.categoryId` is real.
+- The **Channels settings tab** (line 20686) fully supports them: create, rename,
+  delete, add a channel to one, and it groups the list by category.
+- The **Discord importer** maps Discord's category tree onto them correctly
+  (line 19400).
+- Templates carry them. `_createCategory` / `renameCategory` / `deleteCategory`
+  all exist.
 
-**③ The boost progress bar is a lie.** `renderBastionSidebar` line 10760:
+And `renderBastionSidebar` — **the only place a member ever sees the channel
+list** — throws all of it away and groups by channel *type* instead:
+
+```js
+catWrap('text','📝','TEXT ROOMS','text',textHTML);
+catWrap('forum',ftzIcon('chat','12'),'WALL ROOMS','forum',forumHTML);
+catWrap('voice',ftzIcon('mic','12'),'PARTY ROOMS','voice',voiceHTML);
+```
+
+So an owner can build *Plant Hall · Book Club · plant chats* in settings, save
+it, and see **absolutely nothing change**. Their structure exists in the
+database and is invisible in the app. Two of the five headings are also labelled
+with OS emoji (`📝`, `🗳`) rather than icons.
+
+Wiring the sidebar to the data that is already there is the single highest-value
+change in this whole document.
+
+### The other real problems
+
+**① No per-channel permissions.** `restricted` exists but only means
+*age-restricted*. There is no way to say "this channel is for Moderators" — the
+most-asked thing of any role system. Your Discord screenshot has a locked
+`#plant-mods`; we cannot draw that lock because we cannot express it.
+
+**② The boost progress bar is a lie.** `renderBastionSidebar` line 10760:
 
 ```js
 const boostProgress = boostLv > 0 ? Math.floor(Math.random() * 100) : 0;
 ```
 
 A **random number**, re-rolled on every render. Same family as the invented
-"N Online" counts deleted from Discover and the invite embed. It goes.
+"N Online" counts deleted from Discover. It goes — and §3.5 replaces it with the
+real Discord-style goal bar from your screenshot.
 
-**④ Roles are a flat list with no ordering and no icons.** The roles tab renders
-a sorted list where the only handle on priority is a `#3` number you edit in a
-form. Discord's roles list — your screenshot — is **drag-ordered**, and that
-ordering *is* the permission hierarchy, so it has to be direct. We also have no
-role icons and no role-colour-on-name in chat, both of which are in the
-reference.
+**③ Roles are a flat list with no ordering, no icons, no gradients.** The tab
+renders a list whose only handle on priority is a `#3` you type into a form.
+Both references drag to reorder, and in both, **that ordering is the hierarchy**,
+so it has to be direct.
 
-**⑤ Bastion creation is four hidden divs and stops too early.** `showBastionStep1`
-/ `showBastionStep2` swap `display:none`, so there is no motion and no sense of
-progress. And it ends the moment the bastion exists — the Guilded flow you sent
-keeps going: *personalize → what do you play → invite people → nice work*. Ours
-drops you into an empty bastion with no icon, no members and nothing to do.
+**④ Bastion creation is four hidden divs and stops too early.** `display:none`
+swapping, no motion, and it ends the moment the bastion exists — no icon, no
+members, nothing to do. Your Guilded flow keeps going: personalize → what you
+play → invite people → nice work.
+
+**⑤ There is only one boost currency concept.** `b.boostLevel` is a level (0–3)
+with no boost *count* behind it, so "10/20 Boosts" cannot be drawn.
 
 ### What is genuinely good and must survive
 
 - **`renderMemberList` is virtualised** — a flat render schedule with measured
-  row heights and an IntersectionObserver resolving rows by index. That is real
-  engineering on a list that can be thousands long. **Redesign its looks, do not
+  row heights and an IntersectionObserver resolving rows by index. Real
+  engineering on a list that can run to thousands. **Redesign its looks, do not
   touch its mechanism.**
-- Role grouping, online/offline split and live Socket.IO presence in the member
-  list are correct.
-- `ROLE_TEMPLATES` (apply a preset role structure) is a good idea worth keeping.
-- The invite card has real CSS and already carries the 3D button recipe.
-- Bastion settings has genuine depth: automod, starboard, mood, reputation,
-  insights, welcome messages, events, bots. **The features are not the problem.**
-
----
-
-## 2. Design rules for this rework
-
-1. **Assemble from what exists.** `.fs-btn` · `.ftz-confirm-card.ftz-ac-card` ·
-   `.ftz-close-btn.ftz-ac-x` · `.disc-subnav` · `.qst-group` · `.fs-tb-panel` ·
-   `.fr-row`/`.fr-act` · `.ftz-select` · `.settings-input` · `_ftzNotFound` ·
-   `.nm-check`. New `.bst-*` names are **glue only** — shell, rails, drag
-   handles. If I invent a card language, the rework has failed the same way the
-   first staff-console attempt did.
-2. **Every colour from a token.** No `rgba(…)` literals, no `#5865f2`. The whole
-   point is that a bastion looks right under all five appearances.
-3. **No glows. No idle animation.** Arrival animations only.
-4. **Nothing invented.** If we do not measure it, we do not print it.
-5. **Font weights 500–700.** The bastion surfaces are full of legacy `800`.
-6. **Egress-aware.** Bastion reads are already hot; nothing here adds a per-open
-   full-table read, and the category/permission work rides in the **existing**
-   bastion row rather than adding a table.
+- Role grouping, online/offline split, live Socket.IO presence.
+- `ROLE_TEMPLATES`, the Discord importer, bastion templates.
+- Settings has genuine depth: automod, starboard, mood, reputation, insights,
+  welcome messages, events, bots. **The features are not the problem.**
 
 ---
 
 ## 3. The plan, surface by surface
 
-### 3.1 Left sidebar and channels — `.bst-rail`
+### 3.0 Design rules
 
-The centrepiece, because it is what you look at all day.
+1. **Assemble from what exists.** `.fs-btn` · `.ftz-confirm-card.ftz-ac-card` ·
+   `.ftz-close-btn.ftz-ac-x` · `.disc-subnav` · `.qst-group` · `.fs-tb-panel` ·
+   `.fr-row`/`.fr-act` · `.ftz-select` · `.settings-input` · `.nm-check` ·
+   `_ftzNotFound` · `.gs-track`. New `.bst-*` names are **glue only**.
+2. **Every colour from a token.** No `rgba()` literals, no `#5865f2`.
+3. **No glows. No idle animation.** Arrival only.
+4. **Nothing invented.** If we do not measure it, we do not print it.
+5. **Weights 500–700.** These surfaces are full of legacy `800`.
+6. **Egress-aware.** Categories and permissions ride in the **existing** bastion
+   row. No new table, no new per-open read.
 
-**Real categories.** New `b.categories = [{ id, name, collapsed, order }]` and
-`ch.categoryId` on each channel. Uncategorised channels sit in an implicit top
-group, exactly like Discord. Categories are **created, renamed, reordered and
-deleted by the owner**, and hold **any mix of channel types**. The five
-hardcoded type-groups are deleted.
+---
 
-- Channel type becomes a **glyph on the row** (`#`, speaker, megaphone, board,
-  ballot) instead of a heading, which is what frees a category to be about
-  *topic*.
-- **Drag to reorder**, channels within a category and categories among
+### 3.1 Channels and the left sidebar — `.bst-rail`
+
+**Wire the sidebar to `b.categories`.** The five type-groups are deleted.
+Channels render inside their real category; anything with no `categoryId` sits
+in an implicit top group, exactly like both references. A category holds **any
+mix of types** — which is the whole point, and what lets a voice channel sit
+beside the text channel it belongs with.
+
+- Channel **type becomes a glyph on the row**, not a heading. That is what frees
+  a category to be about *topic*.
+- **Drag to reorder** — channels inside a category, and categories among
   themselves — reusing `_initBastionDrag`, which already does this for the rail.
-- Collapsed state persists per bastion, per member (localStorage — it is a view
-  preference, not shared state, so it must not cost a write).
+- Collapsed state persists per member in localStorage. It is a view preference,
+  not shared state, so it must never cost a write.
+- A locked channel (§3.3) draws a lock. Voice channels list who is in them
+  underneath — we have that data and do not show it.
 
-**The header.** Banner hero, emblem, name, and one chevron opening the bastion
-menu. The `▼` text glyph becomes a real icon; the boost pill stops being a
-`linear-gradient` built in a template string; **the random progress bar is
-deleted** and replaced with the honest figure — boosts held out of boosts
-needed, which we do know.
+**Eight channel types**, per your list:
 
-**The rows.** Thicker hit areas, the tactile hover, unread as a white dot and a
-bolded name, mentions as the yellow count capsule. A locked channel (see 3.2)
-draws a lock. Voice rooms list who is in them underneath, which we have the data
-for and do not currently show.
+| Type | What it is |
+|---|---|
+| **Text** | The normal channel. |
+| **Announcement** | Post-restricted; everyone else reads. |
+| **Blog** | Long-form posts with a title, cover and body — an author surface, not a chat. |
+| **Forum** | Threads people open and reply in. |
+| **Gallery** | Media-first grid; images and video are the post. |
+| **Voice** | Everyone can talk. |
+| **Stage** | Voice for a crowd: **speakers on top**, audience below, hands raised to speak, a **priority speaker** who ducks everyone else, and screen/video share. |
+| **Rules** | The bastion's rules, with an agree gate before the rest opens. |
 
-### 3.2 Roles and permissions — the part with real work in it
+Each ships with a real empty state, on the reference's shape: the big type glyph,
+**"Welcome to #media!"**, "This is the start of the #media channel.", and an
+**Edit Channel** button for anyone who can.
 
-**Drag-ordered role list**, top to bottom, priority implied by position — the
-Discord screenshot. Colour dot, name, member count, drag handle.
+**The header.** Banner hero, emblem, name, one chevron opening the bastion menu.
+The `▼` text glyph becomes a real icon; the boost pill stops being a gradient
+built in a template string; the random progress bar is replaced by §3.5's goal
+bar.
 
-**A real role editor** on the settings shell with the reference's four tabs:
-- **Display** — name, colour (swatch grid + custom picker), **role icon**,
-  "show separately in the member list", and a **live preview** of a message from
-  someone wearing it.
+---
+
+### 3.2 The bastion pages
+
+Today a bastion is a channel list and a settings modal. It gets a real page set,
+reached from the bastion menu, on the `.disc-subnav` topbar the rest of the app
+uses:
+
+- **Overview** — banner, emblem, name, tagline, honest stats, what is happening.
+- **Browse channels** — every channel with its description and type, categories
+  as sections, joinable/mutable in place. The way you find the channel you have
+  never opened.
+- **Members** — *a page, not the rail*. Search, filter by role, sort by joined
+  or by name, bulk role assignment, join dates, and moderation actions inline.
+  This is where you administer people; the rail is where you see who is around.
+- **Events** — the existing events system, given a page.
+- **Boosting** — §3.5.
+
+---
+
+### 3.3 Roles and permissions — Guilded's editor
+
+**Drag-ordered role list** with "**+ Add another role**" at the top, each role
+showing its icon, its name in its own colour, and its member count. The note from
+the reference stays because it explains the model: *"Members display the highest
+role on this list. Drag the roles to reorder."*
+
+**The editor**, on the settings shell:
+
+- **Role name** and **Role colour** with a **Solid / Gradient** switch — Guilded's
+  swatch grid plus a custom picker. A gradient role name is drawn with the same
+  machinery `DISPLAY_NAME_EFFECTS` already uses for gradient display names, so
+  this costs no new rendering path.
+- **Role icon** — **Upload image** or **Choose emote** (from the bastion's own
+  emoji), with Remove. Drawn beside the name in chat and in the member list.
+- **Role settings** toggles: **Self-assignable**, **Mentionable**, **Display
+  separately** (its own member-list group).
 - **Permissions** — grouped and searchable, each a `.nm-check` row with a
-  one-line explanation. Today's `(b.roles||[]).permissions` array stays as the
-  storage shape, so no migration.
-- **Members** — add and remove, through `_stfPicker` (the typeahead with avatars
-  and styled names that the console already uses).
+  one-line explanation. The existing `role.permissions` array stays as the
+  storage shape, so **no migration**.
+- **Members** — add and remove via `_stfPicker`, the console's typeahead with
+  avatars and styled names.
 
-**Per-channel permission overrides** — new `ch.overrides = { roleId: {allow:[],
-deny:[]} }`. This is what makes `#plant-mods` possible. Resolution order:
-`@everyone` → role overrides by priority → member override. One shared
-`_bstCan(user, ch, perm)` used by the sidebar (to hide it), the chatbar (to
-disable it) and the send path (to refuse it) — **the guard runs at the action,
-not only where the button is drawn.** That is the rule the console's rank guard
-taught us.
+**Per-channel overrides** — new `ch.overrides = { roleId: {allow:[], deny:[]} }`.
+This is what makes a locked `#plant-mods` possible. Resolution: `@everyone` →
+role overrides by priority → member override. One shared `_bstCan(user, ch,
+perm)` used by the sidebar (to hide), the chatbar (to disable) and the send path
+(to refuse) — **the guard runs at the action, not only where the button is
+drawn**, which is the rule the console's rank guard taught us.
 
-### 3.3 Member list — visual only
+---
 
-Keep the virtualiser. Change: role-coloured names (font at rest, colour and
-effect on hover, per the standing rule), role icons beside names, thicker rows
-with the tactile hover, a real section header instead of an inline-styled div,
-and `_ftzNotFound` when a search matches nobody.
+### 3.4 Member list — Guilded's shape
 
-### 3.4 Bastion overview — `renderBastionHub`
+Keep the virtualiser; change what it draws.
 
-Rebuilt on the Discover hero treatment we already shipped: banner, emblem, name,
-tagline, then honest stat plates (members, channels, created, boost tier) and
-the action row. It is currently 97 lines carrying 27 inline styles and reads
-like a placeholder.
+- **"+ Invite"** pinned at the top of the rail.
+- Groups headed **count first** — "1 Captain", "1 Social", "6 VIP" — for roles
+  marked *Display separately*, then Online, then Offline.
+- **Role icon** beside the avatar, name in the **role's colour** (font at rest,
+  colour and effect on hover, per the standing rule), **BOT** capsule for bots.
+- Thicker rows, the tactile hover, and `_ftzNotFound` when a search finds nobody.
 
-### 3.5 Bastion settings — `.bst-set-*`
+---
 
-**Shell:** the settings-modal shell the staff console uses — a sectioned left
-rail, a sticky header with per-page title and lead, and one scroll body. The 24
-tabs get grouped so the rail is legible:
+### 3.5 Boosting — Radiance's power, spent on a bastion
+
+**The lore:** boosting and Radiance draw on the same power. **You do not need
+Radiance to boost** — boosts are bought with **Onyx** — but **Radiance grants
+free boosts** to spend. That is the relationship, and it is why every boost
+surface wears the Radiance overlay (`.ftz-ov-rad`, already built).
+
+**The data.** New `b.boosts` (a real count) with `b.boostLevel` **derived** from
+thresholds and still written, so everything reading it today keeps working. That
+is what makes the reference's bar drawable:
+
+```
+Boost Goal  ▓▓▓▓▓▓▓░░░░░░░   10/20 Boosts  ›
+```
+
+Real numbers, no `Math.random()`.
+
+**The boost page** — the perk list from your screenshot: each perk with its
+**LVL** badge, what it unlocks, and an unlock button. Perks map onto things we
+already have and things this rework adds: emoji and sticker slots (already
+level-gated), bastion banner, **invite background**, custom invite link, role
+icons, more categories, higher upload limits.
+
+**The logo** is `boosting logo.png` at the web root — **not in the repo yet**;
+I will wire the path and it will draw the moment you drop the file in.
+
+---
+
+### 3.6 The unlock button — one component, two badges
+
+You want the same control in two places, so it is built once:
+
+```
+.ftz-unlock          appearance background, WHITE text, logo at the LEFT
+.ftz-unlock--boost   boosting logo   →  "Unlock with Boosting"
+.ftz-unlock--rad     radiance logo   →  "Unlock Radiance"
+```
+
+Appearance-token background (so it is right under all five themes), white label,
+the app's 3D press. **No glow ring** — the reference has one; our standing rule
+does not. Used on every locked bastion perk and on the Radiance page.
+
+---
+
+### 3.7 Bastion settings — `.bst-set-*`
+
+**Shell:** the settings-modal shell the staff console uses — sectioned left rail,
+sticky header with per-page title and lead, one scroll body. The 24 tabs grouped
+so the rail is legible:
 
 - **Bastion** — Overview · Emblem & banner · Mood · Vanity URL
 - **Structure** — Channels & categories · Roles · Members · Invites
 - **Expression** — Emoji · Stickers · Soundboard
 - **Moderation** — Automod · Bans · Slowmode · Rules · Audit
-- **Growth** — Insights · Boost · Events · Announcements · Welcome · Starboard
+- **Growth** — Insights · Boosting · Events · Announcements · Welcome · Starboard
 - **Advanced** — Bots · Templates · Danger zone
 
 **Every tab rebuilt on `.fs-tb-panel` + `.fr-row` + `.ftz-select` +
-`.settings-input`**, which is what removes the 401 inline styles and makes the
-whole thing appearance-aware. No feature is dropped.
+`.settings-input`** — which is what removes the 401 inline styles and makes the
+whole thing appearance-aware. **No feature is dropped.**
 
-### 3.6 Bastion creation — sliding frames, then the welcome
+---
+
+### 3.8 Bastion creation — sliding frames, then the welcome
 
 Rebuilt on **`.gs-track`, the Get Started guide's mechanism, verbatim**: one card
 that never moves or resizes, frames sliding leftwards inside it, `flex:0 0 100%`
 so one translate is exactly one frame at any width, on the pure ease-out curve
 (`.58s cubic-bezier(.22,.9,.24,1)`) that took two rounds to get right. Only the
-frames change. This is exactly what you asked for.
+frames change.
 
-Frames, following the Guilded flow you sent:
-
-1. **Start** — from scratch, from a template, or import a template link.
+1. **Start** — from scratch, from a template, or import.
 2. **Template** (branch) — the template grid.
-3. **Personalize** — emblem upload + name, with the live "your name looks good"
-   check.
+3. **Personalize** — emblem upload + name, with the live name check.
 4. **What is it about** — category and tags, which also **feeds Discover**
    (round 9 built category chips there and nothing could set them; this closes
    that loop).
-5. **Invite people** — the invite link, ready to copy, in the
-   `invite.fortized.com/CODE` shape.
+5. **Invite people** — the link, ready to copy, as `invite.fortized.com/CODE`.
 6. **Nice work** — the finished bastion, and in.
 
-Then **`#39`, the Get Started guide for a new bastion**, becomes the natural
+Then **task #39**, the Get Started guide *for* a new bastion, becomes the natural
 follow-on: the same `.gs-*` frames, run once you are inside, walking the owner
 through their first channel, first role and first invite.
 
-### 3.7 Invite system
+---
 
-Canonical links are **done and shipped** (`2026fix505`) — every link the app
-hands out is now `invite.fortized.com/CODE`, and the logged-out visitor's code
-survives login and signup. What is left for this rework:
+### 3.9 Invite system
 
-- **Rebuild the invite card** on `.ftz-confirm-card` instead of its own bespoke
+Canonical links **shipped** (`2026fix505`) — every link the app hands out is
+`invite.fortized.com/CODE`, and a logged-out visitor's code now survives login
+and signup. Left to do:
+
+- **Rebuild the invite card** on `.ftz-confirm-card` rather than its own bespoke
   `.invite-*` family (there is also a duplicate `.invite-accept-btn` rule at
   `styles.css` 5438 and 10702 — one wins arbitrarily).
-- Show what you are joining: banner, emblem, name, member count, who invited
-  you. It should look like the thing on the other side of the door.
-- **Invite management in settings** — per-invite expiry, max uses, revoke, and
-  the real uses count, on the console's Onyx-codes shape.
+- Show what you are joining: **invite background** (a boost perk), emblem, name,
+  member count, who invited you.
+- **Invite management** in settings — expiry, max uses, revoke, real uses count,
+  on the console's Onyx-codes shape.
 
 ---
 
 ## 4. Phasing
 
-Each phase ships and is verifiable on its own. I would not do this in one push.
+Each phase ships and is verifiable alone. I would not do this in one push.
 
 | # | Phase | Why this order |
 |---|---|---|
-| 1 | Categories + channel rows + sidebar | The daily surface, and everything else references channels |
-| 2 | Roles, permissions, per-channel overrides | The deepest work; unblocks locked channels |
-| 3 | Settings shell + all 24 tabs rebuilt | Mechanical once 1–2 define the components |
-| 4 | Creation flow + overview | Self-contained; reuses `.gs-*` wholesale |
-| 5 | Invite card + invite management | Smallest, and half of it already landed |
-| 6 | Member list visual pass | Deliberately last — no data model behind it |
+| 1 | Sidebar wired to real categories + channel rows + the 8 types | The daily surface, and it makes an existing feature visible for the first time |
+| 2 | Roles, permissions, per-channel overrides | Deepest work; unblocks locked channels |
+| 3 | Settings shell + all tabs rebuilt | Mechanical once 1–2 define the components |
+| 4 | Boosting + the unlock button + the bastion pages | Self-contained; the button is shared with Radiance |
+| 5 | Creation flow + overview | Reuses `.gs-*` wholesale |
+| 6 | Invite card + invite management | Smallest; half already landed |
+| 7 | Member list visual pass | Last on purpose — no data model behind it |
 
 ---
 
 ## 5. Risks, stated up front
 
-- **Migration.** Existing bastions have no `categories` and no `categoryId`.
-  Handled by reading them as one implicit group and writing categories only when
-  an owner first makes one — **no migration, nothing to run, old bastions keep
-  working untouched.**
-- **Permissions are a security surface.** Hiding a channel in the sidebar is not
-  the same as denying access. `_bstCan` gets checked at every mutation, and the
-  honest limit stands: until passwords are hashed and RLS is on for `users`,
-  anything client-side can be bypassed by writing Supabase directly. I will not
-  describe channel permissions as "secure" in any UI copy until that lands.
-- **`renderBastionSidebar` is hot** — it runs on every channel switch. Categories
-  add a grouping pass over an array that is already in memory; no new reads.
-- **Scale.** This is the largest surface in the app after chat. Phase 1 alone is
+- **Migration: none.** Categories already exist in the data. Bastions without
+  them read as one implicit group; nothing to run, nothing breaks.
+- **`b.boosts` is new** and absent on every existing bastion. Read as
+  `b.boosts ?? _boostsForLevel(b.boostLevel)` so a bastion that is already Level
+  2 keeps its level and its bar reads correctly from day one.
+- **Permissions are a security surface.** Hiding a channel is not denying access.
+  `_bstCan` is checked at every mutation — and the honest limit stands: until
+  passwords are hashed and RLS is on for `users`, anything client-side can be
+  bypassed by writing Supabase directly. **I will not call channel permissions
+  "secure" in any UI copy until that lands.**
+- **`renderBastionSidebar` is hot** — it runs on every channel switch. Grouping
+  by category is a pass over an array already in memory. No new reads.
+- **Stage channels are the one genuinely new system** here — speaker roles,
+  hand-raising, priority speaker. Larger than it looks and worth its own phase if
+  it starts to sprawl.
+- **Scale.** The largest surface in the app after chat. Phase 1 alone is
   comparable to the Discover rebuild.
 
 ---
 
-## 6. Open questions for you
+## 6. Still open
 
-1. **Channel types** — Guilded's create-channel card offers ten (chat, voice,
-   stream, calendar, scheduling, announcement, list, docs, media…). We have five.
-   Do you want more, and which?
-2. **Role icons** — Discord gates them behind a boost level. Free, boost-gated,
-   or Radiance?
-3. **"Make channel public"** — Guilded's toggle exposes a channel outside the
-   server entirely. Do you want that, or is Discover enough?
-4. **Bastion profile** — the Discord screenshot has traits, a description, a
-   banner colour picker and a live invite-card preview. Worth building as its own
-   settings page?
+1. **Role icons** — free, boost-gated (the reference gates them), or Radiance?
+2. **Guilded's "Make channel public"** — a channel readable from outside the
+   bastion entirely. Want it, or is Discover enough?
+3. **Bastion profile** — the Discord shot has traits, description, banner-colour
+   picker and a live invite-card preview. Its own settings page?
+4. **Boost thresholds** — how many boosts per level, and how many free boosts a
+   Radiance member gets.

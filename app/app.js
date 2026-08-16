@@ -16156,6 +16156,64 @@ function _inviteCodeFrom(raw) {
   return (/^[\w-]{3,64}$/.test(seg) && !seg.includes('.')) ? seg : '';
 }
 
+// ⚠️ THE ONE SHAPE WE HAND OUT.  Every invite link the app writes — copied,
+// displayed, DM'd, embedded, put on a card — is built here and reads
+// invite.fortized.com/CODE.  `/app?invite=CODE` still exists, but it is now
+// strictly INTERNAL: it is where the subdomain lands you, and nothing else.
+// It is never shown to a person and never copied to a clipboard.
+//
+// Why a whole host instead of a query string: a link people paste into a
+// browser bar, read aloud, or print on a banner has to be short and has to
+// look like an address, not like machinery. "invite.fortized.com/PIXELFORGE"
+// is the product; "www.fortized.com/app?invite=PIXELFORGE" is plumbing.
+const _FTZ_INVITE_HOST = 'https://invite.fortized.com';
+function _ftzInviteURL(code) {
+  const c = String(code || '').trim();
+  if (!c) return '';
+  // On a dev box the subdomain doesn't resolve, so a link built there would be
+  // untestable. Everywhere else — including any preview deploy on a real
+  // hostname — the public shape is the correct thing to hand out.
+  const h = location.hostname;
+  if (h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || h.endsWith('.local')) {
+    return location.origin + '/app?invite=' + encodeURIComponent(c);
+  }
+  return _FTZ_INVITE_HOST + '/' + encodeURIComponent(c);
+}
+
+// 🐞 THE INVITE USED TO DIE AT THE DOOR.  The single most important visitor an
+// invite link has is someone who does NOT have an account — that is what the
+// link is for. They landed on the card, typed a name, hit Continue, and were
+// sent to /login?invite=CODE… which ignores the parameter entirely. The old
+// code also wrote a `pendingInvite` key to sessionStorage that NOTHING in the
+// codebase ever read. So every new-account invite silently dropped its bastion
+// and dumped the person on an empty app.
+//
+// One shared stash, on localStorage so it survives the whole login → signup →
+// verify → app detour (sessionStorage is per-tab and dies if any step opens
+// one). Short-lived: an invite you started an hour ago is not one you're still
+// in the middle of, and a stale code would hijack a later ordinary login.
+const _FTZ_INVITE_STASH = 'ftz_pending_invite';
+const _FTZ_INVITE_STASH_TTL = 60 * 60 * 1000;
+function _ftzStashInvite(code) {
+  if (!code) return;
+  try { localStorage.setItem(_FTZ_INVITE_STASH, JSON.stringify({ code: String(code), at: Date.now() })); } catch (_) {}
+}
+function _ftzTakeStashedInvite() {
+  let raw = null;
+  try { raw = localStorage.getItem(_FTZ_INVITE_STASH); } catch (_) { return ''; }
+  if (!raw) return '';
+  // Consume on read, always — including when it turns out to be stale. A stash
+  // that fails its own expiry check but stays on disk gets re-tested on every
+  // single boot forever.
+  try { localStorage.removeItem(_FTZ_INVITE_STASH); } catch (_) {}
+  try {
+    const o = JSON.parse(raw);
+    if (!o || !o.code) return '';
+    if (Date.now() - (o.at || 0) > _FTZ_INVITE_STASH_TTL) return '';
+    return String(o.code);
+  } catch (_) { return ''; }
+}
+
 function _invOpenPaste() {
   document.getElementById('ftz-inv-paste')?.remove();
   const ov = document.createElement('div');
@@ -20842,7 +20900,7 @@ function renderBSettingsMain(tab) {
         const maxedOut=inv.maxUses&&inv.uses>=inv.maxUses;
         return `<div style="padding:12px 16px;background:var(--panel);border:1px solid ${expired||maxedOut?'rgba(255, 0, 51,.2)':'var(--border)'};border-radius:14px;margin-bottom:8px;${expired||maxedOut?'opacity:.6;':''}">
           <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;">
-            <span style="flex:1;font-size:12px;font-family:monospace;color:rgba(255,255,255,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${'https://fortized.com/app?invite='+inv.code}</span>
+            <span style="flex:1;font-size:12px;font-family:monospace;color:rgba(255,255,255,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(_ftzInviteURL(inv.code))}</span>
             <button class="btn-g" style="padding:4px 10px;font-size:12px;flex-shrink:0;" onclick="copyInvite('${inv.code}')">Copy</button>
           </div>
           <div style="display:flex;align-items:center;gap:12px;margin-top:6px;font-size:12px;color:var(--muted);">
@@ -22961,10 +23019,10 @@ async function generateInvite() {
   renderBSettingsMain('invites');
   toast('🔗 Invite created!', 'success');
   showFeedbackToast('creating an invite', 'invite_create');
-  navigator.clipboard.writeText('https://fortized.com/app?invite='+code).then(()=>toast('Copied to clipboard!','info')).catch(()=>{});
+  navigator.clipboard.writeText(_ftzInviteURL(code)).then(()=>toast('Copied to clipboard!','info')).catch(()=>{});
 }
 function copyInvite(code) {
-  navigator.clipboard.writeText('https://fortized.com/app?invite='+code).then(()=>toast('🔗 Invite link copied!','success')).catch(()=>toast('Copy failed','error'));
+  navigator.clipboard.writeText(_ftzInviteURL(code)).then(()=>toast('🔗 Invite link copied!','success')).catch(()=>toast('Copy failed','error'));
   // Track invite daily quest
   const today = new Date().toDateString();
   if (CU && (!CU.questsDailyLog || CU.questsDailyLog.invite !== today)) {
@@ -35367,7 +35425,7 @@ async function showBastionInviteUI(bastionIdx) {
       _syncBastionToGlobal(bi);
     }
   }
-  const inviteLink = location.origin + '/app?invite=' + inviteCode;
+  const inviteLink = _ftzInviteURL(inviteCode);
   const friends = CU?.friends || [];
   const bastionMembers = Object.keys(b.memberRoles || {});
 
@@ -35473,7 +35531,7 @@ async function _sendBastionInviteDM(btn, username) {
   btn.style.color = '#949ba4';
   try {
     const inviteCode = window._bastionInviteCode;
-    const link = location.origin + '/app?invite=' + inviteCode;
+    const link = _ftzInviteURL(inviteCode);
     const dmPath = P_dm_path(CU.username, username);
     const msgRef = firebase.database().ref(dmPath).push();
     // Always emit BOTH the ISO `timestamp` and the legacy `time` field —
@@ -35795,14 +35853,20 @@ async function checkInviteLink() {
     return;
   }
   
-  if (!invite) return;
+  // No code on the URL? Someone may have come through login or signup, which
+  // park it in the stash on their way past. Consume it here so the invite card
+  // opens on the first boot after they get an account.
+  const code = invite || _ftzTakeStashedInvite();
+  if (!code) return;
   // Clean URL immediately
-  const url = new URL(location.href);
-  url.searchParams.delete('invite');
-  history.replaceState({}, '', url);
+  if (invite) {
+    const url = new URL(location.href);
+    url.searchParams.delete('invite');
+    history.replaceState({}, '', url);
+  }
 
   // Use the enhanced joinByInvite that handles both logged-in and guest users
-  await joinByInvite(invite);
+  await joinByInvite(code);
 }
 
 async function showBastionInviteDialog(bastion, inviterName, inviteCode) {
@@ -35923,11 +35987,12 @@ function handleInviteGuestContinue(btn, bastionId, inviteCode) {
   const nameInput = document.getElementById('invite-guest-name');
   const name = (nameInput?.value||'').trim();
   if (!name) { nameInput?.focus(); toast('Please enter a name','info'); return; }
-  // Store the pending invite info so we can resume after signup/login
-  sessionStorage.setItem('pendingInvite', JSON.stringify({bastionId, inviteCode, guestName: name}));
+  // Park the code where the app will find it after they come back with an
+  // account, and carry it on the URL too so either half alone is enough.
+  _ftzStashInvite(inviteCode);
+  try { sessionStorage.setItem('ftz_invite_guest_name', name); } catch (_) {}
   document.getElementById('invite-dialog-overlay')?.remove();
-  // Redirect to login/signup flow — store invite + name for after auth
-  window.location.href = '/login?invite=' + encodeURIComponent(inviteCode);
+  window.location.href = '/signup?invite=' + encodeURIComponent(inviteCode);
 }
 // Join a bastion by ID. If hasInvite=true, skip the public-only check.
 async function joinBastionById(bastionId, hasInvite) {
@@ -38721,11 +38786,12 @@ function parseMD(s) {
     });
   });
   // 5. Fortized invite/bastion link — unified embed card.
-  // Short forms first: invite.fortized.com/CODE, fortized.com/invite/CODE and
-  // /i/CODE are rewritten to the canonical ?invite= shape so ONE embed path
-  // handles every link we hand out. ⚠️ The subdomain or an /invite//i/ segment
-  // is REQUIRED — matching any fortized.com path would swallow /app, /login and
-  // every other ordinary link on the site.
+  // invite.fortized.com/CODE is the link we hand out; fortized.com/invite/CODE
+  // and /i/CODE are the aliases. All three are rewritten to the internal
+  // ?invite= shape so ONE embed path below handles every one of them — the raw
+  // URL is replaced by the embed card either way, so nobody ever reads it.
+  // ⚠️ The subdomain or an /invite//i/ segment is REQUIRED — matching any
+  // fortized.com path would swallow /app, /login and every other ordinary link.
   s = s.replace(/https?:\/\/(?:invite\.fortized\.com|(?:www\.)?fortized\.com\/(?:invite|i))\/([\w-]{3,64})\b/gi,
     (m, code) => location.origin + '/app?invite=' + code);
   s = s.replace(/https?:\/\/[^\s]*[?&]invite=([\w-]+)[^\s]*/gi, (url, code) => {
@@ -40071,135 +40137,19 @@ async function _enrichDetectedGameIGDB(game) {
 
 // _setGameActivity and _clearGameActivity removed — use setGameActivity() instead
 
-// Handle bastion invites from URL parameters
-function handleBastionInvite() {
-  const params = new URLSearchParams(window.location.search);
-  const inviteCode = params.get('invite');
-
-  if (!inviteCode) return;
-
-  // Fetch bastion invite info
-  fetch(`/api/bastion/invite/${inviteCode}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        showBastionInviteModal(data.bastion, inviteCode);
-      } else {
-        showNotification('Invalid or expired invite', 'error');
-      }
-    })
-    .catch(err => {
-      console.error('Failed to load bastion invite:', err);
-      showNotification('Failed to load invite', 'error');
-    });
-}
-
-function showBastionInviteModal(bastion, inviteCode) {
-  // Create modal HTML
-  const modal = document.createElement('div');
-  modal.id = 'bastionInviteModal';
-  modal.style.cssText = `
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter:none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-  `;
-
-  modal.innerHTML = `
-    <div style="
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 40px;
-      max-width: 500px;
-      width: 90%;
-      text-align: center;
-      backdrop-filter:none;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
-    ">
-      <div style="font-size: 48px; margin-bottom: 20px;">🏰</div>
-      <h2 style="font-family: var(--font-display); font-size: 24px; margin-bottom: 8px; color: #fff;">
-        ${bastion.name || 'Bastion Invite'}
-      </h2>
-      <p style="color: var(--muted-light); margin-bottom: 20px;">
-        You've been invited to join this bastion
-      </p>
-
-      <div style="
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        padding: 14px;
-        margin-bottom: 24px;
-        font-size: 13px;
-        color: var(--muted-light);
-      ">
-        <span style="color: #dde3ed; font-weight: 600;">${bastion.memberCount || 0}</span> members
-      </div>
-
-      <div style="display: flex; gap: 12px; flex-direction: column;">
-        <button onclick="acceptBastionInvite('${inviteCode}')" style="
-          background: var(--accent);
-          color: #080a0f;
-          border: none;
-          padding: 12px 20px;
-          border-radius: 12px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.25s;
-        " class="invite-accept-btn">
-          Accept Invite
-        </button>
-        <button onclick="document.getElementById('bastionInviteModal').remove()" style="
-          background: transparent;
-          color: var(--muted-light);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          padding: 12px 20px;
-          border-radius: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.25s;
-        " class="invite-decline-btn">
-          Decline
-        </button>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-}
-
-function _legacyAcceptBastionInvite(inviteCode) {
-  const modal = document.getElementById('bastionInviteModal');
-  if (modal) modal.remove();
-
-  // Send accept request
-  fetch(`/api/bastion/invite/${inviteCode}/accept`, { method: 'POST' })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        showNotification('Joined bastion!', 'success');
-        // Navigate to bastion
-        window.location.href = `/app/bastion/${data.bastionId}`;
-      } else {
-        showNotification(data.error || 'Failed to join bastion', 'error');
-      }
-    })
-    .catch(err => {
-      console.error('Failed to accept invite:', err);
-      showNotification('Failed to join bastion', 'error');
-    });
-}
+// ⚠️ A SECOND, COMPETING INVITE HANDLER LIVED HERE AND IS DELETED.
+// `handleBastionInvite` re-read ?invite= on window.load+1s and opened its own
+// modal — a hardcoded rgba/#5865f2 box built from inline styles, blind to the
+// appearance system — against `/api/bastion/invite/:code`. checkInviteLink()
+// already reads that same parameter at init and strips it, so which card you
+// got was a race between the two. One door now: checkInviteLink →
+// joinByInvite → showBastionInviteDialog. (`showBastionInviteModal` and
+// `_legacyAcceptBastionInvite` went with it.)
 
 // Initialize game detection when app loads (if desktop)
 if (typeof window !== 'undefined') {
   window.addEventListener('load', () => {
     setTimeout(initDesktopGameDetection, 3000);
-    setTimeout(handleBastionInvite, 1000); // Handle invites after app loads
   });
 }
 

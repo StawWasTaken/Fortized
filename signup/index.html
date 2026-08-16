@@ -162,7 +162,14 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js">
+// The invite code has to survive this page even if the visitor wanders off to
+// /login first — those nav links carry no query string. Park it on arrival.
+(function(){ try {
+  var c = new URLSearchParams(location.search).get('invite') || '';
+  if (/^[\w-]{3,64}$/.test(c)) localStorage.setItem('ftz_pending_invite', JSON.stringify({ code: c, at: Date.now() }));
+} catch (e) {} })();
+</script>
 <script src="/FortizedSocial-supabase.js?v=20260430e"></script>
 <script src="/firebase-compat-shim.js?v=20260430e"></script>
 <script>
@@ -339,12 +346,26 @@ async function doSignup() {
       return;
     }
 
+    // An invite code arriving on this page (invite.fortized.com/CODE sends a
+    // signed-out visitor through here) has to survive the trip into the app.
+    // Belt and braces: it rides the redirect URL, AND it is parked in
+    // localStorage, because a signup detour or an email round trip can lose
+    // the query string. app.js consumes whichever one it finds.
+    function _ftzInviteQ() {
+      try {
+        var c = new URLSearchParams(location.search).get('invite') || '';
+        if (!/^[\w-]{3,64}$/.test(c)) return '';
+        try { localStorage.setItem('ftz_pending_invite', JSON.stringify({ code: c, at: Date.now() })); } catch (e) {}
+        return '?invite=' + encodeURIComponent(c);
+      } catch (e) { return ''; }
+    }
+
     function cacheAndRedirect(userObj) {
       const u = userObj || result.user;
       localStorage.setItem('ftz_current', u.username);
       localStorage.setItem('fortized_current_user', u.username);
       localStorage.setItem('ftz_user_' + u.username, JSON.stringify(u));
-      window.location.href = '/app';
+      window.location.href = '/app' + _ftzInviteQ();
     }
 
     const file = pfpInput.files[0];

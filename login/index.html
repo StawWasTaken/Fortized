@@ -119,8 +119,25 @@ const passwordInput   = document.getElementById('password');
 const errorDiv        = document.getElementById('error');
 const authCard        = document.getElementById('authCard');
 
+// An invite code arriving on this page (invite.fortized.com/CODE sends a
+// signed-out visitor through here) has to survive the trip into the app.
+// Belt and braces: it rides the redirect URL, AND it is parked in
+// localStorage, because a signup detour or an email round trip can lose
+// the query string. app.js consumes whichever one it finds.
+function _ftzInviteQ() {
+  try {
+    var c = new URLSearchParams(location.search).get('invite') || '';
+    if (!/^[\w-]{3,64}$/.test(c)) return '';
+    try { localStorage.setItem('ftz_pending_invite', JSON.stringify({ code: c, at: Date.now() })); } catch (e) {}
+    return '?invite=' + encodeURIComponent(c);
+  } catch (e) { return ''; }
+}
+// Stash on arrival, not only on the way out: a visitor may hop between login
+// and signup (whose nav links carry no query string) before they finish.
+_ftzInviteQ();
+
 const existing = localStorage.getItem('ftz_current') || localStorage.getItem('fortized_current_user');
-if (existing) window.location.href = '/app';
+if (existing) window.location.href = '/app' + _ftzInviteQ();
 
 const togglePw = document.getElementById('togglePw');
 togglePw.addEventListener('click', () => {
@@ -234,7 +251,7 @@ async function doLogin() {
       try { localStorage.setItem('ftz_user_' + user.username, JSON.stringify(user)); }
       catch (e) { console.warn('[login] user cache not stored (storage full) — app will fetch it:', e && e.name); }
     }
-    window.location.href = '/app';
+    window.location.href = '/app' + _ftzInviteQ();
   } catch (err) {
     console.error('Login error:', err);
     showError('Connection error. Check your internet and try again.');

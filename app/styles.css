@@ -8882,7 +8882,9 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
 
 /* ── Reduced Motion Support ── */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  :root:not([data-motion="full"]) *,
+  :root:not([data-motion="full"]) *::before,
+  :root:not([data-motion="full"]) *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -11268,7 +11270,9 @@ select:focus-visible {
 
 /* ── Reduced motion support ── */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  :root:not([data-motion="full"]) *,
+  :root:not([data-motion="full"]) *::before,
+  :root:not([data-motion="full"]) *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -14737,7 +14741,10 @@ select:focus,select:focus-visible,
    element rules and we need a single shortcut to override them all. */
 [data-reduced-motion="true"] *,
 [data-reduced-motion="true"] *::before,
-[data-reduced-motion="true"] *::after{
+[data-reduced-motion="true"] *::after,
+[data-motion="reduced"] *,
+[data-motion="reduced"] *::before,
+[data-motion="reduced"] *::after{
   animation-duration:.001ms !important;
   animation-iteration-count:1 !important;
   transition-duration:.001ms !important;

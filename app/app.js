@@ -26799,7 +26799,7 @@ function _buildProfileView(tab) {
     const _curDensity = localStorage.getItem('ftz_density') || 'default';
     const _curScale   = parseFloat(localStorage.getItem('ftz_scale') || '1');
     const _curSpoiler = localStorage.getItem('ftz_spoiler_mode') || 'click';
-    const _curReducedMotion = localStorage.getItem('ftz_reduced_motion') === '1';
+    const _curMotion = _ftzMotionMode();
     const _curCursor  = localStorage.getItem('ftz_cursor') || 'knight';
     const cursors = [
       {
@@ -26981,11 +26981,15 @@ function _buildProfileView(tab) {
         </div>
         <div class="voice-row">
           <div class="voice-row__stack">
-            <div class="voice-row__name">Reduced motion</div>
-            <div class="voice-row__desc">Trims animations across Fortized — page transitions, popovers, the Fortshop banner, the nav sub-tree. Easier on motion-sensitive eyes and a little gentler on older hardware.</div>
+            <div class="voice-row__name">Motion</div>
+            <div class="voice-row__desc">Whether Fortized animates. <b>Match my system</b> follows your device's reduce-motion setting. <b>Full</b> keeps animations on even when your system asks for less, which is the one to pick if the app has gone flat and you did not ask it to.</div>
           </div>
           <div class="voice-row__value voice-row__value--end">
-            <div class="toggle ${_curReducedMotion?'on':''}" onclick="(()=>{const on=localStorage.getItem('ftz_reduced_motion')!=='1';_applyReducedMotion(on);this.classList.toggle('on',on);})()"></div>
+            ${_ftzSelectHTML([
+              {value:'system', label:'Match my system'},
+              {value:'full', label:'Full'},
+              {value:'reduced', label:'Reduced'},
+            ], _curMotion, '_applyMotion(__VALUE__)', {width:'190px'})}
           </div>
         </div>
       </div>
@@ -60392,14 +60396,70 @@ function _applySpoilerMode(mode) {
   try { localStorage.setItem('ftz_spoiler_mode', mode); } catch (_) {}
   document.documentElement.dataset.spoilerMode = mode;
 }
-// Reduced motion — flattens animations and transitions across the app
-// for users who prefer less movement. Keys off [data-reduced-motion]
-// on the document root.
-function _applyReducedMotion(on) {
-  on = !!on;
-  try { localStorage.setItem('ftz_reduced_motion', on ? '1' : '0'); } catch (_) {}
-  document.documentElement.dataset.reducedMotion = on ? 'true' : 'false';
+// ════════════════════════════════════════════
+// MOTION — three states, and one of them can WIN over the system
+// ════════════════════════════════════════════
+// 🐞 ANIMATIONS COULD DIE EVERYWHERE WITH NO WAY TO TELL WHY.  There were TWO
+// independent kill switches and neither announced itself:
+//   1. `ftz_reduced_motion` in localStorage, set by a toggle buried in
+//      Settings. It persists forever, so one accidental click and the app is
+//      flat on every device that browser syncs to, for good.
+//   2. Three blanket `@media (prefers-reduced-motion: reduce){ * }` rules in
+//      styles.css. Turn on Reduce Motion in Windows or macOS — or leave it on
+//      from some other app — and every animation in Fortized stops, with
+//      nothing on screen saying so and no setting that could bring it back.
+// Both flatten the WHOLE app to `animation-duration:.001ms`, so the symptom is
+// identical and indistinguishable: "animations just don't play any more".
+//
+// Motion is one setting now, with three honest states:
+//   'system'  — follow the OS (the default, and the accessible thing to do)
+//   'reduced' — off, whatever the OS says
+//   'full'    — ON, whatever the OS says.  ⚠️ This is the state that was
+//               missing: without it the OS had the final word and the person
+//               sitting in front of the app had no say at all.
+const _FTZ_MOTION_KEY = 'ftz_motion';
+function _ftzMotionMode() {
+  let m = null;
+  try { m = localStorage.getItem(_FTZ_MOTION_KEY); } catch (_) {}
+  if (m === 'full' || m === 'reduced' || m === 'system') return m;
+  // Migrate the old boolean.  '1' meant reduced; anything else was never an
+  // explicit choice, so it becomes 'system' rather than a silent 'full'.
+  try { if (localStorage.getItem('ftz_reduced_motion') === '1') return 'reduced'; } catch (_) {}
+  return 'system';
 }
+function _applyMotion(mode) {
+  if (mode !== 'full' && mode !== 'reduced' && mode !== 'system') mode = 'system';
+  try {
+    localStorage.setItem(_FTZ_MOTION_KEY, mode);
+    // Keep the retired key in step so a tab still running the old bundle does
+    // not fight this one.
+    localStorage.setItem('ftz_reduced_motion', mode === 'reduced' ? '1' : '0');
+  } catch (_) {}
+  const el = document.documentElement;
+  el.dataset.motion = mode;
+  // The old attribute stays written because rules elsewhere still read it.
+  el.dataset.reducedMotion = mode === 'reduced' ? 'true' : 'false';
+}
+// Kept so anything still calling it keeps working.
+function _applyReducedMotion(on) { _applyMotion(on ? 'reduced' : 'full'); }
+
+// A person cannot see a media query.  This says, in one line, which of the two
+// switches is holding their animations down.
+function ftzWhyNoAnimations() {
+  const mode = _ftzMotionMode();
+  let sys = false;
+  try { sys = !!window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) {}
+  const flat = mode === 'reduced' || (mode === 'system' && sys);
+  const msg = !flat
+    ? 'Animations are ON.'
+    : mode === 'reduced'
+      ? 'Animations are OFF because Fortized is set to Reduced motion. Settings > Appearance > Motion, or run ftzMotion("full").'
+      : 'Animations are OFF because your system asks for reduced motion. Fortized is following it. Run ftzMotion("full") to override.';
+  console.log('[Fortized motion]', { setting: mode, systemAsksForReducedMotion: sys, animationsFlattened: flat });
+  console.log('[Fortized motion]', msg);
+  return msg;
+}
+function ftzMotion(mode) { _applyMotion(mode); return ftzWhyNoAnimations(); }
 // Apply all persisted appearance prefs on boot so density/scale/
 // spoiler/reduced-motion all kick in before the page paints — no
 // flash of unstyled chrome between login and the first repaint.
@@ -60407,7 +60467,7 @@ function _applyReducedMotion(on) {
   try { _applyFortizedDensity(localStorage.getItem('ftz_density') || 'default', { _noRepaint:true, _skipPersist:true }); } catch (_) {}
   try { _applyFortizedScale(parseFloat(localStorage.getItem('ftz_scale') || '1'), { _skipPersist:true }); } catch (_) {}
   try { _applySpoilerMode(localStorage.getItem('ftz_spoiler_mode') || 'click'); } catch (_) {}
-  try { _applyReducedMotion(localStorage.getItem('ftz_reduced_motion') === '1'); } catch (_) {}
+  try { _applyMotion(_ftzMotionMode()); } catch (_) {}
 })();
 // Apply on boot so the cursor is set before the user sees the app.
 // Custom cursors need CU to be hydrated first (the dataUrls live on

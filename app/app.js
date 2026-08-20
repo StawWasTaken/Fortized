@@ -172,6 +172,207 @@ function _radianceExpiry(u) {
 function _radiancePlusImg(size){return _radianceImg(size);}
 function _boostSvg(size){return ftzIcon('boost',size||'18','currentColor');}
 
+// ⚠️ ONE BANNER SHAPE, for people AND for bastions.  Both were cropped at 16:5
+// and exported at 960x300 — a number that appeared in the crop modal and
+// nowhere else, so nothing on the site could state what size to upload.  680 x
+// 240 is the shape now, everywhere, and it is written once so a user banner and
+// a bastion banner can never drift apart again.
+const FTZ_BANNER_W = 680, FTZ_BANNER_H = 240;
+const FTZ_BANNER_RATIO = FTZ_BANNER_W / FTZ_BANNER_H;
+
+// ── ONE NOTIFICATION BADGE ────────────────────────────────────────────────
+// Red pill, white inside: a number 1-9+ when there is a count worth showing, a
+// plain white dot when all there is to say is "something new".  Nine different
+// badges used to make that decision nine different ways, in three colours.
+// See the ONE NOTIFICATION BADGE block at the end of styles.css.
+const _FTZ_BADGE_DOT = '<span class="ftz-nbadge-dot"></span>';
+function _ftzBadgeInner(count) {
+  const n = Math.max(0, Math.floor(+count || 0));
+  return n > 0 ? (n > 9 ? '9+' : String(n)) : _FTZ_BADGE_DOT;
+}
+// Paint (or hide) a badge element in one call, so every caller agrees on what
+// "nothing to show" looks like.
+function _ftzSetBadge(el, count, show) {
+  if (!el) return;
+  const on = show !== undefined ? !!show : (+count || 0) > 0;
+  el.innerHTML = on ? _ftzBadgeInner(count) : '';
+  el.style.display = on ? 'inline-flex' : 'none';
+}
+
+// ══════════════════════════════════════════════════════════
+// THE RADIANCE LADDER — five rungs, named in Elder Futhark
+// ══════════════════════════════════════════════════════════
+// Radiance used to be a flat yes/no: you either held it or you did not, and
+// somebody in their second year looked exactly like somebody in their first
+// week.  It climbs now, and what it climbs on is `radianceDaysBought` — the
+// CUMULATIVE days a person has bought with their own Onyx.
+//
+// ⚠️ Cumulative days BOUGHT, deliberately, not days held or days remaining.
+// Days remaining goes DOWN, so a rank read off it would fall every morning and
+// collapse the moment a subscription lapsed — a ladder you slide back down for
+// doing nothing is a punishment, not a rank.  Bought only ever goes up, so the
+// rung you earned is the rung you keep.
+//
+// ⚠️ Gifted and trial Radiance do NOT accrue.  It is the same rule the 14-day
+// milestone already runs on ("only the user's OWN purchases accrue
+// radianceDaysBought"), and it exists so the ladder can't be climbed by having
+// a second account gift you a year.  A gift still gives the days; it just
+// doesn't give the rank.
+//
+// Thresholds are MY judgement call — the user named the five rungs and their
+// feel, not the numbers.  Radiance sells in 7/30/90-day packs, so these read as
+// "your first buy · a month · a season · half a year · a year".
+//
+// ⚠️ The colours are the "evolving" part, and they are SOLID.  A rung reads at
+// 14px next to a name — the only thing that can carry it at that size is hue.
+// Warming from ember-orange to the brand yellow, then over into Radiance pink
+// at the top, so the ladder looks like it is heating up.  No glows: the tint is
+// the mask's own fill, not a halo behind it.
+const _FTZ_RADIANCE_LADDER = [
+  { level:1, days:1,   rune:'ᛖᛗᛒᛖᚱ',      name:'Ember',     blurb:'Just starting',   tint:'#ff7a45' },
+  { level:2, days:30,  rune:'ᚷᛚᛟᚹ',       name:'Glow',      blurb:'Noticeable',      tint:'#ffb03a' },
+  { level:3, days:90,  rune:'ᚱᚨᛞᛁᚨᚾᛏ',    name:'Radiant',   blurb:'Strong presence', tint:'#fff93e' },
+  { level:4, days:180, rune:'ᛚᚢᛗᛁᚾᛟᚢᛊ',   name:'Luminous',  blurb:'High status',     tint:'#ff9be0' },
+  { level:5, days:365, rune:'ᛊᛈᚨᚱᚲᛚᛁᚾᚷ',  name:'Sparkling', blurb:'High tier',       tint:'#ef5fb0' },
+];
+// Total days this person has bought for themselves.  Falls back to the days
+// still on the clock for an account that was already subscribed before the
+// counter existed — otherwise every long-standing member would have read as
+// level 0 on the day this shipped, which looks like a demotion.
+function _radianceDaysBought(u) {
+  u = u || CU;
+  if (!u) return 0;
+  const n = +u.radianceDaysBought;
+  if (Number.isFinite(n) && n > 0) return Math.floor(n);
+  return Math.floor(_radianceDaysLeft(u));
+}
+// The rung, or null for somebody who has never bought Radiance.
+function _radianceTier(u) {
+  const d = _radianceDaysBought(u);
+  let t = null;
+  for (const r of _FTZ_RADIANCE_LADDER) if (d >= r.days) t = r;
+  return t;
+}
+// How far along the current rung, and what the next one costs — for the meter
+// on the Radiance page.
+function _radianceLadderProgress(u) {
+  const days = _radianceDaysBought(u);
+  const tier = _radianceTier(u);
+  const level = tier ? tier.level : 0;
+  const next = level < _FTZ_RADIANCE_LADDER.length ? _FTZ_RADIANCE_LADDER[level] : null;
+  const from = tier ? tier.days : 0;
+  const pct = next === null ? 100 : Math.max(0, Math.min(100, ((days - from) / (next.days - from)) * 100));
+  return { days, tier, level, next, pct };
+}
+// Credit an OWN purchase.  Every buy path calls this; the trial and the gift
+// claim deliberately do not.  Returns the rung it crossed onto, or null —
+// showing the card is the CALLER's job, because a first purchase crosses onto
+// Ember AND activates Radiance, and those are two cards for one click.  The
+// caller picks one.
+function _accrueRadianceDays(days) {
+  if (!CU) return null;
+  const d = Math.max(0, Math.floor(+days || 0));
+  if (!d) return null;
+  const before = _radianceTier(CU);
+  CU.radianceDaysBought = (+CU.radianceDaysBought || 0) + d;
+  const after = _radianceTier(CU);
+  return (after && (!before || after.level > before.level)) ? after : null;
+}
+// Say the ONE thing worth saying after a purchase has been written and saved.
+// Switching it on beats climbing a rung beats a date, and never two cards for
+// one click.
+function _radianceSayIt(wasActive, crossed) {
+  if (!wasActive) { _ftzRadianceActivated(); return; }
+  if (crossed)    { _celebrateRadianceTier(crossed); return; }
+  toast('Radiance extended to ' + new Date(_radianceExpiry(CU)).toLocaleDateString(), 'success');
+}
+
+// ══════════════════════════════════════════════════════════
+// THE RADIANCE CARD — one card, two occasions
+// ══════════════════════════════════════════════════════════
+// Buying Radiance used to end in a toast: a grey strip that says "active until
+// 4 Sept" and slides away.  You had just spent real money on the thing the
+// platform sells, and nothing happened on screen.  This is the moment it lands,
+// and the same card does the tier-ups, because a rung is the same event one
+// step further along.
+//
+// ⚠️ The art is the 3D set in `/Icons/`, NOT the character icons.  The
+// characters are storytellers — they hand you a thing and say something.  This
+// card isn't a scene, it's an inventory: here is what you now have.  Objects
+// read as possessions, a character reads as an announcement.
+const _FTZ_RAD_PERK_ICONS = [
+  { src:'/Icons/onyx3dicon.png',    label:'Onyx bonuses'   },
+  { src:'/Icons/media.png',         label:'500 MB uploads' },
+  { src:'/Icons/headset.png',       label:'Soundboard'     },
+  { src:'/Icons/mouse.png',         label:'Custom cursors' },
+  { src:'/Icons/Scheduling.png',    label:'Early access'   },
+  { src:'/Icons/FortizedHelmet.png',label:'Radiance badge' },
+];
+function _radCardOpen(o) {
+  document.getElementById('ftz-rad-card')?.remove();
+  const tier = o.tier || _radianceTier(CU);
+  const until = _radianceExpiry(CU);
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.id = 'ftz-rad-card';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  // Each tile carries its own --i so they arrive one after another instead of
+  // all at once — six things appearing on the same frame reads as a jump cut.
+  const tiles = _FTZ_RAD_PERK_ICONS.map((p, i) => `
+    <div class="radact-tile" style="--i:${i}">
+      <img src="${p.src}" alt="" draggable="false" onerror="this.style.visibility='hidden'">
+      <span>${escapeHTML(p.label)}</span>
+    </div>`).join('');
+  overlay.innerHTML = `
+    <div class="ftz-confirm-card ftz-ac-card ftz-ov-rad radact" role="dialog" aria-label="${escapeHTML(o.title)}">
+      <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('ftz-rad-card')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
+      <div class="radact-head">
+        <div class="radact-eyebrow">${escapeHTML(o.eyebrow || 'Radiance')}</div>
+        <div class="radact-title">${escapeHTML(o.title)}</div>
+        <div class="radact-sub">${o.sub || ''}</div>
+      </div>
+      ${tier ? `<div class="radact-tier">
+        <span class="radact-rune">${tier.rune}</span>
+        <span class="radact-tname">${escapeHTML(tier.name)}</span>
+        <span class="radact-tblurb">${escapeHTML(tier.blurb)}</span>
+      </div>` : ''}
+      <div class="radact-grid">${tiles}</div>
+      ${until > Date.now() ? `<div class="radact-until">Active until <b>${new Date(until).toLocaleDateString()}</b></div>` : ''}
+      <div class="ftz-modal-foot radact-foot">
+        <button class="fs-btn" onclick="document.getElementById('ftz-rad-card')?.remove()">Not now</button>
+        <button class="fs-btn fs-btn--primary fs-send-cta" onclick="document.getElementById('ftz-rad-card')?.remove();showView('radiance')">See everything you get</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.tabIndex = -1;
+  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.remove(); });
+  setTimeout(() => overlay.focus(), 0);
+}
+// Shown the moment a purchase lands.
+function _ftzRadianceActivated() {
+  _radCardOpen({
+    eyebrow: 'ᚱᚨᛞᛁᚨᚾᚲᛖ',
+    title: 'Radiance is live',
+    sub: 'Every perk below is switched on right now. Nothing to set up.',
+  });
+}
+// Shown when a purchase pushes somebody onto a new rung.
+function _celebrateRadianceTier(tier) {
+  _radCardOpen({
+    tier,
+    eyebrow: 'A new rung',
+    title: 'You reached ' + tier.rune,
+    sub: `<b>${escapeHTML(tier.name)}</b> — ${escapeHTML(tier.blurb.toLowerCase())}. Your rung is yours to keep, even if Radiance lapses.`,
+  });
+  try {
+    FortizedSocial.addNotification(CU.username, {
+      type: 'reward', from: 'Radiance',
+      msg: `You reached ${tier.rune} · ${tier.name} on the Radiance ladder.`,
+      time: new Date().toISOString(),
+    });
+  } catch (_) {}
+}
+
 // ══════════════════════════════════════════════════════════
 // RADIANCE MILESTONE — the free "Radiance Plum" theme, kept FOREVER
 // (it survives Radiance lapsing). You earn it by holding a healthy
@@ -5280,11 +5481,7 @@ function _updateMobileTabAvatar() {
 function _updateMobileNotifBadge() {
   const badge = document.getElementById('mtab-notif-badge');
   const dot = document.getElementById('mtab-friends-dot');
-  if (badge) {
-    const count = CU?.notifications?.filter(n => !n.read)?.length || 0;
-    if (count > 0) { badge.style.display = ''; badge.textContent = count > 99 ? '99+' : count; }
-    else badge.style.display = 'none';
-  }
+  _ftzSetBadge(badge, CU?.notifications?.filter(n => !n.read)?.length || 0);
   if (dot) {
     const pending = CU?.friends?.filter(f => f.status === 'pending_in')?.length || 0;
     dot.style.display = pending > 0 ? '' : 'none';
@@ -6628,7 +6825,7 @@ function toggleBastionDropdown(e, idx) {
   dropdown.className = 'bastion-dropdown';
   dropdown.innerHTML = `
     <div class="bd-header">
-      <div class="bd-name">${escapeHTML(b.name)}${b.verified?_verifiedBadge(14):''}</div>
+      <div class="bd-name">${escapeHTML(b.name)}${b.verified?_verifiedBadge(14):''}${_boostBadge(b,14)}</div>
     </div>
     <div class="bd-info">
       <span class="bd-chip">${visIcon} ${visLabel}</span>
@@ -10798,7 +10995,47 @@ function _openChannel(i){
 // read back through its level — a level 2 bastion is credited with exactly the 7
 // that bought level 2, which is the least it can possibly have.  No migration,
 // and the bar is never wider than the truth.
-const _FTZ_BOOST_TIERS = [2, 7, 14];
+// ════════════════════════════════════════════
+// THE BOOST LADDER — five rungs, named in Elder Futhark
+// ════════════════════════════════════════════
+// The mirror of the Radiance ladder up at the top of the file.  Both climb five
+// rungs and both are named in the language of the ᚱᛖᛚᛗ ᛟᚠ ᚠᛟᚱᛏᛁᛉᛖᛞ; the rune is
+// the OFFICIAL name — it is what the app shows — and the English sits in the
+// tooltip as the gloss, because a name nobody can read is atmosphere, not
+// information.  Same power, two directions: Radiance is it held by a person, a
+// Boost is it spent on a place.
+//
+// Tints warm the same way Radiance's do, from asleep to mastery.  Solid fills,
+// no halos.
+const _FTZ_BOOST_NAMES = [
+  { level:1, rune:'ᛞᛟᚱᛗᚨᚾᛏ',    name:'Dormant',   blurb:'Sleeping power',        tint:'#8a93a6' },
+  { level:2, rune:'ᛊᛏᛁᚱᚱᛁᚾᚷ',   name:'Stirring',  blurb:'Beginning to awaken',   tint:'#b06fd6' },
+  { level:3, rune:'ᚨᚹᚨᚴᛖᚾᛖᛞ',   name:'Awakened',  blurb:'Active and glowing',    tint:'#ef5fb0' },
+  { level:4, rune:'ᛖᛗᛈᛟᚹᛖᚱᛖᛞ',  name:'Empowered', blurb:'Strong arcane force',   tint:'#ff9d4d' },
+  { level:5, rune:'ᛋᛟᚡᛖᚱᛖᛁᚷᚾ',  name:'Sovereign', blurb:'Full mastery',          tint:'#fff93e' },
+];
+function _boostTierName(lv){ return _FTZ_BOOST_NAMES[Math.max(0,Math.min(4,(lv|0)-1))] || null; }
+
+// The boost logo, tinted to whatever colour it sits in — the same mask trick the
+// Radiance and security marks use, so it reads correctly under every appearance
+// instead of being one baked-in colour.
+const _FTZ_BOOST_LOGO = '/boost-logo.png';
+function _boostLogoHTML(size, cls, tint){
+  return `<span class="ftz-boost-mask ${cls||''}" style="--sz:${size||16}px${tint?';color:'+tint:''}" aria-hidden="true"></span>`;
+}
+
+// ⚠️ THE BASTION'S BADGE — it sits NEXT TO the verified check, and it is drawn
+// from the same registry as the pill and the bar, so a bastion can never wear
+// one rung in the sidebar and another beside its name.  Level 0 draws nothing:
+// an un-boosted bastion has no badge, not a grey one.
+function _boostBadge(b, size) {
+  const lv = _levelForBoosts(_bastionBoosts(b));
+  if (!lv) return '';
+  const t = _boostTierName(lv);
+  return `<span class="ftz-boost-badge" data-tip="${t.rune} · ${t.name} — ${t.blurb}">${_boostLogoHTML(size || 15, '', t.tint)}</span>`;
+}
+
+const _FTZ_BOOST_TIERS = [2, 7, 14, 24, 40];
 function _boostsForLevel(lv){ lv=Math.max(0,Math.min(_FTZ_BOOST_TIERS.length, parseInt(lv,10)||0)); return lv?_FTZ_BOOST_TIERS[lv-1]:0; }
 function _levelForBoosts(n){ let lv=0; for(let i=0;i<_FTZ_BOOST_TIERS.length;i++) if(n>=_FTZ_BOOST_TIERS[i]) lv=i+1; return lv; }
 function _bastionBoosts(b){ const n=Number(b&&b.boosts); return Number.isFinite(n)&&n>=0?Math.floor(n):_boostsForLevel(b&&b.boostLevel); }
@@ -10808,8 +11045,10 @@ function _bastionBoosts(b){ const n=Number(b&&b.boosts); return Number.isFinite(
 // gradient now, the Radiance one, because that is what a boost is.
 function _boostPillHTML(b){
   const p=_boostProgress(b);
-  if (!p.level) return `<span class="bm-boost bm-boost--none">${_boostSvg('10')}Boost</span>`;
-  return `<span class="bm-boost" data-tip="${p.boosts} boost${p.boosts!==1?'s':''}">${_boostSvg('10')}Level ${p.level}</span>`;
+  if (!p.level) return `<span class="bm-boost bm-boost--none">${_boostLogoHTML(11)}Boost</span>`;
+  const t = _boostTierName(p.level);
+  // The rune is the name; the English and the count are what the tooltip is for.
+  return `<span class="bm-boost" style="color:${t.tint}" data-tip="${t.name} · ${t.blurb} · ${p.boosts} boost${p.boosts!==1?'s':''}">${_boostLogoHTML(11)}${t.rune}</span>`;
 }
 function _boostProgress(b){
   const boosts=_bastionBoosts(b);
@@ -10870,7 +11109,7 @@ function renderBastionSidebar(scroll) {
   const bp=_boostProgress(b);
   html+=`<div class="bst-bar">
     <div class="bst-bar-head">
-      <span>${bp.next===null?'Fully boosted':'Boost level '+bp.level}</span>
+      <span>${bp.next===null?_boostTierName(5).rune+' · fully boosted':(bp.level?_boostTierName(bp.level).rune:'Not boosted')}</span>
       <span class="bst-bar-count">${bp.boosts}${bp.next===null?'':' / '+bp.next}</span>
     </div>
     <div class="bst-bar-track"><div class="bst-bar-fill" style="width:${bp.pct}%;"></div></div>
@@ -11290,7 +11529,7 @@ function loadChatChannel(idx) {
           <img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'">
           <div style="position:absolute;bottom:14px;left:18px;display:flex;align-items:center;gap:10px;">
             ${b.icon?`<img src="${escapeHTML(b.icon)}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;border:2px solid rgba(255,255,255,.15);box-shadow:0 2px 8px rgba(0,0,0,.4);" onerror="this.style.display='none'">`:''}
-            <span style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.7),0 0 4px rgba(0,0,0,.4);letter-spacing:-.01em;">${escapeHTML(b.name||'')}${b.verified?_verifiedBadge(14):''}</span>
+            <span style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.7),0 0 4px rgba(0,0,0,.4);letter-spacing:-.01em;">${escapeHTML(b.name||'')}${b.verified?_verifiedBadge(14):''}${_boostBadge(b,14)}</span>
           </div>
         </div>` : ''}
         <div class="chat-welcome">
@@ -16167,7 +16406,7 @@ function _discCard(b, i, o) {
     </div>
     <div class="disc-card-em">${emblem}</div>
     <div class="disc-card-body">
-      <div class="disc-card-name">${escapeHTML(b.name)}${b.verified ? _verifiedBadge(15) : ''}</div>
+      <div class="disc-card-name">${escapeHTML(b.name)}${b.verified ? _verifiedBadge(15) : ''}${_boostBadge(b,14)}</div>
       ${tags.length || cat ? `<div class="disc-card-tags">
         ${cat ? `<span class="disc-tag disc-tag--cat">${escapeHTML(cat)}</span>` : ''}
         ${tags.map(t => `<span class="disc-tag">${escapeHTML(String(t).slice(0, 18))}</span>`).join('')}
@@ -17744,10 +17983,10 @@ function initFortizedUXResilience() {
               // blob whose write may have quota-failed — re-equipping
               // an old decoration the user explicitly wanted gone.
               'pfp','pfpCrop','banner','bio',
-              'connections','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
+              'connections','email','radianceUntil','radiancePlus','radianceDaysBought','unlockedAppearances','ownedDecorations',
               'profileWidgets','displayFont','displayEffect','displayColor','displayColor2','wantToPlay','gameCollection',
               'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
-              'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount',
+              'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount','boostsGiven',
               'createdAt','customStatus','verified','appearance','badges',
               'completedQuests','questsRewarded','questsDailyLog','dailyStreak','streakDate',
               'questsWeekly','questOnyxEarned','questsAccepted','questsClaimedCount',
@@ -20080,7 +20319,7 @@ function renderBastionHub() {
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;${bannerSafe?'margin-top:-40px;position:relative;z-index:2;padding:0 8px;':''}">
       <div style="width:56px;height:56px;border-radius:16px;background:var(--panel2);border:3px solid var(--channel);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;box-shadow:0 4px 16px rgba(0,0,0,.4);">${emblemHTML}</div>
       <div style="flex:1;min-width:0;">
-        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;word-break:break-word;">${escapeHTML(b.name)}${b.verified?_verifiedBadge(18):''}</div>
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;word-break:break-word;">${escapeHTML(b.name)}${b.verified?_verifiedBadge(18):''}${_boostBadge(b,17)}</div>
         ${b.tagline ? `<div style="font-size:12px;color:var(--muted-light);margin-top:2px;">${escapeHTML(b.tagline)}</div>` : ''}
       </div>
     </div>
@@ -20193,7 +20432,7 @@ function renderOverviewRoom() {
   // ── Identity: name, tagline, badge ──
   html += '<div class="ov-identity" style="' + (bannerSrc ? '' : 'padding-top:24px;') + '">'
     + (bannerSrc ? '' : '<div class="ov-emblem" style="position:relative;margin-bottom:12px;"><div class="ov-icon">' + emblemHTML + '</div></div>')
-    + '<div class="ov-name">' + escapeHTML(b.name) + (b.verified?_verifiedBadge(16):'') + '</div>'
+    + '<div class="ov-name">' + escapeHTML(b.name) + (b.verified?_verifiedBadge(16):'') + _boostBadge(b,15) + '</div>'
     + (b.tagline ? '<div class="ov-tagline">' + escapeHTML(b.tagline) + '</div>' : '')
     + '</div>';
 
@@ -20696,7 +20935,7 @@ function _updateBSettingsPreview() {
       <div class="bs-preview-banner">${b.banner?`<img src="${escapeHTML(b.banner)}">`:'<div style="width:100%;height:100%;background:linear-gradient(135deg,#1a0f30,#0f1830);"></div>'}</div>
       <div class="bs-preview-body">
         <div class="bs-preview-icon">${b.icon?`<img src="${escapeHTML(b.icon)}">`:`<span style="font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}</div>
-        <div class="bs-preview-name">${escapeHTML(b.name)}${b.verified?_verifiedBadge(14):''}</div>
+        <div class="bs-preview-name">${escapeHTML(b.name)}${b.verified?_verifiedBadge(14):''}${_boostBadge(b,14)}</div>
         <div class="bs-preview-stats">
           <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);"></span> ${onlineGuess} Online</span>
           <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:50%;background:#6b7280;"></span> ${memberCount} Members</span>
@@ -20721,7 +20960,7 @@ function renderBSettingsMain(tab) {
       <div style="margin-bottom:18px;">
         <div class="settings-title">Banner</div>
         <div style="height:160px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,249,62,.1);cursor:pointer;position:relative;transition:all .2s;" onclick="document.getElementById('bs-banner-upload').click()" onmouseover="this.style.borderColor='rgba(255,249,62,.2);this.style.background='rgba(255,249,62,.02)'" onmouseout="this.style.borderColor='rgba(255,249,62,.1);this.style.background=''">
-          ${b.banner?`<img src="${b.banner}" style="width:100%;height:100%;object-fit:cover;">`:'<div style="height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f1830,#1a0f30);color:var(--muted);font-size:13px;">🖼 Click to upload banner</div>'}
+          ${b.banner?`<img src="${b.banner}" style="width:100%;height:100%;object-fit:cover;">`:'<div style="height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f1830,#1a0f30);color:var(--muted);font-size:13px;">Click to upload a banner &middot; '+FTZ_BANNER_W+' x '+FTZ_BANNER_H+'</div>'}
         </div>
         <input id="bs-banner-upload" type="file" accept="image/*" style="display:none;" onchange="updateBastionBanner(event)">
       </div>
@@ -23327,15 +23566,41 @@ async function distributeOnyxRevenue(cost, context) {
 }
 async function boostBastion(level, cost) {
   if((CU.onyx||0)<cost){toast('Not enough Onyx!','error');return;}
-  showCustomConfirm(`Boost to Level ${level} for ${cost} Onyx?`, async ()=>{
+  const t = _boostTierName(level);
+  showCustomConfirm(`Take this bastion to ${t ? t.rune + ' · ' + t.name : 'level ' + level} for ${cost} Onyx?`, async ()=>{
     const b = CU?.bastions?.[curBastion];
     if (!b) return;
     CU.onyx=(CU.onyx||0)-cost;
-    _fsLogTx('boost', -cost, 'Bastion boost · level ' + level);
-    b.boostLevel=level;
+    _fsLogTx('boost', -cost, 'Bastion boost · ' + (t ? t.name : 'level ' + level));
+    // ⚠️ WRITE THE COUNT, NOT JUST THE LEVEL.  Everything that draws a boost —
+    // the pill, the bar, the badge — reads `boosts`; a bastion that only ever
+    // wrote `boostLevel` had its count INFERRED from the level, which is the
+    // floor, not the truth.  Now the number is real and the level is derived
+    // from it, so the two can never disagree.
+    const before = _bastionBoosts(b);
+    const after  = Math.max(before, _boostsForLevel(level));
+    b.boosts     = after;
+    b.boostLevel = _levelForBoosts(after);
+    // What THIS person paid for, on their own row — the profile badge reads it.
+    CU.boostsGiven = (+CU.boostsGiven || 0) + Math.max(0, after - before);
     await saveUser(); updateOnyxDisplay(); openBoostModal();
     distributeOnyxRevenue(cost);
-    toast('Boosted to Level '+level+'!','success');
+    // ⚠️ Read-modify-write the GLOBAL row rather than calling
+    // _syncBastionToGlobal: that copies the caller's whole local bastion object
+    // over the shared one, and a booster is very often NOT the owner — their
+    // copy is a member's stale snapshot, so syncing it would clobber the real
+    // bastion with old channels and settings.  Only the two boost fields move.
+    // A boost is a rare, deliberate purchase, so one small read + one small
+    // write is affordable here in a way a per-message write never would be.
+    try {
+      const bid = b.globalId;
+      if (bid) {
+        const g = await FortizedSocial.getGlobalBastion(bid);
+        if (g) { g.boosts = after; g.boostLevel = b.boostLevel; await FortizedSocial.saveGlobalBastion(bid, g); }
+      }
+    } catch (e) { console.warn('[Boost] global sync failed:', e?.message); }
+    const nt = _boostTierName(b.boostLevel);
+    toast(nt ? `This bastion is now ${nt.rune} · ${nt.name}` : 'Boosted!', 'success');
   });
 }
 async function confirmLeaveBastion() {
@@ -27708,7 +27973,7 @@ async function _applyGifAvatar(url) {
   document.querySelectorAll('.ftz-confirm-overlay').forEach(el => el.remove());
 
   if (mode === 'banner') {
-    showCropModal(gifData, 16/5, async (cropped) => {
+    showCropModal(gifData, FTZ_BANNER_RATIO, async (cropped) => {
       _syncSettingsInputsToCU();
       const finalBanner = (cropped && typeof cropped === 'object' && cropped.gifData) ? cropped.gifData : cropped;
       CU.banner = finalBanner;
@@ -27880,7 +28145,7 @@ async function updateBanner(e) {
     if (isAnimatedGif) {
       await applyBanner(fileData);
     } else {
-      showCropModal(fileData, 16/5, async (cropped) => {
+      showCropModal(fileData, FTZ_BANNER_RATIO, async (cropped) => {
         const finalBanner = (cropped && typeof cropped === 'object' && cropped.gifData) ? cropped.gifData : cropped;
         await applyBanner(finalBanner);
       });
@@ -27927,7 +28192,7 @@ function _showBannerPickerMenu(event) {
         <button onclick="this.closest('.ftz-confirm-overlay').remove();CU.banner='';saveUser(true,['banner']);markSettingsDirty();buildProfileView('myprofile');toast('Banner removed','success')" style="position:absolute;top:8px;right:8px;background:rgba(255, 0, 51,.18);border:1px solid rgba(255, 0, 51,.35);color:#ff0033;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">Remove</button>
       </div>
     </div>` : ''}
-    <div style="padding:12px 24px 16px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);font-size:10.5px;color:rgba(255,255,255,.28);">Banners are cropped to 16:5. Upload up to 8 MB or pick an animated GIF.</div>
+    <div style="padding:12px 24px 16px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);font-size:10.5px;color:rgba(255,255,255,.28);">Banners are ${FTZ_BANNER_W} x ${FTZ_BANNER_H}. Upload up to 8 MB or pick an animated GIF.</div>
   </div>`;
   document.body.appendChild(ov);
   ov.onclick = e => { if (e.target === ov) ov.remove(); };
@@ -27981,12 +28246,13 @@ async function buyRadiance(days, cost) {
   if((CU.onyx||0)<cost){toast('Not enough Onyx!','error');return;}
   _fsPurchaseConfirm({ title: 'Radiance · ' + days + ' day' + (days === 1 ? '' : 's'), subtitle: 'Fortized premium membership', priceOnyx: cost, variant: 'radiance', onConfirm: async ()=>{
     CU.onyx=(CU.onyx||0)-cost;
+    const wasActive = _hasRadiance(CU);
     CU.radianceUntil = _stackFromExpiry(_radianceExpiry(CU) || null, days);
+    const crossed = _accrueRadianceDays(days);
     _checkRadianceMilestone();
     await saveUser(); updateOnyxDisplay();
     distributeOnyxRevenue(cost);
-    const untilStr = new Date(CU.radianceUntil).toLocaleDateString();
-    toast(`✨ Radiance active until ${untilStr}`,'success');
+    _radianceSayIt(days, wasActive, crossed);
   } });
 }
 
@@ -27994,14 +28260,15 @@ async function buyRadiancePlus(days, cost) {
   _fsPurchaseConfirm({ title: 'Radiance+ · ' + days + ' day' + (days === 1 ? '' : 's'), subtitle: 'Fortized premium membership', priceOnyx: cost, variant: 'radiance', onConfirm: async () => {
     if ((CU.onyx||0) < cost) { toast('Not enough Onyx!', 'error'); return; }
     CU.onyx -= cost;
+    const wasActive = _hasRadiance(CU);
     const base = _stackFromExpiry(_radianceExpiry(CU) || null, days);
     CU.radianceUntil = base;
+    const crossed = _accrueRadianceDays(days);
     _checkRadianceMilestone();
     await saveUser();
     refreshAtelierBalance();
     distributeOnyxRevenue(cost);
-    const untilStr = new Date(base).toLocaleDateString();
-    toast(`🌟 Radiance active until ${untilStr}`, 'success');
+    _radianceSayIt(wasActive, crossed);
   } });
 }
 
@@ -28027,16 +28294,10 @@ async function updateNotifBadge(force) {
   if (seq !== _notifBadgeSeq) return;
   const unread = sum.total;
   const counted = sum.counted ?? sum.mentions ?? 0;
-  const mentionTxt = counted > 9 ? '9+' : String(counted);
-  const dotHTML = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#fff;vertical-align:middle;"></span>';
-  if (badge) {
-    badge.innerHTML = counted > 0 ? mentionTxt : (unread > 0 ? dotHTML : '');
-    badge.style.display = unread > 0 ? 'flex' : 'none';
-  }
-  if (tbBadge) {
-    tbBadge.innerHTML = counted > 0 ? mentionTxt : (unread > 0 ? dotHTML : '');
-    tbBadge.style.display = unread > 0 ? 'inline-flex' : 'none';
-  }
+  // Both badges say the same thing the same way: the mention count if there is
+  // one, otherwise a white dot meaning "unread, no number worth printing".
+  _ftzSetBadge(badge, counted, unread > 0);
+  _ftzSetBadge(tbBadge, counted, unread > 0);
   setFaviconNotif(unread>0);
   if (unread === 0) {
     document.querySelectorAll('.rail-notif-badge').forEach(b=>b.remove());
@@ -33581,13 +33842,13 @@ function _gsFrames() {
       eyebrow: 'What this is', title: 'It\'s a place to talk.',
       body: 'Message a friend, start a group, or gather everyone into a <b>bastion</b>: a community with its own channels, roles and emojis.' },
 
-    { art: 'point', side: 'right',
+    { art: 'announce', side: 'right',
       eyebrow: 'What you can do', title: 'Make it yours.',
       body: 'Choose a font, an effect and a colour for your name. Add a nameplate, an avatar decoration, or reskin the whole app. None of that costs real money.' },
 
-    // The herald, not the celebration knight: this frame is an announcement,
-    // and celebrate is already the welcome frame three cards back.
-    { art: 'announce', side: 'left', overlay: 'rad',
+    // Joyster pointing.  The herald moved to the card before this one, and a
+    // pitch wants somebody showing you the thing rather than reading it out.
+    { art: 'point', side: 'left', overlay: 'rad',
       eyebrow: 'Radiance', title: 'The membership, if you fancy it.',
       body: 'Bigger uploads, animated banners, your emojis anywhere, custom cursors, early access, and 10% off the Fortshop. Everything on the last card stays free either way.' },
 
@@ -33595,9 +33856,11 @@ function _gsFrames() {
       eyebrow: 'Onyx', title: 'The realm\'s currency.',
       body: 'Quests pay it out, a little each day and more each week. You claim it yourself from the <b>Quests</b> page; nothing ever pays out behind your back. Spend it in the Fortshop.' },
 
-    { art: 'point', side: 'left', step: 'friend', skip: 'Skip',
-      eyebrow: 'Step 1 of 4', title: 'Find someone you know.',
-      body: 'Add them by username, or send them your invite link and let them come to you.',
+    // SpaceFriends: two of them, obviously not from the same planet, obviously
+    // getting on fine.  The copy answers the art rather than ignoring it.
+    { art: 'friends', side: 'left', step: 'friend', skip: 'Skip',
+      eyebrow: 'Step 1 of 4', title: 'You don\'t have to be from the same world.',
+      body: 'Add someone by username, or send them your invite link and let them find you. Wherever they are, they can be here too.',
       acts: [
         { label: 'Add a friend', fn: "_gsAct('addfriend')", primary: true },
         { label: 'Copy my invite link', fn: "_gsAct('invite')" },
@@ -36062,7 +36325,7 @@ async function showBastionInviteDialog(bastion, inviterName, inviteCode) {
   const boostLv = bastion.boostLevel || 0;
   const memberCount = bastion.memberCount || 1;
   const isLoggedIn = !!CU?.username;
-  const verifiedBadge = bastion.verified ? _verifiedBadge(16) : '';
+  const verifiedBadge = (bastion.verified ? _verifiedBadge(16) : '') + _boostBadge(bastion, 15);
 
   // Right panel: bastion logo (image only, no emoji fallback)
   const bastionLogoInner = bastion.icon
@@ -36623,12 +36886,17 @@ async function checkTrialLink() {
 }
 
 async function acceptRadianceTrial(days, overlay) {
-  const until = new Date(Date.now() + days*86400000).toISOString();
-  CU.radianceUntil = until;
+  // 🐞 This used to be `Date.now() + days`, flat.  Somebody sitting on three
+  // months of PAID Radiance who accepted a 7-day trial had their subscription
+  // cut to seven days.  Stacking is the only correct arithmetic here.
+  // A trial does NOT accrue toward the ladder — it isn't a purchase.
+  const wasActive = _hasRadiance(CU);
+  CU.radianceUntil = _stackFromExpiry(_radianceExpiry(CU) || null, days);
   await saveUser();
   overlay.remove();
-  toast(`✨ ${days}-day Radiance activated!`,'success');
   updateUserbar();
+  if (!wasActive) _ftzRadianceActivated();
+  else toast(`${days} more days of Radiance added.`,'success');
 }
 
 // ════════════════════════════════════════════
@@ -43262,7 +43530,7 @@ async function updateBastionBanner(e) {
   const reader = new FileReader();
   reader.onload = async ev => {
     const fileData = ev.target.result;
-    showCropModal(fileData, 16/5, async (cropped) => {
+    showCropModal(fileData, FTZ_BANNER_RATIO, async (cropped) => {
       const b = CU?.bastions?.[curBastion];
       if (!b) return;
       b.banner = cropped;
@@ -49588,6 +49856,9 @@ const _FTZ_CHARS = {
   device:    'PlayComputer.png',    // at the machine — games, devices, accounts
   celebrate: 'Celebration.png',     // a win worth marking
   announce:  'Announcement.png',    // herald with a scroll — news, what's new
+  friends:   'SpaceFriends.png',    // two of them, plainly not from the same place
+  boost:     'ActivateBoost.png',   // the power going in
+  boostgone: 'BrokenBoost.png',     // a boost that lapsed, or a tier lost
 };
 function _ftzCharSrc(name) { return _FTZ_CHAR_DIR + (_FTZ_CHARS[name] || _FTZ_CHARS.search); }
 
@@ -51639,6 +51910,28 @@ function renderAtelierTab(tab) {
     const _decoSrc = (CU?.activeDecoration && typeof getDecorationSrc === 'function') ? getDecorationSrc(CU.activeDecoration) : '';
     const decoHTML = _decoSrc ? `<img class="rad-head-deco" src="${_decoSrc}" alt="" draggable="false" onerror="this.remove()">` : '';
 
+    // The ladder, in full, for the person standing on it.  The rung is what the
+    // rest of the app shows as a rune; this is the one place that spells out
+    // what the rune means and what the next one costs — otherwise the badge is
+    // a symbol with no way to find out what it is.
+    const _lad = _radianceLadderProgress(CU);
+    const ladderHTML = _lad.tier ? `
+      <div class="rad-ladder">
+        <div class="rad-ladder-head">
+          <span class="rad-ladder-rune" style="color:${_lad.tier.tint}">${_lad.tier.rune}</span>
+          <span class="rad-ladder-name">${escapeHTML(_lad.tier.name)}</span>
+          <span class="rad-ladder-blurb">${escapeHTML(_lad.tier.blurb)}</span>
+          <span class="rad-ladder-count">${_lad.days.toLocaleString()} day${_lad.days === 1 ? '' : 's'} of Radiance bought</span>
+        </div>
+        <div class="rad-ladder-track"><div class="rad-ladder-fill" style="width:${_lad.pct}%;background:${_lad.tier.tint}"></div></div>
+        <div class="rad-ladder-next">${_lad.next
+          ? `${(_lad.next.days - _lad.days).toLocaleString()} more day${(_lad.next.days - _lad.days) === 1 ? '' : 's'} to reach <b style="color:${_lad.next.tint}">${_lad.next.rune}</b> ${escapeHTML(_lad.next.name)}`
+          : 'You are at the top of the ladder.'}</div>
+        <div class="rad-ladder-rungs">${_FTZ_RADIANCE_LADDER.map(r => `
+          <span class="rad-ladder-rung${r.level <= _lad.level ? ' is-on' : ''}" data-tip="${r.rune} · ${r.name} — ${r.blurb} · ${r.days} day${r.days === 1 ? '' : 's'}"
+            style="${r.level <= _lad.level ? 'color:' + r.tint : ''}">${r.rune}</span>`).join('')}</div>
+      </div>` : '';
+
     const stateLine = hasRad ? `
       <div class="rad-status">
         <span class="rad-status-pill"><i class="fa-solid fa-bolt"></i> Radiance active</span>
@@ -51651,7 +51944,8 @@ function renderAtelierTab(tab) {
           <span class="rad-stat-k">Onyx balance</span>
         </div>
         <button class="rad-hud-cancel" onclick="cancelRadiance()">Cancel subscription</button>
-      </div>` : `
+      </div>
+      ${ladderHTML}` : `
       <div class="rad-status rad-status--guest">
         <p class="rad-pitch">Fortized’s premium membership — bigger uploads, exclusive perks and a profile that shines.</p>
         <div class="rad-pitch-row">
@@ -54519,6 +54813,10 @@ const BADGE_DEFS = {
   // `verified` field may still sit on old user rows; nothing reads it.
   creator:   { img:'/badges/creator.png',               cls:'badge-creator',   order:3, tooltip:'Creator' },
   radiance:  { img:'/badges/radiance.png',              cls:'badge-radiance',  order:4, tooltip:'Radiance - Active Radiance subscriber.' },
+  // The boost badge has no PNG — it is the boost logo as a currentColor mask,
+  // tinted to the wearer's rung, same as the badge a boosted bastion wears.
+  // `maskSrc` is how a badge says "I am drawn, not loaded".
+  booster:   { maskSrc:'/boost-logo.png',               cls:'badge-booster',   order:5, tooltip:'Booster' },
   flame:     { img:'/badges/dedicated%20flame.png',     cls:'badge-flame',     order:6, tooltip:'Dedicated Flame' },
   beta:      { img:'/badges/beta%20user.png',           cls:'badge-beta',      order:7, tooltip:'Beta User - Early supporter of Fortized (account created before 25 August 2026).' },
   quest:     { img:'/badges/quest.png',                 cls:'badge-quest',     order:8, tooltip:'Quest Progression' },
@@ -55048,9 +55346,31 @@ function getUserBadges(user) {
     });
   }
 
-  // 4. Radiance — auto-tied to active subscription, no separate +tier
+  // 4. Radiance — tied to an active subscription, and it EVOLVES.  The level is
+  //    the rune of the rung they have climbed to on cumulative days bought;
+  //    somebody in their second year no longer looks like somebody in their
+  //    first week.  A subscriber who has only ever been gifted Radiance still
+  //    gets the badge — they really do have Radiance — just no rung on it.
   const hasRadiance = _hasRadiance(user);
-  if (hasRadiance) badges.push({ id:'radiance', ...BADGE_DEFS.radiance });
+  if (hasRadiance) {
+    const rt = _radianceTier(user);
+    badges.push(rt
+      ? { id:'radiance', ...BADGE_DEFS.radiance, level: rt.rune, tint: rt.tint,
+          tooltip: `Radiance · ${rt.rune} ${rt.name} — ${rt.blurb}` }
+      : { id:'radiance', ...BADGE_DEFS.radiance });
+  }
+
+  // 5. Booster — anyone who has spent Onyx boosting a bastion.  The rung is
+  //    read off the TOTAL they have given across every bastion, so it is a
+  //    record of what this person has put in, not of one place they happened
+  //    to pick.  Only real, recorded boosts count: `boostsGiven` is written by
+  //    boostBastion and by nothing else.
+  const given = +user.boostsGiven || 0;
+  if (given >= 1) {
+    const bt = _boostTierName(_levelForBoosts(given)) || _FTZ_BOOST_NAMES[0];
+    badges.push({ id:'booster', ...BADGE_DEFS.booster, level: bt.rune, tint: bt.tint,
+      tooltip: `Booster · ${bt.rune} ${bt.name} — ${given} boost${given===1?'':'s'} given` });
+  }
 
   // 6. Dedicated Flame — awarded once max-ever streak hits 5; level = max-ever
   const streakBest = Math.max(+user.streakBest || 0, +user.dailyStreak || 0);
@@ -55092,12 +55412,18 @@ function renderBadgesHTML(user) {
   // gracefully via onerror so a missing asset never leaves a broken
   // square in the badge row.
   const badgesHTML = badges.map(b => {
-    const icon = b.img ? `<img src="${b.img}" alt="${b.id}" onerror="this.parentNode.style.display='none'">` : '';
+    // A badge is either a PNG (`img`) or a drawn mask (`maskSrc`).  The mask
+    // path exists for the evolving ones: their colour changes with the rung, and
+    // a flat PNG cannot change colour — it would need five files per badge.
+    const tint = b.tint ? `--bg-tint:${b.tint};` : '';
+    const icon = b.maskSrc
+      ? `<span class="ftz-badge-mask" style="${tint}--m:url('${b.maskSrc}')"></span>`
+      : b.img ? `<img src="${b.img}" alt="${b.id}" onerror="this.parentNode.style.display='none'">` : '';
     const name = escapeHTML((b.tooltip || '').split(' · ')[0] || b.id);
     const sub  = b.level ? `<span class="badge-tooltip-sub">${escapeHTML(b.level)}</span>` : '';
-    const tipImg = b.img
-      ? `<img class="badge-tooltip-img" src="${b.img}" alt="" onerror="this.style.display='none'">`
-      : '';
+    const tipImg = b.maskSrc
+      ? `<span class="badge-tooltip-img ftz-badge-mask" style="${tint}--m:url('${b.maskSrc}')"></span>`
+      : b.img ? `<img class="badge-tooltip-img" src="${b.img}" alt="" onerror="this.style.display='none'">` : '';
     return `<span class="ftz-badge ${b.cls}${b.level?' has-level':''}">${icon}<span class="badge-tooltip">${tipImg}<span class="badge-tooltip-name">${name}</span>${sub}</span></span>`;
   }).join('');
   return '<span class="ftz-badge-row">' + badgesHTML + '</span>';
@@ -56543,7 +56869,7 @@ function showCropModal(src, aspectRatio, callback, cropShape) {
         <div class="ftz-crop-modal__title">Crop Image</div>
         <div class="ftz-crop-modal__chip">${shapeLabel}</div>
       </div>
-      <div id="crop-canvas-wrap" class="ftz-crop-modal__canvas-wrap" style="aspect-ratio:${isBanner?'16/5':'1/1'};">
+      <div id="crop-canvas-wrap" class="ftz-crop-modal__canvas-wrap" style="aspect-ratio:${isBanner?FTZ_BANNER_W+'/'+FTZ_BANNER_H:'1/1'};">
         <canvas id="crop-canvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
         <div id="crop-guide" style="position:absolute;inset:0;pointer-events:none;">
           <div style="position:absolute;inset:0;box-shadow:inset 0 0 0 9999px rgba(0,0,0,.58);border-radius:${borderRadius};"></div>
@@ -56715,8 +57041,12 @@ function applyCrop() {
     return;
   }
 
-  const outW = _cropData.ratio > 2 ? 960 : 480;
-  const outH = _cropData.ratio > 2 ? Math.round(960 / _cropData.ratio) : 480;
+  // A banner exports at exactly the shape the app asks for, so what somebody
+  // uploads and what gets stored are the same picture.  Everything else stays
+  // square at 480.
+  const isBannerCrop = _cropData.ratio > 2;
+  const outW = isBannerCrop ? FTZ_BANNER_W : 480;
+  const outH = isBannerCrop ? FTZ_BANNER_H : 480;
   const out = document.createElement('canvas');
   out.width = outW; out.height = outH;
   const ctx = out.getContext('2d');
@@ -57287,15 +57617,16 @@ async function purchaseRadiance(isPlus, days, cost) {
     onConfirm: async () => {
       CU.onyx = (CU.onyx || 0) - cost;
       _fsLogTx('radiance', -cost, 'Radiance · ' + days + ' days');
+      const wasActive = _hasRadiance(CU);
       const until = _stackFromExpiry(existingExpiry, days);
       CU.radianceUntil = until;
+      const crossed = _accrueRadianceDays(days);
       _checkRadianceMilestone();
       await saveUser();
       updateOnyxDisplay();
       distributeOnyxRevenue(cost);
-      const untilStr = new Date(until).toLocaleDateString();
-      toast(`✨ Radiance active until ${untilStr}`, 'success');
       renderAtelierTab('radiance');
+      _radianceSayIt(wasActive, crossed);
     },
   });
 }
@@ -57487,12 +57818,17 @@ async function claimGift(giftCode) {
     // Mark as claimed
     await firebase.database().ref('gifts/' + giftCode).update({ claimed:true, claimedBy:CU.username, claimedAt:new Date().toISOString() });
     if (gift.type === 'radiance') {
-      const until = new Date(Date.now() + (gift.days||30) * 86400000).toISOString();
-      CU.radianceUntil = until;
-      // NOTE: gifted Radiance does NOT count toward the 14-day milestone —
-      // only the user's OWN purchases accrue radianceDaysBought.
+      // 🐞 Same overwrite bug the trial had: a 30-day gift landing on somebody
+      // with 200 days left used to REPLACE the 200.  Stack it.
+      // NOTE: gifted Radiance does NOT count toward the 14-day milestone, and
+      // does NOT climb the ladder — only the user's OWN purchases accrue
+      // radianceDaysBought.  A gift gives you the days, not the rank.
+      const gdays = gift.days || 30;
+      const wasActive = _hasRadiance(CU);
+      CU.radianceUntil = _stackFromExpiry(_radianceExpiry(CU) || null, gdays);
       await saveUser();
-      toast('You received 30 days of Radiance! Enjoy your perks.', 'success');
+      if (!wasActive) _ftzRadianceActivated();
+      else toast(`You received ${gdays} days of Radiance!`, 'success');
     } else if (gift.type === 'item') {
       if (!CU.ownedItems) CU.ownedItems = [];
       CU.ownedItems.push(gift.itemId);

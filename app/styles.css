@@ -1973,7 +1973,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .crop-modal-overlay{position:fixed;inset:0;background:rgba(4,6,10,.96);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;}
 .crop-box{background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:500px;width:100%;overflow:hidden;}
 .crop-canvas-wrap{position:relative;overflow:hidden;background:#000;width:100%;aspect-ratio:1;cursor:move;}
-.crop-canvas-wrap.banner-crop{aspect-ratio:16/5;}
+.crop-canvas-wrap.banner-crop{aspect-ratio:680/240;}
 /* Old aliases kept */
 .chat-input-box{background:transparent;border:none;border-radius:0;display:flex;flex-direction:column;gap:0;padding:0;transition:none;}
 .chat-input-box:focus-within{border-color:transparent;}
@@ -12125,7 +12125,7 @@ select:focus-visible {
 .fpp__banner{
   position:relative;
   width:100%;
-  aspect-ratio:680 / 235;
+  aspect-ratio:680 / 240;   /* the one banner shape — see FTZ_BANNER_W/H */
   overflow:hidden;
   /* Hard delimitation between banner and card body — a thin Main-
      tinted line + a soft glow under it. Reads as deliberate without
@@ -19160,3 +19160,150 @@ body.has-announce .main{padding-top:var(--ann-h);}
 .bm-boost svg{flex-shrink:0;}
 .ch-nopost{display:flex;align-items:center;justify-content:center;gap:9px;margin:0 16px 18px;padding:14px 18px;border:2px solid var(--border);border-radius:var(--radius-lg);background:var(--panel);color:var(--muted-light);font-size:13.5px;font-weight:600;}
 .ch-nopost svg{opacity:.55;flex-shrink:0;}
+
+/* The boost mark, tinted to its surroundings rather than baked one colour. */
+.ftz-boost-mask{display:inline-block;width:var(--sz,16px);height:var(--sz,16px);background:currentColor;-webkit-mask:url('/boost-logo.png') center/contain no-repeat;mask:url('/boost-logo.png') center/contain no-repeat;flex-shrink:0;vertical-align:middle;}
+.bm-boost{font-family:var(--font-display);letter-spacing:.06em;}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE TWO LADDERS (2026fix509) — Radiance rungs · boost badges · the Radiance
+   card.  Both ladders are named in Elder Futhark and both EVOLVE by colour,
+   because a rung has to read at 15px next to a name and hue is the only thing
+   that carries at that size.  Solid fills throughout: the tint is the mark's
+   own colour, never a halo behind it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* The badge a boosted bastion wears, immediately after the verified check. */
+.ftz-boost-badge{display:inline-flex;align-items:center;margin-left:3px;vertical-align:middle;flex-shrink:0;}
+
+/* A badge drawn from a mask instead of a PNG — the evolving ones, whose colour
+   is the rung.  Five colours off one file rather than five files. */
+.ftz-badge-mask{display:block;width:100%;height:100%;background:var(--bg-tint,currentColor);
+  -webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat;pointer-events:none;}
+.badge-tooltip-img.ftz-badge-mask{width:34px;height:34px;margin:0 auto 6px;}
+
+/* 🚫 The badge row's hover was a coloured drop-shadow — a glow, against the
+   standing rule, and it fired on every badge on every profile card.  The lift
+   is the whole interaction; the halo was never part of it. */
+.ftz-badge:hover{filter:none;}
+
+/* ── The Radiance card: activation, and every rung after it ── */
+.radact{max-width:520px;width:calc(100vw - 40px);padding:0;text-align:center;}
+.radact-head{padding:30px 30px 0;}
+.radact-eyebrow{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.16em;
+  color:var(--rad-pink,#ef5fb0);margin-bottom:9px;}
+.radact-title{font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--text);
+  letter-spacing:-.01em;margin-bottom:9px;}
+.radact-sub{font-size:13.5px;line-height:1.6;color:var(--muted-light);max-width:400px;margin:0 auto;}
+.radact-tier{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;
+  margin:18px 30px 0;padding:11px 16px;border:2px solid var(--border);border-radius:var(--radius-md);
+  background:color-mix(in srgb,var(--bg) 55%,transparent);}
+.radact-rune{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--rad-pink,#ef5fb0);letter-spacing:.05em;}
+.radact-tname{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text);}
+.radact-tblurb{font-size:12.5px;color:var(--muted-light);}
+.radact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:20px 30px 4px;}
+.radact-tile{display:flex;flex-direction:column;align-items:center;gap:7px;padding:14px 8px;
+  border:2px solid var(--border);border-radius:var(--radius-md);
+  background:color-mix(in srgb,var(--bg) 55%,transparent);
+  /* backwards, never both — `both` pins the last keyframe forever and would
+     swallow any hover the tiles ever get. */
+  animation:radactTileIn .42s cubic-bezier(.22,.9,.24,1) backwards;animation-delay:calc(var(--i) * 55ms);}
+.radact-tile img{width:44px;height:44px;object-fit:contain;pointer-events:none;}
+.radact-tile span{font-size:11.5px;font-weight:600;color:var(--muted-light);text-align:center;line-height:1.3;}
+@keyframes radactTileIn{from{opacity:0;transform:translateY(10px) scale(.94)}to{opacity:1;transform:none}}
+.radact-until{font-size:12.5px;color:var(--muted-light);padding:14px 30px 0;}
+.radact-until b{color:var(--text);}
+.radact-foot{margin-top:20px;}
+@media (max-width:520px){.radact-grid{grid-template-columns:repeat(2,1fr);}}
+
+/* The ladder, spelled out — the one place a rune says what it means. */
+.rad-ladder{max-width:620px;margin:18px auto 0;padding:16px 18px;border:2px solid var(--border);
+  border-radius:var(--radius-lg);background:color-mix(in srgb,var(--bg) 55%,transparent);text-align:left;}
+.rad-ladder-head{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:11px;}
+.rad-ladder-rune{font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:.05em;}
+.rad-ladder-name{font-family:var(--font-display);font-size:14.5px;font-weight:700;color:var(--text);}
+.rad-ladder-blurb{font-size:12.5px;color:var(--muted-light);}
+.rad-ladder-count{margin-left:auto;font-size:12px;color:var(--muted-light);font-variant-numeric:tabular-nums;}
+.rad-ladder-track{height:8px;border-radius:100px;background:color-mix(in srgb,var(--text) 10%,transparent);overflow:hidden;}
+.rad-ladder-fill{height:100%;border-radius:100px;transition:width .6s cubic-bezier(.22,.9,.24,1);}
+.rad-ladder-next{margin-top:9px;font-size:12.5px;color:var(--muted-light);}
+.rad-ladder-rungs{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;padding-top:11px;
+  border-top:1px solid var(--border);}
+.rad-ladder-rung{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:.05em;
+  color:color-mix(in srgb,var(--text) 26%,transparent);cursor:default;transition:color .2s;}
+.rad-ladder-rung.is-on{opacity:1;}
+@media (max-width:560px){.rad-ladder-count{margin-left:0;width:100%;}}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ONE NOTIFICATION BADGE (2026fix509)
+   ═══════════════════════════════════════════════════════════════════════════
+   Fortized had at least nine of these, and they disagreed on everything that
+   matters.  A channel with unread messages wore a YELLOW pill with black
+   digits; the same account's unread DM wore a yellow DOT; the topbar inbox wore
+   #ef4444; the rail wore #ff0033; the mobile tab wore var(--red).  Three
+   different colours for one meaning, and yellow is the brand accent — it is
+   supposed to say "this is where you are", not "somebody wants you".
+   From here there is one badge and it says one thing:
+     RED #ff0033, white inside.  A number 1-9+ when there is a count worth
+     showing, a plain white dot when there is only "something new".
+   ⚠️ 9+ is a CAP, not a truncation of meaning: past nine, the exact number
+   stops changing what you do about it.  (The staff console keeps 99+ — a
+   moderator genuinely needs 12 vs 400 in a queue.)
+   🚫 No glows.  Every one of these carried a coloured blur halo; they are all
+   gone.  The ring around a badge is a SOLID stroke in the surface behind it, so
+   the badge reads as punched out of the background rather than lit from within.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.ftz-nbadge,
+.nav-badge,
+.rail-notif-badge,
+.rail-mention-badge,
+.mobile-tab-item .mtb-badge,
+.ch-item-2027 .ch-unread-badge,
+.ch-item-2027 .ch-mention-badge,
+.fr-tab-badge,
+.dm-nav-qbadge,
+.dm-unread-badge{
+  position:absolute;
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:18px;height:18px;padding:0 5px;border-radius:100px;
+  background:#ff0033;color:#fff;
+  font-family:var(--font-display);font-size:10.5px;font-weight:800;line-height:1;
+  letter-spacing:0;text-align:center;
+  box-shadow:0 0 0 2.5px var(--ring,var(--sidebar));
+  /* The ring is the shadow, so any legacy border has to go or a badge wears two. */
+  border:none;animation:none;filter:none;transform:none;
+  z-index:3;pointer-events:none;flex-shrink:0;
+}
+/* The ones that sit in flow rather than pinned to a corner. */
+.fr-tab-badge,
+.dm-nav-qbadge--inline,
+.ch-item-2027 .ch-unread-badge,
+.ch-item-2027 .ch-mention-badge{position:static;margin-left:auto;box-shadow:none;}
+.fr-tab-badge{margin-left:6px;}
+.dm-nav-qbadge--inline{position:static;transform:none;margin-left:6px;box-shadow:none;}
+.nav-badge,.rail-notif-badge{top:-2px;right:-2px;--ring:var(--sidebar);}
+.rail-mention-badge{bottom:-3px;right:-5px;top:auto;--ring:var(--rail);}
+.mobile-tab-item .mtb-badge{top:2px;right:50%;transform:translateX(14px);--ring:var(--panel);}
+.dm-nav-qbadge{right:10px;top:50%;transform:translateY(-50%);--ring:var(--sidebar);}
+
+/* The dot form: "something new", no count.  Same red, white centre — so a dot
+   and a number are visibly the same object, one just has less to say. */
+.ftz-ndot,
+.friend-item.dmn.unread .dmn-unread,
+.np-unread-dot{
+  display:block;width:16px;height:16px;border-radius:50%;
+  background:#ff0033;box-shadow:none;filter:none;animation:none;
+  position:relative;flex-shrink:0;
+}
+.ftz-ndot::after,
+.friend-item.dmn.unread .dmn-unread::after,
+.np-unread-dot::after{
+  content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:6px;height:6px;border-radius:50%;background:#fff;
+}
+.np-unread-dot{position:absolute;top:50%;right:12px;transform:translateY(-50%);}
+.np-unread-dot::after{transform:translate(-50%,-50%);}
+
+/* The dot a count-badge renders when there is no number to show — same shape
+   as .ftz-ndot's centre, drawn inside the red pill. */
+.ftz-nbadge .ftz-nbadge-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#fff;}

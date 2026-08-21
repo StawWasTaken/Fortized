@@ -178,6 +178,23 @@ function _ftzMarkHTML(name, style) {
   if (!m) return '';
   return `<span class="ftz-mark" style="--ftz-mark:url('${m.src}');aspect-ratio:${m.ratio};${style || ''}" aria-hidden="true"></span>`;
 }
+// The controller mark has TWO colour states, and they are the whole reason it is
+// a colour overlay rather than a flat image:
+//   live  → green, because somebody is ACTUALLY playing something right now.
+//   plain → currentColor, so it takes the gray of the nav row or widget title it
+//           is decorating and never shouts over the label beside it.
+// Everything else about it is identical, so the two states can never drift.
+const _FTZ_PLAYING_GREEN = '#3ecf6e';
+function _controllerMark(size, live, extra) {
+  return _ftzMarkHTML('controller', `height:${size || 14}px;${live ? `color:${_FTZ_PLAYING_GREEN};` : ''}${extra || ''}`);
+}
+// The member-list "Playing X" subline. ⚠️ The dimming sits on the TEXT, not on
+// the whole line: these sublines used to be one `opacity:.6` wrapper, and
+// fading the mark with it turns the green into a washed-out sage. The mark
+// stays at full strength, the game name stays quiet.
+function _playingSublineHTML(name) {
+  return `<span style="font-size:11px;">${_controllerMark(11, true, 'vertical-align:-1px;')}<span style="opacity:.6;"> Playing ${escapeHTML(name || '')}</span></span>`;
+}
 
 // Shorthand icon helpers — Radiance & Onyx use PNG images (displayed inline like SVGs), Boost uses SVG
 function _onyxImg(size){const s=size||'18';return '<span class="icon-onyx" style="width:'+s+'px;height:'+s+'px;" aria-label="Onyx"></span>';}
@@ -8939,7 +8956,7 @@ function _invalidateDmSidebarCache() { _dmScrollCache = { sig: null, html: null,
 // One individual (not-in-a-game) Active Now entry.
 function _anItemHTML(u) {
   const activityText = u.gameActivity
-    ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.6;flex-shrink:0;"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg> Playing: ${escapeHTML(u.gameActivity)}`
+    ? `${_controllerMark(11, true, 'vertical-align:-1px;')} Playing: ${escapeHTML(u.gameActivity)}`
     : u.customStatus ? escapeHTML(u.customStatus) : escapeHTML(FtzStatus.label(u.status));
   return `<div class="active-now-item" onclick="viewUserProfile('${escapeHTML(u.username)}')">
     <div class="an-avatar" style="pointer-events:none;">
@@ -13265,6 +13282,138 @@ function renderUserRoleTags(username, bastionIdx) {
     }).join('') + '</div>';
 }
 
+// ── New members ──────────────────────────────────────────────────────
+// Somebody is "new" for their first week in a bastion. ⚠️ The WINDOW is the
+// whole mechanism — nothing has to remember to take the badge away, no field
+// has to be written a second time, and a bastion that goes quiet for a month
+// doesn't come back wearing a dozen of these.
+const _FTZ_NEW_MEMBER_DAYS = 7;
+// ⚠️ NO DATE MEANS NOT NEW, and that distinction is the whole safety of this.
+// `memberJoins` is only stamped when somebody joins, so every member who was
+// already in the bastion before that shipped has nothing recorded. Reading a
+// missing date as "just arrived" would badge the entire roster on day one.
+function _ftzNewMemberSince(username) {
+  try {
+    const joins = window._ftzBastionJoinCtx && window._ftzBastionJoinCtx.joins;
+    if (!joins) return null;
+    // memberJoins is keyed by norm(username) — always lowercase.
+    const iso = joins[String(username || '').toLowerCase()];
+    if (!iso) return null;
+    const t = new Date(iso).getTime();
+    if (!t || isNaN(t)) return null;
+    if (Date.now() - t > _FTZ_NEW_MEMBER_DAYS * 864e5) return null;
+    return iso;
+  } catch (_) { return null; }
+}
+// Sits beside a display name inside a bastion. Sized in the same 12-13px band
+// as the role pill and the staff badge so it can never change a row's height —
+// the member list is virtualised off fixed row heights.
+function _newMemberBadgeHTML(username, size) {
+  if (!_ftzNewMemberSince(username)) return '';
+  const u = escapeHTML(String(username || ''));
+  return `<button class="ftz-newmem" type="button" data-tip="New around here"
+    onclick="event.stopPropagation();_ftzNewMemberCard('${u}',this);">${_ftzMarkHTML('newmember', 'height:' + (size || 13) + 'px;')}</button>`;
+}
+
+// The card behind the badge. Portalled to <body> and placed like .ftz-tooltip,
+// because the badge lives inside the member list and the chat scroller, both of
+// which clip their own overflow — an absolutely positioned card would die at
+// their edge (the same trap the staff picker hit).
+function _ftzNewMemberCard(username, anchor) {
+  _ftzNewMemberCardClose();
+  const iso = _ftzNewMemberSince(username);
+  if (!iso || !anchor) return;
+  // Read the name off the DOM rather than fetching the profile: the label is
+  // already rendered right beside the badge, and this is a hot surface.
+  const row = anchor.closest('.msg-header, .ml-info, .ml-entry');
+  const label = row && row.querySelector('.msg-author, .ml-name');
+  const display = (label && label.textContent.trim()) || username;
+  const b = CU?.bastions?.[curBastion];
+  const place = b ? (b.name || 'this bastion') : 'the realm';
+  const mine = String(username || '').toLowerCase() === String(CU?.username || '').toLowerCase();
+
+  const card = document.createElement('div');
+  card.className = 'ftz-newmem-card';
+  card.innerHTML = `
+    <div class="ftz-newmem-art">${_ftzMarkHTML('newmember', 'height:34px;')}</div>
+    <div class="ftz-newmem-h">${mine ? 'Welcome in' : 'Say hi to ' + escapeHTML(display)}</div>
+    <div class="ftz-newmem-b">${mine
+      ? `You joined ${escapeHTML(place)} ${escapeHTML(formatTimeAgo(iso))}. This mark sits beside your name for your first week, so everyone knows you have just arrived.`
+      : `${escapeHTML(display)} joined ${escapeHTML(place)} ${escapeHTML(formatTimeAgo(iso))}. A welcome goes a long way.`}</div>
+    ${mine ? '' : `<button class="fs-btn fs-btn--primary ftz-newmem-cta" type="button">Wave hello</button>`}`;
+  document.body.appendChild(card);
+
+  const cta = card.querySelector('.ftz-newmem-cta');
+  if (cta) cta.onclick = () => { _ftzNewMemberWave(display); _ftzNewMemberCardClose(); };
+
+  // Place it above the badge, flipped below when there is no headroom, and
+  // clamped inside the viewport on the horizontal.
+  const r = anchor.getBoundingClientRect();
+  const cw = card.offsetWidth, chh = card.offsetHeight;
+  const below = r.top < chh + 16;
+  let left = r.left + r.width / 2 - cw / 2;
+  left = Math.max(10, Math.min(left, window.innerWidth - cw - 10));
+  card.style.left = left + 'px';
+  card.style.top = (below ? r.bottom + 10 : r.top - chh - 10) + 'px';
+  card.dataset.place = below ? 'bottom' : 'top';
+  card.style.setProperty('--arrow-x', (r.left + r.width / 2 - left) + 'px');
+  requestAnimationFrame(() => card.classList.add('visible'));
+
+  // Close on the next click anywhere outside, on scroll, or on Escape. The
+  // listeners go on in a later tick so the click that OPENED it doesn't
+  // immediately close it again.
+  setTimeout(() => {
+    window._ftzNewMemOutside = e => { if (!card.contains(e.target)) _ftzNewMemberCardClose(); };
+    window._ftzNewMemKey = e => { if (e.key === 'Escape') _ftzNewMemberCardClose(); };
+    document.addEventListener('mousedown', window._ftzNewMemOutside, true);
+    document.addEventListener('keydown', window._ftzNewMemKey, true);
+    window.addEventListener('scroll', _ftzNewMemberCardClose, true);
+  }, 0);
+  window._ftzNewMemCard = card;
+}
+// ⚠️ REQUIRED, not a nicety. `_ftzBastionJoinCtx` is filled by a promise that
+// renderMemberList deliberately does NOT await, so the first paint of both the
+// chat and the roster can happen before a single join date exists — without
+// this sweep, opening a bastion would show no badges until something else
+// forced a re-render. Injecting is safe: the badge is inline and sized inside
+// the existing line, so no row changes height and the virtualiser stays honest.
+function _ftzRefreshNewMemberBadges() {
+  if (curBastion === null) return;
+  try {
+    document.querySelectorAll('.msg-header .msg-author[data-author]').forEach(el => {
+      if (el.parentElement.querySelector('.ftz-newmem')) return;
+      const html = _newMemberBadgeHTML(el.dataset.author);
+      if (html) el.insertAdjacentHTML('afterend', html);
+    });
+    document.querySelectorAll('.ml-entry[data-member] .ml-badges').forEach(el => {
+      if (el.querySelector('.ftz-newmem')) return;
+      const html = _newMemberBadgeHTML(el.closest('.ml-entry').dataset.member, 12);
+      if (html) el.insertAdjacentHTML('afterbegin', html);
+    });
+  } catch (_) {}
+}
+
+function _ftzNewMemberCardClose() {
+  const c = window._ftzNewMemCard;
+  if (c && c.parentNode) c.parentNode.removeChild(c);
+  window._ftzNewMemCard = null;
+  if (window._ftzNewMemOutside) document.removeEventListener('mousedown', window._ftzNewMemOutside, true);
+  if (window._ftzNewMemKey) document.removeEventListener('keydown', window._ftzNewMemKey, true);
+  window.removeEventListener('scroll', _ftzNewMemberCardClose, true);
+  window._ftzNewMemOutside = null; window._ftzNewMemKey = null;
+}
+// ⚠️ Prefills the chatbar, it does NOT send. A button that fires a message into
+// a channel the moment you click it is a button people learn to fear.
+function _ftzNewMemberWave(display) {
+  const inp = document.getElementById('ch-input');
+  if (!inp) return;
+  const greeting = `Welcome, ${display}! 👋`;
+  inp.value = inp.value ? inp.value.replace(/\s*$/, ' ') + greeting : greeting;
+  inp.focus();
+  try { inp.dispatchEvent(new Event('input', { bubbles: true })); } catch (_) {}
+  try { inp.setSelectionRange(inp.value.length, inp.value.length); } catch (_) {}
+}
+
 function getMsgRoleTag(fromUser, context) {
   // Only show role tags in bastion channels, not DMs or GC
   if (context !== 'ch' && context !== 'channel') return '';
@@ -13841,6 +13990,7 @@ function appendMessage(container, msg, context, prevAuthor, skipSep) {
         ${fwdHTML}
         <div class="msg-header">
           <span class="msg-author" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;${roleColor?'color:'+roleColor+';':''}" data-author="${safeFrom}">${safeFrom}</span>
+          ${(context === 'ch' || context === 'channel') ? _newMemberBadgeHTML(msg.from) : ''}
           ${getMsgRoleTag(msg.from, context)}
           <span class="msg-timestamp${_msgTimeLiveClass(msg.timestamp)}" data-ts="${escapeHTML(String(msg.timestamp||''))}" data-tip="${escapeHTML(fullTime)}">·  ${time}</span>
         </div>
@@ -15138,6 +15288,9 @@ async function renderMemberList() {
   try {
     FortizedSocial.getGlobalBastion(b.globalId || b.name).then(g => {
       window._ftzBastionJoinCtx = { emblem: b.emblem || b.icon || (g && (g.emblem || g.icon)) || null, joins: (g && g.memberJoins) || {} };
+      // The join dates have only just landed — anything already painted was
+      // drawn without them.
+      try { _ftzRefreshNewMemberBadges(); } catch (_) {}
     }).catch(() => {});
   } catch (_) {}
 
@@ -15372,7 +15525,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
           if (ud.gameActivity?._spotify) {
             csEl.innerHTML = '<span style="opacity:.7;font-size:11px;color:#1DB954;">🎵 Listening to Spotify</span>';
           } else if (ud.gameActivity?.name) {
-            csEl.innerHTML = '<span style="opacity:.6;font-size:11px;">🎮 Playing ' + escapeHTML(ud.gameActivity.name) + '</span>';
+            csEl.innerHTML = _playingSublineHTML(ud.gameActivity.name);
           } else if (ud.customStatus) {
             csEl.textContent = typeof ud.customStatus === 'object' ? (ud.customStatus.emoji||'') + ' ' + (ud.customStatus.text||'') : ud.customStatus;
           }
@@ -15403,7 +15556,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
     <div class="ml-info" style="min-width:0;flex:1;">
       <div style="display:flex;align-items:center;gap:4px;">
         <div class="ml-name" style="color:${primaryRole?.color||'rgba(255,255,255,.55)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
-        <span class="ml-badges">${staffBadge}</span>
+        <span class="ml-badges">${_newMemberBadgeHTML(u, 12)}${staffBadge}</span>
       </div>
       <div class="ml-custom-status"></div>
     </div>
@@ -18352,7 +18505,7 @@ function initFortizedUXResilience() {
             if (isSpotifyAct) {
               el.innerHTML = '<span style="opacity:.7;font-size:11px;color:#1DB954;">🎵 Listening to Spotify</span>';
             } else {
-              el.innerHTML = '<span style="opacity:.6;font-size:11px;">🎮 Playing ' + escapeHTML(_actGame.name||'') + '</span>';
+              el.innerHTML = _playingSublineHTML(_actGame.name);
             }
           });
         } else if (!isOnline) {
@@ -18459,7 +18612,7 @@ function initFortizedUXResilience() {
             if (_primary?._spotify) {
               el.innerHTML = '<span style="opacity:.7;font-size:11px;color:#1DB954;">🎵 Listening to Spotify</span>';
             } else if (_primary?.name) {
-              el.innerHTML = '<span style="opacity:.6;font-size:11px;">🎮 Playing ' + escapeHTML(_primary.name) + '</span>';
+              el.innerHTML = _playingSublineHTML(_primary.name);
             } else {
               el.innerHTML = '';
             }
@@ -18467,7 +18620,7 @@ function initFortizedUXResilience() {
             const _isSp = !!data.gameActivity._spotify;
             el.innerHTML = _isSp
               ? '<span style="opacity:.7;font-size:11px;color:#1DB954;">🎵 Listening to Spotify</span>'
-              : '<span style="opacity:.6;font-size:11px;">🎮 Playing ' + escapeHTML(data.gameActivity.name) + '</span>';
+              : _playingSublineHTML(data.gameActivity.name);
           } else {
             el.innerHTML = '';
           }
@@ -25888,7 +26041,9 @@ function buildProfileNav(scroll, opts) {
     'palette':     _faIcon('palette'),
     'keyboard':    _faIcon('keyboard'),
     'language':    _faIcon('language'),
-    'gamepad':     _faIcon('gamepad'),
+    // ⚠️ This is the one the NAV row draws. _SETTINGS_TAB_META only feeds the
+    // page-header strip, so changing that alone leaves the nav on the old glyph.
+    'gamepad':     _ftzMarkHTML('controller', 'display:block;height:15px;'),
     'user-plus':   _faIcon('user-plus'),
     'circle-info': _faIcon('circle-info'),
     'logout':      _faIcon('logout'),
@@ -42246,7 +42401,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
     const accentBg = statusColor + '08';
     const accentBorder = statusColor + '20';
     html += `<div class="pw-widget" style="border-left:3px solid ${statusColor};padding:12px 14px;background:linear-gradient(90deg,${accentBg} 0%,transparent 100%);border-radius:12px;border:1px solid ${accentBorder};">
-      <div class="pw-widget-title" style="color:${statusColor};display:flex;align-items:center;gap:6px;margin-bottom:8px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${statusColor}" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg> <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Playing</span></div>
+      <div class="pw-widget-title" style="color:${statusColor};display:flex;align-items:center;gap:6px;margin-bottom:8px;">${_controllerMark(13, true)} <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Playing</span></div>
       <div style="display:flex;align-items:center;gap:12px;">
         ${cover ? `<img src="${escapeHTML(cover)}" style="width:56px;height:74px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1.5px solid ${statusColor}33;box-shadow:0 4px 12px rgba(0,0,0,.3);" onerror="this.style.display='none'">` : `<div style="width:56px;height:74px;border-radius:10px;background:linear-gradient(135deg,${statusColor}15,${statusColor}08);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;border:1.5px dashed ${statusColor}22;">${ga.icon||'🎮'}</div>`}
         <div style="flex:1;min-width:0;">

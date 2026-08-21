@@ -19354,3 +19354,41 @@ body.has-announce .main{padding-top:var(--ann-h);}
 .fpp-menu__send .ftz-mark{height:15px;}
 .rad-prow-svg{width:auto;}
 .rad-prow-svg .ftz-mark{height:17px;}
+
+/* ── NEW MEMBER BADGE (2026fix511) ────────────────────────────────────
+   Sits beside a display name inside a bastion for the member's first week.
+   ⚠️ Sized in the same 12-13px band as the role pill and the staff badge, and
+   given NO vertical padding beyond the line it sits on: the member list is
+   virtualised off fixed row heights, so a badge that grows a row breaks the
+   scroll maths. */
+.ftz-newmem{display:inline-flex;align-items:center;justify-content:center;
+  flex-shrink:0;padding:0;margin:0 1px;border:0;background:none;cursor:pointer;
+  color:var(--muted-light,#b3b2b4);line-height:0;opacity:.85;
+  transition:color .14s var(--ease-out,ease),opacity .14s,transform .14s;}
+.ftz-newmem:hover{color:var(--accent);opacity:1;transform:translateY(-1px);}
+.ftz-newmem:active{transform:translateY(0);}
+
+/* The card. Portalled to <body> and placed like .ftz-tooltip, because both
+   surfaces that host the badge clip their own overflow. */
+.ftz-newmem-card{position:fixed;left:0;top:0;z-index:var(--z-max);width:262px;
+  background:var(--panel);border:2px solid var(--border);
+  border-radius:var(--radius-lg,20px);padding:16px 16px 14px;
+  box-shadow:0 14px 40px rgba(0,0,0,.5);text-align:center;
+  opacity:0;transform:translateY(4px) scale(.985);
+  transition:opacity .14s,transform .14s var(--ease-out,ease);}
+.ftz-newmem-card.visible{opacity:1;transform:translateY(0) scale(1);}
+.ftz-newmem-art{color:var(--accent);line-height:0;margin-bottom:9px;}
+.ftz-newmem-h{font-family:var(--font-display,inherit);font-weight:700;
+  font-size:15px;color:var(--text);margin-bottom:5px;}
+.ftz-newmem-b{font-size:12.5px;line-height:1.5;color:var(--muted-light,#b3b2b4);}
+.ftz-newmem-cta{margin-top:13px;width:100%;}
+/* Same rotated-square tail as .ftz-tooltip. ⚠️ It carries the card's own 2px
+   stroke on the two edges that face out, or it reads as a chip floating loose
+   under the card. */
+.ftz-newmem-card::after{content:'';position:absolute;width:11px;height:11px;
+  background:var(--panel);left:var(--arrow-x,50%);margin-left:-5.5px;
+  transform:rotate(45deg);}
+.ftz-newmem-card[data-place="top"]::after{bottom:-7px;
+  border-right:2px solid var(--border);border-bottom:2px solid var(--border);}
+.ftz-newmem-card[data-place="bottom"]::after{top:-7px;
+  border-left:2px solid var(--border);border-top:2px solid var(--border);}

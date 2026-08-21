@@ -20,9 +20,51 @@ it to be before building.**
 
 ## 🟢 SHIPPED — Rounds 13-18 (`2026fix505`→`512`, branch `claude/ui-polish-redesigns-xf43er`)
 
-### 🏰 BASTION REWORK — plan + phases 1, 2a and 2b are IN
+### 🏰 BASTION REWORK — plan + phases 1, 2a, 2b and 2c are IN
 Full plan: **`docs/bastion-redesign.md`** (revised after the user's precisions).
-Phasing table is §4; **phases 1, 2a and 2b are shipped, phase 2c is next.**
+Phasing table is §4; **phases 1, 2a, 2b and 2c are shipped, phase 3 is next.**
+
+#### `513` — phase 2c: THE CHANNEL EDITOR, and per-channel overrides
+Phase 2a gave `ch.overrides` a resolver (`_bstCan`) but **no way to author one**.
+A channel now takes over the Channels tab's pane exactly the way a role takes
+over the Roles tab's — same sub-page shape, `.bstc-*` riding on `.bstr-*` so it
+only adds what a channel has that a role does not: the type glyph, the category
+groups, and the three-state override control.
+- **Three override subjects, one key space**: `@everyone` · a `roleId` · a
+  `user:<name>`. `_bstCan` resolves them in that order, so a member override is
+  the last word. Each is `{allow:[], deny:[]}` and the UI is **tri-state** —
+  deny / leave it to the roles / allow. ⚠️ **Neutral is the REST state and must
+  read as one**: colour lands only on the button that is actually on, so a
+  permission nobody has touched never looks decided.
+- ⚠️ **AN EMPTY OVERRIDE IS DEBRIS.** `_bstCan` reads every key it finds, and a
+  subject holding two empty arrays says nothing while still riding along in
+  every bastion sync, forever. `_bstChSave` drops them before writing.
+- ⚠️ **It's `ch.desc`, NOT `ch.topic`.** The rail, the topbar and the channel
+  header all read `desc`; writing `topic` would save cleanly and show nowhere.
+- ⚠️ **The member picker searches in-memory `b.members`, NOT `_stfPicker`** —
+  same rule as phase 2b: `_stfPicker` resolves people through `getUsers()`, a
+  scan of the whole users table, and this list only needs people already here.
+- **`_editChannelInline` is retired** — it only ever renamed a channel, so the
+  rail's "Edit Channel" and the settings card disagreed about what a channel
+  even is. It now routes through `_bstChEditFromRail(idx)` → `openBastionSettings
+  ('channels')` → `_bstChOpen(idx)`. **One editor, one truth.**
+- ⚠️ **`deleteChannel` ALREADY CONFIRMS**, so wrapping it double-prompted.
+  `_bstChDelete` owns its own confirm/splice/save/socket-emit/sidebar-repaint —
+  which also gained the emit and the repaint `deleteChannel` never had.
+- The three glyphs (`_BSTC_LOCK`/`_BSTC_X`/`_BSTC_SLASH`) are **inline SVG, not
+  FA classes** — FontAwesome is a CDN dependency and these are load-bearing.
+  ⚠️ They're read at call time inside template literals, so `node --check` is
+  blind to a missing one; the failure is a runtime `ReferenceError` the moment
+  the Permissions tab draws.
+- **Channel GUIDELINES are deliberately NOT here** — no `guidelines` field
+  exists, and dead data rides along in every bastion sync. Deferred to the
+  channel-types pass.
+- The honest limit is repeated verbatim from `_bstRolePermsHTML`: these switches
+  decide what the app draws and does; **no copy calls a channel private or
+  secure** until passwords are hashed and RLS is on for `users`.
+- **CSS baseline for next session: `app/styles.css` parses to 9,979 rules**
+  (9,939 + 40 `.bstc-*`). Verified by reparse over a local server — **count them
+  after any block append.**
 
 #### `512` — phase 2b: THE ROLE EDITOR, rebuilt as a Guilded sub-page
 The old editor was a `.modal wide tall` (`#modal-role-editor`) stacked over the

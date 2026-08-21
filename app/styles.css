@@ -19512,3 +19512,82 @@ body.has-announce .main{padding-top:var(--ann-h);}
 
 /* No glow. A toggle reads as on because it is filled, not because it halos. */
 .toggle.on{box-shadow:none;}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   BASTION CHANNELS — the Guilded editor (2026fix513)
+   Phase 2c. A channel is a SUB-PAGE of the Channels tab, exactly the way a
+   role is a sub-page of the Roles tab, so this block only adds what a
+   channel has that a role does not: the type glyph, the category groups,
+   and the three-state override control. Everything else is .bstr-*.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── the list ── */
+.bstc-add{margin-bottom:6px;}
+.bstc-row{gap:11px;}
+.bstc-glyph{display:inline-flex;align-items:center;justify-content:center;
+  color:var(--muted);flex:0 0 auto;}
+.bstc-glyph svg{display:block;}
+.bstc-name{flex:1;min-width:0;}
+.bstc-pill{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;
+  padding:3px 9px;border-radius:100px;font-family:var(--font-display);
+  font-weight:600;font-size:10px;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--muted);background:color-mix(in srgb,var(--text) 8%,transparent);}
+.bstc-pill--nsfw{color:#ff5c5c;background:color-mix(in srgb,#ff5c5c 14%,transparent);}
+.bstc-pill--ov{padding:4px 7px;}
+.bstc-pill--ov svg{height:11px;width:auto;display:block;}
+
+/* ── categories ── */
+.bstc-cat{margin-bottom:22px;}
+.bstc-cathead{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.bstc-catname{flex:1;min-width:0;font-family:var(--font-display);font-weight:600;
+  font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bstc-catb{padding:5px 12px!important;font-size:12px!important;flex:0 0 auto;}
+.bstc-catb--del{color:#ff5c5c!important;}
+.bstc-catempty{padding:14px;font-size:13px;color:var(--muted);
+  border:2px dashed var(--border);border-radius:var(--radius-md);}
+
+/* ── the editor ── */
+.bstc-headglyph{color:var(--muted);}
+.bstc-headglyph svg{display:block;}
+.bstc-ta{resize:vertical;min-height:78px;line-height:1.6;}
+.bstc-typechip{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;
+  background:var(--panel);border:2px solid var(--border);border-radius:var(--radius-md);}
+.bstc-typechip b{font-family:var(--font-display);font-weight:600;font-size:14px;
+  color:var(--text);display:block;}
+.bstc-typed{display:block;font-size:12px;color:var(--muted);line-height:1.5;margin-top:2px;}
+.bstc-typechip .bstc-glyph{margin-top:2px;}
+
+/* ── who you are editing ── */
+.bstc-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
+.bstc-chip{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;
+  background:var(--panel);border:2px solid var(--border);border-radius:100px;
+  cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:13px;
+  color:var(--muted);transition:transform .16s var(--ease-out),border-color .16s,color .16s;}
+.bstc-chip:hover{transform:translateY(-1px);color:var(--text);}
+.bstc-chip.on{color:var(--text);border-color:var(--accent);}
+.bstc-chip .bstr-mark{width:18px;height:18px;}
+.bstc-subhead{display:flex;align-items:center;gap:10px;margin:22px 0 10px;
+  font-size:13px;color:var(--muted);}
+.bstc-subhead b{color:var(--text);font-weight:600;}
+.bstc-subhead span:first-child{flex:1;min-width:0;}
+.bstc-drop{padding:5px 12px!important;font-size:12px!important;color:#ff5c5c!important;}
+
+/* ── the three-state override control ──
+   Deny / leave it to the roles / allow. Neutral is the rest state and reads
+   as one, so a row you have not touched never looks decided. Colour lands
+   only on the button that is actually on. */
+.bstc-perm{display:flex;align-items:center;gap:14px;padding:12px 0;
+  border-bottom:1px solid var(--border);}
+.bstc-perm:last-child{border-bottom:0;}
+.bstc-tri{display:inline-flex;gap:4px;padding:4px;flex:0 0 auto;
+  background:var(--panel);border:2px solid var(--border);border-radius:var(--radius-md);}
+.bstc-tri-b{display:inline-flex;align-items:center;justify-content:center;
+  width:34px;height:28px;padding:0;background:none;border:0;cursor:pointer;
+  border-radius:calc(var(--radius-md) - 5px);color:var(--muted);
+  transition:background .16s,color .16s;}
+.bstc-tri-b svg{height:12px;width:auto;display:block;}
+.bstc-tri-b:hover{color:var(--text);background:color-mix(in srgb,var(--text) 8%,transparent);}
+.bstc-tri-b.is-deny.on{background:#ff5c5c;color:#13161d;}
+.bstc-tri-b.is-neutral.on{background:color-mix(in srgb,var(--text) 16%,transparent);color:var(--text);}
+.bstc-tri-b.is-allow.on{background:#3ecf6e;color:#13161d;}

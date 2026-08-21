@@ -1355,6 +1355,12 @@ let _bstRoleTab = 'display';
 let _bstRoleQ = '';
 let _bstRoleMemberQ = '';
 let _bstRoleDragFrom = -1;
+let _bstChDraft = null;
+let _bstChIdx = -1;          // index into b.channels
+let _bstChTab = 'overview';
+let _bstChQ = '';            // permission search inside the channel editor
+let _bstChSubject = '@everyone';
+let _bstChMemberQ = '';
 let cbVisibility = 'public';
 let cbSelectedEmoji = null;
 let cbIconData = null;
@@ -21291,48 +21297,11 @@ function renderBSettingsMain(tab) {
       `;
   }
   else if (tab==='channels') {
-    const cats = b.categories||[];
-    const uncatChs = (b.channels||[]).filter(ch=>!ch.categoryId);
-    const catHTML = cats.map((cat,ci)=>{
-      const catChs = (b.channels||[]).filter(ch=>ch.categoryId===cat.id);
-      return `<div style="margin-bottom:16px;">
-        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;">
-          <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);flex:1;">${escapeHTML(cat.name)}</span>
-          <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="addChannelToCategory('${cat.id}')">+ Channel</button>
-          <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="renameCategory('${cat.id}')">✏️</button>
-          <button class="btn-d" style="font-size:11px;padding:3px 8px;" onclick="deleteCategory('${cat.id}')">✕</button>
-        </div>
-        ${catChs.map((ch,i)=>{const realIdx=(b.channels||[]).indexOf(ch);return `
-          <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;margin-left:12px;">
-            <span style="color:var(--muted);display:flex;align-items:center;" data-tip="${_chType(ch.type).label}">${_chTypeGlyph(ch.type,14)}</span>
-            <span style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(ch.name)}</span>
-            ${ch.focusMode?'<span class="focus-mode-badge">🧭 FOCUS</span>':''}
-            ${ch.nsfw?'<span style="font-size:9px;background:rgba(255, 0, 51,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
-            ${ch.type!=='voice'?`<button class="btn-g" style="padding:4px 9px;font-size:11px;" onclick="toggleChannelFocusMode(${realIdx})">${ch.focusMode?'Unfocus':'🧭 Focus'}</button>`:''}
-            <button class="btn-g" style="padding:4px 9px;font-size:11px;" onclick="toggleNSFW(${realIdx})">${ch.nsfw?'SFW':'NSFW'}</button>
-            <button class="btn-d" style="padding:4px 9px;font-size:11px;" onclick="deleteChannel(${realIdx})">✕</button>
-          </div>`;}).join('')}
-      </div>`;
-    }).join('');
-    const uncatHTML = uncatChs.map(ch=>{const realIdx=(b.channels||[]).indexOf(ch);return `
-      <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;">
-        <span style="color:var(--muted);display:flex;align-items:center;" data-tip="${_chType(ch.type).label}">${_chTypeGlyph(ch.type,14)}</span>
-        <span style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(ch.name)}</span>
-        ${ch.focusMode?'<span class="focus-mode-badge">🧭 FOCUS</span>':''}
-        ${ch.nsfw?'<span style="font-size:9px;background:rgba(255, 0, 51,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
-        ${ch.type!=='voice'?`<button class="btn-g" style="padding:4px 9px;font-size:11px;" onclick="toggleChannelFocusMode(${realIdx})">${ch.focusMode?'Unfocus':'🧭 Focus'}</button>`:''}
-        <button class="btn-g" style="padding:4px 9px;font-size:11px;" onclick="toggleNSFW(${realIdx})">${ch.nsfw?'SFW':'NSFW'}</button>
-        <button class="btn-d" style="padding:4px 9px;font-size:11px;" onclick="deleteChannel(${realIdx})">✕</button>
-      </div>`;}).join('');
-    main.innerHTML = `
-      <div class="bs-section-title">Channels</div>
-      <div class="bs-section-desc">Create and manage your bastion's channels and categories.</div>
-      <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
-        <button class="btn-g" onclick="addCategoryPrompt()" style="font-size:13px;">+ Category</button>
-        <button class="btn-a" onclick="addChannel(curBastion,null,null)" style="font-size:13px;">+ Channel</button>
-      </div>
-      ${catHTML}
-      ${uncatHTML||(!cats.length?'<div style="color:var(--muted);font-size:13.5px;text-align:center;padding:20px;">No channels yet. Create some above!</div>':'')}`;
+    // A channel being edited takes over the whole pane, exactly like a role.
+    // The nav above still reads "Channels", so this is a sub-page of the tab
+    // rather than a modal stacked on top of the settings card.
+    if (_bstChDraft) { _bstChRender(); return; }
+    main.innerHTML = _bstChannelsListHTML(b);
   }
   else if (tab==='roles') {
     // A role being edited takes over the whole pane. The nav above stays on
@@ -23942,6 +23911,13 @@ const _BSTR_GRIP = '<svg viewBox="0 0 320 512" fill="currentColor" aria-hidden="
 const _BSTR_CHEV = '<svg viewBox="0 0 320 512" fill="currentColor" aria-hidden="true"><path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg>';
 const _BSTR_CHEVL = '<svg viewBox="0 0 320 512" fill="currentColor" aria-hidden="true"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"/></svg>';
 const _BSTR_TICK = '<svg viewBox="0 0 448 512" fill="currentColor" aria-hidden="true"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
+// The three states a channel override can be in, plus the lock that marks a
+// channel carrying any override at all. Inline rather than FontAwesome classes
+// for the same reason the close button is: the sheet is a CDN dependency and
+// a permission control that silently draws nothing is worse than an ugly one.
+const _BSTC_LOCK = '<svg viewBox="0 0 448 512" fill="currentColor" aria-hidden="true"><path d="M144 144l0 48 160 0 0-48c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192l0-48C80 64.5 144.5 0 224 0s144 64.5 144 144l0 48 16 0c35.3 0 64 28.7 64 64l0 192c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 256c0-35.3 28.7-64 64-64l16 0z"/></svg>';
+const _BSTC_X = '<svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg>';
+const _BSTC_SLASH = '<svg viewBox="0 0 448 512" fill="currentColor" aria-hidden="true"><path d="M432 256c0 17.7-14.3 32-32 32L48 288c-17.7 0-32-14.3-32-32s14.3-32 32-32l352 0c17.7 0 32 14.3 32 32z"/></svg>';
 
 function _bstRoleMemberCount(b, roleId) {
   return Object.values((b && b.memberRoles) || {}).filter(ids => (ids || []).includes(roleId)).length;
@@ -24373,6 +24349,388 @@ async function _bstRoleDrop(e, i) {
   FortizedSocial.socketEmit('bastion:update', { bastionId: b.globalId, field: 'roles' });
   renderBSettingsMain('roles');
   try { renderMemberList(); } catch (_) {}
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CHANNELS — the list, and the channel as a sub-page (phase 2c)
+
+   Phase 2a shipped the resolver: `ch.overrides = { subject: {allow:[],deny:[]} }`
+   read by `_bstCan`, with precedence @everyone → every role's denies → every
+   role's allows → the individual member. It has had exactly one reader and no
+   writer since. This is the writer.
+
+   ⚠️ A CHANNEL IS HIDDEN, NOT PRIVATE. These switches decide what the app draws
+   and what it will do. Until passwords are hashed and RLS is on for `users`,
+   the table can be read directly with the shipped anon key, so no copy in here
+   may call a channel or a permission private or secure.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+// The subject keys a channel actually carries an override for. Roles and
+// @everyone are always offered whether or not a row exists yet; a person only
+// appears once somebody has given them one.
+function _bstChPeopleSubjects(ch) {
+  return Object.keys((ch && ch.overrides) || {}).filter(k => k.indexOf('user:') === 0);
+}
+function _bstChSubjectLabel(b, key) {
+  if (key === '@everyone') return '@everyone';
+  if (key.indexOf('user:') === 0) return key.slice(5);
+  const r = ((b && b.roles) || []).find(x => x && x.id === key);
+  return r ? r.name : key;
+}
+// A channel with any override at all gets a mark in the list, because "why can
+// nobody post in here" is otherwise invisible from outside the editor.
+function _bstChHasOverrides(ch) {
+  const ov = (ch && ch.overrides) || {};
+  return Object.keys(ov).some(k => ((ov[k] || {}).allow || []).length || ((ov[k] || {}).deny || []).length);
+}
+
+function _bstChRowHTML(b, ch, realIdx, nested) {
+  const t = _chType(ch.type);
+  return `<div class="bstr-row bstc-row${nested ? ' bstc-row--in' : ''}" role="button" tabindex="0"
+      onclick="_bstChOpen(${realIdx})"
+      onkeydown="if(event.key==='Enter'){_bstChOpen(${realIdx})}">
+    <span class="bstc-glyph" data-tip="${escapeHTML(t.label)}">${_chTypeGlyph(ch.type, 15)}</span>
+    <span class="bstr-rname bstc-name">${escapeHTML(ch.name)}</span>
+    ${ch.focusMode ? '<span class="bstc-pill">Focus</span>' : ''}
+    ${ch.nsfw ? '<span class="bstc-pill bstc-pill--nsfw">NSFW</span>' : ''}
+    ${_bstChHasOverrides(ch) ? `<span class="bstc-pill bstc-pill--ov" data-tip="This channel has permission overrides">${_BSTC_LOCK}</span>` : ''}
+    <span class="bstr-count">${escapeHTML(t.label)}</span>
+    <span class="bstr-chev">${_BSTR_CHEV}</span>
+  </div>`;
+}
+
+function _bstChannelsListHTML(b) {
+  const chs = b.channels || [];
+  const cats = b.categories || [];
+  const cat = cats.map(c => {
+    const inside = chs.filter(ch => ch.categoryId === c.id);
+    return `<div class="bstc-cat">
+      <div class="bstc-cathead">
+        <span class="bstc-catname">${escapeHTML(c.name)}</span>
+        <button class="fs-btn bstc-catb" onclick="addChannelToCategory('${escapeHTML(c.id)}')">+ Channel</button>
+        <button class="fs-btn bstc-catb" onclick="renameCategory('${escapeHTML(c.id)}')">Rename</button>
+        <button class="fs-btn bstc-catb bstc-catb--del" onclick="deleteCategory('${escapeHTML(c.id)}')">Delete</button>
+      </div>
+      ${inside.length
+        ? `<div class="bstr-list">${inside.map(ch => _bstChRowHTML(b, ch, chs.indexOf(ch), true)).join('')}</div>`
+        : '<div class="bstc-catempty">Nothing in this category yet.</div>'}
+    </div>`;
+  }).join('');
+
+  const loose = chs.filter(ch => !ch.categoryId);
+  const looseHTML = loose.length
+    ? `${cats.length ? '<div class="bstr-pghead">Not in a category</div>' : ''}
+       <div class="bstr-list">${loose.map(ch => _bstChRowHTML(b, ch, chs.indexOf(ch), false)).join('')}</div>`
+    : '';
+
+  return `
+    <div class="bs-section-title">Channels</div>
+    <div class="bs-section-desc">Every room in this bastion. Open one to rename it, describe it, move it, or decide who can do what in it.</div>
+    <div class="bstc-add">
+      <button class="fs-btn fs-btn--primary" onclick="addChannel(curBastion,null,null)">+ Add a channel</button>
+      <button class="fs-btn" onclick="addCategoryPrompt()">+ Add a category</button>
+    </div>
+    ${cat}${looseHTML}
+    ${(!chs.length && !cats.length) ? '<div class="nm-empty">No channels yet. Add the first one above.</div>' : ''}`;
+}
+
+function _bstChOpen(idx) {
+  const b = CU && CU.bastions && CU.bastions[curBastion];
+  const ch = b && (b.channels || [])[idx];
+  if (!ch) return;
+  _bstChDraft = JSON.parse(JSON.stringify(ch));
+  _bstChDraft.overrides = _bstChDraft.overrides || {};
+  _bstChIdx = idx;
+  _bstChTab = 'overview';
+  _bstChQ = ''; _bstChMemberQ = ''; _bstChSubject = '@everyone';
+  _bstChRender();
+}
+function _bstChBack() {
+  _bstChDraft = null; _bstChIdx = -1;
+  renderBSettingsMain('channels');
+}
+function _bstChSetTab(t) { _bstChTab = t; _bstChRender(); }
+
+function _bstChRender() {
+  const b = CU && CU.bastions && CU.bastions[curBastion];
+  const d = _bstChDraft;
+  const main = document.getElementById('bs-settings-main');
+  if (!b || !d || !main) return;
+  const t = _chType(d.type);
+  const body = _bstChTab === 'permissions' ? _bstChPermsHTML(b, d) : _bstChOverviewHTML(b, d);
+  main.innerHTML = `
+    <button class="bstr-back" onclick="_bstChBack()">${_BSTR_CHEVL}<span>Channels</span></button>
+    <div class="bstr-edithead">
+      <span class="bstr-mark bstr-mark--lg bstc-headglyph">${_chTypeGlyph(d.type, 22)}</span>
+      <div class="bs-section-title bstr-title" id="bstc-preview-name">${escapeHTML(d.name || '')}</div>
+    </div>
+    <div class="bs-section-desc">${escapeHTML(t.label)} channel · ${escapeHTML(t.desc)}</div>
+    <div class="bstr-tabs">
+      <button class="bstr-tab${_bstChTab === 'overview' ? ' on' : ''}" onclick="_bstChSetTab('overview')">Overview</button>
+      <button class="bstr-tab${_bstChTab === 'permissions' ? ' on' : ''}" onclick="_bstChSetTab('permissions')">Permissions</button>
+    </div>
+    <div class="bstr-body">${body}</div>
+    <div class="bstr-foot">
+      <button class="fs-btn bstr-del" onclick="_bstChDelete()">Delete channel</button>
+      <span class="bstr-spacer"></span>
+      <button class="fs-btn" onclick="_bstChBack()">Cancel</button>
+      <button class="fs-btn fs-btn--primary" onclick="_bstChSave()">Save</button>
+    </div>`;
+}
+
+function _bstChSetField(k, v, quiet) {
+  if (!_bstChDraft) return;
+  _bstChDraft[k] = v;
+  if (!quiet) _bstChRender();
+}
+function _bstChToggle(k, el) {
+  const d = _bstChDraft; if (!d) return;
+  const on = !d[k];
+  d[k] = on;
+  el.classList.toggle('on', on);
+  el.setAttribute('aria-checked', on ? 'true' : 'false');
+}
+// The header name follows the field without repainting the pane, so the caret
+// stays where the person left it.
+function _bstChSyncPreview() {
+  const el = document.getElementById('bstc-preview-name');
+  if (el && _bstChDraft) el.textContent = _bstChDraft.name || '';
+}
+
+function _bstChOverviewHTML(b, d) {
+  const tog = (key, label, desc) => `<div class="bstr-opt">
+    <div class="bstr-opt-txt"><div class="bstr-opt-l">${label}</div><div class="bstr-opt-d">${desc}</div></div>
+    <div class="toggle ${d[key] ? 'on' : ''}" role="switch" aria-checked="${d[key] ? 'true' : 'false'}" tabindex="0"
+      onclick="_bstChToggle('${key}',this)"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();_bstChToggle('${key}',this)}"></div>
+  </div>`;
+  const cats = b.categories || [];
+  const catOpts = [{ value: '', label: 'No category' }].concat(cats.map(c => ({ value: c.id, label: c.name })));
+  const t = _chType(d.type);
+
+  return `
+    <label class="bstr-lb" for="bstc-name">Channel name</label>
+    <input class="settings-input" id="bstc-name" maxlength="40" value="${escapeHTML(d.name || '')}"
+      oninput="_bstChSetField('name',this.value,true);_bstChSyncPreview()" placeholder="general">
+    <div class="bstr-hint">Spaces become dashes and capitals are dropped, the way channel names work everywhere else.</div>
+
+    <label class="bstr-lb" for="bstc-desc">Description</label>
+    <textarea class="settings-input bstc-ta" id="bstc-desc" maxlength="300" rows="3"
+      oninput="_bstChSetField('desc',this.value,true)"
+      placeholder="What this channel is for.">${escapeHTML(d.desc || '')}</textarea>
+    <div class="bstr-hint">Shown at the top of the channel and beside it in Browse Channels.</div>
+
+    <label class="bstr-lb">Category</label>
+    ${_ftzSelectHTML('bstc-cat', d.categoryId || '', catOpts, '_bstChSetField("categoryId",__VALUE__||null,true)')}
+
+    <label class="bstr-lb">Type</label>
+    <div class="bstc-typechip"><span class="bstc-glyph">${_chTypeGlyph(d.type, 15)}</span>
+      <span><b>${escapeHTML(t.label)}</b><span class="bstc-typed">${escapeHTML(t.desc)}</span></span></div>
+    <div class="bstr-hint">A channel keeps the type it was made with. Its messages are stored the way that type reads them.</div>
+
+    <label class="bstr-lb">Behaviour</label>
+    ${d.type !== 'voice' ? tog('focusMode', 'Focus mode', 'One conversation at a time. Replies and side chatter get held back.') : ''}
+    ${tog('nsfw', 'Age restricted', 'Only members old enough for it can open this channel.')}`;
+}
+
+/* ── Permissions ──────────────────────────────────────────────────────────── */
+
+// null = neutral (inherit whatever the roles decided), true = allow, false = deny.
+function _bstChState(d, subject, perm) {
+  const o = (d.overrides || {})[subject] || {};
+  if ((o.deny || []).includes(perm)) return false;
+  if ((o.allow || []).includes(perm)) return true;
+  return null;
+}
+function _bstChSetState(subject, perm, state, el) {
+  const d = _bstChDraft; if (!d) return;
+  d.overrides = d.overrides || {};
+  const o = d.overrides[subject] = d.overrides[subject] || { allow: [], deny: [] };
+  o.allow = (o.allow || []).filter(p => p !== perm);
+  o.deny = (o.deny || []).filter(p => p !== perm);
+  if (state === true) o.allow.push(perm);
+  else if (state === false) o.deny.push(perm);
+  const row = el && el.closest('.bstc-perm');
+  if (row) row.querySelectorAll('.bstc-tri-b').forEach(btn => {
+    btn.classList.toggle('on', btn.dataset.state === String(state));
+  });
+  // Hiding the channel changes what the rest of the row even means, so that one
+  // repaints the list rather than sitting there quietly contradicting itself.
+  if (perm === 'view_channel') _bstChPermSearch(_bstChQ);
+}
+
+function _bstChSubjectsHTML(b, d) {
+  const people = _bstChPeopleSubjects(d);
+  const chip = (key, label, mark) => `<button class="bstc-chip${_bstChSubject === key ? ' on' : ''}"
+      onclick="_bstChSetSubject('${escapeHTML(key)}')">${mark || ''}<span>${escapeHTML(label)}</span></button>`;
+  const roles = _bstRolesOrdered(b).map(r =>
+    chip(r.id, r.name, `<span class="bstr-mark">${_bstRoleIconHTML(r, 14, b) || `<span class="bstr-dot" style="background:${r.color || '#60a5fa'};"></span>`}</span>`)).join('');
+  return `<div class="bstc-chips">
+    ${chip('@everyone', '@everyone')}
+    ${roles}
+    ${people.map(k => chip(k, k.slice(5), `<span class="bstr-mark">${buildAvatarHTML(_pfpCache && _pfpCache[k.slice(5)], k.slice(5), 16)}</span>`)).join('')}
+  </div>`;
+}
+function _bstChSetSubject(key) { _bstChSubject = key; _bstChRender(); }
+
+function _bstChPermBodyHTML(b, d) {
+  const q = (_bstChQ || '').trim().toLowerCase();
+  const subject = _bstChSubject;
+  let out = '';
+  PERM_GROUPS.forEach(group => {
+    const list = PERMISSIONS.filter(p => _FTZ_CH_PERMS.has(p[0]) && p[2] === group &&
+      (!q || p[1].toLowerCase().includes(q) || String(p[3] || '').toLowerCase().includes(q)));
+    if (!list.length) return;
+    out += `<div class="bstr-pg"><div class="bstr-pghead">${escapeHTML(group)}</div>` + list.map(p => {
+      const st = _bstChState(d, subject, p[0]);
+      const b3 = (val, label, cls) => `<button class="bstc-tri-b ${cls}${st === val ? ' on' : ''}" data-state="${val}"
+        data-tip="${label}" aria-label="${label}"
+        onclick="_bstChSetState('${escapeHTML(subject)}','${p[0]}',${val === null ? 'null' : val},this)">${
+          val === false ? _BSTC_X : val === true ? _BSTR_TICK : _BSTC_SLASH}</button>`;
+      return `<div class="bstc-perm">
+        <div class="bstr-perm-txt"><div class="bstr-perm-l">${escapeHTML(p[1])}</div><div class="bstr-perm-d">${escapeHTML(p[3] || '')}</div></div>
+        <div class="bstc-tri">${b3(false, 'Deny', 'is-deny')}${b3(null, 'Leave it to the roles', 'is-neutral')}${b3(true, 'Allow', 'is-allow')}</div>
+      </div>`;
+    }).join('') + '</div>';
+  });
+  if (!out) out = `<div class="nm-empty">Nothing matches "${escapeHTML(_bstChQ)}".</div>`;
+  if (_bstChState(d, subject, 'view_channel') === false)
+    out = `<div class="bstr-warn">View Channels is denied here, so ${escapeHTML(_bstChSubjectLabel(b, subject))} will not see this channel at all. The rest of these switches will not matter to them.</div>` + out;
+  return out;
+}
+function _bstChPermSearch(v) {
+  _bstChQ = v;
+  const el = document.getElementById('bstc-permbody');
+  const b = CU && CU.bastions && CU.bastions[curBastion];
+  if (el && b && _bstChDraft) el.innerHTML = _bstChPermBodyHTML(b, _bstChDraft);
+}
+
+// ⚠️ Searches b.members, which is already in memory. NOT _stfPicker: that one
+// resolves people through getUsers(), a scan of the whole users table, and this
+// list only ever needs people who are already in this bastion.
+function _bstChMemberBodyHTML(b, d) {
+  const q = (_bstChMemberQ || '').trim().toLowerCase();
+  if (!q) return '';
+  const have = _bstChPeopleSubjects(d);
+  const names = Array.from(new Set([].concat(b.members || [], Object.keys(b.memberRoles || {}))))
+    .filter(u => u && u.toLowerCase().includes(q) && have.indexOf('user:' + u) < 0)
+    .slice(0, 20);
+  if (!names.length) return `<div class="nm-empty">Nobody in this bastion matches that.</div>`;
+  return `<div class="bstr-picklist">${names.map(u => `<div class="nm-row bstr-pick" role="button" tabindex="0"
+      onclick="_bstChAddPerson('${escapeHTML(u)}')"
+      onkeydown="if(event.key==='Enter'){_bstChAddPerson('${escapeHTML(u)}')}">
+    <span class="nm-av">${buildAvatarHTML(_pfpCache && _pfpCache[u], u, 30)}</span>
+    <span class="nm-info"><span class="nm-name">${escapeHTML(u)}</span></span>
+  </div>`).join('')}</div>`;
+}
+function _bstChMemberSearch(v) {
+  _bstChMemberQ = v;
+  const b = CU && CU.bastions && CU.bastions[curBastion];
+  const el = document.getElementById('bstc-membody');
+  if (el && b && _bstChDraft) el.innerHTML = _bstChMemberBodyHTML(b, _bstChDraft);
+}
+function _bstChAddPerson(user) {
+  const d = _bstChDraft; if (!d) return;
+  d.overrides = d.overrides || {};
+  d.overrides['user:' + user] = d.overrides['user:' + user] || { allow: [], deny: [] };
+  _bstChSubject = 'user:' + user;
+  _bstChMemberQ = '';
+  _bstChRender();
+}
+function _bstChDropPerson() {
+  const d = _bstChDraft; if (!d || _bstChSubject.indexOf('user:') !== 0) return;
+  delete d.overrides[_bstChSubject];
+  _bstChSubject = '@everyone';
+  _bstChRender();
+}
+
+function _bstChPermsHTML(b, d) {
+  // ⚠️ The honest limit, said once and said plainly. These switches decide what
+  // the app draws and what it will do. They are not a wall: until passwords are
+  // hashed and RLS is on for `users`, the table can be read directly with the
+  // shipped anon key. So nothing here may be described as private or secure.
+  const person = _bstChSubject.indexOf('user:') === 0;
+  return `
+    <div class="bstr-note">A channel starts out exactly as the roles left it. Anything you set here only applies inside <b>${escapeHTML(d.name || 'this channel')}</b>. Treat anything posted in a bastion as readable by the people in it.</div>
+    ${_bstChSubjectsHTML(b, d)}
+    <label class="bstr-lb" for="bstc-msearch">Add a member</label>
+    <input class="settings-input bstr-psearch" id="bstc-msearch" placeholder="Search this bastion's members" value="${escapeHTML(_bstChMemberQ || '')}"
+      oninput="_bstChMemberSearch(this.value)">
+    <div id="bstc-membody">${_bstChMemberBodyHTML(b, d)}</div>
+    <div class="bstc-subhead">
+      <span>Editing <b>${escapeHTML(_bstChSubjectLabel(b, _bstChSubject))}</b></span>
+      ${person ? '<button class="fs-btn bstc-drop" onclick="_bstChDropPerson()">Remove</button>' : ''}
+    </div>
+    <input class="settings-input bstr-psearch" placeholder="Search permissions" value="${escapeHTML(_bstChQ || '')}"
+      oninput="_bstChPermSearch(this.value)">
+    <div id="bstc-permbody">${_bstChPermBodyHTML(b, d)}</div>`;
+}
+
+/* ── Save and delete ──────────────────────────────────────────────────────── */
+
+async function _bstChSave() {
+  const b = CU && CU.bastions && CU.bastions[curBastion];
+  const d = _bstChDraft;
+  if (!b || !d || _bstChIdx < 0) return;
+  const ch = (b.channels || [])[_bstChIdx];
+  if (!ch) { _bstChBack(); return; }
+
+  // The same slug rule the rename prompt has always used, so a channel renamed
+  // here comes out identical to one renamed from the sidebar.
+  const name = String(d.name || '').trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-_]/g, '');
+  if (!name) { toast('Give the channel a name', 'error'); return; }
+
+  // ⚠️ AN EMPTY OVERRIDE IS DEBRIS, NOT A SETTING. `_bstCan` reads every key it
+  // finds, and a subject sitting there with two empty arrays is a row that says
+  // nothing while still riding along in every bastion sync. Drop it.
+  const ov = {};
+  Object.keys(d.overrides || {}).forEach(k => {
+    const o = d.overrides[k] || {};
+    const allow = (o.allow || []).filter(p => _FTZ_CH_PERMS.has(p));
+    const deny = (o.deny || []).filter(p => _FTZ_CH_PERMS.has(p));
+    if (allow.length || deny.length) ov[k] = { allow: allow, deny: deny };
+  });
+
+  ch.name = name;
+  ch.desc = String(d.desc || '').trim();
+  ch.categoryId = d.categoryId || null;
+  ch.nsfw = !!d.nsfw;
+  ch.focusMode = !!d.focusMode;
+  if (Object.keys(ov).length) ch.overrides = ov; else delete ch.overrides;
+
+  await saveUser();
+  _syncBastionToGlobal(curBastion);
+  FortizedSocial.socketEmit('bastion:update', { bastionId: b.globalId, field: 'channels' });
+  _bstChDraft = null; _bstChIdx = -1;
+  renderBSettingsMain('channels');
+  const scroll = document.getElementById('sidebar-scroll');
+  if (scroll) { try { renderBastionSidebar(scroll); } catch (_) {} }
+  toast('Channel saved', 'success');
+}
+
+// ⚠️ NOT a wrapper around `deleteChannel` — that one carries its own
+// `showCustomConfirm`, so delegating here would ask twice. It also never emits
+// the socket update or repaints the sidebar, which from inside the editor is
+// exactly what you need: the channel you were editing has to disappear from the
+// rail on every member's screen, not just from this settings pane.
+function _bstChDelete() {
+  const b = CU && CU.bastions && CU.bastions[curBastion];
+  const idx = _bstChIdx;
+  const ch = b && (b.channels || [])[idx];
+  if (!ch) return;
+  showCustomConfirm(`Delete #${ch.name}? Everything posted in it goes with it.`, async () => {
+    const b2 = CU && CU.bastions && CU.bastions[curBastion];
+    if (!b2 || !(b2.channels || [])[idx]) return;
+    b2.channels.splice(idx, 1);
+    _bstChDraft = null; _bstChIdx = -1;
+    await saveUser();
+    _syncBastionToGlobal(curBastion);
+    FortizedSocial.socketEmit('bastion:update', { bastionId: b2.globalId, field: 'channels' });
+    renderBSettingsMain('channels');
+    const scroll = document.getElementById('sidebar-scroll');
+    if (scroll) { try { renderBastionSidebar(scroll); } catch (_) {} }
+    toast('Channel deleted', 'info');
+  });
 }
 
 // Apply role template to current bastion
@@ -36777,7 +37135,7 @@ function showChannelCtxMenu(e, chIdx) {
     ...(canManageCh ? [{
       label: 'Manage',
       items: [
-        { icon: _ctxSvg('edit'), label: 'Edit Channel', action: () => _editChannelInline(chIdx) },
+        { icon: _ctxSvg('edit'), label: 'Edit Channel', action: () => _bstChEditFromRail(chIdx) },
         { icon: _ctxSvg('trash'), label: 'Delete Channel', danger: true, action: () => {
           showCustomConfirm('Delete '+displayName+'?',async function(){
             b.channels.splice(chIdx,1);
@@ -36794,20 +37152,16 @@ function showChannelCtxMenu(e, chIdx) {
   ];
   showCtxMenu(e.clientX, e.clientY, groups);
 }
-function _editChannelInline(chIdx) {
+// ⚠️ THIS REPLACED `_editChannelInline`, WHICH ONLY EVER RENAMED. "Edit Channel"
+// off the rail dropped you into a one-field prompt: no description, no category,
+// no permissions, nothing the settings pane already knew how to hold. It now
+// lands on the real editor, so there is ONE place a channel is edited from and
+// the rail and the settings card can never disagree about what a channel is.
+function _bstChEditFromRail(chIdx) {
   const b = CU.bastions?.[curBastion]; if (!b) return;
-  const ch = b.channels?.[chIdx]; if (!ch) return;
-  const chType = _chType(ch.type);
-  showCustomInput('Edit '+chType.label+' channel', 'Channel name:', (newName) => {
-    if (!newName || !newName.trim()) return;
-    ch.name = newName.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-_]/g, '');
-    saveUser();
-    _syncBastionToGlobal(curBastion);
-    const scroll = document.getElementById('sidebar-scroll');
-    if (scroll) renderBastionSidebar(scroll);
-    if (curChannel === chIdx) loadChatChannel(chIdx);
-    toast('Channel renamed to '+(chType.voice?'':'#')+ch.name, 'success');
-  }, ch.name);
+  if (!b.channels?.[chIdx]) return;
+  openBastionSettings('channels');
+  _bstChOpen(chIdx);
 }
 // ⚠️ THIS MENU USED TO ACT ON A CHANNEL TYPE, NOT A CATEGORY, AND "DELETE
 // CATEGORY" WAS DESTRUCTIVE.  Under the old type-grouping there was no such

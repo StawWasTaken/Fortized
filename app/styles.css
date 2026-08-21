@@ -19224,15 +19224,42 @@ body.has-announce .main{padding-top:var(--ann-h);}
 .rad-ladder-name{font-family:var(--font-display);font-size:14.5px;font-weight:700;color:var(--text);}
 .rad-ladder-blurb{font-size:12.5px;color:var(--muted-light);}
 .rad-ladder-count{margin-left:auto;font-size:12px;color:var(--muted-light);font-variant-numeric:tabular-nums;}
-.rad-ladder-track{height:8px;border-radius:100px;background:color-mix(in srgb,var(--text) 10%,transparent);overflow:hidden;}
+/* The rail.  ⚠️ The track is inset by HALF A COLUMN at each end
+   (100/n/2 = 10% at five tiers) because every node owns an equal column and is
+   centred in it — so the first dot sits at 10% and the last at 90%.  Inset the
+   track to match and the line starts and ends exactly under a dot; leave it
+   full-bleed and the bar visibly overshoots the ladder at both ends. */
+.rad-ladder-rail{position:relative;padding-top:5px;}
+.rad-ladder-track{position:absolute;left:calc(50% / var(--lad-n,5));right:calc(50% / var(--lad-n,5));
+  top:11px;height:8px;border-radius:100px;background:color-mix(in srgb,var(--text) 10%,transparent);overflow:hidden;}
 .rad-ladder-fill{height:100%;border-radius:100px;transition:width .6s cubic-bezier(.22,.9,.24,1);}
-.rad-ladder-next{margin-top:9px;font-size:12.5px;color:var(--muted-light);}
-.rad-ladder-rungs{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;padding-top:11px;
-  border-top:1px solid var(--border);}
-.rad-ladder-rung{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:.05em;
-  color:color-mix(in srgb,var(--text) 26%,transparent);cursor:default;transition:color .2s;}
-.rad-ladder-rung.is-on{opacity:1;}
-@media (max-width:560px){.rad-ladder-count{margin-left:0;width:100%;}}
+.rad-ladder-nodes{position:relative;display:flex;}
+.rad-ladder-node{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:default;}
+/* The dot sits ON the track, so it needs the card's own fill behind it or the
+   bar shows through the unlit ones. */
+/* ⚠️ Every dot is the SAME 20px box.  The one you are standing on is marked by
+   a thicker ring, not a bigger circle: grow the box and that column's name and
+   day count drop a few pixels below the other four, and a row of labels that
+   does not sit on one line reads as a rendering fault. */
+.rad-ladder-dot{width:20px;height:20px;border-radius:50%;background:var(--panel);
+  border:2px solid color-mix(in srgb,var(--text) 16%,transparent);
+  box-shadow:0 0 0 3px var(--bg);transition:border-color .25s,background .25s,border-width .25s;}
+.rad-ladder-node.is-on .rad-ladder-dot{background:var(--tint);border-color:var(--tint);}
+.rad-ladder-node.is-here .rad-ladder-dot{background:var(--panel);border-width:6px;}
+.rad-ladder-nname{font-family:var(--font-display);font-size:11.5px;font-weight:600;line-height:1.15;
+  color:color-mix(in srgb,var(--text) 34%,transparent);text-align:center;transition:color .25s;}
+.rad-ladder-node.is-on .rad-ladder-nname{color:var(--tint);}
+.rad-ladder-node.is-here .rad-ladder-nname{font-weight:700;}
+.rad-ladder-ndays{font-size:10.5px;line-height:1;color:color-mix(in srgb,var(--text) 28%,transparent);
+  font-variant-numeric:tabular-nums;}
+.rad-ladder-node.is-on .rad-ladder-ndays{color:var(--muted-light);}
+.rad-ladder-next{margin-top:13px;padding-top:11px;border-top:1px solid var(--border);
+  font-size:12.5px;color:var(--muted-light);}
+@media (max-width:560px){
+  .rad-ladder-count{margin-left:0;width:100%;}
+  .rad-ladder-nname{font-size:10px;}
+  .rad-ladder-ndays{font-size:9.5px;}
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    ONE NOTIFICATION BADGE (2026fix509)
@@ -19307,3 +19334,23 @@ body.has-announce .main{padding-top:var(--ann-h);}
 /* The dot a count-badge renders when there is no number to show — same shape
    as .ftz-ndot's centre, drawn inside the red pill. */
 .ftz-nbadge .ftz-nbadge-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#fff;}
+
+/* ── Brand marks (_FTZ_MARKS / _ftzMarkHTML) ─────────────────────── */
+/* Same technique as .gif-mask-ico / .rad-onyx-ic / .ftz-sec-ico: the PNG is a
+   MASK, the fill is currentColor, so a mark takes the colour of whatever row
+   it sits in and can never arrive as a black-on-dark rectangle.
+   ⚠️ Size a mark by HEIGHT only. Every mark carries its own `aspect-ratio`
+   inline (they are not square), so pinning both sides just pads it. */
+.ftz-mark{display:inline-block;background-color:currentColor;flex-shrink:0;pointer-events:none;
+  -webkit-mask:var(--ftz-mark) center/contain no-repeat;mask:var(--ftz-mark) center/contain no-repeat;}
+
+/* The six slots that used to size the Send Onyx glyph as an <svg>. Each one
+   pinned width AND height; a mask <span> given a fixed width loses its ratio,
+   and the two that size the BOX as well as the glyph would squash it. */
+.fs-send-mark .ftz-mark{height:26px;}
+.fs-tb-onyxnote-ic .ftz-mark{height:17px;}
+.ftz-onyx-receipt-ic .ftz-mark{height:15px;}
+.fpp-menu__send{width:auto;}
+.fpp-menu__send .ftz-mark{height:15px;}
+.rad-prow-svg{width:auto;}
+.rad-prow-svg .ftz-mark{height:17px;}

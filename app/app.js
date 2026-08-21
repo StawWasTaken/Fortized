@@ -147,6 +147,38 @@ function ftzIcon(name, size, color) {
   if (color) out = out.replace(/stroke="currentColor"/g, `stroke="${color}"`).replace(/fill="currentColor"/g, `fill="${color}"`);
   return out;
 }
+
+// ── Our own marks ──
+// Sibling registry to `_FTZ_CHARS` (the character art, much further down). A
+// handful of glyphs are ours rather than FontAwesome's, and they live as PNGs
+// at the web root. They are drawn as a currentColor MASK, not an <img>, so they
+// tint exactly like an inline `fill="currentColor"` SVG does: grey at rest,
+// gold when a tab is active, green in a join line, red in a danger row, with no
+// per-theme copy of the file. Same technique as `.gif-mask-ico` / `.rad-onyx-ic`.
+// ⚠️ This sits up here with `ftzIcon` and not next to `_FTZ_CHARS` on purpose:
+// `_SYSTEM_EVENT_PATTERNS` and `_FS_SEND_MARK` are const object literals
+// evaluated at load, so the registry has to already exist by the time the file
+// reaches them. `const` is not hoisted; moving this down breaks boot.
+// ⚠️ `ratio` is the ASSET's real pixel ratio. The mask is `contain`, which
+// letterboxes rather than distorts, so a wrong ratio never stretches the art —
+// it leaves the box wider than the glyph, which reads as bad spacing instead.
+const _FTZ_MARKS = {
+  sendonyx:   { src: '/SendOnyxSVG.png',   ratio: '292/266' },  // a vault handing over a card
+  newmember:  { src: '/NewMemberSVG.png',  ratio: '259/272' },  // somebody arriving
+  controller: { src: '/ControllerSVG.png', ratio: '581/581' },  // games, apps, the machine
+  // ⚠️ NOT USED ANYWHERE YET. Bastion Moments doesn't exist, and there is no
+  // other surface this belongs to. Registered so the asset is accounted for and
+  // the wiring is one line when Moments lands — do not force it somewhere else.
+  moments:    { src: '/MomentsSVG.png',    ratio: '466/529' },
+};
+// `style` is for the SIZE. Give it a height and let `aspect-ratio` find the
+// width — pinning both sides of a non-square mark just pads it.
+function _ftzMarkHTML(name, style) {
+  const m = _FTZ_MARKS[name];
+  if (!m) return '';
+  return `<span class="ftz-mark" style="--ftz-mark:url('${m.src}');aspect-ratio:${m.ratio};${style || ''}" aria-hidden="true"></span>`;
+}
+
 // Shorthand icon helpers — Radiance & Onyx use PNG images (displayed inline like SVGs), Boost uses SVG
 function _onyxImg(size){const s=size||'18';return '<span class="icon-onyx" style="width:'+s+'px;height:'+s+'px;" aria-label="Onyx"></span>';}
 function _radianceImg(size){const s=size||'16';return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;object-fit:contain;" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="radianceGrad-'+Math.random()+'" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ff77e4;stop-opacity:1" /><stop offset="100%" style="stop-color:#fff93e;stop-opacity:1" /></linearGradient></defs><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="url(#radianceGrad-'+Math.random()+')" /></svg>';}
@@ -12650,7 +12682,12 @@ function _fmtMsgFullTime(ts) {
 // Bot is the only exception — explicitly blue (matches the chatbar
 // bot-command button affordance).
 const _SYSTEM_EVENT_PATTERNS = [
-  { key: 'join',       icon: 'sys_join',     color: '#3ecf6e', test: /\b(joined|welcome to|has entered|just joined|has joined)\b/i },
+  // ⚠️ `iconHTML`, not `icon`. `ftzIcon()` sizes a glyph by regex-replacing
+  // `width="1em"`/`height="1em"` in the svg source, which a mask <span> does
+  // not carry — swapping this inside `_svgIcons` would return truthy and draw
+  // nothing. The renderer already prefers iconHTML and wraps it in a span
+  // coloured `ev.color`, which the mask inherits through currentColor.
+  { key: 'join',       icon: 'sys_join',     iconHTML: _ftzMarkHTML('newmember', 'height:14px'), color: '#3ecf6e', test: /\b(joined|welcome to|has entered|just joined|has joined)\b/i },
   { key: 'leave',      icon: 'sys_leave',    color: '#ff0033', test: /\b(left|has left|kicked|removed from)\b/i },
   { key: 'ban',        icon: 'sys_ban',      color: '#ff0033', test: /\b(banned|banished)\b/i },
   { key: 'bot',        iconHTML: '<svg viewBox="0 0 24 24" fill="#212121" style="width:14px;height:14px;display:inline-block;vertical-align:middle;filter:invert(57%) sepia(91%) saturate(2167%) hue-rotate(193deg) brightness(101%) contrast(94%);"><path d="M17.75,14C19,14 20,15.01 20,16.25V17.16C20,18.25 19.53,19.29 18.7,20C17.13,21.34 14.89,22 12,22C9.11,22 6.87,21.34 5.31,20C4.48,19.29 4,18.25 4,17.16V16.25C4,15.01 5.01,14 6.25,14H17.75ZM11.9,2C12.28,2 12.6,2.28 12.64,2.65L12.65,2.75L12.65,3.5L16.25,3.5C17.49,3.5 18.5,4.51 18.5,5.75V10.25C18.5,11.5 17.49,12.5 16.25,12.5H7.75C6.51,12.5 5.5,11.5 5.5,10.25V5.75C5.5,4.51 6.51,3.5 7.75,3.5L11.25,3.5L11.25,2.75C11.25,2.37 11.53,2.06 11.9,2.01L12,2L11.9,2ZM9.75,6.5C9.06,6.5 8.5,7.06 8.5,7.75C8.5,8.44 9.06,9 9.75,9C10.44,9 11,8.44 11,7.75C11,7.06 10.44,6.5 9.75,6.5ZM14.24,6.5C13.55,6.5 12.99,7.06 12.99,7.75C12.99,8.44 13.55,9 14.24,9C14.93,9 15.49,8.44 15.49,7.75C15.49,7.06 14.93,6.5 14.24,6.5Z"/></svg>', color: '#60a5fa', test: /\b(integrated|deployed|bot added|installed bot)\b/i },
@@ -25808,7 +25845,7 @@ const _SETTINGS_TAB_META = {
   appearance:      { icon:() => _faIcon('palette', 24),     title:'Appearance' },
   keybinds:        { icon:() => _faIcon('keyboard', 24),    title:'Keybinds' },
   language:        { icon:() => _faIcon('language', 24),    title:'Language & Time' },
-  game_collection: { icon:() => _faIcon('gamepad', 24),     title:'Apps & Games' },
+  game_collection: { icon:() => _ftzMarkHTML('controller', 'height:24px'), title:'Apps & Games' },
   safety:          { icon:() => _safetyIcon(24),            title:'Safety' },
   activity_privacy:{ icon:() => '<span style="display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;color:currentColor;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 576 512" fill="currentColor" style="display:block;"><path d="M224 248a120 120 0 1 0 0-240 120 120 0 1 0 0 240zm-29.7 56C95.8 304 16 383.8 16 482.3 16 498.7 29.3 512 45.7 512l251.5 0C261 469.4 240 414.5 240 356.4l0-31.1c0-7.3 1-14.5 2.9-21.3l-48.6 0zm251 184.5l-13.3 6.3 0-188.1 96 32 0 19.6c0 55.8-32.2 106.5-82.7 130.3zM421.9 259.5l-112 37.3c-13.1 4.4-21.9 16.6-21.9 30.4l0 31.1c0 74.4 43 142.1 110.2 173.7l18.5 8.7c4.8 2.2 10 3.4 15.2 3.4s10.5-1.2 15.2-3.4l18.5-8.7C533 500.3 576 432.6 576 358.2l0-31.1c0-13.8-8.8-26-21.9-30.4l-112-37.3c-6.6-2.2-13.7-2.2-20.2 0z"/></svg></span>', title:'Activity Privacy' },
   my_data:         { icon:() => _faIcon('key', 24),         title:'My Data' },
@@ -27250,11 +27287,11 @@ function _buildProfileView(tab) {
             <div class="voice-row__desc">Whether Fortized animates. <b>Match my system</b> follows your device's reduce-motion setting. <b>Full</b> keeps animations on even when your system asks for less, which is the one to pick if the app has gone flat and you did not ask it to.</div>
           </div>
           <div class="voice-row__value voice-row__value--end">
-            ${_ftzSelectHTML([
+            ${_ftzSelectHTML('apr-motion', _curMotion, [
               {value:'system', label:'Match my system'},
               {value:'full', label:'Full'},
               {value:'reduced', label:'Reduced'},
-            ], _curMotion, '_applyMotion(__VALUE__)', {width:'190px'})}
+            ], '_applyMotion(__VALUE__)')}
           </div>
         </div>
       </div>
@@ -33834,31 +33871,38 @@ function _gsFrames() {
   const cu = (typeof CU !== 'undefined' && CU) ? CU : {};
   const g = cu.guide || {};
   return [
-    { art: 'celebrate', side: 'right',
+    // ⚠️ The sides alternate strictly, card to card, and the whole run is
+    // anchored by TWO of them: Leafen (the `announce` herald) stands on the
+    // LEFT and Joyster (`point`) on the RIGHT.  Those two are index 2 and 3,
+    // so the sequence has to start on the left for both to land right.  Insert
+    // or remove a frame and every side after it flips — re-check the two
+    // characters rather than only the frame you touched.
+    { art: 'celebrate', side: 'left',
       eyebrow: 'Welcome', title: `Good to have you, ${escapeHTML(_gsName())}.`,
       body: 'A quick walk round the realm and you\'ll know where everything is. Step out whenever you like; this waits for you.' },
 
-    { art: 'device', side: 'left',
+    { art: 'device', side: 'right',
       eyebrow: 'What this is', title: 'It\'s a place to talk.',
       body: 'Message a friend, start a group, or gather everyone into a <b>bastion</b>: a community with its own channels, roles and emojis.' },
 
-    { art: 'announce', side: 'right',
+    // Leafen, on the left.
+    { art: 'announce', side: 'left',
       eyebrow: 'What you can do', title: 'Make it yours.',
       body: 'Choose a font, an effect and a colour for your name. Add a nameplate, an avatar decoration, or reskin the whole app. None of that costs real money.' },
 
-    // Joyster pointing.  The herald moved to the card before this one, and a
-    // pitch wants somebody showing you the thing rather than reading it out.
-    { art: 'point', side: 'left', overlay: 'rad',
+    // Joyster pointing, on the right.  A pitch wants somebody showing you the
+    // thing rather than reading it out.
+    { art: 'point', side: 'right', overlay: 'rad',
       eyebrow: 'Radiance', title: 'The membership, if you fancy it.',
       body: 'Bigger uploads, animated banners, your emojis anywhere, custom cursors, early access, and 10% off the Fortshop. Everything on the last card stays free either way.' },
 
-    { art: 'onyx', side: 'right',
+    { art: 'onyx', side: 'left',
       eyebrow: 'Onyx', title: 'The realm\'s currency.',
       body: 'Quests pay it out, a little each day and more each week. You claim it yourself from the <b>Quests</b> page; nothing ever pays out behind your back. Spend it in the Fortshop.' },
 
     // SpaceFriends: two of them, obviously not from the same planet, obviously
     // getting on fine.  The copy answers the art rather than ignoring it.
-    { art: 'friends', side: 'left', step: 'friend', skip: 'Skip',
+    { art: 'friends', side: 'right', step: 'friend', skip: 'Skip',
       eyebrow: 'Step 1 of 4', title: 'You don\'t have to be from the same world.',
       body: 'Add someone by username, or send them your invite link and let them find you. Wherever they are, they can be here too.',
       acts: [
@@ -33866,17 +33910,17 @@ function _gsFrames() {
         { label: 'Copy my invite link', fn: "_gsAct('invite')" },
       ] },
 
-    { art: 'onyx', side: 'right', step: 'quest', skip: 'Later',
+    { art: 'onyx', side: 'left', step: 'quest', skip: 'Later',
       eyebrow: 'Step 2 of 4', title: 'Claim a quest.',
       body: 'Your daily claim is sitting there waiting. One click, and it\'s the easiest Onyx you\'ll ever earn.',
       acts: [{ label: 'Open Quests', fn: "_gsAct('quests')", primary: true }] },
 
-    { art: 'device', side: 'left', step: 'shop', skip: 'Later',
+    { art: 'device', side: 'right', step: 'shop', skip: 'Later',
       eyebrow: 'Step 3 of 4', title: 'Star something you want.',
       body: 'Have a wander round the Fortshop and heart one thing. It\'ll be in your wishlist when you can afford it.',
       acts: [{ label: 'Open the Fortshop', fn: "_gsAct('shop')", primary: true }] },
 
-    { art: 'battle', side: 'right', step: 'bastion', skip: 'Skip',
+    { art: 'battle', side: 'left', step: 'bastion', skip: 'Skip',
       eyebrow: 'Step 4 of 4', title: 'Raise your own bastion.',
       body: 'Or don\'t. Plenty of people never do. If you go for it, it\'s yours to name, decorate and rule however you like.',
       acts: [
@@ -33884,11 +33928,11 @@ function _gsFrames() {
         { label: 'Find one to join', fn: "_gsAct('discover')" },
       ] },
 
-    { art: 'celebrate', side: 'left',
+    { art: 'celebrate', side: 'right',
       eyebrow: 'Well done', title: 'That\'s the tour.',
       body: `You've got the shape of it. The rest you'll pick up as you go, and ${g.skipped ? 'anything you skipped is' : 'the quests are'} still there when you want them.` },
 
-    { art: 'onyx', side: 'right', last: true,
+    { art: 'onyx', side: 'left', last: true,
       eyebrow: 'All set', title: 'All set!',
       body: `Here's ${_FTZ_GS_REWARD} Onyx to start you off. Now go and find your folks.` },
   ];
@@ -38944,7 +38988,7 @@ function parseMD(s) {
       <span class="ftz-onyx-receipt-bar"></span>
       <span class="ftz-onyx-receipt-b">
         <span class="ftz-onyx-receipt-h">
-          <span class="ftz-onyx-receipt-ic">${_FS_SEND_SVG}</span>
+          <span class="ftz-onyx-receipt-ic">${_FS_SEND_MARK}</span>
           <span class="ftz-onyx-receipt-t">Onyx sent</span>
         </span>
         <span class="ftz-onyx-receipt-amt"><span class="rad-onyx-ic"></span>${escapeHTML(_ftzFullNum(n))}</span>
@@ -49608,7 +49652,12 @@ const _FS_TABS = ['featured', 'browse', 'onyx'];
 const _FS_ONYX_IC = '<span class="rad-onyx-ic"></span>';
 // Send Onyx mark — a vault handing over a card. Used on the profile More menu,
 // the send card and the Radiance Vault perk.
-const _FS_SEND_SVG = '<svg viewBox="0 0 576 512" fill="currentColor" aria-hidden="true"><path d="M288 33.9L96.4 175.8 254.5 293c5.3 3.9 11.2 6.9 17.5 8.7L272 464c0 5.5 .5 10.8 1.3 16L96 480c-35.3 0-64-28.7-64-64l0-239.9c0-20.3 9.6-39.4 25.9-51.4L254.5-21c9.7-7.2 21.4-11 33.5-11s23.8 3.9 33.5 11L518.1 124.7c7.2 5.3 13.1 12 17.4 19.6-2.5-.2-5-.3-7.5-.3L436.6 144 288 33.9zM320 240c0-26.5 21.5-48 48-48l160 0c26.5 0 48 21.5 48 48l0 224c0 26.5-21.5 48-48 48l-160 0c-26.5 0-48-21.5-48-48l0-224zm80 16c-13.3 0-24 10.7-24 24s10.7 24 24 24l96 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-96 0zm0 96c-13.3 0-24 10.7-24 24s10.7 24 24 24l56 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-56 0z"/></svg>';
+// The user's own art: a vault handing over a card. Replaces the stand-in FA
+// house/card composite that used to sit here.
+// ⚠️ It is a MASK, not an <svg>, so the six CSS slots that size it were all
+// widened with a sibling `.ftz-mark` rule that sets HEIGHT ONLY — a fixed
+// width would squash a 292:266 mark into a square. Don't pin width anywhere.
+const _FS_SEND_MARK = _ftzMarkHTML('sendonyx');
 
 // ── Collections. Each holds a MIX: at least one nameplate + one avatar
 // decoration, plus appearances / other item types where they fit.
@@ -50693,7 +50742,7 @@ function _fsTradeBuilder() {
       ${panel('get', 'You get', wanted, d.getOnyx, 'Ask for anything they own')}
     </div>
     <div class="fs-tb-onyxnote">
-      <span class="fs-tb-onyxnote-ic">${_FS_SEND_SVG}</span>
+      <span class="fs-tb-onyxnote-ic">${_FS_SEND_MARK}</span>
       <span>Trades are for items. To move Onyx, use <b>Send Onyx</b> on someone's profile — it's a Radiance perk.</span>
     </div>
     <div class="fs-trade-foot">
@@ -51125,7 +51174,7 @@ function _fsSendCard(to) {
     <div class="ftz-confirm-card ftz-ac-card ftz-ov-rad fs-send" role="dialog" aria-label="Send Onyx">
       <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="_fsSendClose()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="ftz-ac-hero ftz-ac-hero--noicon">
-        <div class="fs-send-mark">${_FS_SEND_SVG}</div>
+        <div class="fs-send-mark">${_FS_SEND_MARK}</div>
         <div class="ftz-ac-title">Send Onyx</div>
         <div class="ftz-ac-sub">Straight into <span id="fs-send-who">@${escapeHTML(to)}</span>'s wallet.. forever.</div>
       </div>
@@ -51376,7 +51425,7 @@ function _fsSendOnyxUpsell(to) {
     <div class="ftz-confirm-card ftz-ac-card ftz-ov-rad fs-send fs-send--locked" role="dialog" aria-label="Sending Onyx requires Radiance">
       <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-send-modal')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="ftz-ac-hero ftz-ac-hero--noicon">
-        <div class="fs-send-mark">${_FS_SEND_SVG}</div>
+        <div class="fs-send-mark">${_FS_SEND_MARK}</div>
         <div class="ftz-ac-title">Sending Onyx requires Radiance</div>
         <div class="ftz-ac-sub">Radiance users can send up to ${_ftzFullNum(FS_ONYX_SEND_MAX)} Onyx to anyone, at any time, including to <span id="fs-send-who2">@${escapeHTML(to)}</span>.</div>
       </div>
@@ -51893,7 +51942,7 @@ function renderAtelierTab(tab) {
     // Smaller perks — consistent one-line descriptions (no truncation needed).
     const MORE = [
       { ic: 'fa-arrow-pointer', name: 'Custom Cursors',        desc: 'Set a custom in-app cursor.' },
-      { svg: _FS_SEND_SVG,      name: 'Send Onyx',             desc: `Send up to ${_ftzFullNum(FS_ONYX_SEND_MAX)} Onyx to anyone, straight from their profile.` },
+      { svg: _FS_SEND_MARK,      name: 'Send Onyx',             desc: `Send up to ${_ftzFullNum(FS_ONYX_SEND_MAX)} Onyx to anyone, straight from their profile.` },
       { ic: 'fa-bolt',          name: '3 Free Bastion Boosts', desc: 'Boost your favourite communities — three on us.' },
       { ic: 'fa-tags',          name: '10% Fortshop Discount', desc: 'Save 10% on every Fortshop order.' },
       { ic: 'fa-box-open',      name: 'Starter Drops',         desc: 'Claim exclusive Radiance drops.' },
@@ -51914,7 +51963,24 @@ function renderAtelierTab(tab) {
     // rest of the app shows as a rune; this is the one place that spells out
     // what the rune means and what the next one costs — otherwise the badge is
     // a symbol with no way to find out what it is.
+    //
+    // ⚠️ THE RUNGS *ARE* THE TRACK.  They used to sit in a detached row under a
+    // divider, below a progress bar that had no marks on it: two objects that
+    // never said they were the same ladder.  Now the five tiers are nodes ON
+    // the rail, so where the fill stops IS which rung you are standing on.
+    //
+    // ⚠️ The rail is spaced by LEVEL, not by days.  1/30/90/180/365 plotted to
+    // scale puts the first three rungs on top of each other in the leftmost
+    // eighth, which reads as a broken bar rather than a ladder.  Each node
+    // carries its own day count so the uneven spacing is never a claim.
     const _lad = _radianceLadderProgress(CU);
+    const _ladN = _FTZ_RADIANCE_LADDER.length;
+    // Each node owns an equal column, so its centre sits at (i+0.5)/N of the
+    // width — the rail is inset by half a column at both ends to match, and
+    // the fill is measured across that inset span, never the full card.
+    const _ladFill = _lad.level
+      ? (((_lad.level - 1) + (_lad.next ? _lad.pct / 100 : 0)) / (_ladN - 1)) * 100
+      : 0;
     const ladderHTML = _lad.tier ? `
       <div class="rad-ladder">
         <div class="rad-ladder-head">
@@ -51923,13 +51989,23 @@ function renderAtelierTab(tab) {
           <span class="rad-ladder-blurb">${escapeHTML(_lad.tier.blurb)}</span>
           <span class="rad-ladder-count">${_lad.days.toLocaleString()} day${_lad.days === 1 ? '' : 's'} of Radiance bought</span>
         </div>
-        <div class="rad-ladder-track"><div class="rad-ladder-fill" style="width:${_lad.pct}%;background:${_lad.tier.tint}"></div></div>
+        <div class="rad-ladder-rail" style="--lad-n:${_ladN}">
+          <div class="rad-ladder-track">
+            <div class="rad-ladder-fill" style="width:${_ladFill}%;background:linear-gradient(90deg,${_FTZ_RADIANCE_LADDER[0].tint},${_lad.tier.tint})"></div>
+          </div>
+          <div class="rad-ladder-nodes">${_FTZ_RADIANCE_LADDER.map(r => {
+            const on = r.level <= _lad.level, here = r.level === _lad.level;
+            return `<div class="rad-ladder-node${on ? ' is-on' : ''}${here ? ' is-here' : ''}" style="--tint:${r.tint}"
+              data-tip="${r.rune} · ${escapeHTML(r.name)} · ${escapeHTML(r.blurb)} · ${r.days.toLocaleString()} day${r.days === 1 ? '' : 's'}">
+              <span class="rad-ladder-dot"></span>
+              <span class="rad-ladder-nname">${escapeHTML(r.name)}</span>
+              <span class="rad-ladder-ndays">${r.days.toLocaleString()}d</span>
+            </div>`;
+          }).join('')}</div>
+        </div>
         <div class="rad-ladder-next">${_lad.next
           ? `${(_lad.next.days - _lad.days).toLocaleString()} more day${(_lad.next.days - _lad.days) === 1 ? '' : 's'} to reach <b style="color:${_lad.next.tint}">${_lad.next.rune}</b> ${escapeHTML(_lad.next.name)}`
           : 'You are at the top of the ladder.'}</div>
-        <div class="rad-ladder-rungs">${_FTZ_RADIANCE_LADDER.map(r => `
-          <span class="rad-ladder-rung${r.level <= _lad.level ? ' is-on' : ''}" data-tip="${r.rune} · ${r.name} — ${r.blurb} · ${r.days} day${r.days === 1 ? '' : 's'}"
-            style="${r.level <= _lad.level ? 'color:' + r.tint : ''}">${r.rune}</span>`).join('')}</div>
       </div>` : '';
 
     const stateLine = hasRad ? `
@@ -59517,7 +59593,7 @@ function _fppGamesCardHTML(u) {
     return `<div class="fpp__game-tile" title="${safeName}">${safeName.charAt(0).toUpperCase()}</div>`;
   }).join('');
   const more = games.length > 5 ? `<div class="fpp__game-tile fpp__game-tile--more">+${games.length - 5}</div>` : '';
-  return `<div class="fpp-card fpp-card--games"><div class="fpp-card__title">Games I Like</div><div class="fpp-card__body"><div class="fpp__games-strip">${tiles}${more}</div></div></div>`;
+  return `<div class="fpp-card fpp-card--games"><div class="fpp-card__title">${_ftzMarkHTML('controller', 'height:13px;margin-right:7px;vertical-align:-1px;')}Games I Like</div><div class="fpp-card__body"><div class="fpp__games-strip">${tiles}${more}</div></div></div>`;
 }
 
 function _fppMutualsChipHTML(username) {
@@ -59667,7 +59743,7 @@ function _fppShowMoreMenu(evt, username) {
     const isMe = (username || '').toLowerCase() === (CU?.username || '').toLowerCase();
     const sendOnyxHTML = (isOfficial || isMe) ? '' : `
       <div class="fpp-menu__item fpp-menu__item--onyx" onclick="_fppClose();_fsOpenSendOnyx('${safeUser}')">
-        <span class="fpp-menu__send">${_FS_SEND_SVG}</span>
+        <span class="fpp-menu__send">${_FS_SEND_MARK}</span>
         Send Onyx
         ${_hasRadiance(CU) ? '' : '<span class="fpp-menu__rad" data-tip="Radiance Exclusive" aria-label="Radiance Exclusive"></span>'}
       </div>

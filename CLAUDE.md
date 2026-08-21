@@ -18,6 +18,129 @@ wants it worked on next. The page already has an Activities tab (hidden behind
 this is a rework of something half-built, not a green field. **Ask what they want
 it to be before building.**
 
+## 🟢 SHIPPED — Rounds 13-18 (`2026fix505`→`512`, branch `claude/ui-polish-redesigns-xf43er`)
+
+### 🏰 BASTION REWORK — plan + phases 1, 2a and 2b are IN
+Full plan: **`docs/bastion-redesign.md`** (revised after the user's precisions).
+Phasing table is §4; **phases 1, 2a and 2b are shipped, phase 2c is next.**
+
+#### `512` — phase 2b: THE ROLE EDITOR, rebuilt as a Guilded sub-page
+The old editor was a `.modal wide tall` (`#modal-role-editor`) stacked over the
+settings card, plus a second dead one (`#modal-assign-role`). Both are **deleted
+from `index.html`** (43 lines); a role now **takes over the Roles tab's pane**
+with the nav still reading "Roles", so it's a sub-page, not a modal on a modal.
+Three tabs — Display · Permissions · Members — in the `.bstr-*` namespace.
+- **🐞 THERE WERE THREE `syncFields` LISTS, NOT ONE** (`2672`, `19295`, `35116`),
+  each with a different gap. `2672` (`_syncBastionFromGlobal`) was missing
+  **`categories`** — *that* is why a non-owner never pulled the owner's category
+  tree after phase 1 — and all three were missing **`everyone`**. Patched all
+  three. ⚠️ **Adding a bastion field means grepping for every `syncFields`.**
+- **`b.everyone` had never had a UI.** The resolver has read it since phase 2a.
+  It's surfaced through the SAME card at draft index `-2` (Permissions tab only),
+  saved with `field:'everyone'` — one editor, not two.
+- ⚠️ **Role icons are hard-downscaled to 64px.** `roles` rides along in every
+  bastion sync, so a full-size data URL pinned to a role is re-sent to every
+  member on every save. On this egress budget that is not hypothetical.
+- ⚠️ **The member picker searches in-memory `b.members`, NOT `_stfPicker`** —
+  that one resolves people through `getUsers()`, a scan of the whole users table,
+  and this list only ever needs people already in this bastion.
+- ⚠️ **Deleting a role leaves TWO kinds of debris** and the resolver reads both:
+  the id in every member's `memberRoles`, and the per-channel `ch.overrides`
+  keyed on it. Left behind, a later role reusing that id silently inherits the
+  old channel overrides. `_bstRoleDelete` sweeps both.
+- ⚠️ **Drag-drop restamps `priority` AND rewrites `b.roles` into the same
+  order.** The resolver sorts on priority and falls back to array index, so
+  leaving either behind puts the list and the resolver into disagreement. A NEW
+  role gets `priority:0` and is appended instead — never renumber a ladder
+  somebody already tuned.
+- The bastion **TEMPLATE export** (~20206) now carries `color2`/`gradient`/
+  `icon`/`hoist`/`mentionable`/`selfAssign` + `everyone`. (`_syncBastionToGlobal`
+  spreads `{...b}` wholesale, so it needed nothing — different code path.)
+- Caret preservation: the perms and members bodies are split into
+  `#bstr-permbody` / `#bstr-membody` and repainted alone by their search
+  handlers; the name field writes `quiet=true` + `_bstRoleSyncPreview()`.
+- ⚠️ **`_bstRoleNameStyle` must NOT go on the member-list role-group header** —
+  it emits `background-clip:text`, and a gradient name inside a 10px uppercase
+  muted section head reads as a rendering fault. The icon/dot carries the colour.
+- Glow sweep: `.toggle.on`'s `0 0 8px rgba(255,249,62,.15)` overridden to `none`;
+  `.bs-section-title` and `.rtc-name` dialled 800→700.
+- **CSS baseline for next session: `app/styles.css` parses to 9,939 rules**
+  (9,865 before + 73 `.bstr-*` + 1 override). Verified by reparse over a local
+  server — the `</style>`/stray-`}` class of bug silently swallows rules, so
+  **count them after any block append.**
+- **`506` — phase 1: the sidebar draws your REAL categories.** `b.categories` and
+  `ch.categoryId` already existed and the Channels settings tab, the Discord
+  importer and the templates all supported them — `renderBastionSidebar` was the
+  one place that threw them away and grouped by channel TYPE instead. An owner
+  could build a category tree, save it, and see nothing change. Type is a glyph
+  on the row now; the five hardcoded "ROOMS" headings are gone.
+- **`507` — phase 2a: one permission resolver, and channels that can lock.**
+  `ch.overrides = {roleId:{allow:[],deny:[]}}` + `_bstCan(user, ch, perm)`.
+  ⚠️ **The guard runs at the MUTATION, not only where the button is drawn** —
+  the rule the staff console's rank guard taught us. ⚠️ And the honest limit
+  stands: **hiding a channel is not denying access**. Until passwords are hashed
+  and RLS is on for `users`, anything client-side can be bypassed by writing
+  Supabase directly, so **no UI copy may call a channel secure or private.**
+
+### 🎮 The controller mark, and why the first attempt missed (`511`)
+- **🐞 "You STILL didn't change it."** There are **TWO** settings icon sources:
+  `_SETTINGS_TAB_META` feeds the page-HEADER strip, and the `ICN` map feeds the
+  **NAV row** — which is the one you actually look at. Only the former had been
+  swapped. **Changing a settings icon means changing both.**
+- **Two colour states through ONE helper** (`_controllerMark(size, live)`):
+  green `#3ecf6e` where somebody is genuinely playing right now, `currentColor`
+  everywhere it decorates a label or a widget title. One helper so they can
+  never drift.
+- ⚠️ The four member-list "Playing X" sublines wrapped everything in
+  `opacity:.6`, which turns the green into a washed-out sage. **The dimming sits
+  on the game NAME now**; the mark keeps full strength.
+- Deliberately NOT swapped, and why: the retired `ub-activity` code (inert), the
+  `title=""` attribute injection (markup would break it), the game cover-art
+  `🎮` fallbacks, and every place the glyph means a *category* or a *report
+  label* rather than the platform mark.
+
+### 🙋 New-member badge (`511`)
+Beside a display name inside a bastion for the member's first week; clicking it
+opens a card naming who arrived, when, and offering a wave.
+- **The 7-day window IS the expiry.** Nothing has to remember to remove the
+  badge, and a bastion that goes quiet for a month doesn't come back wearing a
+  dozen of them.
+- ⚠️ **NO DATE MEANS NOT NEW.** `memberJoins` is only stamped on join, so every
+  member who was there before that shipped has nothing recorded — reading a
+  missing date as "just arrived" would badge the whole roster on day one.
+- **No new data layer**: `b.memberJoins` already exists and is already surfaced
+  through `_ftzBastionJoinCtx`.
+- ⚠️ The badge is **inline and sized in the 12-13px band** of the role pill.
+  `renderMemberList` is virtualised off **fixed row heights** — a badge that
+  grows a row breaks the scroll maths.
+- ⚠️ `_ftzBastionJoinCtx` is filled by a promise `renderMemberList` does NOT
+  await, so chat and roster can paint before any join date exists.
+  `_ftzRefreshNewMemberBadges()` sweeps the painted rows from inside that
+  `.then()` — without it you'd see no badges until something forced a re-render.
+- Card is **portalled to `<body>`** like `.ftz-tooltip`: both host surfaces clip
+  their own overflow.
+- **"Wave hello" PREFILLS the chatbar, it does not send.** A button that fires a
+  message the moment you click it is a button people learn to fear.
+
+### Also in this stretch
+- **`505`** — `invite.fortized.com/CODE` is the only invite link we hand out,
+  and a logged-out visitor's code now survives login AND signup.
+- **`508`** — 🔥 animations had stopped platform-wide; found and given back as a
+  choice.
+- **`509`** — the two ladders, one banner shape, one notification badge (red,
+  dot or 1-9+).
+- **`510`** — brand marks wired up (`_FTZ_MARKS` / `_ftzMarkHTML`), the
+  Appearance-page crash fixed. ⚠️ **`_FTZ_MARKS` must stay at the TOP beside
+  `ftzIcon`** — `_SYSTEM_EVENT_PATTERNS` and `_FS_SEND_MARK` are `const`
+  literals evaluated at load, and `const` is not hoisted, so moving the registry
+  down beside `_FTZ_CHARS` throws at boot. ⚠️ **Marks are sized by HEIGHT only**
+  (each carries its own `aspect-ratio`); pinning both sides squashes a
+  non-square mark. ⚠️ A mask `<span>` can NOT be swapped into `_svgIcons` —
+  `ftzIcon()` sizes by regex-replacing `width="1em"`, which a span doesn't
+  carry, so it returns truthy and renders at zero height. Use `iconHTML`.
+- 🐞 `_ftzSelectHTML(id, currentValue, options, onChangeExpr)` was called with
+  the wrong argument order (`options.find is not a function` on Appearance).
+
 ## 🟢 SHIPPED — Round 12 (`2026fix504`, branch `claude/ui-polish-redesigns-xf43er`)
 
 ### 🌐 `invite.fortized.com` WAS SERVING A SECOND COPY OF THE WHOLE SITE

@@ -1349,9 +1349,12 @@ let forwardMsgText = '';
 // { author, displayName, pfp, timestamp, context } — see _forwardOriginFromRow.
 let _forwardOrigin = null;
 let activeEmojiTarget = null;
-let currentRoleEditing = null;
-let assignRoleBastion = null;
-let assignRoleMemberName = null;
+let _bstRoleDraft = null;
+let _bstRoleDraftIdx = -1;   // index into b.roles; -1 = a new role, -2 = @everyone
+let _bstRoleTab = 'display';
+let _bstRoleQ = '';
+let _bstRoleMemberQ = '';
+let _bstRoleDragFrom = -1;
 let cbVisibility = 'public';
 let cbSelectedEmoji = null;
 let cbIconData = null;
@@ -2666,7 +2669,7 @@ async function _syncBastionFromGlobal(bastionIdx) {
     const global = await FortizedSocial.getGlobalBastion(b.globalId);
     if (!global) return;
     // Merge global fields into local copy (owner-managed data)
-    const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
+    const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','categories','roles','everyone','memberRoles','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
     let changed = false;
     for (const key of syncFields) {
       if (global[key] !== undefined && JSON.stringify(b[key]) !== JSON.stringify(global[key])) {
@@ -10380,13 +10383,13 @@ async function showGCMemberPanel(meta) {
   }
   // Online members
   if (othersOnline.length) {
-    membersHtml += `<div class="ml-role-header">Online <span class="ml-role-count">— ${othersOnline.length}</span></div>`;
+    membersHtml += `<div class="ml-role-header">Online <span class="ml-role-count">· ${othersOnline.length}</span></div>`;
     othersOnline.forEach(m => { membersHtml += _buildGCMemberEntry(m, meta, isOwner, _gcStatusMap); });
   }
   // Offline section
   const offlineMembers = [...(!ownerOnline ? [meta.owner] : []), ...othersOffline];
   if (offlineMembers.length) {
-    membersHtml += `<div class="ml-role-header">Offline <span class="ml-role-count">— ${offlineMembers.length}</span></div>`;
+    membersHtml += `<div class="ml-role-header">Offline <span class="ml-role-count">· ${offlineMembers.length}</span></div>`;
     offlineMembers.forEach(m => { membersHtml += _buildGCMemberEntry(m, meta, isOwner, _gcStatusMap); });
   }
 
@@ -13260,25 +13263,76 @@ function _detachOlderObserver(container) {
 }
 
 
+// ── Roles: ONE ordering, read through ONE accessor ───────────────────
+// ⚠️ THE BUG THIS FIXES. Four render sites picked a member's role with
+// `roles.find(...)`, i.e. by the order the array happened to be in, while the
+// settings tab sorted by `priority` and the permission resolver
+// (`_bstRolesOf`) sorts by `priority` too. So the tag beside your name in
+// chat could name a different role from the one actually deciding what you
+// can do. Priority wins: it is what the resolver already trusts and what
+// ROLE_TEMPLATES fills in, and making array order authoritative instead would
+// silently reshuffle every bastion that already exists. Array index is the
+// tiebreak so two roles at the same priority keep a stable order.
+function _bstRolesOrdered(b) {
+  const roles = (b && b.roles) || [];
+  return roles.map((r, i) => ({ r, i }))
+    .sort((a, c) => ((c.r.priority || 0) - (a.r.priority || 0)) || (a.i - c.i))
+    .map(x => x.r);
+}
+// The roles a member actually holds, highest first.
+function _bstRolesFor(b, username) {
+  const ids = ((b && b.memberRoles) || {})[username] || [];
+  if (!ids.length) return [];
+  return _bstRolesOrdered(b).filter(r => ids.includes(r.id));
+}
+// The one role that speaks for a member: their highest.
+function _bstTopRole(b, username) { return _bstRolesFor(b, username)[0] || null; }
+
+// A role's name is drawn with the SAME machinery display names use, so a
+// gradient role costs no new rendering path.
+function _bstRoleNameStyle(role) {
+  if (!role) return '';
+  const c = role.color || '#60a5fa';
+  if (role.gradient && typeof _getDisplayEffectCSS === 'function')
+    return _getDisplayEffectCSS('gradient', c, role.color2 || c);
+  return `color:${c};`;
+}
+// ⚠️ A ROLE NEVER CARRIES IMAGE BYTES OF ITS OWN unless it has to. An emote
+// icon stores the emote's NAME and is resolved against the bastion at render;
+// an uploaded one is downscaled to 64px before it is ever written. `roles`
+// rides along in every bastion sync, so a full-size data URL copied onto a
+// role would be re-sent to everyone on every save.
+function _bstRoleIconHTML(role, size, b) {
+  const ic = role && role.icon;
+  if (!ic) return '';
+  const px = size || 16;
+  let src = '';
+  if (ic.kind === 'emote') {
+    const ce = ((b && b.customEmojis) || []).find(e => e && e.name === ic.name);
+    src = (ce && ce.data) || '';
+  } else if (ic.kind === 'img') src = ic.data || '';
+  if (!src) return '';
+  return `<img class="bstr-ico" src="${escapeHTML(src)}" alt="" style="width:${px}px;height:${px}px;">`;
+}
+
 // Get all roles for a user across current bastion context
 function getUserRolesInBastion(username, bastionIdx) {
   bastionIdx ??= curBastion;
   const b = CU?.bastions?.[bastionIdx];
   if (!b) return [];
-  const roles = b.roles || [];
-  const memberRoles = (b.memberRoles || {})[username] || [];
-  return roles.filter(r => memberRoles.includes(r.id));
+  return _bstRolesFor(b, username);
 }
 
 // Render all role tags for a user, first role is visually prominent
 function renderUserRoleTags(username, bastionIdx) {
   const roles = getUserRolesInBastion(username, bastionIdx);
   if (!roles.length) return '';
+  const b = CU?.bastions?.[bastionIdx ?? curBastion];
   return '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">' +
     roles.map((r, i) => {
       const col = r.color || '#60a5fa';
       const isFirst = i === 0;
-      return `<span class="role-tag" style="color:${col};background:${col}${isFirst?'33':'18'};border:1px solid ${col}${isFirst?'66':'33'};${isFirst?'font-weight:800;':'font-weight:600;'}">${escapeHTML(r.name)}</span>`;
+      return `<span class="role-tag" style="background:${col}${isFirst?'33':'18'};border:1px solid ${col}${isFirst?'66':'33'};font-weight:${isFirst?700:600};">${_bstRoleIconHTML(r, 12, b)}<span style="${_bstRoleNameStyle(r)}">${escapeHTML(r.name)}</span></span>`;
     }).join('') + '</div>';
 }
 
@@ -13420,22 +13474,22 @@ function getMsgRoleTag(fromUser, context) {
   if (curBastion === null) return '';
   const b = CU?.bastions?.[curBastion];
   if (!b) return '';
-  const roles = b.roles || [];
-  const memberRoles = (b.memberRoles || {})[fromUser] || [];
-  const pr = roles.find(r => memberRoles.includes(r.id));
+  const pr = _bstTopRole(b, fromUser);
   if (!pr) return '';
-  // Discord-style pill: colored dot + name on colored bg
+  // ⚠️ `displayAsTag` used to be DEAD DATA — written by the role editor, read
+  // nowhere. It means what it says now: a role only appears beside a name in
+  // chat if it was asked to. Roles that predate the flag have no opinion, so
+  // `!== false` keeps every existing bastion looking exactly as it does today.
+  if (pr.displayAsTag === false) return '';
   const col = pr.color || '#60a5fa';
-  return `<span class="role-tag" style="color:${col};background:${col}22;border:1px solid ${col}44;">${escapeHTML(pr.name)}</span>`;
+  return `<span class="role-tag" style="background:${col}22;border:1px solid ${col}44;">${_bstRoleIconHTML(pr, 12, b)}<span style="${_bstRoleNameStyle(pr)}">${escapeHTML(pr.name)}</span></span>`;
 }
 function getMsgRoleColor(fromUser, context) {
   if (context !== 'ch' && context !== 'channel') return '';
   if (curBastion === null) return '';
   const b = CU?.bastions?.[curBastion];
   if (!b) return '';
-  const roles = b.roles || [];
-  const memberRoles = (b.memberRoles || {})[fromUser] || [];
-  const pr = roles.find(r => memberRoles.includes(r.id));
+  const pr = _bstTopRole(b, fromUser);
   return pr ? (pr.color || '#60a5fa') : '';
 }
 function _getLastAuthor(container) {
@@ -15305,7 +15359,11 @@ async function renderMemberList() {
   extraFromRoles.forEach(u => { if (!members.includes(u)) members.push(u); });
   members = [...new Set(members)].filter(Boolean);
 
-  const roles = b.roles || [];
+  // ⚠️ ONE ordering. `_bstRolesOrdered` sorts by priority, which fixes BOTH the
+  // `roles.find` below (whose group a member lands in) and the `roles.indexOf`
+  // that orders the groups — they used to follow raw array order and could
+  // disagree with the role settings tab and the permission resolver.
+  const roles = _bstRolesOrdered(b);
   const memberRoles = b.memberRoles || {};
   const deployedBots = b.deployedBots || [];
   const totalCount = members.length + deployedBots.length;
@@ -15336,7 +15394,11 @@ async function renderMemberList() {
   const noRole = [];
   members.filter(u => u !== b.owner).forEach(u => {
     const rids = memberRoles[u] || [];
-    const primaryRole = roles.find(r => rids.includes(r.id));
+    // `hoist` decides whether a role gets its own section in this list. Every
+    // role used to get one, so a bastion with ten roles read as ten headers of
+    // one person each. `!== false` keeps existing bastions grouped exactly as
+    // they are; only a role explicitly told not to hoist drops out.
+    const primaryRole = roles.find(r => rids.includes(r.id) && r.hoist !== false);
     if (primaryRole) {
       if (!roleGroups[primaryRole.id]) roleGroups[primaryRole.id] = { role: primaryRole, members: [] };
       roleGroups[primaryRole.id].members.push(u);
@@ -15371,14 +15433,21 @@ async function renderMemberList() {
   sortedGroups.forEach(g => {
     const online = g.members.filter(u => isOnlineStatus(statusMap[u]));
     if (online.length) {
-      items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header"><span style="width:6px;height:6px;border-radius:50%;background:${g.role.color||'var(--muted)'};flex-shrink:0;"></span> ${escapeHTML(g.role.name)} <span class="ml-role-count">— ${online.length}</span></div>` });
+      // ⚠️ The icon replaces the dot rather than joining it — a header is
+      // _MLH_ROLE tall and this list is virtualised, so nothing here may add
+      // height. Both marks render at 12px inside the same line box.
+      const rmark = _bstRoleIconHTML(g.role, 12, b) || `<span style="width:6px;height:6px;border-radius:50%;background:${g.role.color||'var(--muted)'};flex-shrink:0;"></span>`;
+      // The header name stays muted like every other section head; the mark is
+      // what carries the role's colour. A gradient name in a 10px uppercase
+      // header reads as a rendering fault, not a style.
+      items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header">${rmark} ${escapeHTML(g.role.name)} <span class="ml-role-count">· ${online.length}</span></div>` });
       online.forEach(u => items.push({ type:'member', height:_mlRowHeightFor(u, false), u, isOffline:false }));
     }
   });
 
   const noRoleOnline = noRole.filter(u => isOnlineStatus(statusMap[u]));
   if (noRoleOnline.length) {
-    items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header">Online <span class="ml-role-count">— ${noRoleOnline.length}</span></div>` });
+    items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header">Online <span class="ml-role-count">· ${noRoleOnline.length}</span></div>` });
     noRoleOnline.forEach(u => items.push({ type:'member', height:_mlRowHeightFor(u, false), u, isOffline:false }));
   }
 
@@ -15386,12 +15455,12 @@ async function renderMemberList() {
   sortedGroups.forEach(g => { allOffline.push(...g.members.filter(u => !isOnlineStatus(statusMap[u]))); });
   allOffline.push(...noRole.filter(u => !isOnlineStatus(statusMap[u])));
   if (allOffline.length) {
-    items.push({ type:'role-header', height:_MLH_OFFL_GAP, html:`<div class="ml-role-header" style="margin-top:8px;opacity:.5;">Offline <span class="ml-role-count">— ${allOffline.length}</span></div>` });
+    items.push({ type:'role-header', height:_MLH_OFFL_GAP, html:`<div class="ml-role-header" style="margin-top:8px;opacity:.5;">Offline <span class="ml-role-count">· ${allOffline.length}</span></div>` });
     allOffline.forEach(u => items.push({ type:'member', height:_MLH_ENTRY, u, isOffline:true }));
   }
 
   if (deployedBots.length) {
-    items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header"><img src="/badges/bot.png" style="width:12px;height:12px;object-fit:contain;opacity:.5;"> Bots <span class="ml-role-count">— ${deployedBots.length}</span></div>` });
+    items.push({ type:'role-header', height:_MLH_ROLE, html:`<div class="ml-role-header"><img src="/badges/bot.png" style="width:12px;height:12px;object-fit:contain;opacity:.5;"> Bots <span class="ml-role-count">· ${deployedBots.length}</span></div>` });
     deployedBots.forEach(bot => items.push({ type:'bot', height:_MLH_ENTRY, bot }));
   }
 
@@ -15452,6 +15521,9 @@ function _filterMemberList(query) {
 
 function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
   const rids = memberRoles[u] || [];
+  // `roles` is already priority-ordered (_mlRoles). No `hoist` filter here on
+  // purpose: hoist decides which SECTION you sit in, colour comes from your
+  // highest role either way — so a non-hoisted top role still paints the name.
   const primaryRole = roles.find(r => rids.includes(r.id));
   const isMe = u === CU.username;
   // Read from the persistent profile cache so previously-seen members
@@ -19220,7 +19292,7 @@ function initFortizedUXResilience() {
             FortizedSocial.getGlobalBastion(data.bastionId).then(fresh => {
               if (!fresh) return;
               // Sync ALL fields from global
-              const syncFields = ['roles','memberRoles','channels','name','icon','banner','emblem','desc','tagline','members','memberCount','invites','automod','boostLevel','customEmojis','public','categories','moodDisabled','moodLocked','lockedMood','customMood','overview','bans','verified'];
+              const syncFields = ['roles','everyone','memberRoles','channels','name','icon','banner','emblem','desc','tagline','members','memberCount','invites','automod','boostLevel','customEmojis','public','categories','moodDisabled','moodLocked','lockedMood','customMood','overview','bans','verified'];
               syncFields.forEach(f => { if (fresh[f] !== undefined) b[f] = fresh[f]; });
               saveLocal();
               renderRailBastions();
@@ -20132,7 +20204,11 @@ async function generateBastionTemplateLink(bastionIdx) {
     banner: b.banner || null,
     channels: (b.channels||[]).map(ch => ({name:ch.name, type:ch.type, desc:ch.desc||'', categoryId:ch.categoryId||null, nsfw:ch.nsfw||false})),
     categories: b.categories || [],
-    roles: (b.roles||[]).map(r => ({id:r.id, name:r.name, color:r.color, permissions:r.permissions||[], priority:r.priority||0, displayAsTag:r.displayAsTag||false})),
+    roles: (b.roles||[]).map(r => ({id:r.id, name:r.name, color:r.color, color2:r.color2||null,
+      gradient:r.gradient||false, icon:r.icon||null, permissions:r.permissions||[], priority:r.priority||0,
+      displayAsTag:r.displayAsTag||false, hoist:r.hoist||false, mentionable:r.mentionable||false,
+      selfAssign:r.selfAssign||false})),
+    everyone: b.everyone || null,
     createdBy: CU.username,
     createdAt: new Date().toISOString(),
     bastionName: b.name,
@@ -21259,39 +21335,11 @@ function renderBSettingsMain(tab) {
       ${uncatHTML||(!cats.length?'<div style="color:var(--muted);font-size:13.5px;text-align:center;padding:20px;">No channels yet. Create some above!</div>':'')}`;
   }
   else if (tab==='roles') {
-    const sortedRoles = (b.roles||[]).map((r,i)=>({...r,_idx:i})).sort((a,b_)=>(b_.priority||0)-(a.priority||0));
-    const rolesHTML = sortedRoles.map(r=>`
-      <div class="role-item" onclick="editRole(${r._idx})" style="position:relative;">
-        <div class="role-dot" style="background:${r.color};"></div>
-        <div class="role-name">${escapeHTML(r.name)}</div>
-        ${r.displayAsTag?'<span style="font-size:9px;padding:2px 6px;border-radius:var(--radius-pill);border:1px solid '+r.color+'33;color:'+r.color+';background:'+r.color+'15;">Tag</span>':''}
-        <div style="font-size:11px;color:var(--muted);margin-left:auto;display:flex;align-items:center;gap:6px;">
-          <span title="Priority">#${r.priority||0}</span>
-          <span>${(r.permissions||[]).length} perms</span>
-        </div>
-        <span style="color:var(--muted);">→</span>
-      </div>`).join('');
-    const tmplCards = Object.entries(ROLE_TEMPLATES).map(([key,t])=>{
-      const pillsHTML = t.roles.slice(0,4).map(r=>`<span class="rtc-role-pill" style="color:${r.color};background:${r.color}15;border:1px solid ${r.color}33;">${escapeHTML(r.name)}</span>`).join('');
-      return `<div class="role-tmpl-card" onclick="applyRoleTemplate('${key}')">
-        <div class="rtc-emoji">${t.emoji}</div>
-        <div class="rtc-name">${escapeHTML(t.name)}</div>
-        <div class="rtc-desc">${escapeHTML(t.desc)}</div>
-        <div class="rtc-roles">${pillsHTML}${t.roles.length>4?`<span style="font-size:9px;color:var(--muted);padding:2px 4px;">+${t.roles.length-4}</span>`:''}</div>
-      </div>`;
-    }).join('');
-    main.innerHTML = `
-      <div class="bs-section-title">Roles</div>
-      <div class="bs-section-desc">Roles are sorted by priority (highest first). Higher priority roles override lower ones.</div>
-      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
-        <button class="btn-a" style="font-size:13px;" onclick="createNewRole()">+ Create Role</button>
-      </div>
-      ${rolesHTML||'<div style="color:var(--muted);font-size:13.5px;margin-bottom:20px;">No roles created yet.</div>'}
-      <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
-        <div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;">Role Templates</div>
-        <div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Apply a preset role structure. This will replace all existing roles.</div>
-        <div class="role-tmpl-grid">${tmplCards}</div>
-      </div>`;
+    // A role being edited takes over the whole pane. The nav above stays on
+    // "Roles" (renderBSettingsNav already ran), so this reads as a sub-page of
+    // the tab rather than a modal stacked on top of the settings card.
+    if (_bstRoleDraft) { _bstRoleRender(); return; }
+    main.innerHTML = _bstRolesListHTML(b);
   }
   else if (tab==='emojis') {
     const slotsByLevel = [15,25,35,50];
@@ -23574,13 +23622,10 @@ async function loadBastionMembersList() {
   let members=[];
   try { members = await FortizedSocial.getBastionMembers(b.globalId||b.name)||[]; } catch(e) { _wrn('[Bastion] Members list load:', e?.message); }
   if(!members.length) members=[b.owner];
-  const roles = b.roles||[];
-  const memberRoles = b.memberRoles||{};
   const isOwner = b.owner===CU.username;
   el.innerHTML = members.map(u=>{
-    const uRoleIds = memberRoles[u]||[];
-    const uRoles = roles.filter(r=>uRoleIds.includes(r.id));
-    const roleTags = uRoles.map(r=>`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);border:1px solid ${r.color}33;color:${r.color};background:${r.color}15;">${escapeHTML(r.name)}</span>`).join(' ');
+    const uRoles = _bstRolesFor(b, u);
+    const roleTags = uRoles.map(r=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);border:1px solid ${r.color}33;background:${r.color}15;">${_bstRoleIconHTML(r, 11, b)}<span style="${_bstRoleNameStyle(r)}">${escapeHTML(r.name)}</span></span>`).join(' ');
     const repScore = getReputation(b.globalId||b.name, u);
     const repTier = getRepTier(repScore);
     const repBadge = repScore > 0 ? `<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);border:1px solid ${repTier.color}33;color:${repTier.color};background:${repTier.color}15;">${repTier.label}</span>` : '';
@@ -23882,83 +23927,452 @@ async function transferBastionOwnership() {
 // ════════════════════════════════════════════
 // ROLES
 // ════════════════════════════════════════════
-function createNewRole() {
-  currentRoleEditing = {id:'r'+Date.now(),name:'New Role',color:ROLE_COLORS[0],permissions:['send_messages','read_history','add_reactions']};
-  document.getElementById('re-title').textContent='Create Role';
-  document.getElementById('re-delete-btn').style.display='none';
-  openRoleEditor();
+// The old editor was a `.modal wide tall` stacked ON TOP of the settings card:
+// a name, eight swatches, a priority slider and a wall of bare toggles. Two
+// things were wrong with it beyond the looks. It dropped PERMISSIONS[3] — the
+// line saying what each toggle actually hands out — so an owner was asked to
+// guess. And opening a second card over the settings card is the reason the
+// roles tab never read as part of the bastion.
+//
+// The editor is a SUB-PAGE of the tab now: it replaces #bsettings-main while
+// the nav above stays marked on "Roles". Nothing is written until Save —
+// `_bstRoleDraft` is a deep copy, so backing out of a half-made role leaves
+// `b.roles` exactly as it was.
+const _BSTR_GRIP = '<svg viewBox="0 0 320 512" fill="currentColor" aria-hidden="true"><path d="M40 352h48c22.1 0 40 17.9 40 40v48c0 22.1-17.9 40-40 40H40c-22.1 0-40-17.9-40-40v-48c0-22.1 17.9-40 40-40zm192 0h48c22.1 0 40 17.9 40 40v48c0 22.1-17.9 40-40 40h-48c-22.1 0-40-17.9-40-40v-48c0-22.1 17.9-40 40-40zM40 192h48c22.1 0 40 17.9 40 40v48c0 22.1-17.9 40-40 40H40c-22.1 0-40-17.9-40-40v-48c0-22.1 17.9-40 40-40zm192 0h48c22.1 0 40 17.9 40 40v48c0 22.1-17.9 40-40 40h-48c-22.1 0-40-17.9-40-40v-48c0-22.1 17.9-40 40-40zM40 32h48c22.1 0 40 17.9 40 40v48c0 22.1-17.9 40-40 40H40c-22.1 0-40-17.9-40-40V72c0-22.1 17.9-40 40-40zm192 0h48c22.1 0 40 17.9 40 40v48c0 22.1-17.9 40-40 40h-48c-22.1 0-40-17.9-40-40V72c0-22.1 17.9-40 40-40z"/></svg>';
+const _BSTR_CHEV = '<svg viewBox="0 0 320 512" fill="currentColor" aria-hidden="true"><path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg>';
+const _BSTR_CHEVL = '<svg viewBox="0 0 320 512" fill="currentColor" aria-hidden="true"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"/></svg>';
+const _BSTR_TICK = '<svg viewBox="0 0 448 512" fill="currentColor" aria-hidden="true"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
+
+function _bstRoleMemberCount(b, roleId) {
+  return Object.values((b && b.memberRoles) || {}).filter(ids => (ids || []).includes(roleId)).length;
 }
-function editRole(idx) {
-  const b=CU.bastions[curBastion];
-  currentRoleEditing={...b.roles[idx], _idx:idx};
-  document.getElementById('re-title').textContent='Edit Role';
-  document.getElementById('re-delete-btn').style.display='';
-  openRoleEditor();
-}
-function openRoleEditor() {
-  const r=currentRoleEditing;
-  document.getElementById('re-name').value=r.name;
-  document.getElementById('re-colors').innerHTML=ROLE_COLORS.map(c=>`<div class="color-swatch ${r.color===c?'sel':''}" style="background:${c};" onclick="selectRoleColor('${c}')"></div>`).join('');
-  // Priority & Display as Tag
-  const extraEl=document.getElementById('re-extras');
-  if(extraEl) extraEl.innerHTML=`
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
-      <div style="flex:1;"><div style="font-size:12px;font-weight:700;margin-bottom:4px;">Priority</div>
-        <div style="display:flex;align-items:center;gap:8px;"><input type="range" id="re-priority" min="0" max="100" value="${r.priority||0}" style="flex:1;accent-color:var(--accent);"><span id="re-priority-val" style="font-size:13px;font-weight:700;min-width:24px;text-align:center;">${r.priority||0}</span></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12px;font-weight:700;">Display as Tag</span><div class="toggle ${r.displayAsTag?'on':''}" onclick="currentRoleEditing.displayAsTag=!currentRoleEditing.displayAsTag;this.classList.toggle('on')"></div></div>
+
+function _bstRolesListHTML(b) {
+  const ordered = _bstRolesOrdered(b);
+  const rows = ordered.map((r, i) => {
+    const col = r.color || '#60a5fa';
+    const n = _bstRoleMemberCount(b, r.id);
+    const mark = _bstRoleIconHTML(r, 18, b) || `<span class="bstr-dot" style="background:${col};"></span>`;
+    const id = escapeHTML(r.id || '');
+    return `<div class="bstr-row" draggable="true" data-i="${i}" role="button" tabindex="0"
+        ondragstart="_bstRoleDragStart(event,${i})" ondragover="_bstRoleDragOver(event,${i})"
+        ondrop="_bstRoleDrop(event,${i})" ondragend="_bstRoleDragEnd(event)"
+        onclick="_bstRoleOpen('${id}')" onkeydown="if(event.key==='Enter'){_bstRoleOpen('${id}')}">
+      <span class="bstr-grip">${_BSTR_GRIP}</span>
+      <span class="bstr-mark">${mark}</span>
+      <span class="bstr-rname" style="${_bstRoleNameStyle(r)}">${escapeHTML(r.name || 'Role')}</span>
+      <span class="bstr-count">${n} ${n === 1 ? 'member' : 'members'}</span>
+      <span class="bstr-chev">${_BSTR_CHEV}</span>
     </div>`;
-  const prSlider=document.getElementById('re-priority');
-  if(prSlider)prSlider.oninput=function(){document.getElementById('re-priority-val').textContent=this.value;currentRoleEditing.priority=parseInt(this.value);};
-  // Grouped permissions
-  const permsEl=document.getElementById('re-perms');
-  let permsHTML='';
-  PERM_GROUPS.forEach(group=>{
-    const groupPerms=PERMISSIONS.filter(p=>p[2]===group);
-    if(!groupPerms.length)return;
-    permsHTML+=`<div style="margin-bottom:16px;"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border);">${group}</div>`;
-    groupPerms.forEach(([key,label])=>{
-      permsHTML+=`<div class="perm-row"><div class="perm-info"><div class="perm-label">${label}</div></div><div class="toggle ${(r.permissions||[]).includes(key)?'on':''}" onclick="toggleRolePerm('${key}',this)"></div></div>`;
+  }).join('');
+
+  // @everyone is not a row in b.roles — it is `b.everyone`, the bare permission
+  // list the resolver already reads before any role is added. It has never had
+  // a UI. Editing it through the same card means one editor, not two.
+  const ev = _bstEveryone(b).length;
+  const everyoneRow = `<div class="bstr-row bstr-row--ev" role="button" tabindex="0"
+      onclick="_bstRoleOpen('@everyone')" onkeydown="if(event.key==='Enter'){_bstRoleOpen('@everyone')}">
+    <span class="bstr-grip bstr-grip--off">${_BSTR_GRIP}</span>
+    <span class="bstr-mark"><span class="bstr-dot" style="background:#b3b2b4;"></span></span>
+    <span class="bstr-rname">@everyone</span>
+    <span class="bstr-count">${ev} ${ev === 1 ? 'permission' : 'permissions'}</span>
+    <span class="bstr-chev">${_BSTR_CHEV}</span>
+  </div>`;
+
+  const tmpl = Object.keys(ROLE_TEMPLATES).map(id => {
+    const t = ROLE_TEMPLATES[id];
+    return `<div class="role-tmpl-card" role="button" tabindex="0" onclick="applyRoleTemplate('${id}')"
+        onkeydown="if(event.key==='Enter'){applyRoleTemplate('${id}')}">
+      <div class="rtc-emoji">${t.emoji}</div>
+      <div class="rtc-name">${escapeHTML(t.name)}</div>
+      <div class="rtc-desc">${escapeHTML(t.desc)}</div>
+      <div class="rtc-roles">${(t.roles || []).map(r => `<span class="rtc-role-pill" style="background:${r.color}22;color:${r.color};">${escapeHTML(r.name)}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="bs-section-title">Roles</div>
+    <div class="bs-section-desc">A member gets the permissions of every role they hold, added together. Drag to reorder: the role nearest the top is the one whose colour and icon show beside a name.</div>
+    <button class="fs-btn fs-btn--primary bstr-add" onclick="_bstRoleNew()">+ Add another role</button>
+    <div class="bstr-list" id="bstr-list">${rows}</div>
+    ${everyoneRow}
+    <div class="bs-section-title" style="margin-top:30px;">Start from a template</div>
+    <div class="bs-section-desc">Replaces every role you have with a ready-made set.</div>
+    <div class="role-tmpl-grid">${tmpl}</div>`;
+}
+
+function _bstRoleNew() {
+  _bstRoleDraft = {
+    id: 'r' + Date.now() + Math.random().toString(36).slice(2, 6),
+    name: 'New Role', color: ROLE_COLORS[0],
+    permissions: ['view_channel', 'send_messages', 'read_history', 'add_reactions'],
+    priority: 0, displayAsTag: false, hoist: false, mentionable: false, selfAssign: false
+  };
+  _bstRoleDraftIdx = -1; _bstRoleTab = 'display'; _bstRoleQ = ''; _bstRoleMemberQ = '';
+  _bstRoleRender();
+}
+
+function _bstRoleOpen(roleId) {
+  const b = CU && CU.bastions && CU.bastions[curBastion];
+  if (!b) return;
+  if (roleId === '@everyone') {
+    _bstRoleDraft = { id: '@everyone', name: '@everyone', color: '#b3b2b4', permissions: _bstEveryone(b).slice() };
+    _bstRoleDraftIdx = -2; _bstRoleTab = 'permissions';
+  } else {
+    const idx = (b.roles || []).findIndex(r => r && r.id === roleId);
+    if (idx < 0) return;
+    _bstRoleDraft = JSON.parse(JSON.stringify(b.roles[idx]));
+    _bstRoleDraftIdx = idx; _bstRoleTab = 'display';
+  }
+  _bstRoleQ = ''; _bstRoleMemberQ = '';
+  _bstRoleRender();
+}
+
+function _bstRoleBack() {
+  _bstRoleDraft = null; _bstRoleDraftIdx = -1;
+  renderBSettingsMain('roles');
+}
+function _bstRoleSetTab(t) { _bstRoleTab = t; _bstRoleRender(); }
+function _bstRoleSetField(k, v, quiet) {
+  if (!_bstRoleDraft) return;
+  _bstRoleDraft[k] = v;
+  if (!quiet) _bstRoleRender();
+}
+function _bstRoleToggle(k, el) {
+  if (!_bstRoleDraft) return;
+  const on = !_bstRoleDraft[k];
+  _bstRoleDraft[k] = on;
+  el.classList.toggle('on', on);
+  el.setAttribute('aria-checked', on ? 'true' : 'false');
+}
+// The name field must not re-render on every keystroke or it loses the caret,
+// so it writes quietly and repaints only the heading it feeds.
+function _bstRoleSyncPreview() {
+  const el = document.getElementById('bstr-preview-name');
+  if (el && _bstRoleDraft) el.textContent = _bstRoleDraft.name || '';
+}
+
+function _bstRoleDisplayHTML(b, d) {
+  const col = d.color || ROLE_COLORS[0];
+  const grad = !!d.gradient;
+  const sw = (val, key) => ROLE_COLORS.map(c =>
+    `<button class="bstr-sw${c.toLowerCase() === String(val).toLowerCase() ? ' sel' : ''}" style="background:${c};"
+      title="${c}" onclick="_bstRoleSetField('${key}','${c}')"></button>`).join('');
+
+  const emotes = (b.customEmojis || []).slice(0, 48).map(e => {
+    const on = d.icon && d.icon.kind === 'emote' && d.icon.name === e.name;
+    return `<button class="bstr-emote${on ? ' sel' : ''}" title=":${escapeHTML(e.name)}:"
+      onclick="_bstRoleIconEmote('${escapeHTML(e.name)}')"><img src="${escapeHTML(e.data || '')}" alt=""></button>`;
+  }).join('');
+
+  const tog = (key, label, desc) => `<div class="bstr-opt">
+    <div class="bstr-opt-txt"><div class="bstr-opt-l">${label}</div><div class="bstr-opt-d">${desc}</div></div>
+    <div class="toggle ${d[key] ? 'on' : ''}" role="switch" aria-checked="${d[key] ? 'true' : 'false'}" tabindex="0"
+      onclick="_bstRoleToggle('${key}',this)"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();_bstRoleToggle('${key}',this)}"></div>
+  </div>`;
+
+  return `
+    <label class="bstr-lb" for="bstr-name">Role name</label>
+    <input class="settings-input" id="bstr-name" maxlength="40" value="${escapeHTML(d.name || '')}"
+      oninput="_bstRoleSetField('name',this.value,true);_bstRoleSyncPreview()" placeholder="Knight">
+
+    <label class="bstr-lb">Colour</label>
+    <div class="bstr-seg">
+      <button class="bstr-segb${grad ? '' : ' on'}" onclick="_bstRoleSetField('gradient',false)">Solid</button>
+      <button class="bstr-segb${grad ? ' on' : ''}" onclick="_bstRoleSetField('gradient',true)">Gradient</button>
+    </div>
+    <div class="bstr-swrow">${sw(col, 'color')}
+      <label class="bstr-custom" title="Pick your own"><input type="color" value="${/^#[0-9a-f]{6}$/i.test(col) ? col : '#fbbf24'}"
+        oninput="_bstRoleSetField('color',this.value,true);_bstRoleRepaintDots()" onchange="_bstRoleSetField('color',this.value)"></label>
+    </div>
+    ${grad ? `<div class="bstr-swrow bstr-swrow--2">${sw(d.color2 || ROLE_COLORS[4], 'color2')}
+      <label class="bstr-custom" title="Second colour"><input type="color" value="${/^#[0-9a-f]{6}$/i.test(d.color2 || '') ? d.color2 : '#a78bfa'}"
+        onchange="_bstRoleSetField('color2',this.value)"></label>
+    </div>` : ''}
+
+    <label class="bstr-lb">Role icon</label>
+    <div class="bstr-iconrow">
+      <span class="bstr-iconprev">${_bstRoleIconHTML(d, 26, b) || `<span class="bstr-dot bstr-dot--lg" style="background:${col};"></span>`}</span>
+      <button class="fs-btn" onclick="_bstRoleIconUpload()">Upload</button>
+      ${d.icon ? '<button class="fs-btn" onclick="_bstRoleIconClear()">Remove</button>' : ''}
+    </div>
+    ${emotes ? `<div class="bstr-emotes">${emotes}</div>` : '<div class="bstr-hint">Add emotes to this bastion and you can use one as the icon.</div>'}
+
+    <label class="bstr-lb">Behaviour</label>
+    ${tog('hoist', 'Display separately', 'Members with this role get their own group at the top of the member list.')}
+    ${tog('displayAsTag', 'Show as a tag', 'The role name sits beside the display name, in the role colour.')}
+    ${tog('mentionable', 'Let anyone mention it', 'Members can ping everyone holding this role.')}
+    ${tog('selfAssign', 'Self-assignable', 'Members can pick this role up themselves without asking staff.')}`;
+}
+
+function _bstRolePermBodyHTML(d) {
+  const q = (_bstRoleQ || '').trim().toLowerCase();
+  const have = d.permissions || [];
+  let out = '';
+  PERM_GROUPS.forEach(group => {
+    const list = PERMISSIONS.filter(p => p[2] === group &&
+      (!q || p[1].toLowerCase().includes(q) || String(p[3] || '').toLowerCase().includes(q)));
+    if (!list.length) return;
+    out += `<div class="bstr-pg"><div class="bstr-pghead">${escapeHTML(group)}</div>` + list.map(p => {
+      const on = have.includes(p[0]);
+      return `<div class="bstr-perm${on ? ' on' : ''}" role="switch" aria-checked="${on ? 'true' : 'false'}" tabindex="0"
+        onclick="_bstRoleTogglePerm('${p[0]}',this)"
+        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();_bstRoleTogglePerm('${p[0]}',this)}">
+        <div class="bstr-perm-txt"><div class="bstr-perm-l">${escapeHTML(p[1])}</div><div class="bstr-perm-d">${escapeHTML(p[3] || '')}</div></div>
+        <span class="nm-check bstr-chk">${on ? _BSTR_TICK : ''}</span>
+      </div>`;
+    }).join('') + '</div>';
+  });
+  if (!out) out = `<div class="nm-empty">Nothing matches "${escapeHTML(_bstRoleQ)}".</div>`;
+  if (have.includes('administrator'))
+    out = `<div class="bstr-warn">Administrator carries every permission on this list, everywhere in the bastion, whatever the rest of these switches say.</div>` + out;
+  return out;
+}
+
+function _bstRolePermsHTML(b, d) {
+  // ⚠️ The honest limit, said once and said plainly. These switches decide what
+  // the app draws and what it will do. They are not a wall: until passwords are
+  // hashed and RLS is on for `users`, the table can be read directly with the
+  // shipped anon key. So nothing here may be described as private or secure.
+  return `
+    <div class="bstr-note">Permissions decide what this app lets a member do. Treat anything posted in a bastion as readable by the people in it.</div>
+    <input class="settings-input bstr-psearch" placeholder="Search permissions" value="${escapeHTML(_bstRoleQ || '')}"
+      oninput="_bstRolePermSearch(this.value)">
+    <div id="bstr-permbody">${_bstRolePermBodyHTML(d)}</div>`;
+}
+function _bstRolePermSearch(v) {
+  _bstRoleQ = v;
+  const el = document.getElementById('bstr-permbody');
+  if (el && _bstRoleDraft) el.innerHTML = _bstRolePermBodyHTML(_bstRoleDraft);
+}
+function _bstRoleTogglePerm(key, el) {
+  const d = _bstRoleDraft; if (!d) return;
+  d.permissions = d.permissions || [];
+  const on = !d.permissions.includes(key);
+  d.permissions = on ? d.permissions.concat([key]) : d.permissions.filter(p => p !== key);
+  el.classList.toggle('on', on);
+  el.setAttribute('aria-checked', on ? 'true' : 'false');
+  const chk = el.querySelector('.bstr-chk');
+  if (chk) chk.innerHTML = on ? _BSTR_TICK : '';
+  // Administrator changes what every other row means, so that one repaints the list.
+  if (key === 'administrator') _bstRolePermSearch(_bstRoleQ);
+}
+
+function _bstRoleMemberBodyHTML(b, d) {
+  // ⚠️ Searches b.members, which is already in memory. NOT _stfPicker: that one
+  // resolves people through getUsers(), a scan of the whole users table, and
+  // this list only ever needs people who are already in this bastion.
+  const q = (_bstRoleMemberQ || '').trim().toLowerCase();
+  const names = Array.from(new Set([].concat(b.members || [], Object.keys(b.memberRoles || {}))))
+    .filter(u => u && (!q || u.toLowerCase().includes(q)));
+  const held = names.filter(u => ((b.memberRoles || {})[u] || []).includes(d.id));
+  const rest = names.filter(u => held.indexOf(u) < 0);
+  if (!names.length) return `<div class="nm-empty">${q ? 'Nobody here matches that.' : 'This bastion has no members yet.'}</div>`;
+  const row = u => {
+    const on = ((b.memberRoles || {})[u] || []).includes(d.id);
+    return `<div class="nm-row bstr-pick${on ? ' sel' : ''}" role="button" tabindex="0"
+        onclick="_bstRoleMemberToggle('${escapeHTML(u)}')"
+        onkeydown="if(event.key==='Enter'){_bstRoleMemberToggle('${escapeHTML(u)}')}">
+      <span class="nm-av">${buildAvatarHTML(_pfpCache && _pfpCache[u], u, 30)}</span>
+      <span class="nm-info"><span class="nm-name">${escapeHTML(u)}</span></span>
+      <span class="nm-check bstr-pick-mark">${on ? _BSTR_TICK : ''}</span>
+    </div>`;
+  };
+  return (held.length ? `<div class="bstr-pghead">Has this role · ${held.length}</div><div class="bstr-picklist">${held.map(row).join('')}</div>` : '')
+    + (rest.length ? `<div class="bstr-pghead">Everyone else</div><div class="bstr-picklist">${rest.map(row).join('')}</div>` : '');
+}
+function _bstRoleMembersHTML(b, d) {
+  if (_bstRoleDraftIdx === -1)
+    return `<div class="bstr-note">Save the role first. Then you can hand it out here.</div>`;
+  return `
+    <input class="settings-input bstr-psearch" placeholder="Search members" value="${escapeHTML(_bstRoleMemberQ || '')}"
+      oninput="_bstRoleMemberSearch(this.value)">
+    <div id="bstr-membody">${_bstRoleMemberBodyHTML(b, d)}</div>`;
+}
+function _bstRoleMemberSearch(v) {
+  _bstRoleMemberQ = v;
+  const b = CU && CU.bastions && CU.bastions[curBastion];
+  const el = document.getElementById('bstr-membody');
+  if (el && b && _bstRoleDraft) el.innerHTML = _bstRoleMemberBodyHTML(b, _bstRoleDraft);
+}
+async function _bstRoleMemberToggle(user) {
+  const b = CU && CU.bastions && CU.bastions[curBastion];
+  const d = _bstRoleDraft;
+  if (!b || !d || _bstRoleDraftIdx < 0) return;
+  b.memberRoles = b.memberRoles || {};
+  const cur = b.memberRoles[user] || [];
+  b.memberRoles[user] = cur.includes(d.id) ? cur.filter(x => x !== d.id) : cur.concat([d.id]);
+  await saveUser();
+  _syncBastionToGlobal(curBastion);
+  FortizedSocial.socketEmit('bastion:update', { bastionId: b.globalId, field: 'memberRoles' });
+  _bstRoleMemberSearch(_bstRoleMemberQ);
+  try { renderMemberList(); } catch (_) {}
+}
+
+function _bstRoleRepaintDots() {
+  const d = _bstRoleDraft; if (!d) return;
+  document.querySelectorAll('.bstr-body .bstr-dot, .bstr-edithead .bstr-dot')
+    .forEach(el => { el.style.background = d.color || '#60a5fa'; });
+}
+
+function _bstRoleIconEmote(name) {
+  if (!_bstRoleDraft) return;
+  _bstRoleDraft.icon = { kind: 'emote', name: name };
+  _bstRoleRender();
+}
+function _bstRoleIconClear() {
+  if (!_bstRoleDraft) return;
+  delete _bstRoleDraft.icon;
+  _bstRoleRender();
+}
+function _bstRoleIconUpload() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = () => {
+    const f = inp.files && inp.files[0]; if (!f) return;
+    if (f.size > 4 * 1024 * 1024) { toast('That image is too big. 4 MB is the cap.', 'error'); return; }
+    const rd = new FileReader();
+    rd.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        // ⚠️ 64px, always. `roles` rides along in every bastion sync, so a
+        // full-size data URL pinned to a role is re-sent to every member on
+        // every save. On this egress budget that is not hypothetical.
+        const S = 64, c = document.createElement('canvas');
+        c.width = S; c.height = S;
+        const ctx = c.getContext('2d');
+        const side = Math.min(img.width, img.height);
+        ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, S, S);
+        if (_bstRoleDraft) { _bstRoleDraft.icon = { kind: 'img', data: c.toDataURL('image/png') }; _bstRoleRender(); }
+      };
+      img.onerror = () => toast('That image could not be read', 'error');
+      img.src = rd.result;
+    };
+    rd.readAsDataURL(f);
+  };
+  inp.click();
+}
+
+function _bstRoleRender() {
+  const main = document.getElementById('bsettings-main');
+  const b = CU && CU.bastions && CU.bastions[curBastion];
+  const d = _bstRoleDraft;
+  if (!main || !b || !d) return;
+  const everyone = _bstRoleDraftIdx === -2;
+  const isNew = _bstRoleDraftIdx === -1;
+  const tabs = everyone ? [['permissions', 'Permissions']]
+    : [['display', 'Display'], ['permissions', 'Permissions'], ['members', 'Members']];
+  if (!tabs.some(t => t[0] === _bstRoleTab)) _bstRoleTab = tabs[0][0];
+  const body = _bstRoleTab === 'display' ? _bstRoleDisplayHTML(b, d)
+    : _bstRoleTab === 'members' ? _bstRoleMembersHTML(b, d)
+    : _bstRolePermsHTML(b, d);
+  main.innerHTML = `
+    <button class="bstr-back" onclick="_bstRoleBack()">${_BSTR_CHEVL}<span>Roles</span></button>
+    <div class="bstr-edithead">
+      <span class="bstr-mark bstr-mark--lg">${_bstRoleIconHTML(d, 24, b) || `<span class="bstr-dot bstr-dot--lg" style="background:${d.color || '#60a5fa'};"></span>`}</span>
+      <div class="bs-section-title bstr-title" id="bstr-preview-name" style="${everyone ? '' : _bstRoleNameStyle(d)}">${escapeHTML(d.name || '')}</div>
+    </div>
+    <div class="bs-section-desc">${everyone
+      ? 'What every member of this bastion can do before a single role is added. Roles only ever add to this.'
+      : 'A member gets the permissions of every role they hold, added together.'}</div>
+    <div class="bstr-tabs">${tabs.map(t => `<button class="bstr-tab${_bstRoleTab === t[0] ? ' on' : ''}" onclick="_bstRoleSetTab('${t[0]}')">${t[1]}</button>`).join('')}</div>
+    <div class="bstr-body">${body}</div>
+    <div class="bstr-foot">
+      ${(!everyone && !isNew) ? '<button class="fs-btn bstr-del" onclick="_bstRoleDelete()">Delete role</button>' : ''}
+      <span class="bstr-spacer"></span>
+      <button class="fs-btn" onclick="_bstRoleBack()">Cancel</button>
+      <button class="fs-btn fs-btn--primary" onclick="_bstRoleSave()">Save</button>
+    </div>`;
+}
+
+async function _bstRoleSave() {
+  const b = CU && CU.bastions && CU.bastions[curBastion];
+  const d = _bstRoleDraft;
+  if (!b || !d) return;
+  let field = 'roles';
+  if (_bstRoleDraftIdx === -2) {
+    b.everyone = (d.permissions || []).slice();
+    field = 'everyone';
+  } else {
+    d.name = String(d.name || '').trim() || 'New Role';
+    b.roles = b.roles || [];
+    if (_bstRoleDraftIdx >= 0) b.roles[_bstRoleDraftIdx] = d;
+    // A new role is appended at priority 0: _bstRolesOrdered's array-index
+    // tie-break puts it last, so creating a role never renumbers the ladder
+    // somebody else already tuned. Only a deliberate drag restamps priorities.
+    else b.roles.push(d);
+  }
+  await saveUser();
+  _syncBastionToGlobal(curBastion);
+  FortizedSocial.socketEmit('bastion:update', { bastionId: b.globalId, field: field });
+  _bstRoleDraft = null; _bstRoleDraftIdx = -1;
+  renderBSettingsMain('roles');
+  try { renderMemberList(); } catch (_) {}
+  toast(field === 'everyone' ? 'Base permissions saved' : 'Role saved', 'success');
+}
+
+function _bstRoleDelete() {
+  const b = CU && CU.bastions && CU.bastions[curBastion];
+  const d = _bstRoleDraft;
+  if (!b || !d || _bstRoleDraftIdx < 0) return;
+  const id = d.id, idx = _bstRoleDraftIdx;
+  showCustomConfirm(`Delete the "${d.name}" role? Everyone holding it keeps their other roles.`, async () => {
+    b.roles.splice(idx, 1);
+    // ⚠️ A deleted role leaves two kinds of debris, and the resolver reads both:
+    // the id sitting in every member's memberRoles list, and the per-channel
+    // overrides keyed on it. Left behind, a later role reusing that id would
+    // silently inherit the old channel overrides.
+    Object.keys(b.memberRoles || {}).forEach(u => {
+      b.memberRoles[u] = (b.memberRoles[u] || []).filter(x => x !== id);
     });
-    permsHTML+=`</div>`;
+    (b.channels || []).forEach(ch => { if (ch && ch.overrides) delete ch.overrides[id]; });
+    await saveUser();
+    _syncBastionToGlobal(curBastion);
+    FortizedSocial.socketEmit('bastion:update', { bastionId: b.globalId, field: 'roles' });
+    _bstRoleDraft = null; _bstRoleDraftIdx = -1;
+    renderBSettingsMain('roles');
+    try { renderMemberList(); } catch (_) {}
+    toast('Role deleted', 'info');
   });
-  if(permsEl)permsEl.innerHTML=permsHTML;
-  openModal('modal-role-editor');
 }
-function selectRoleColor(color) {
-  currentRoleEditing.color=color;
-  document.querySelectorAll('.color-swatch').forEach(el=>el.classList.toggle('sel',el.style.background===color||el.style.backgroundColor===color));
+
+function _bstRoleDragStart(e, i) {
+  _bstRoleDragFrom = i;
+  e.currentTarget.classList.add('is-drag');
+  try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(i)); } catch (_) {}
 }
-function toggleRolePerm(key, el) {
-  const perms=currentRoleEditing.permissions||[];
-  if(perms.includes(key)) currentRoleEditing.permissions=perms.filter(p=>p!==key);
-  else currentRoleEditing.permissions=[...perms,key];
-  el.classList.toggle('on',currentRoleEditing.permissions.includes(key));
+function _bstRoleDragOver(e, i) {
+  e.preventDefault();
+  try { e.dataTransfer.dropEffect = 'move'; } catch (_) {}
+  document.querySelectorAll('#bstr-list .bstr-row').forEach(el => el.classList.remove('is-over'));
+  if (i !== _bstRoleDragFrom) e.currentTarget.classList.add('is-over');
 }
-async function saveRole() {
-  const b=CU.bastions[curBastion];
-  currentRoleEditing.name=document.getElementById('re-name').value.trim()||currentRoleEditing.name;
-  const prSlider=document.getElementById('re-priority');
-  if(prSlider) currentRoleEditing.priority=parseInt(prSlider.value)||0;
-  if('_idx' in currentRoleEditing) {
-    const idx=currentRoleEditing._idx;
-    delete currentRoleEditing._idx;
-    b.roles[idx]=currentRoleEditing;
-  } else { b.roles=[...(b.roles||[]),currentRoleEditing]; }
-  await saveUser(); _syncBastionToGlobal(curBastion); closeModal('modal-role-editor'); renderBSettingsMain('roles');
-  FortizedSocial.socketEmit('bastion:update', { bastionId: CU.bastions[curBastion]?.globalId, field: 'roles' });
-  toast('Role saved!','success');
+function _bstRoleDragEnd() {
+  _bstRoleDragFrom = -1;
+  document.querySelectorAll('#bstr-list .bstr-row').forEach(el => el.classList.remove('is-drag', 'is-over'));
 }
-async function deleteCurrentRole() {
-  if(!('_idx' in currentRoleEditing)) return;
-  showCustomConfirm('Delete this role?', async ()=>{
-    const b = CU?.bastions?.[curBastion];
-    if (!b?.roles) return;
-    b.roles.splice(currentRoleEditing._idx,1);
-    await saveUser(); _syncBastionToGlobal(curBastion); closeModal('modal-role-editor'); renderBSettingsMain('roles');
-    FortizedSocial.socketEmit('bastion:update', { bastionId: b?.globalId, field: 'roles' });
-    toast('Role deleted','info');
-  });
+async function _bstRoleDrop(e, i) {
+  e.preventDefault();
+  const from = _bstRoleDragFrom;
+  _bstRoleDragEnd();
+  if (from < 0 || from === i) return;
+  const b = CU && CU.bastions && CU.bastions[curBastion];
+  if (!b) return;
+  const ordered = _bstRolesOrdered(b);
+  const moved = ordered.splice(from, 1)[0];
+  ordered.splice(i, 0, moved);
+  // ⚠️ Restamp priority AND rewrite b.roles into the same order. The resolver
+  // sorts on priority and falls back to array index, so leaving either one
+  // behind puts the list and the resolver into disagreement — which is exactly
+  // the drift the one shared accessor was introduced to end.
+  ordered.forEach((r, k) => { r.priority = (ordered.length - k) * 10; });
+  b.roles = ordered;
+  await saveUser();
+  _syncBastionToGlobal(curBastion);
+  FortizedSocial.socketEmit('bastion:update', { bastionId: b.globalId, field: 'roles' });
+  renderBSettingsMain('roles');
+  try { renderMemberList(); } catch (_) {}
 }
 
 // Apply role template to current bastion
@@ -23970,40 +24384,11 @@ function applyRoleTemplate(templateId) {
     b.roles = tmpl.roles.map(r=>({...r, id: r.id || ('r'+Date.now()+Math.random().toString(36).slice(2,6))}));
     await saveUser();
     _syncBastionToGlobal(curBastion);
+    FortizedSocial.socketEmit('bastion:update', { bastionId: b?.globalId, field: 'roles' });
     renderBSettingsMain('roles');
+    try { renderMemberList(); } catch (_) {}
     toast(`"${tmpl.name}" roles applied!`, 'success');
   });
-}
-
-// Assign roles modal
-let assignRoleBastionIdx=null;
-function openAssignRole(bastionIdx, username) {
-  assignRoleBastionIdx=bastionIdx; assignRoleMember=username;
-  const b=CU.bastions[bastionIdx];
-  document.getElementById('ar-title').textContent=`Roles for ${username}`;
-  const memberRoles=(b.memberRoles||{})[username]||[];
-  document.getElementById('ar-roles').innerHTML=(b.roles||[]).map(r=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;">
-      <div class="role-dot" style="background:${r.color};"></div>
-      <div style="flex:1;font-weight:600;">${escapeHTML(r.name)}</div>
-      <div class="toggle ${memberRoles.includes(r.id)?'on':''}" onclick="toggleMemberRole('${r.id}',this)"></div>
-    </div>`).join('');
-  openModal('modal-assign-role');
-}
-function toggleMemberRole(roleId, el) {
-  const b=CU.bastions[assignRoleBastionIdx];
-  if(!b.memberRoles) b.memberRoles={};
-  if(!b.memberRoles[assignRoleMember]) b.memberRoles[assignRoleMember]=[];
-  const roles=b.memberRoles[assignRoleMember];
-  if(roles.includes(roleId)) b.memberRoles[assignRoleMember]=roles.filter(r=>r!==roleId);
-  else b.memberRoles[assignRoleMember]=[...roles,roleId];
-  el.classList.toggle('on',b.memberRoles[assignRoleMember].includes(roleId));
-}
-async function saveAssignedRoles() {
-  const bIdx = assignRoleBastionIdx!=null?assignRoleBastionIdx:curBastion;
-  await saveUser(); _syncBastionToGlobal(bIdx); closeModal('modal-assign-role');
-  FortizedSocial.socketEmit('bastion:update', { bastionId: CU.bastions[bIdx]?.globalId, field: 'memberRoles' });
-  toast('Roles updated!','success');
 }
 
 // ════════════════════════════════════════════
@@ -34732,7 +35117,7 @@ function _listenBastionUpdates() {
       try {
         const fresh = await FortizedSocial.getGlobalBastion(gid);
         if (!fresh) continue;
-        const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','members','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
+        const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','categories','roles','everyone','memberRoles','members','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
         let changed = false;
         let membersChanged = false;
         syncFields.forEach(f => {
@@ -36804,36 +37189,71 @@ async function deleteCategory(catId) {
 function openAssignRoleUI(username) {
   const b = CU.bastions?.[curBastion];
   if (!b) return;
-  const roles = b.roles || [];
+  // Highest role first, the same order the permission resolver and the roles
+  // tab use, so this card can never present a different hierarchy from the one
+  // that actually decides anything.
+  const roles = _bstRolesOrdered(b);
   if (!roles.length) { toast('No roles created yet. Create roles in the Roles tab first.','info'); return; }
-  const memberRoles = b.memberRoles || {};
-  const currentRoleIds = memberRoles[username] || [];
-  const html = roles.map(r => `
-    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);border:1.5px solid ${currentRoleIds.includes(r.id)?r.color+'66':'var(--border)'};border-radius:12px;margin-bottom:8px;cursor:pointer;">
-      <input type="checkbox" data-roleid="${r.id}" ${currentRoleIds.includes(r.id)?'checked':''} style="width:16px;height:16px;accent-color:${r.color};">
-      <div style="width:12px;height:12px;border-radius:50%;background:${r.color};flex-shrink:0;"></div>
-      <span style="font-weight:600;color:${r.color};">${escapeHTML(r.name)}</span>
-    </label>`).join('');
-  // Use a temp overlay
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:8000;display:flex;align-items:center;justify-content:center;padding:20px;';
-  overlay.innerHTML = `
-    <div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:28px;max-width:400px;width:100%;">
-      <div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:6px;">Assign Roles</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:18px;">to @${escapeHTML(username)}</div>
-      <div id="role-assign-list">${html}</div>
-      <div style="display:flex;gap:8px;margin-top:18px;">
-        <button class="btn-a" style="flex:1;" onclick="saveAssignedRoles('${escapeHTML(username)}',this.closest('[style*=fixed]'))">Save Roles</button>
-        <button class="btn-g" style="flex:1;" onclick="this.closest('[style*=fixed]').remove()">Cancel</button>
+  const currentRoleIds = (b.memberRoles || {})[username] || [];
+  // ⚠️ The row is the control. A native checkbox was the only reason this card
+  // looked nothing like the rest of the app, and it made the 44px row a 16px
+  // hit area. `.nm-row`/`.nm-check` is the app's own picker row (gift picker,
+  // new message, Discover filters) and gives the whole row back as the target.
+  const CHK = '<svg viewBox="0 0 448 512" width="12" height="12" fill="currentColor"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
+  const html = roles.map(r => {
+    const on = currentRoleIds.includes(r.id);
+    const col = r.color || '#60a5fa';
+    const mark = _bstRoleIconHTML(r, 16, b) || `<span style="width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0;"></span>`;
+    const holders = Object.values(b.memberRoles || {}).filter(ids => (ids || []).includes(r.id)).length;
+    return `<div class="nm-row bstr-pick${on?' sel':''}" data-roleid="${escapeHTML(r.id)}" role="checkbox" tabindex="0" aria-checked="${on?'true':'false'}">
+      <span class="bstr-pick-mark">${mark}</span>
+      <div class="nm-info">
+        <div class="nm-name" style="${_bstRoleNameStyle(r)}">${escapeHTML(r.name)}</div>
+        <div class="nm-user">${holders} ${holders === 1 ? 'member' : 'members'}</div>
       </div>
+      <span class="nm-check" aria-hidden="true">${on ? CHK : ''}</span>
     </div>`;
+  }).join('');
+  document.querySelector('.ftz-confirm-overlay[data-id=assign-roles]')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.setAttribute('data-id', 'assign-roles');
+  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:420px;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+      <div>
+        <div class="ftz-confirm-title" style="margin-bottom:2px;">Roles</div>
+        <div style="font-size:12px;color:var(--muted-light);">for <strong style="color:#fff;">@${escapeHTML(username)}</strong></div>
+      </div>
+      <button onclick="this.closest('.ftz-confirm-overlay').remove()" class="ftz-close-btn" aria-label="Close"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
+    </div>
+    <div class="bstr-picklist">${html}</div>
+    <div class="ftz-modal-foot" style="margin-top:14px;">
+      <div class="ftz-modal-foot__actions" style="width:100%;">
+        <button class="btn-g" onclick="this.closest('.ftz-confirm-overlay').remove()" style="flex:1;justify-content:center;">Cancel</button>
+        <button class="btn-a" id="bstr-pick-save" style="flex:1;justify-content:center;">Save</button>
+      </div>
+    </div>
+  </div>`;
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  const toggle = row => {
+    const on = !row.classList.contains('sel');
+    row.classList.toggle('sel', on);
+    row.setAttribute('aria-checked', on ? 'true' : 'false');
+    row.querySelector('.nm-check').innerHTML = on ? CHK : '';
+  };
+  overlay.querySelectorAll('.bstr-pick').forEach(row => {
+    row.onclick = () => toggle(row);
+    row.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(row); } };
+  });
+  overlay.querySelector('#bstr-pick-save').onclick = () => saveAssignedRoles(username, overlay);
   document.body.appendChild(overlay);
 }
 
 async function saveAssignedRoles(username, overlay) {
   const b = CU.bastions[curBastion];
   b.memberRoles = b.memberRoles || {};
-  const checked = [...overlay.querySelectorAll('input[type=checkbox]:checked')].map(el => el.dataset.roleid);
+  // The selection lives on the row now, not in a native input.
+  const checked = [...overlay.querySelectorAll('.bstr-pick.sel')].map(el => el.dataset.roleid);
   b.memberRoles[username] = checked;
   await saveUser();
   _syncBastionToGlobal(curBastion);

@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix511';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix512';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix511';
+    s4.src = '/firebase-compat-shim.js?v=2026fix512';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix511">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix512">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix511', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix512', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix511"></script>
+<script src="/app/utils.js?v=2026fix512"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -965,49 +965,6 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<!-- ROLE EDITOR -->
-<div class="modal-overlay" role="dialog" id="modal-role-editor" data-modal-stack="1">
-  <div class="modal wide tall">
-    <div class="modal-bar"></div>
-    <div class="modal-body">
-      <div class="modal-title" id="re-title">Edit Role</div>
-      <div style="display:flex;gap:12px;margin-bottom:16px;">
-        <div style="flex:1;">
-          <div class="settings-title">Role Name</div>
-          <input class="field-input" id="re-name" placeholder="Role name" style="margin-bottom:10px;">
-        </div>
-        <div>
-          <div class="settings-title">Color</div>
-          <div class="color-swatches" id="re-colors"></div>
-        </div>
-      </div>
-      <div id="re-extras"></div>
-      <div class="settings-title">Permissions</div>
-      <div id="re-perms" style="max-height:300px;overflow-y:auto;"></div>
-      <div class="modal-actions" style="margin-top:16px;">
-        <button class="btn-g" onclick="closeModal('modal-role-editor')">Cancel</button>
-        <button class="btn-d" id="re-delete-btn" onclick="deleteCurrentRole()">Delete Role</button>
-        <button class="btn-a" onclick="saveRole()">Save Role</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ASSIGN ROLE -->
-<div class="modal-overlay" role="dialog" id="modal-assign-role" data-modal-stack="1">
-  <div class="modal">
-    <div class="modal-bar"></div>
-    <div class="modal-body">
-      <div class="modal-title" id="ar-title">Assign Roles</div>
-      <div id="ar-roles" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;max-height:300px;overflow-y:auto;"></div>
-      <div class="modal-actions">
-        <button class="btn-g" onclick="closeModal('modal-assign-role')">Close</button>
-        <button class="btn-a" onclick="saveAssignedRoles()">Save</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- LEAVE BASTION CONFIRM -->
 <div class="modal-overlay" role="dialog" id="modal-leave-bastion" data-modal-stack="1">
   <div class="modal">
@@ -1154,10 +1111,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix511"></script>
-<script src="/app/app.js?v=2026fix511"></script>
-<script src="/app/joy-system.js?v=2026fix511"></script>
-<script src="/app/chronicle-games.js?v=2026fix511"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix512"></script>
+<script src="/app/app.js?v=2026fix512"></script>
+<script src="/app/joy-system.js?v=2026fix512"></script>
+<script src="/app/chronicle-games.js?v=2026fix512"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

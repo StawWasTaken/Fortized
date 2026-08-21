@@ -4288,7 +4288,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .bsettings-nav-sep{height:1px;background:rgba(255,255,255,.04);margin:8px 16px;}
 .bsettings-nav-back{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:4px 8px;border-radius:6px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.3);transition:all .12s;}
 .bsettings-nav-back:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);}
-.bs-section-title{font-size:18px;font-weight:800;font-family:var(--font-display);color:#fff;margin-bottom:6px;}
+.bs-section-title{font-size:18px;font-weight:700;font-family:var(--font-display);color:#fff;margin-bottom:6px;}
 .bs-section-desc{font-size:13px;color:rgba(255,255,255,.35);margin-bottom:20px;line-height:1.5;}
 .bs-divider{height:1px;background:rgba(255,255,255,.06);margin:28px 0;}
 .bs-field-label{font-size:12px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
@@ -4310,7 +4310,7 @@ body:has(.undo-toast) .chat-past-bar.show{bottom:calc(var(--toast-bottom) + 60px
 .role-tmpl-card{padding:14px 16px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;transition:all .15s;background:var(--panel);position:relative;overflow:hidden;}
 .role-tmpl-card:hover{border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.03);}
 .role-tmpl-card .rtc-emoji{font-size:22px;margin-bottom:6px;}
-.role-tmpl-card .rtc-name{font-family:var(--font-display);font-size:13px;font-weight:800;margin-bottom:3px;color:#fff;}
+.role-tmpl-card .rtc-name{font-family:var(--font-display);font-size:13px;font-weight:700;margin-bottom:3px;color:#fff;}
 .role-tmpl-card .rtc-desc{font-size:10.5px;color:var(--muted-light);line-height:1.4;margin-bottom:8px;}
 .role-tmpl-card .rtc-roles{display:flex;flex-wrap:wrap;gap:4px;}
 .role-tmpl-card .rtc-role-pill{font-size:9px;padding:2px 7px;border-radius:var(--radius-pill);font-weight:600;}
@@ -19392,3 +19392,123 @@ body.has-announce .main{padding-top:var(--ann-h);}
   border-right:2px solid var(--border);border-bottom:2px solid var(--border);}
 .ftz-newmem-card[data-place="bottom"]::after{top:-7px;
   border-left:2px solid var(--border);border-top:2px solid var(--border);}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   BASTION ROLES — the Guilded editor (2026fix512)
+   A role is a SUB-PAGE of the Roles tab, never a modal stacked over the
+   settings card. Every surface here is the app's own: .fs-btn for controls,
+   .settings-input for fields, the 2px var(--border) on var(--panel) card
+   stroke the inbox and the console share.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── the list ── */
+.bstr-add{margin-bottom:14px;}
+.bstr-list{display:flex;flex-direction:column;gap:8px;}
+.bstr-row{display:flex;align-items:center;gap:10px;padding:11px 12px;
+  background:var(--panel);border:2px solid var(--border);border-radius:var(--radius-md);
+  cursor:pointer;transition:transform .16s var(--ease-out),border-color .16s,background .16s;}
+.bstr-row:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--text) 22%,transparent);}
+.bstr-row.is-drag{opacity:.4;}
+.bstr-row.is-over{border-color:var(--accent);}
+.bstr-row--ev{margin-top:8px;}
+.bstr-grip{display:flex;align-items:center;color:var(--muted);cursor:grab;flex:0 0 auto;}
+.bstr-grip svg{height:15px;width:auto;display:block;}
+.bstr-grip--off{opacity:.25;cursor:default;}
+.bstr-mark{display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;flex:0 0 auto;}
+.bstr-mark--lg{width:30px;height:30px;}
+.bstr-dot{width:14px;height:14px;border-radius:50%;display:block;}
+.bstr-dot--lg{width:20px;height:20px;}
+.bstr-ico{height:18px;width:18px;object-fit:contain;display:block;border-radius:4px;}
+.bstr-mark--lg .bstr-ico{height:24px;width:24px;}
+.bstr-rname{flex:1;min-width:0;font-family:var(--font-display);font-weight:600;
+  font-size:15px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  -webkit-user-select:none;user-select:none;}
+.bstr-count{font-size:12px;color:var(--muted);flex:0 0 auto;}
+.bstr-chev{display:flex;align-items:center;color:var(--muted);flex:0 0 auto;}
+.bstr-chev svg{height:13px;width:auto;display:block;}
+
+/* ── the editor shell ── */
+.bstr-back{display:inline-flex;align-items:center;gap:7px;background:none;border:0;
+  padding:0;margin-bottom:16px;cursor:pointer;color:var(--muted);
+  font-family:var(--font-display);font-weight:600;font-size:13px;transition:color .16s;}
+.bstr-back:hover{color:var(--text);}
+.bstr-back svg{height:12px;width:auto;display:block;}
+.bstr-edithead{display:flex;align-items:center;gap:11px;margin-bottom:4px;}
+.bstr-title{margin:0!important;}
+.bstr-tabs{display:flex;gap:6px;margin:18px 0 18px;border-bottom:2px solid var(--border);}
+.bstr-tab{background:none;border:0;padding:9px 2px;margin-right:16px;cursor:pointer;
+  font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--muted);
+  border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .16s,border-color .16s;}
+.bstr-tab:hover{color:var(--text);}
+.bstr-tab.on{color:var(--text);border-bottom-color:var(--accent);}
+.bstr-body{min-height:120px;}
+.bstr-foot{display:flex;align-items:center;gap:10px;margin-top:26px;
+  padding-top:18px;border-top:2px solid var(--border);}
+.bstr-spacer{flex:1;}
+.bstr-del{color:#ff5c5c!important;}
+
+/* ── display tab ── */
+.bstr-lb{display:block;font-family:var(--font-display);font-weight:600;font-size:12px;
+  letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:20px 0 8px;}
+.bstr-lb:first-child{margin-top:0;}
+.bstr-seg{display:inline-flex;gap:4px;padding:4px;background:var(--panel);
+  border:2px solid var(--border);border-radius:var(--radius-md);margin-bottom:12px;}
+.bstr-segb{background:none;border:0;padding:6px 16px;border-radius:calc(var(--radius-md) - 5px);
+  cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:13px;
+  color:var(--muted);transition:background .16s,color .16s;}
+.bstr-segb:hover{color:var(--text);}
+.bstr-segb.on{background:var(--accent);color:#13161d;}
+.bstr-swrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
+.bstr-swrow--2{margin-top:8px;}
+.bstr-sw{width:30px;height:30px;border-radius:50%;border:2px solid transparent;
+  cursor:pointer;padding:0;transition:transform .16s var(--ease-out),border-color .16s;}
+.bstr-sw:hover{transform:scale(1.1);}
+.bstr-sw.sel{border-color:var(--text);}
+.bstr-custom{width:30px;height:30px;border-radius:50%;overflow:hidden;cursor:pointer;
+  border:2px dashed color-mix(in srgb,var(--text) 30%,transparent);display:block;position:relative;}
+.bstr-custom input{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);
+  border:0;padding:0;background:none;cursor:pointer;}
+.bstr-iconrow{display:flex;align-items:center;gap:10px;}
+.bstr-iconprev{display:inline-flex;align-items:center;justify-content:center;
+  width:40px;height:40px;flex:0 0 auto;background:var(--panel);
+  border:2px solid var(--border);border-radius:var(--radius-md);}
+.bstr-iconprev .bstr-ico{height:24px;width:24px;}
+.bstr-emotes{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.bstr-emote{width:34px;height:34px;padding:4px;background:var(--panel);
+  border:2px solid var(--border);border-radius:var(--radius-md);cursor:pointer;
+  transition:transform .16s var(--ease-out),border-color .16s;}
+.bstr-emote:hover{transform:translateY(-1px);}
+.bstr-emote.sel{border-color:var(--accent);}
+.bstr-emote img{width:100%;height:100%;object-fit:contain;display:block;}
+.bstr-hint{font-size:12px;color:var(--muted);margin-top:8px;}
+.bstr-opt{display:flex;align-items:center;gap:14px;padding:12px 0;
+  border-bottom:1px solid var(--border);}
+.bstr-opt:last-child{border-bottom:0;}
+.bstr-opt-txt{flex:1;min-width:0;}
+.bstr-opt-l{font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--text);}
+.bstr-opt-d{font-size:12px;color:var(--muted);line-height:1.5;margin-top:2px;}
+
+/* ── permissions tab ── */
+.bstr-note{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
+.bstr-psearch{margin-bottom:16px;}
+.bstr-warn{display:block;padding:12px 14px;margin-bottom:16px;font-size:13px;line-height:1.6;
+  color:var(--text);background:color-mix(in srgb,#ff5c5c 12%,var(--panel));
+  border:2px solid color-mix(in srgb,#ff5c5c 45%,transparent);border-radius:var(--radius-md);}
+.bstr-pg{margin-bottom:22px;}
+.bstr-pghead{font-family:var(--font-display);font-weight:600;font-size:11px;
+  letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.bstr-perm{display:flex;align-items:center;gap:14px;padding:12px 0;
+  border-bottom:1px solid var(--border);}
+.bstr-perm:last-child{border-bottom:0;}
+.bstr-perm-txt{flex:1;min-width:0;}
+.bstr-perm-l{font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--text);}
+.bstr-perm-d{font-size:12px;color:var(--muted);line-height:1.5;margin-top:2px;}
+
+/* ── members tab / the assign picker ── */
+.bstr-picklist{display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;}
+.bstr-pick{cursor:pointer;}
+.bstr-pick-save{margin-top:14px;}
+
+/* No glow. A toggle reads as on because it is filled, not because it halos. */
+.toggle.on{box-shadow:none;}

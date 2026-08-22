@@ -19453,10 +19453,7 @@ body.has-announce .main{padding-top:var(--ann-h);}
   cursor:pointer;padding:0;transition:transform .16s var(--ease-out),border-color .16s;}
 .bstr-sw:hover{transform:scale(1.1);}
 .bstr-sw.sel{border-color:var(--text);}
-.bstr-custom{width:30px;height:30px;border-radius:50%;overflow:hidden;cursor:pointer;
-  border:2px dashed color-mix(in srgb,var(--text) 30%,transparent);display:block;position:relative;}
-.bstr-custom input{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);
-  border:0;padding:0;background:none;cursor:pointer;}
+/* .bstr-custom is gone with the native colour input it wrapped. */
 .bstr-iconrow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
 /* The icon field itself opens the picker — Guilded's shape. */
 .bstr-iconfield{flex:1;min-width:190px;display:flex;align-items:center;gap:11px;padding:8px 11px;cursor:pointer;
@@ -20491,13 +20488,8 @@ textarea.bapp-in{resize:vertical;min-height:88px;line-height:1.55;}
 .bcm-tt{font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--text);}
 .bcm-tl{font-size:13px;color:var(--muted);line-height:1.5;margin-top:5px;}
 .bcm-tb{padding:0 26px 8px;display:flex;flex-direction:column;gap:12px;}
-.bcm-check{display:flex;align-items:flex-start;gap:12px;padding:13px 15px;border:2px solid var(--border);border-radius:var(--radius-md);background:var(--panel);cursor:pointer;font-size:13px;color:var(--text);line-height:1.55;}
-.bcm-check input{position:absolute;opacity:0;pointer-events:none;}
-.bcm-check span{width:20px;height:20px;flex:0 0 auto;margin-top:1px;border:2px solid var(--border);border-radius:6px;background:var(--bg);position:relative;transition:background .14s,border-color .14s;}
-.bcm-check span::after{content:'';position:absolute;left:5px;top:1px;width:5px;height:10px;border:solid #13161d;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) scale(0);transition:transform .14s;}
-.bcm-check input:checked + span{background:var(--accent);border-color:var(--accent);}
-.bcm-check input:checked + span::after{transform:rotate(45deg) scale(1);}
-.bcm-check a{color:var(--accent);}
+/* .bcm-check is gone: the Community consent lines wear .ftz-chk--card now,
+   which is the one checkmark the platform has. */
 /* The audit log: filters on top, rows that read as a sentence. */
 .bau-filters{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:20px;}
 .bau-f{flex:1;min-width:190px;}
@@ -20606,3 +20598,124 @@ textarea.bapp-in{resize:vertical;min-height:88px;line-height:1.55;}
   letter-spacing:.09em;color:var(--muted);margin:22px 0 11px;padding-top:16px;border-top:2px solid var(--border);}
 .event-card.ev-card-past,.event-card.ev-card-cancelled{opacity:.6;}
 .event-card.ev-card-cancelled .ec-title{text-decoration:line-through;}
+
+/* ═══ OUR OWN CONTROLS ══════════════════════════════════════════════════════
+   The checkmark, the colour picker and the stepper are ONE design each, used
+   everywhere. The checkmark is the circular one from the Gift Radiance card
+   (.nm-check) — that is the design, and this is it made general.
+
+   ⚠️ THE SKIN BELOW IS NOT OPTIONAL POLISH. Thirty-nine native checkboxes
+   were still drawing whatever the operating system felt like: a blue square
+   on Windows, a grey one on Linux, a different one again on a Mac. Painting
+   them at the element level means a control nobody has got round to
+   converting still reads as Fortized, today, with no markup change.
+   :where() carries ZERO specificity, so any component that genuinely needs
+   its own treatment (.ftz-switch's hidden input, .ftz-chk, .modify-att-*)
+   still wins without an !important anywhere. */
+:where(input[type="checkbox"]){appearance:none;-webkit-appearance:none;margin:0;
+  width:20px;height:20px;flex:0 0 auto;border-radius:50%;
+  border:2px solid color-mix(in srgb,var(--text) 20%,transparent);background:transparent;
+  cursor:pointer;display:inline-grid;place-items:center;vertical-align:middle;
+  transition:background .14s var(--ease-out),border-color .14s;}
+:where(input[type="checkbox"]:hover){border-color:color-mix(in srgb,var(--text) 38%,transparent);}
+:where(input[type="checkbox"])::after{content:'';width:11px;height:11px;background:#13161d;transform:scale(0);
+  -webkit-mask:var(--ftz-tick) center/contain no-repeat;mask:var(--ftz-tick) center/contain no-repeat;}
+:where(input[type="checkbox"]:checked){background:var(--accent);border-color:var(--accent);}
+:where(input[type="checkbox"]:checked)::after{transform:none;animation:ftzCheckPop .26s var(--ease-out) both;}
+:where(input[type="checkbox"]:focus-visible){outline:2px solid var(--accent);outline-offset:2px;}
+:where(input[type="checkbox"]:disabled){opacity:.45;cursor:not-allowed;}
+:root{--ftz-tick:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z'/%3E%3C/svg%3E");}
+
+/* The labelled row. This is what NEW markup uses — it carries the hit area,
+   the label, the optional description and the focus ring, so a checkbox is
+   never again a bare input with a <span> of text guessing at its alignment. */
+.ftz-chk{display:flex;align-items:flex-start;gap:11px;cursor:pointer;
+  font-size:13px;color:var(--text);line-height:1.55;position:relative;}
+.ftz-chk input[type="checkbox"]{position:absolute;opacity:0;width:0;height:0;pointer-events:none;margin:0;}
+.ftz-check{width:22px;height:22px;flex:0 0 auto;border-radius:50%;
+  border:2px solid color-mix(in srgb,var(--text) 20%,transparent);background:transparent;
+  display:grid;place-items:center;color:#13161d;margin-top:1px;
+  transition:background .14s var(--ease-out),border-color .14s;}
+.ftz-check svg{width:11px;height:11px;fill:currentColor;opacity:0;transform:scale(0);}
+.ftz-chk:hover .ftz-check{border-color:color-mix(in srgb,var(--text) 38%,transparent);}
+.ftz-chk input:checked + .ftz-check{background:var(--accent);border-color:var(--accent);}
+/* The tick pops in from the centre then settles — the same beat as the one in
+   the Gift Radiance card, off the same keyframes, so they cannot drift. */
+.ftz-chk input:checked + .ftz-check svg{opacity:1;transform:none;animation:ftzCheckPop .26s var(--ease-out) both;}
+.ftz-chk input:focus-visible + .ftz-check{outline:2px solid var(--accent);outline-offset:2px;}
+.ftz-chk input:disabled + .ftz-check{opacity:.45;}
+.ftz-chk:has(input:disabled){cursor:not-allowed;opacity:.6;}
+.ftz-chk-tx{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.ftz-chk-l{font-family:var(--font-display);font-size:13.5px;font-weight:600;color:var(--text);}
+.ftz-chk-d{font-size:12px;color:var(--muted);line-height:1.5;}
+/* Card variant — the whole row is a plate, for a consent line or a setting
+   that deserves its own surface. */
+.ftz-chk--card{padding:13px 15px;border:2px solid var(--border);border-radius:var(--radius-md);
+  background:var(--panel);transition:border-color .14s,background .14s;}
+.ftz-chk--card:hover{border-color:color-mix(in srgb,var(--text) 22%,var(--border));}
+.ftz-chk--card:has(input:checked){border-color:color-mix(in srgb,var(--accent) 55%,var(--border));
+  background:color-mix(in srgb,var(--accent) 7%,var(--panel));}
+/* Red variant, for a check that confirms something destructive. */
+.ftz-chk--danger input:checked + .ftz-check{background:var(--red);border-color:var(--red);color:#fff;}
+.ftz-chk--danger.ftz-chk--card:has(input:checked){border-color:color-mix(in srgb,var(--red) 55%,var(--border));
+  background:color-mix(in srgb,var(--red) 9%,var(--panel));}
+
+/* Two hold-outs that were drawing their own square tick. Same circle now. */
+.modify-att-check{width:22px;height:22px;border-radius:50%;border-width:2px;}
+.modify-att-check svg{transform:scale(0);opacity:0;}
+.modify-att-spoiler input:checked + .modify-att-check svg{transform:none;opacity:1;animation:ftzCheckPop .26s var(--ease-out) both;}
+.sc-main input[type=checkbox]{width:20px;height:20px;border-radius:50%;border-width:2px;}
+.sc-main input[type=checkbox]:checked::after{width:11px;height:11px;background:#13161d;clip-path:none;
+  -webkit-mask:var(--ftz-tick) center/contain no-repeat;mask:var(--ftz-tick) center/contain no-repeat;}
+
+/* ── The colour field, and the picker it opens ─────────────────────────────
+   The field is the same shape as the role-icon field it sits beside, so a
+   colour and an icon read as one row rather than two ideas. */
+.ftz-cpf{display:inline-flex;align-items:center;gap:9px;height:34px;padding:0 11px;
+  border:2px solid var(--border);border-radius:var(--radius-md);background:var(--panel);
+  color:var(--text);cursor:pointer;font-family:var(--font-display);font-size:12.5px;font-weight:600;
+  transition:border-color .14s,transform .1s var(--ease-out);}
+.ftz-cpf:hover{border-color:color-mix(in srgb,var(--text) 26%,var(--border));}
+.ftz-cpf:active{transform:translateY(1px);}
+.ftz-cpf-sw{width:18px;height:18px;border-radius:50%;flex:0 0 auto;
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--bg) 55%,transparent);}
+.ftz-cpf-ch{display:inline-flex;color:var(--muted);}
+.ftz-cpf-ch svg{fill:currentColor;}
+/* The live preview inside the picker. The colour you are dragging towards is
+   named and shown at full size — a 6px crosshair on an HSV square is not a
+   preview of anything. */
+.ftzcp-prev{display:flex;align-items:center;gap:10px;padding-bottom:2px;}
+.ftzcp-prev-sw{width:34px;height:34px;border-radius:10px;flex:0 0 auto;
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.35);}
+.ftzcp-prev-tx{display:flex;flex-direction:column;gap:1px;min-width:0;}
+.ftzcp-prev-l{font-family:var(--font-display);font-size:12px;font-weight:600;color:rgba(255,255,255,.55);}
+.ftzcp-prev-h{font-family:var(--font-display);font-size:14px;font-weight:700;color:#fff;letter-spacing:.02em;}
+.ftz-chk-l a{color:var(--accent);font-weight:700;}
+.ftz-chk-l a:hover{text-decoration:underline;}
+.ftz-chk--card .ftz-chk-l{font-weight:600;font-size:13px;line-height:1.55;}
+
+/* The picker's own chrome, brought onto the language the rest of the platform
+   was redesigned in: 2px strokes, our radii, round swatches like the role
+   swatch row it sits under. It was still wearing 1px hairlines from before
+   that pass. */
+.pt-colour-pop .pt-pop-card{border:2px solid var(--border);border-radius:var(--radius-lg);
+  padding:14px;width:276px;background:var(--panel);box-shadow:0 18px 48px rgba(0,0,0,.55);}
+.pt-colour-pop .pt-pop-sq{border-radius:var(--radius-md);}
+.pt-colour-pop .pt-pop-hex-row{border-width:2px;border-radius:var(--radius-md);}
+.pt-colour-pop .pt-pop-icon-btn{border-width:2px;border-radius:var(--radius-md);width:30px;height:30px;}
+.pt-colour-pop .pt-pop-preset{border-radius:50%;border-width:2px;border-color:transparent;}
+.pt-colour-pop .pt-pop-preset:hover{border-color:var(--text);transform:scale(1.08);}
+
+/* Dropdowns. `.ftz-select` is the real one — a button and our own popover —
+   and new UI uses it. The 33 native <select> elements still in the codebase
+   at least stop LOOKING native here: our chevron, our radius, our surface on
+   the option list. ⚠️ The !important is answering the shorthand `background:`
+   in .sc-select / .field-input, which would otherwise wipe the chevron off
+   the field. The open list is still drawn by the operating system — that is
+   the honest limit, and the only cure is converting each one to .ftz-select. */
+select{appearance:none !important;-webkit-appearance:none !important;
+  background-image:var(--ftz-chev) !important;background-repeat:no-repeat !important;
+  background-position:right 12px center !important;padding-right:34px !important;
+  border-radius:var(--radius-md) !important;cursor:pointer;}
+select option{background:var(--panel);color:var(--text);}
+:root{--ftz-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23b3b2b4' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");}

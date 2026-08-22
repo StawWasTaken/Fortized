@@ -3197,10 +3197,7 @@ function _showLeavingFortizedModal(url, domain) {
         </div>
         <p style="font-size:13px;color:rgba(255,255,255,.55);line-height:1.55;margin-bottom:16px;">You're about to visit an external website. Make sure you trust this link before continuing.</p>
         <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;font-family:'DM Mono',monospace,var(--font-body);font-size:12.5px;color:rgba(255,255,255,.45);word-break:break-all;line-height:1.5;margin-bottom:16px;">${displayUrl}</div>
-        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:10px 0 4px;user-select:none;" id="ftz-trust-label">
-          <input type="checkbox" id="ftz-trust-check" style="appearance:none;width:16px;height:16px;border:1.5px solid rgba(255,249,62,.25);border-radius:4px;background:rgba(255,249,62,.04);cursor:pointer;flex-shrink:0;position:relative;transition:all .15s;">
-          <span style="font-size:12.5px;color:rgba(255,255,255,.5);">Trust <strong style="color:rgba(255,255,255,.7);">${escapeHTML(domain)}</strong> links from now on</span>
-        </label>
+        <div style="padding:10px 0 4px;">${_ftzCheckHTML('ftz-trust-check', 'Trust <strong>' + escapeHTML(domain) + '</strong> links from now on', { html: true })}</div>
       </div>
       <div style="display:flex;gap:10px;padding:20px 28px 24px;justify-content:flex-end;">
         <button id="ftz-ext-back" style="padding:9px 20px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(255,255,255,.7);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font-body);">Go Back</button>
@@ -3208,13 +3205,9 @@ function _showLeavingFortizedModal(url, domain) {
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  // Checkbox visual
+  // ⚠️ The checkbox used to paint its own state from script, glow included.
+  // It is the platform's checkmark now and styles itself.
   const chk = document.getElementById('ftz-trust-check');
-  if (chk) chk.addEventListener('change', function() {
-    this.style.background = this.checked ? 'var(--accent,#fff93e)' : 'rgba(255,249,62,.04)';
-    this.style.borderColor = this.checked ? 'var(--accent,#fff93e)' : 'rgba(255,249,62,.25)';
-    this.style.boxShadow = this.checked ? '0 0 8px rgba(255,249,62,.3)' : 'none';
-  });
   document.getElementById('ftz-ext-back').onclick = () => overlay.remove();
   document.getElementById('ftz-ext-visit').onclick = () => {
     if (chk && chk.checked && domain) _trustDomain(domain);
@@ -21257,24 +21250,12 @@ function openOverviewEditor() {
 
       <div style="font-size:12px;font-weight:700;color:var(--muted-light);margin-bottom:8px;">Visible Sections</div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
-          <input type="checkbox" id="ov-ed-stats" ${ov.showStats!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Community Stats
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
-          <input type="checkbox" id="ov-ed-rooms" ${ov.showRooms!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Channels Quick-Access
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
-          <input type="checkbox" id="ov-ed-announcements" ${ov.showAnnouncements!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Latest Announcements
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
-          <input type="checkbox" id="ov-ed-forums" ${ov.showForums!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Recent Wall Activity
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
-          <input type="checkbox" id="ov-ed-roles" ${ov.showRoles!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Your Roles
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
-          <input type="checkbox" id="ov-ed-invite" ${ov.showInvite!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Invite Friends
-        </label>
+        ${_ftzCheckHTML('ov-ed-stats', 'Community Stats', {checked: ov.showStats !== false})}
+        ${_ftzCheckHTML('ov-ed-rooms', 'Channels Quick-Access', {checked: ov.showRooms !== false})}
+        ${_ftzCheckHTML('ov-ed-announcements', 'Latest Announcements', {checked: ov.showAnnouncements !== false})}
+        ${_ftzCheckHTML('ov-ed-forums', 'Recent Wall Activity', {checked: ov.showForums !== false})}
+        ${_ftzCheckHTML('ov-ed-roles', 'Your Roles', {checked: ov.showRoles !== false})}
+        ${_ftzCheckHTML('ov-ed-invite', 'Invite Friends', {checked: ov.showInvite !== false})}
       </div>
 
       <div style="font-size:12px;font-weight:700;color:var(--muted-light);margin-bottom:8px;">Footer Text <span style="font-weight:400;color:var(--muted);font-size:10.5px;">(optional — shown at the bottom)</span></div>
@@ -23867,10 +23848,8 @@ function _bstCommunityTerms() {
           <div class="bcm-tl">You are agreeing to this as the person who runs it, not on behalf of your members.</div>
         </div>
         <div class="bcm-tb">
-          <label class="bcm-check"><input type="checkbox" id="bcm-tos"><span></span>
-            <div>I accept the <a href="/terms" target="_blank" rel="noopener">Terms of Service</a> as they apply to a community I run.</div></label>
-          <label class="bcm-check"><input type="checkbox" id="bcm-tou"><span></span>
-            <div>I accept the <a href="/guidelines" target="_blank" rel="noopener">Terms of Use</a>, and I will moderate this bastion against them.</div></label>
+          ${_ftzCheckHTML('bcm-tos', 'I accept the <a href="/terms" target="_blank" rel="noopener">Terms of Service</a> as they apply to a community I run.', { card: true, html: true })}
+          ${_ftzCheckHTML('bcm-tou', 'I accept the <a href="/guidelines" target="_blank" rel="noopener">Terms of Use</a>, and I will moderate this bastion against them.', { card: true, html: true })}
         </div>
         <div class="ftz-modal-foot">
           <button class="fs-btn" type="button" id="bcm-no">Not now</button>
@@ -24873,12 +24852,10 @@ function _bstRoleDisplayHTML(b, d) {
       <button class="bstr-segb${grad ? ' on' : ''}" onclick="_bstRoleSetField('gradient',true)">Gradient</button>
     </div>
     <div class="bstr-swrow">${sw(col, 'color')}
-      <label class="bstr-custom" title="Pick your own"><input type="color" value="${/^#[0-9a-f]{6}$/i.test(col) ? col : '#fbbf24'}"
-        oninput="_bstRoleSetField('color',this.value,true);_bstRoleRepaintDots()" onchange="_bstRoleSetField('color',this.value)"></label>
+      ${_ftzColorFieldHTML('bstr-cpf-color', col, "_bstRoleColorPop(this,'color')", 'Pick your own')}
     </div>
     ${grad ? `<div class="bstr-swrow bstr-swrow--2">${sw(d.color2 || ROLE_COLORS[4], 'color2')}
-      <label class="bstr-custom" title="Second colour"><input type="color" value="${/^#[0-9a-f]{6}$/i.test(d.color2 || '') ? d.color2 : '#a78bfa'}"
-        onchange="_bstRoleSetField('color2',this.value)"></label>
+      ${_ftzColorFieldHTML('bstr-cpf-color2', d.color2 || ROLE_COLORS[4], "_bstRoleColorPop(this,'color2')", 'Second colour')}
     </div>` : ''}
 
     <label class="bstr-lb">Role icon</label>
@@ -25008,6 +24985,33 @@ function _bstRoleRepaintDots() {
   const d = _bstRoleDraft; if (!d) return;
   document.querySelectorAll('.bstr-body .bstr-dot, .bstr-edithead .bstr-dot')
     .forEach(el => { el.style.background = d.color || '#60a5fa'; });
+}
+
+// A role's colour, picked in OUR picker — no operating-system dialog opening
+// on top of a Fortized card.
+//
+// ⚠️ IT PREVIEWS WHILE YOU DRAG. Every frame writes the draft quietly and
+// repaints the two things that carry the colour: the role name at the top of
+// the editor and every dot in the pane. Only when the picker closes does it
+// re-render the whole editor — a full render on every frame would tear the
+// picker's own anchor out from under it.
+function _bstRoleColorPop(btn, key) {
+  const d = _bstRoleDraft; if (!d) return;
+  const cur = d[key] || (key === 'color2' ? ROLE_COLORS[4] : ROLE_COLORS[0]);
+  const swatch = btn.querySelector('.ftz-cpf-sw');
+  _ftzColorPop(btn, {
+    value: cur,
+    label: key === 'color2' ? 'Second colour' : 'Role colour',
+    presets: ROLE_COLORS.slice(0, 5),
+    onPick(hex) {
+      _bstRoleSetField(key, hex, true);
+      if (swatch) swatch.style.background = hex;
+      _bstRoleRepaintDots();
+      const name = document.getElementById('bstr-preview-name');
+      if (name) name.setAttribute('style', _bstRoleNameStyle(d));
+    },
+    onClose(hex) { _bstRoleSetField(key, hex); }
+  });
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -33833,7 +33837,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         <div class="sc-card" style="padding:18px;">
           <div class="sc-card-head" style="border:none;padding:0 0 12px 0;background:none;"><span class="icon-onyx" style="width:18px;height:18px;"></span> Give Onyx</div>
           <input class="sc-input" id="eco-username" placeholder="Username" style="width:100%;margin-bottom:9px;">
-          <input class="sc-input" id="eco-amount" type="number" placeholder="Amount" style="width:100%;margin-bottom:11px;">
+          ${_stfStep('eco-amount', '', { min: 1, placeholder: 'Amount', style: 'width:100%;margin-bottom:11px;' })}
           <button class="sc-btn" style="width:100%;justify-content:center;background:rgba(255,249,62,.1);color:#ffd93e;" onclick="adminGiveOnyx()">Give Onyx</button>
         </div>
         <div class="sc-card" style="padding:18px;">
@@ -35395,7 +35399,7 @@ function _openUnifiedActionPopup(prefillUser) {
     <div id="_ua-duration-wrap" style="margin-bottom:14px;">
       <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Duration</div>
       <div style="display:flex;gap:8px;">
-        <input id="_ua-dur-amount" class="settings-input" type="number" min="1" value="1" style="flex:1;">
+        ${_stfStep('_ua-dur-amount', 1, { min: 1, style: 'flex:1;' })}
         <select id="_ua-dur-unit" class="settings-input" style="flex:1;background:var(--channel,#15171e);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27rgba(255,255,255,.3)%27 stroke-width=%272.5%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 10px center;padding-right:32px;cursor:pointer;">
           <option value="minutes">Minutes</option>
           <option value="hours" selected>Hours</option>
@@ -37217,8 +37221,8 @@ function _scActionCard(opts) {
     const lbl = f.label ? `<label>${escapeHTML(f.label)}</label>` : '';
     if (f.type === 'textarea') return `<div class="sc-ac-field">${lbl}${Array.isArray(f.presets) && f.presets.length ? `<div class="sc-ac-presets" style="flex-wrap:wrap;margin-bottom:8px;">${f.presets.map(p=>`<button type="button" class="sc-ac-preset" onclick="document.getElementById('${fid}').value=this.textContent;">${escapeHTML(p)}</button>`).join('')}</div>` : ''}<textarea id="${fid}" rows="${f.rows||3}" placeholder="${escapeHTML(f.placeholder||'')}">${escapeHTML(f.value||'')}</textarea></div>`;
     if (f.type === 'select') return `<div class="sc-ac-field">${lbl}<select id="${fid}" class="sc-select">${(f.options||[]).map(op=>`<option value="${escapeHTML(op.value)}"${op.value===f.value?' selected':''}>${escapeHTML(op.label)}</option>`).join('')}</select></div>`;
-    if (f.type === 'presets') return `<div class="sc-ac-field">${lbl}<div class="sc-ac-row"><input id="${fid}" class="sc-input" type="number" min="${f.min||0}" placeholder="${escapeHTML(f.placeholder||'')}" value="${escapeHTML(String(f.value||''))}" style="flex:1;"><div class="sc-ac-presets">${(f.presets||[]).map(p=>`<button type="button" class="sc-ac-preset" onclick="document.getElementById('${fid}').value='${p}'">${p}</button>`).join('')}</div></div></div>`;
-    if (f.type === 'duration') return `<div class="sc-ac-field">${lbl}<div class="sc-ac-row"><input id="${fid}-amt" class="sc-input" type="number" min="1" value="${f.amount||1}" style="flex:1;"><select id="${fid}-unit" class="sc-select" style="flex:1;">${['minutes','hours','days','weeks','months','years'].map(un=>`<option value="${un}"${un===(f.unit||'hours')?' selected':''}>${un[0].toUpperCase()+un.slice(1)}</option>`).join('')}</select></div></div>`;
+    if (f.type === 'presets') return `<div class="sc-ac-field">${lbl}<div class="sc-ac-row">${_stfStep(fid, f.value || '', { min: f.min || 0, placeholder: f.placeholder || '', style: 'flex:1;' })}<div class="sc-ac-presets">${(f.presets||[]).map(p=>`<button type="button" class="sc-ac-preset" onclick="document.getElementById('${fid}').value='${p}'">${p}</button>`).join('')}</div></div></div>`;
+    if (f.type === 'duration') return `<div class="sc-ac-field">${lbl}<div class="sc-ac-row">${_stfStep(fid + '-amt', f.amount || 1, { min: 1, style: 'flex:1;' })}<select id="${fid}-unit" class="sc-select" style="flex:1;">${['minutes','hours','days','weeks','months','years'].map(un=>`<option value="${un}"${un===(f.unit||'hours')?' selected':''}>${un[0].toUpperCase()+un.slice(1)}</option>`).join('')}</select></div></div>`;
     return `<div class="sc-ac-field">${lbl}<input id="${fid}" class="sc-input" type="${f.inputType||'text'}" placeholder="${escapeHTML(f.placeholder||'')}" value="${escapeHTML(f.value||'')}" style="width:100%;"></div>`;
   }).join('');
   const wrap = document.createElement('div');
@@ -41207,6 +41211,264 @@ function _bioEmojiWarnOnce(branch, e) {
   window._bioEmojiWarned[branch] = true;
   console.warn('[bio-emoji] ' + branch + ' branch threw — bios will show :name: text:', e?.message || e);
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+// OUR OWN CONTROLS — the primitive layer
+// ══════════════════════════════════════════════════════════════════════════
+// Every control the platform draws has to be ours and has to be the SAME one
+// everywhere. Three primitives live here; the rest of the app calls them and
+// never hand-rolls its own again:
+//
+//   _ftzCheckHTML   the circular checkmark from the Gift Radiance card
+//   _ftzColorPop    our colour picker (the one the profile theme already had)
+//   _stfStep        the up/down stepper from the staff console (defined there)
+//
+// ⚠️ THE CHECKMARK IS NOT ONLY A HELPER. A helper alone would have left the
+// 39 native <input type="checkbox"> already in the codebase drawing whatever
+// the operating system felt like — a blue square on Windows, a grey one on
+// Linux. The skin in styles.css (":where(input[type=checkbox])") paints EVERY
+// checkbox in the app as our circle, so a control nobody has got round to
+// converting still reads as Fortized. This helper is what you use for a NEW
+// one, because it also carries the label, the hit area and the focus ring.
+
+// The tick itself. One glyph, so a checkbox and a "selected" row in a picker
+// can never end up wearing two different ticks.
+function _ftzTickHTML(size) { return _faIcon('check', size || 11); }
+
+// A labelled checkbox row.
+//   _ftzCheckHTML('ov-ed-stats', 'Community Stats', {checked:true, desc:'…'})
+// opts: checked · disabled · desc · card (bordered plate) · danger (red fill)
+//       onchange · value · inputCls · cls · html (label/desc are already HTML)
+function _ftzCheckHTML(id, label, o) {
+  o = o || {};
+  const esc = (s) => (o.html ? String(s) : escapeHTML(String(s)));
+  const cls = ['ftz-chk'];
+  if (o.card) cls.push('ftz-chk--card');
+  if (o.danger) cls.push('ftz-chk--danger');
+  if (o.cls) cls.push(o.cls);
+  const a = [];
+  if (id) a.push(`id="${escapeHTML(String(id))}"`);
+  if (o.inputCls) a.push(`class="${escapeHTML(String(o.inputCls))}"`);
+  if (o.value != null) a.push(`value="${escapeHTML(String(o.value))}"`);
+  if (o.checked) a.push('checked');
+  if (o.disabled) a.push('disabled');
+  if (o.onchange) a.push(`onchange="${String(o.onchange).replace(/"/g, '&quot;')}"`);
+  const txt = label
+    ? `<span class="ftz-chk-tx"><span class="ftz-chk-l">${esc(label)}</span>${
+        o.desc ? `<span class="ftz-chk-d">${esc(o.desc)}</span>` : ''}</span>`
+    : '';
+  return `<label class="${cls.join(' ')}"><input type="checkbox" ${a.join(' ')}>` +
+         `<span class="ftz-check">${_ftzTickHTML(11)}</span>${txt}</label>`;
+}
+
+// ── OUR COLOUR PICKER ─────────────────────────────────────────────────────
+// The profile theme has had this picker for a while — HSV square, hue track,
+// hex field, eyedropper, presets, all on our own panel. It was welded to that
+// one widget, so anything else that needed a colour reached for the browser's
+// <input type="color"> and popped an operating-system dialog in the middle of
+// a Fortized card. This is the same picker, generalised.
+//
+// ⚠️ IT PREVIEWS AS YOU DRAG. onPick fires on every frame of the drag, not on
+// release, so the role name / the swatch / whatever it is you are colouring
+// changes under your hand. A picker you have to close to see the result is a
+// guessing game.
+//
+//   _ftzColorPop(anchorEl, {
+//     value:'#fbbf24',
+//     presets:['#…'],                 // up to 5, defaults to the brand set
+//     label:'Role colour',            // shown beside the live preview chip
+//     onPick(hex){ … },               // every change — repaint the preview
+//     onClose(hex){ … }               // dismissed — commit/save
+//   })
+function _ftzColorPop(anchor, o) {
+  o = o || {};
+  document.querySelector('.pt-colour-pop')?.remove();
+  const startHex = /^#[0-9a-f]{6}$/i.test(o.value || '') ? o.value.toLowerCase() : '#fff93e';
+  const eyeOk = ('EyeDropper' in window) || !!navigator?.mediaDevices?.getDisplayMedia;
+  const PRESETS = (o.presets && o.presets.length ? o.presets : ['#13161d', '#fff93e', '#559367', '#7a4f2b', '#7c3aed'])
+    .slice(0, 5);
+
+  const rgbToHex = (r, g, b) => '#' + [r, g, b].map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+  const hexToRgb = (hex) => {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return { r: 0, g: 0, b: 0 };
+    const n = parseInt(m[1], 16); return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+  };
+  const rgbToHsv = (r, g, b) => {
+    r /= 255; g /= 255; b /= 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    let h = 0; const v = mx, s = mx === 0 ? 0 : d / mx;
+    if (d) { switch (mx) { case r: h = ((g - b) / d) % 6; break; case g: h = (b - r) / d + 2; break; default: h = (r - g) / d + 4; } h *= 60; if (h < 0) h += 360; }
+    return { h, s, v };
+  };
+  const hsvToRgb = (h, s, v) => {
+    const c = v * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = v - c;
+    let r = 0, g = 0, b = 0;
+    if (h < 60) { r = c; g = x; } else if (h < 120) { r = x; g = c; } else if (h < 180) { g = c; b = x; }
+    else if (h < 240) { g = x; b = c; } else if (h < 300) { r = x; b = c; } else { r = c; b = x; }
+    return { r: (r + m) * 255, g: (g + m) * 255, b: (b + m) * 255 };
+  };
+
+  const s0 = rgbToHsv(hexToRgb(startHex).r, hexToRgb(startHex).g, hexToRgb(startHex).b);
+  const state = { h: s0.h, s: s0.s, v: s0.v, hex: startHex };
+
+  const pop = document.createElement('div');
+  pop.className = 'pt-colour-pop';
+  pop.innerHTML = `
+    <div class="pt-pop-card pt-pop-card--discord">
+      <div class="ftzcp-prev">
+        <span class="ftzcp-prev-sw" id="ftzcp-prev-sw" style="background:${startHex};"></span>
+        <span class="ftzcp-prev-tx">
+          <span class="ftzcp-prev-l">${escapeHTML(o.label || 'Colour')}</span>
+          <span class="ftzcp-prev-h" id="ftzcp-prev-h">${startHex.toUpperCase()}</span>
+        </span>
+      </div>
+      <div class="pt-pop-sq" id="ftzcp-sq" role="application" aria-label="Saturation and brightness">
+        <div class="pt-pop-sq-sat"></div>
+        <div class="pt-pop-sq-val"></div>
+        <div class="pt-pop-sq-thumb" id="ftzcp-sq-thumb"></div>
+      </div>
+      <div class="pt-pop-hue" id="ftzcp-hue" role="slider" aria-label="Hue" aria-valuemin="0" aria-valuemax="360" tabindex="0">
+        <div class="pt-pop-hue-thumb" id="ftzcp-hue-thumb"></div>
+      </div>
+      <div class="pt-pop-hex-row">
+        <span class="pt-pop-hex-prefix">#</span>
+        <input id="ftzcp-hex" class="pt-pop-hex-input" type="text" maxlength="6" value="${startHex.slice(1)}" spellcheck="false" autocomplete="off">
+        ${eyeOk ? `<button class="pt-pop-icon-btn" id="ftzcp-eye" type="button" aria-label="Eyedropper" title="Sample a colour from anywhere on screen">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg>
+        </button>` : ''}
+      </div>
+      <div class="pt-pop-presets">
+        ${PRESETS.map(c => `<button type="button" class="pt-pop-preset" data-c="${escapeHTML(c)}" style="background:${escapeHTML(c)};" aria-label="Preset ${escapeHTML(c)}"></button>`).join('')}
+      </div>
+    </div>`;
+  document.body.appendChild(pop);
+
+  // Placed after it is in the DOM so we can measure it — a picker that opens
+  // off the bottom of a card is a picker you cannot reach the presets in.
+  const r = anchor.getBoundingClientRect();
+  const box = pop.getBoundingClientRect();
+  let left = Math.round(r.left);
+  let top = Math.round(r.bottom + 8);
+  if (left + box.width > window.innerWidth - 12) left = Math.max(12, window.innerWidth - box.width - 12);
+  if (top + box.height > window.innerHeight - 12) top = Math.max(12, Math.round(r.top - box.height - 8));
+  pop.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:var(--z-max,9999);`;
+
+  const sq = pop.querySelector('#ftzcp-sq');
+  const sqThumb = pop.querySelector('#ftzcp-sq-thumb');
+  const hue = pop.querySelector('#ftzcp-hue');
+  const hueThumb = pop.querySelector('#ftzcp-hue-thumb');
+  const hexInp = pop.querySelector('#ftzcp-hex');
+  const prevSw = pop.querySelector('#ftzcp-prev-sw');
+  const prevHx = pop.querySelector('#ftzcp-prev-h');
+
+  const refresh = (skipHexInput) => {
+    const hueRgb = hsvToRgb(state.h, 1, 1);
+    sq.style.setProperty('--pt-hue', rgbToHex(hueRgb.r, hueRgb.g, hueRgb.b));
+    const rgb = hsvToRgb(state.h, state.s, state.v);
+    const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+    state.hex = hex;
+    sqThumb.style.left = (state.s * 100) + '%';
+    sqThumb.style.top = ((1 - state.v) * 100) + '%';
+    sqThumb.style.background = hex;
+    hueThumb.style.left = (state.h / 360 * 100) + '%';
+    hue.setAttribute('aria-valuenow', Math.round(state.h));
+    if (!skipHexInput) hexInp.value = hex.slice(1);
+    if (prevSw) prevSw.style.background = hex;
+    if (prevHx) prevHx.textContent = hex.toUpperCase();
+    try { o.onPick && o.onPick(hex); } catch (_) {}
+  };
+  refresh();
+
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  let sqDrag = false;
+  const sqMove = (e) => {
+    if (!sqDrag) return;
+    const b = sq.getBoundingClientRect();
+    state.s = clamp((e.clientX - b.left) / b.width, 0, 1);
+    state.v = clamp(1 - (e.clientY - b.top) / b.height, 0, 1);
+    refresh(); e.preventDefault();
+  };
+  sq.addEventListener('pointerdown', (e) => { sqDrag = true; sq.setPointerCapture?.(e.pointerId); sqMove(e); });
+  sq.addEventListener('pointermove', sqMove);
+  sq.addEventListener('pointerup', () => { sqDrag = false; });
+  sq.addEventListener('pointercancel', () => { sqDrag = false; });
+
+  let hueDrag = false;
+  const hueMove = (e) => {
+    if (!hueDrag) return;
+    const b = hue.getBoundingClientRect();
+    state.h = clamp((e.clientX - b.left) / b.width, 0, 1) * 360;
+    refresh(); e.preventDefault();
+  };
+  hue.addEventListener('pointerdown', (e) => { hueDrag = true; hue.setPointerCapture?.(e.pointerId); hueMove(e); });
+  hue.addEventListener('pointermove', hueMove);
+  hue.addEventListener('pointerup', () => { hueDrag = false; });
+  hue.addEventListener('pointercancel', () => { hueDrag = false; });
+  hue.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') { state.h = clamp(state.h - 3, 0, 360); refresh(); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { state.h = clamp(state.h + 3, 0, 360); refresh(); e.preventDefault(); }
+  });
+
+  hexInp.addEventListener('input', () => {
+    const raw = hexInp.value.trim().replace(/^#/, '').toLowerCase();
+    if (!/^[0-9a-f]{6}$/.test(raw)) return;
+    const rgb = hexToRgb('#' + raw);
+    const h = rgbToHsv(rgb.r, rgb.g, rgb.b);
+    state.h = h.h; state.s = h.s; state.v = h.v;
+    refresh(true);
+  });
+
+  pop.querySelectorAll('.pt-pop-preset').forEach(btn => btn.addEventListener('click', () => {
+    const rgb = hexToRgb(btn.dataset.c);
+    const h = rgbToHsv(rgb.r, rgb.g, rgb.b);
+    state.h = h.h; state.s = h.s; state.v = h.v;
+    refresh();
+  }));
+
+  const eyeBtn = pop.querySelector('#ftzcp-eye');
+  if (eyeBtn) eyeBtn.addEventListener('click', async () => {
+    // While the eyedropper overlay is up the next click lands on IT, not on
+    // the picker — without this flag the outside-close handler would tear the
+    // picker down mid-sample and the colour would arrive at an orphan.
+    pop.dataset.eyedropping = '1';
+    try {
+      const sampled = await _ftzEyedropperOpen();
+      if (sampled) {
+        const rgb = hexToRgb(sampled);
+        const h = rgbToHsv(rgb.r, rgb.g, rgb.b);
+        state.h = h.h; state.s = h.s; state.v = h.v;
+        refresh();
+      }
+    } catch (_) { /* cancelled */ }
+    finally { delete pop.dataset.eyedropping; }
+  });
+
+  const done = () => { try { o.onClose && o.onClose(state.hex); } catch (_) {} pop.remove(); };
+  pop.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); done(); } });
+  setTimeout(() => {
+    document.addEventListener('mousedown', function close(ev) {
+      if (pop.dataset.eyedropping) return;
+      if (!document.body.contains(pop)) { document.removeEventListener('mousedown', close, true); return; }
+      if (!pop.contains(ev.target) && ev.target !== anchor && !anchor.contains(ev.target)) {
+        document.removeEventListener('mousedown', close, true);
+        done();
+      }
+    }, true);
+  }, 0);
+  return pop;
+}
+
+// The button that opens it: a swatch, the hex, a chevron. Same shape as the
+// role icon field right beside it, so a colour and an icon read as one row.
+function _ftzColorFieldHTML(id, value, onOpenExpr, label) {
+  const hex = /^#[0-9a-f]{6}$/i.test(value || '') ? value : '#fff93e';
+  return `<button type="button" class="ftz-cpf" id="${escapeHTML(String(id))}" onclick="${String(onOpenExpr).replace(/"/g, '&quot;')}">
+    <span class="ftz-cpf-sw" style="background:${escapeHTML(hex)};"></span>
+    <span class="ftz-cpf-tx">${escapeHTML(label || hex.toUpperCase())}</span>
+    <span class="ftz-cpf-ch">${_faIcon('chevron-down', 11)}</span>
+  </button>`;
+}
+
 
 // ────────────────────────────────────────────────────────────
 // .ftz-select — small custom dropdown used by settings (mention
@@ -47528,7 +47790,7 @@ function openStatusPicker() {
         </div>
       </div>
       <div class="ftz-csp__custom" id="ftz-csp-custom-box" style="display:${curDur === 'custom' ? 'flex' : 'none'};">
-        <input type="number" id="ftz-csp-custom-amt" class="ftz-csp__custom-amt" min="1" max="720" value="2">
+        ${_stfStep('ftz-csp-custom-amt', 2, { min: 1, max: 720, cls: 'ftz-csp__custom-amt' })}
         <select id="ftz-csp-custom-unit" class="ftz-csp__custom-unit">
           <option value="min">minutes</option>
           <option value="h" selected>hours</option>
@@ -64082,241 +64344,38 @@ async function _applyStarterPack(id) {
   toast(`🎨 ${pack.name} loaded — save to keep`, 'info');
 }
 
-// ── Aesthetic colour popover for the Custom mode swatch.
-// Anchored under the clicked swatch. Contains a styled colour
-// preview, a hex input, the EyeDropper button, and the native
-// <input type="color"> hidden behind the swatch so the OS picker
-// still does the heavy lifting. ──
-// Discord-style colour picker for the inline Profile-Theme widget.
-// Layout matches the reference screenshot the user attached:
-//   ┌──────────────────────────────────────┐
-//   │           HSV square (s × v)         │  ← drag to pick saturation/value
-//   ├──────────────────────────────────────┤
-//   │ hue slider (rainbow track)           │
-//   ├──────────────────────────────────────┤
-//   │ # ▒▒▒▒▒▒  [eyedropper]               │  ← hex field + native colour
-//   ├──────────────────────────────────────┤
-//   │ ▓ ▓ ▓ ▓ ▓                            │  ← 5 brand presets
-//   └──────────────────────────────────────┘
-// Chrome is dark Fortized panel — never white — with the brand
-// yellow only on the selection ring and focus states. The little
-// crosshair on the square and the slider thumb are stroked in the
-// CURRENT live colour outline so the picker visibly reflects what
-// the user is selecting at all times.
+// The Profile Theme swatch. It used to carry its own copy of the picker; the
+// picker now lives in the primitive layer (_ftzColorPop) and this is the thin
+// wrapper that says where the chosen colour goes. One picker, so a colour is
+// chosen the same way here, in the role editor, and anywhere else that needs
+// one.
 function _openColourPopover(anchorEl, hiddenInputId) {
-  document.querySelector('.pt-colour-pop')?.remove();
   const hidden = document.getElementById(hiddenInputId);
-  const startHex = (hidden?.value || '#fff93e').toLowerCase();
-  const eyeOk = ('EyeDropper' in window);
-  // Brand presets — the 5 most common Fortized picks. Matches the
-  // count and footprint of the screenshot reference (1 dark + 4
-  // brand hues). User can still type any hex or use the native
-  // colour input via the eyedropper button.
-  const PRESETS = ['#13161d','#fff93e','#559367','#7a4f2b','#7c3aed'];
-
-  // HSV math.
-  const rgbToHex = (r,g,b) => '#' + [r,g,b].map(v => Math.round(v).toString(16).padStart(2,'0')).join('');
-  const hexToRgb = (hex) => {
-    const m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return {r:0,g:0,b:0};
-    const n = parseInt(m[1],16); return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
-  };
-  const rgbToHsv = (r,g,b) => {
-    r/=255; g/=255; b/=255;
-    const mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn;
-    let h=0; const v=mx, s=mx===0?0:d/mx;
-    if (d){ switch(mx){case r: h=((g-b)/d)%6; break; case g: h=(b-r)/d+2; break; case b: h=(r-g)/d+4; break;} h*=60; if (h<0) h+=360; }
-    return {h,s,v};
-  };
-  const hsvToRgb = (h,s,v) => {
-    const c=v*s, x=c*(1-Math.abs(((h/60)%2)-1)), m=v-c;
-    let r=0,g=0,b=0;
-    if (h<60){r=c;g=x;} else if (h<120){r=x;g=c;} else if (h<180){g=c;b=x;}
-    else if (h<240){g=x;b=c;} else if (h<300){r=x;b=c;} else {r=c;b=x;}
-    return {r:(r+m)*255, g:(g+m)*255, b:(b+m)*255};
-  };
-
-  const startRgb = hexToRgb(startHex);
-  const startHsv = rgbToHsv(startRgb.r, startRgb.g, startRgb.b);
-  const state = { h:startHsv.h, s:startHsv.s, v:startHsv.v };
-
-  const rect = anchorEl.getBoundingClientRect();
-  const pop = document.createElement('div');
-  pop.className = 'pt-colour-pop';
-  pop.style.cssText = `position:fixed;left:${Math.round(rect.left)}px;top:${Math.round(rect.bottom+8)}px;z-index:9999;`;
-  pop.innerHTML = `
-    <div class="pt-pop-card pt-pop-card--discord">
-      <div class="pt-pop-sq" id="pt-pop-sq" role="application" aria-label="Saturation and brightness">
-        <div class="pt-pop-sq-sat"></div>
-        <div class="pt-pop-sq-val"></div>
-        <div class="pt-pop-sq-thumb" id="pt-pop-sq-thumb"></div>
-      </div>
-      <div class="pt-pop-hue" id="pt-pop-hue" role="slider" aria-label="Hue" aria-valuemin="0" aria-valuemax="360" tabindex="0">
-        <div class="pt-pop-hue-thumb" id="pt-pop-hue-thumb"></div>
-      </div>
-      <div class="pt-pop-hex-row">
-        <span class="pt-pop-hex-prefix">#</span>
-        <input id="pt-pop-hex" class="pt-pop-hex-input" type="text" maxlength="6" value="${startHex.slice(1)}" spellcheck="false" autocomplete="off">
-        <button class="pt-pop-icon-btn${eyeOk ? '' : ' pt-pop-icon-btn--soft-disabled'}" id="pt-pop-eye" title="${eyeOk ? 'Eyedropper — sample any pixel on screen' : 'Eyedropper unsupported in this browser — try Chrome or Edge'}" type="button" aria-label="Eyedropper">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg>
-        </button>
-      </div>
-      <div class="pt-pop-presets">
-        ${PRESETS.map(c => `<button type="button" class="pt-pop-preset" data-c="${c}" style="background:${c};" aria-label="Preset ${c}"></button>`).join('')}
-      </div>
-    </div>`;
-  document.body.appendChild(pop);
-
-  const sq = pop.querySelector('#pt-pop-sq');
-  const sqThumb = pop.querySelector('#pt-pop-sq-thumb');
-  const hue = pop.querySelector('#pt-pop-hue');
-  const hueThumb = pop.querySelector('#pt-pop-hue-thumb');
-  const hexInp = pop.querySelector('#pt-pop-hex');
-
-  // Repaint the picker chrome + commit the current colour upward.
-  const refresh = (skipHexInput) => {
-    const hueRgb = hsvToRgb(state.h, 1, 1);
-    sq.style.setProperty('--pt-hue', rgbToHex(hueRgb.r, hueRgb.g, hueRgb.b));
-    const rgb = hsvToRgb(state.h, state.s, state.v);
-    const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
-    sqThumb.style.left = (state.s * 100) + '%';
-    sqThumb.style.top  = ((1 - state.v) * 100) + '%';
-    sqThumb.style.background = hex;
-    hueThumb.style.left = (state.h / 360 * 100) + '%';
-    hue.setAttribute('aria-valuenow', Math.round(state.h));
-    if (!skipHexInput) hexInp.value = hex.slice(1);
-    if (hidden) hidden.value = hex;
-    // Generic visible-swatch + label sync — derive both IDs from
-    // the hidden input the picker was opened against so the second
-    // (Radiance) picker updates its own corresponding chrome instead
-    // of the first picker's.
-    const swatchId = hiddenInputId === 'pt-colour-hidden-2' ? 'pt-custom-swatch-2' : 'pt-custom-swatch';
-    const labelId  = (hiddenInputId || 'pt-colour-hidden') + '-label';
-    const visibleSwatch = document.getElementById(swatchId);
-    if (visibleSwatch) visibleSwatch.style.background = hex;
-    const label = document.getElementById(labelId) || document.getElementById('pt-colour-hex-label');
-    if (label) label.textContent = hex;
-    if (!CU.profileTheme) CU.profileTheme = {};
-    CU.profileTheme.mode = 'custom';
-    // Route to color1 OR color2 based on which hidden input opened
-    // the picker — the inline widget uses 'pt-colour-hidden' for
-    // primary and 'pt-colour-hidden-2' for the Radiance secondary.
-    // We DO NOT auto-derive the other slot anymore (that was the
-    // "yellow card renders green" bug — _ptHexComplement shifted
-    // hue by 35° so yellow turned into yellow-green for the accent).
-    // Free users only ever see one picker, so color2 stays null
-    // and the resolver reinforces color1 everywhere.
-    const safeHex = _sanitizeThemeHex(hex);
-    if (hiddenInputId === 'pt-colour-hidden-2') {
-      CU.profileTheme.color2 = safeHex;
-    } else {
-      CU.profileTheme.color1 = safeHex;
-    }
-    markSettingsDirty();
-    try { updateProfilePreview(); } catch (_) {}
-  };
-  refresh();
-
-  // Square (saturation × value) drag handling.
-  const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
-  let sqDragging = false;
-  const sqMove = (e) => {
-    if (!sqDragging) return;
-    const r = sq.getBoundingClientRect();
-    state.s = clamp((e.clientX - r.left) / r.width, 0, 1);
-    state.v = clamp(1 - (e.clientY - r.top) / r.height, 0, 1);
-    refresh();
-    e.preventDefault();
-  };
-  sq.addEventListener('pointerdown', (e) => { sqDragging = true; sq.setPointerCapture?.(e.pointerId); sqMove(e); });
-  sq.addEventListener('pointermove', sqMove);
-  sq.addEventListener('pointerup',   () => { sqDragging = false; });
-  sq.addEventListener('pointercancel',() => { sqDragging = false; });
-
-  // Hue slider drag.
-  let hueDragging = false;
-  const hueMove = (e) => {
-    if (!hueDragging) return;
-    const r = hue.getBoundingClientRect();
-    state.h = clamp((e.clientX - r.left) / r.width, 0, 1) * 360;
-    refresh();
-    e.preventDefault();
-  };
-  hue.addEventListener('pointerdown', (e) => { hueDragging = true; hue.setPointerCapture?.(e.pointerId); hueMove(e); });
-  hue.addEventListener('pointermove', hueMove);
-  hue.addEventListener('pointerup',   () => { hueDragging = false; });
-  hue.addEventListener('pointercancel',() => { hueDragging = false; });
-  hue.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft')  { state.h = clamp(state.h - 3, 0, 360); refresh(); e.preventDefault(); }
-    if (e.key === 'ArrowRight') { state.h = clamp(state.h + 3, 0, 360); refresh(); e.preventDefault(); }
-  });
-
-  // Hex input — manual entry. Validate on every keystroke so the
-  // picker chrome stays in sync as the user types.
-  hexInp.addEventListener('input', () => {
-    const raw = hexInp.value.trim().replace(/^#/, '').toLowerCase();
-    if (!/^[0-9a-f]{6}$/.test(raw)) return;
-    const rgb = hexToRgb('#' + raw);
-    const h = rgbToHsv(rgb.r, rgb.g, rgb.b);
-    state.h = h.h; state.s = h.s; state.v = h.v;
-    refresh(true);
-  });
-
-  // Native colour picker removed (per brief — only the eyedropper
-  // remains as the alternative input alongside HSV + hex).
-
-  // Preset swatches.
-  pop.querySelectorAll('.pt-pop-preset').forEach(b => b.addEventListener('click', () => {
-    const rgb = hexToRgb(b.dataset.c);
-    const h = rgbToHsv(rgb.r, rgb.g, rgb.b);
-    state.h = h.h; state.s = h.s; state.v = h.v;
-    refresh();
-  }));
-
-  // Eyedropper — works on every browser. Chromium gets the real
-  // pixel-perfect EyeDropper API; Firefox / Safari fall back to a
-  // DOM-element-sampler that reads the computed background-color
-  // of whatever element you click. Not pixel-perfect (won't catch
-  // a single pixel inside an image) but covers the vast majority
-  // of UI sampling needs — banner tiles, sidebar swatches, etc. —
-  // without depending on a 30KB html2canvas-style dependency.
-  const eyeBtn = pop.querySelector('#pt-pop-eye');
-  if (eyeBtn) eyeBtn.addEventListener('click', async () => {
-    // Suspend the outside-close listener for the whole eyedropper
-    // session — the system overlay's click (Chromium) or the
-    // polyfill overlay's click (others) would bubble up to the
-    // document mousedown handler and tear the picker down before
-    // we got a chance to apply the sampled colour.
-    pop.dataset.eyedropping = '1';
-    try {
-      const sampled = await _ftzEyedropperOpen();
-      if (sampled) {
-        const rgb = hexToRgb(sampled);
-        const h = rgbToHsv(rgb.r, rgb.g, rgb.b);
-        state.h = h.h; state.s = h.s; state.v = h.v;
-        refresh();
-      }
-    } catch (_) {
-      // User cancelled — silent.
-    } finally {
-      delete pop.dataset.eyedropping;
+  const isSecond = hiddenInputId === 'pt-colour-hidden-2';
+  _ftzColorPop(anchorEl, {
+    value: (hidden?.value || '#fff93e').toLowerCase(),
+    label: isSecond ? 'Accent colour' : 'Theme colour',
+    onPick(hex) {
+      if (hidden) hidden.value = hex;
+      // The visible swatch + hex label are derived from the hidden input the
+      // picker was opened against, so the second (Radiance) picker updates its
+      // own chrome instead of the first one's.
+      const visibleSwatch = document.getElementById(isSecond ? 'pt-custom-swatch-2' : 'pt-custom-swatch');
+      if (visibleSwatch) visibleSwatch.style.background = hex;
+      const label = document.getElementById((hiddenInputId || 'pt-colour-hidden') + '-label')
+        || document.getElementById('pt-colour-hex-label');
+      if (label) label.textContent = hex;
+      if (!CU.profileTheme) CU.profileTheme = {};
+      CU.profileTheme.mode = 'custom';
+      // ⚠️ We do NOT auto-derive the other slot. That was the "yellow card
+      // renders green" bug — the old complement shifted hue by 35°, so yellow
+      // came out yellow-green on the accent.
+      const safeHex = _sanitizeThemeHex(hex);
+      if (isSecond) CU.profileTheme.color2 = safeHex; else CU.profileTheme.color1 = safeHex;
+      markSettingsDirty();
+      try { updateProfilePreview(); } catch (_) {}
     }
   });
-
-  // Click-outside dismiss.
-  setTimeout(() => {
-    document.addEventListener('mousedown', function close(ev) {
-      // Eyedropper guard — see above. While the EyeDropper system
-      // overlay is up, the next click is on its surface, not the
-      // picker; without this skip we'd tear the picker down
-      // mid-sample and the colour update would land on an
-      // orphan DOM.
-      if (pop.dataset.eyedropping) return;
-      if (!pop.contains(ev.target) && ev.target !== anchorEl) {
-        pop.remove();
-        document.removeEventListener('mousedown', close, true);
-      }
-    }, true);
-  }, 0);
 }
 
 // ─── Universal pixel-accurate eyedropper ───────────────────────
@@ -68106,7 +68165,7 @@ function _renderTradeModalHTML() {
             <label class="trade-field-label">Onyx</label>
             <div class="trade-onyx-input">
               <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">
-              <input id="trade-my-onyx" type="number" min="0" max="${CU?.onyx || 0}" placeholder="0" oninput="_tradeUpdateTotals()">
+              ${_stfStep('trade-my-onyx', '', { min: 0, max: CU?.onyx || 0, oninput: '_tradeUpdateTotals()' })}
               <span class="trade-onyx-avail">/ ${(CU?.onyx || 0).toLocaleString()}</span>
             </div>
             <label class="trade-field-label">Items <span class="trade-field-count" id="trade-my-items-count">0 selected</span></label>
@@ -68127,7 +68186,7 @@ function _renderTradeModalHTML() {
             <label class="trade-field-label">Onyx</label>
             <div class="trade-onyx-input">
               <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">
-              <input id="trade-their-onyx" type="number" min="0" placeholder="0" oninput="_tradeUpdateTotals()">
+              ${_stfStep('trade-their-onyx', '', { min: 0, oninput: '_tradeUpdateTotals()' })}
               <span class="trade-onyx-avail">paid to you</span>
             </div>
             <div class="trade-return-note">
@@ -68877,7 +68936,7 @@ function _fsEditResellListing(listingId, itemId, currentPrice) {
       <label for="sim-list-resale-price">New price</label>
       <div class="sim-list-resale-input-wrap">
         <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">
-        <input id="sim-list-resale-price" type="number" min="1" max="999999" value="${currentPrice}" autofocus>
+        ${_stfStep('sim-list-resale-price', currentPrice, { min: 1, max: 999999, autofocus: true })}
       </div>
     </div>
     <div class="sim-list-resale-actions">
@@ -68944,7 +69003,7 @@ async function _fsPromptListResale(itemId) {
       <label for="sim-list-resale-price">Asking price</label>
       <div class="sim-list-resale-input-wrap">
         <img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" alt="">
-        <input id="sim-list-resale-price" type="number" min="1" max="999999" value="${item.price || 100}" autofocus>
+        ${_stfStep('sim-list-resale-price', item.price || 100, { min: 1, max: 999999, autofocus: true })}
       </div>
     </div>
     <div class="sim-list-resale-actions">
@@ -71915,13 +71974,21 @@ function _stfToggle(fid, btn) {
 // "The up and down thing" — a native `<input type=number>` draws the
 // browser's own spinner, which is the one control on the page we don't own.
 // This is the same field with our own ▲▼ built from `.fr-act` geometry.
+// The platform's number field. Every native <input type="number"> in the app
+// routes through this — the browser's spinner is two 8px arrows that only
+// appear on hover, in a shape we do not control, and it accepts "e", "+" and
+// "." as if they were digits.
+//   opt: min · max · step · placeholder · cls (extra classes on the field)
+//        oninput (expression) · style (on the wrapper) · autofocus
 function _stfStep(id, value, o) {
   const opt = o || {};
-  return `<span class="stf-step">
-    <input id="${id}" class="settings-input stf-step-in" type="text" inputmode="numeric"
+  return `<span class="stf-step"${opt.style ? ` style="${String(opt.style).replace(/"/g, '&quot;')}"` : ''}>
+    <input id="${id}" class="settings-input stf-step-in${opt.cls ? ' ' + opt.cls : ''}" type="text" inputmode="numeric"
       value="${escapeHTML(String(value == null ? '' : value))}" placeholder="${escapeHTML(opt.placeholder || '0')}"
       data-min="${opt.min == null ? '' : opt.min}" data-max="${opt.max == null ? '' : opt.max}" data-step="${opt.step || 1}"
-      autocomplete="off" spellcheck="false" onkeydown="_stfStepKey(event,'${id}')">
+      autocomplete="off" spellcheck="false"${opt.autofocus ? ' autofocus' : ''}
+      ${opt.oninput ? `oninput="${String(opt.oninput).replace(/"/g, '&quot;')}"` : ''}
+      onkeydown="_stfStepKey(event,'${id}')">
     <span class="stf-step-btns">
       <button type="button" class="stf-step-b" tabindex="-1" aria-label="Increase" onclick="_stfStepBy('${id}',1)">${_faIcon('chevron-up', 9)}</button>
       <button type="button" class="stf-step-b" tabindex="-1" aria-label="Decrease" onclick="_stfStepBy('${id}',-1)">${_faIcon('chevron-down', 9)}</button>
@@ -71943,8 +72010,17 @@ function _stfStepBy(id, dir) {
   el.dispatchEvent(new Event('input', { bubbles: true }));
 }
 function _stfStepKey(e, id) {
-  if (e.key === 'ArrowUp') { e.preventDefault(); _stfStepBy(id, 1); }
-  else if (e.key === 'ArrowDown') { e.preventDefault(); _stfStepBy(id, -1); }
+  if (e.key === 'ArrowUp') { e.preventDefault(); _stfStepBy(id, 1); return; }
+  if (e.key === 'ArrowDown') { e.preventDefault(); _stfStepBy(id, -1); return; }
+  // ⚠️ It is a text field, because that is the only way to own the spinner —
+  // which means WE keep it numeric. A native number input silently accepts
+  // "e", "+" and "-" anyway, so this is stricter than the thing it replaced.
+  if (e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && !/[0-9]/.test(e.key)) {
+    const el = document.getElementById(id);
+    const min = el && el.dataset.min !== '' ? parseFloat(el.dataset.min) : 0;
+    const step = el ? (parseFloat(el.dataset.step) || 1) : 1;
+    if (!(e.key === '-' && min < 0) && !(e.key === '.' && step < 1)) e.preventDefault();
+  }
 }
 
 // ── Member picker ──────────────────────────────────────────────────

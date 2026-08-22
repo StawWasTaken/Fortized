@@ -21151,69 +21151,148 @@ function _renderEventsModalContent() {
   else _renderCalendar(bastionId);
 }
 
+// ONE source of truth for the bastion settings nav AND its page header. The
+// settings card learned this the hard way: two maps (_SETTINGS_TAB_META for the
+// header, ICN for the nav row) meant swapping an icon in one place changed
+// nothing where you were actually looking. Never split this.
+const _BSET_TABS = {
+  overview:      { icon:'house',      label:'Bastion Profile',   lead:'How your bastion introduces itself across Fortized.' },
+  channels:      { icon:'hashtag',    label:'Channels',          lead:'Your categories, your rooms, and who can reach them.' },
+  roles:         { icon:'shield',     label:'Roles',             lead:'What each role can do, and who wears it.' },
+  emojis:        { icon:'face-smile', label:'Emoji & Stickers',  lead:'Expressions your members can use here.' },
+  templates:     { icon:'clipboard',  label:'Templates',         lead:'Save this bastion as a starting point, or build from one.' },
+  members:       { icon:'users',      label:'Members',           lead:'Everyone who calls this bastion home.' },
+  invites:       { icon:'link',       label:'Invites',           lead:'The doors in, and who has been handed a key.' },
+  bans:          { icon:'ban',        label:'Bans',              lead:'People who can no longer come back.' },
+  automod:       { icon:'safety',     label:'AutoMod',           lead:'Rules that act before a moderator has to.' },
+  bots:          { icon:'robot',      label:'Bots',              lead:'Automations serving this bastion.' },
+  slowmode:      { icon:'clock',      label:'Slow Mode',         lead:'Give a busy channel room to breathe.' },
+  welcome_msg:   { icon:'user-plus',  label:'Welcome Message',   lead:'The first thing a new arrival reads.' },
+  rules:         { icon:'file-lines', label:'Bastion Rules',     lead:'What you expect of the people here.' },
+  announcements: { icon:'bullhorn',   label:'Announcements',     lead:'Say something to the whole bastion at once.' },
+  insights:      { icon:'chart-line', label:'Insights',          lead:'How your bastion is actually doing.' },
+  starboard:     { icon:'star',       label:'Starboard',         lead:'The messages your members thought were worth keeping.' },
+  boost:         { icon:'boost',      label:'Boosts',            lead:'What your members have unlocked for everyone.' },
+  mood:          { icon:'heart',      label:'Bastion Mood',      lead:'The tone your bastion carries.' },
+  reputation:    { icon:'medal',      label:'Reputation',        lead:'Standing earned inside this bastion.' },
+  danger:        { icon:'trash',      label:'Delete Bastion',    lead:'This one cannot be walked back.', danger:true },
+};
+
+// Nav order. A string is a section head, an id is a row, '-' is a separator.
+const _BSET_NAV = [
+  'overview', 'channels',
+  'PEOPLE', 'members', 'roles', 'invites', 'bans',
+  'MODERATION', 'automod', 'bots', 'slowmode',
+  'COMMUNITY', 'welcome_msg', 'rules', 'announcements', 'starboard',
+  'EXPRESSION', 'emojis', 'templates',
+  'GROWTH', 'boost', 'insights', 'mood', 'reputation',
+  '-', 'danger',
+];
+
+// Both the rail row (15px) and the page header (24px) draw from here, so a
+// glyph can never disagree with itself.
+function _bsetIcon(id, size) {
+  const m = _BSET_TABS[id];
+  if (!m) return '';
+  if (m.icon === 'safety') return _safetyIcon(size);
+  if (m.icon === 'boost')  return _boostSvg(String(size));
+  return _faIcon(m.icon, size);
+}
+
 function renderBSettingsNav(activeTab) {
   const nav = document.getElementById('bsettings-nav');
   const b = CU.bastions[curBastion];
   if (!nav||!b) return;
-  document.getElementById('sidebar-title').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> '+escapeHTML(b.name);
-  const sections = [
-    {label:escapeHTML(b.name).toUpperCase()},
-    {id:'overview',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',label:'Bastion Profile'},
-    {label:'EXPRESSION'},
-    {id:'emojis',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',label:'Emoji & Stickers'},
-    {id:'templates',icon:ftzIcon('clipboard','15'),label:'Templates'},
-    {label:'PEOPLE'},
-    {id:'members',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',label:'Members'},
-    {id:'roles',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',label:'Roles'},
-    {id:'invites',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',label:'Invites'},
-    {id:'bans',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',label:'Bans'},
-    {label:'MODERATION'},
-    {id:'automod',icon:ftzIcon('shield','15'),label:'AutoMod'},
-    {id:'bots',icon:'<img src="/Fortized Bot.png" style="width:15px;height:15px;">',label:'Bots'},
-    {id:'slowmode',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',label:'Slow Mode'},
-    {label:'COMMUNITY'},
-    {id:'welcome_msg',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',label:'Welcome Message'},
-    {id:'rules',icon:ftzIcon('clipboard','15'),label:'Server Rules'},
-    {id:'announcements',icon:ftzIcon('megaphone','15'),label:'Announcements'},
-    {id:'insights',icon:ftzIcon('chartUp','15'),label:'Insights'},
-    {id:'starboard',icon:ftzIcon('star','15'),label:'Starboard'},
-    {label:'LIVING BASTION'},
-    {id:'mood',icon:ftzIcon('castle','15'),label:'Bastion Mood'},
-    {id:'reputation',icon:ftzIcon('shield','15'),label:'Reputation'},
-    {sep:true},
-    {id:'danger',icon:ftzIcon('warning','15'),label:'Delete Bastion',danger:true},
-  ];
-  let html = `<div class="bsettings-nav-header">${escapeHTML(b.name)}</div><div class="bsettings-nav-scroll">`;
-  html += sections.map(s=>{
-    if(s.sep) return '<div class="bsettings-nav-sep"></div>';
-    if(!s.id) return `<div class="bsettings-nav-section">${s.label}</div>`;
-    return `<div class="bsettings-nav-item${activeTab===s.id?' active':''}${s.danger?' danger':''}" onclick="renderBSettingsMain('${s.id}')">${s.icon} <span>${s.label}</span></div>`;
+  const st = document.getElementById('sidebar-title');
+  if (st) st.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;">${_faIcon('user-gear',14)}${escapeHTML(b.name)}</span>`;
+
+  const emb = b.icon
+    ? `<img src="${escapeHTML(b.icon)}" alt="">`
+    : `<span>${escapeHTML((b.name||'B')[0].toUpperCase())}</span>`;
+  let html = `<div class="bset-railhead">
+      <div class="bset-railemb">${emb}</div>
+      <div class="bset-railtx">
+        <div class="bset-railname">${escapeHTML(b.name)}</div>
+        <div class="bset-railsub">Bastion settings</div>
+      </div>
+    </div>
+    <div class="bset-railscroll">`;
+
+  html += _BSET_NAV.map(key => {
+    if (key === '-') return '<div class="bset-railsep"></div>';
+    const m = _BSET_TABS[key];
+    if (!m) return `<div class="bset-railgrp">${escapeHTML(key)}</div>`;
+    const cls = 'bset-navi' + (activeTab === key ? ' active' : '') + (m.danger ? ' danger' : '');
+    return `<button class="${cls}" type="button" onclick="renderBSettingsMain('${key}')">`
+         + `<span class="bset-navi-ic">${_bsetIcon(key, 15)}</span><span>${escapeHTML(m.label)}</span></button>`;
   }).join('');
-  html += `<div class="bsettings-nav-sep"></div>`;
-  html += `<div class="bsettings-nav-back" onclick="closeModal('modal-bsettings')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back to Bastion</div>`;
-  html += '</div>';
+
+  html += `</div>
+    <button class="bset-railback" type="button" onclick="closeModal('modal-bsettings')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to bastion
+    </button>`;
   nav.innerHTML = html;
 }
+
+// The page header. Same meta map as the rail, one size up.
+function _renderBSettingsHead(tab) {
+  const head = document.getElementById('bsettings-head');
+  if (!head) return;
+  const m = _BSET_TABS[tab];
+  if (!m) { head.innerHTML = ''; head.style.display = 'none'; return; }
+  head.style.display = '';
+  head.innerHTML = `<span class="bset-head-ic${m.danger?' danger':''}">${_bsetIcon(tab, 22)}</span>
+    <div class="bset-head-tx">
+      <div class="bset-head-title">${escapeHTML(m.label)}</div>
+      <div class="bset-head-lead">${escapeHTML(m.lead||'')}</div>
+    </div>`;
+}
+
+// BRIDGE (phase 3a): every tab still opens with its own .bs-section-title, which
+// would now read as a second heading under the real page header. Strip a LEADING
+// one (and the .bs-section-desc that follows it) as each tab is rebuilt in 3b/3c
+// this call becomes a no-op for that tab and finally goes away.
+// It must NOT touch .bs-section-title.bstr-title: that is the role/channel
+// editor's preview name, which is mid-page content, not a heading.
+function _bsetStripLegacyHead(main) {
+  const first = main.firstElementChild;
+  if (!first) return;
+  if (!first.classList.contains('bs-section-title')) return;
+  if (first.classList.contains('bstr-title')) return;
+  const next = first.nextElementSibling;
+  first.remove();
+  if (next && next.classList.contains('bs-section-desc')) next.remove();
+}
+
+// Declared ABOVE its reader on purpose. `let` is not hoisted, and this codebase
+// has already been bitten once by a const registry sitting below the code that
+// reads it (_FTZ_MARKS). Keep it here.
+let _bsetActiveTab = 'overview';
 
 function _updateBSettingsPreview() {
   const preview = document.getElementById('bsettings-preview');
   const b = CU.bastions?.[curBastion];
   if (!preview || !b) return;
+  // Scoped to the profile tab on purpose: a bastion card is context while you
+  // edit the profile, and noise while you edit Bans or AutoMod.
+  if (_bsetActiveTab !== 'overview') { preview.innerHTML = ''; preview.style.display = 'none'; return; }
+  preview.style.display = '';
   const memberCount = b.memberCount || 1;
-  const onlineGuess = Math.max(1, Math.floor(memberCount * 0.3));
+  // No "N Online" here. There is no per-bastion presence figure to read, and the
+  // old one was members * 0.3 rounded down: a number that was never measured.
   preview.innerHTML = `
-    <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:12px;">Preview</div>
+    <div class="bset-prevlab">Preview</div>
     <div class="bs-preview-card">
-      <div class="bs-preview-banner">${b.banner?`<img src="${escapeHTML(b.banner)}">`:'<div style="width:100%;height:100%;background:linear-gradient(135deg,#1a0f30,#0f1830);"></div>'}</div>
+      <div class="bs-preview-banner">${b.banner?`<img src="${escapeHTML(b.banner)}">`:'<div class="bs-preview-bannerph"></div>'}</div>
       <div class="bs-preview-body">
-        <div class="bs-preview-icon">${b.icon?`<img src="${escapeHTML(b.icon)}">`:`<span style="font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}</div>
+        <div class="bs-preview-icon">${b.icon?`<img src="${escapeHTML(b.icon)}">`:`<span style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--accent);">${escapeHTML((b.name||'B')[0].toUpperCase())}</span>`}</div>
         <div class="bs-preview-name">${escapeHTML(b.name)}${b.verified?_verifiedBadge(14):''}${_boostBadge(b,14)}</div>
         <div class="bs-preview-stats">
-          <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);"></span> ${onlineGuess} Online</span>
-          <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:50%;background:#6b7280;"></span> ${memberCount} Members</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--muted);"></span> ${memberCount} ${memberCount===1?'member':'members'}</span>
         </div>
         ${b.desc?`<div class="bs-preview-desc">${escapeHTML(b.desc)}</div>`:''}
-        ${b.tagline?`<div style="margin-top:8px;font-size:11px;color:rgba(255,255,255,.3);font-style:italic;">"${escapeHTML(b.tagline)}"</div>`:''}
+        ${b.tagline?`<div class="bs-preview-tag">${escapeHTML(b.tagline)}</div>`:''}
       </div>
     </div>`;
 }
@@ -21222,8 +21301,12 @@ function renderBSettingsMain(tab) {
   const main = document.getElementById('bsettings-main');
   const b = CU.bastions[curBastion];
   if (!main||!b) return;
+  _bsetActiveTab = tab;
   renderBSettingsNav(tab);
+  _renderBSettingsHead(tab);
   _updateBSettingsPreview();
+  const _bsetScroll = main.closest('.bset-scroll');
+  if (_bsetScroll) _bsetScroll.scrollTop = 0;
 
   if (tab==='overview') {
     main.innerHTML = `
@@ -21231,7 +21314,7 @@ function renderBSettingsMain(tab) {
       <div class="bs-section-desc">Customize how your bastion appears across Fortized.</div>
       <div style="margin-bottom:18px;">
         <div class="settings-title">Banner</div>
-        <div style="height:160px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,249,62,.1);cursor:pointer;position:relative;transition:all .2s;" onclick="document.getElementById('bs-banner-upload').click()" onmouseover="this.style.borderColor='rgba(255,249,62,.2);this.style.background='rgba(255,249,62,.02)'" onmouseout="this.style.borderColor='rgba(255,249,62,.1);this.style.background=''">
+        <div style="height:160px;border-radius:12px;overflow:hidden;border:2px solid var(--border);cursor:pointer;position:relative;transition:border-color .15s;" onclick="document.getElementById('bs-banner-upload').click()" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
           ${b.banner?`<img src="${b.banner}" style="width:100%;height:100%;object-fit:cover;">`:'<div style="height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f1830,#1a0f30);color:var(--muted);font-size:13px;">Click to upload a banner &middot; '+FTZ_BANNER_W+' x '+FTZ_BANNER_H+'</div>'}
         </div>
         <input id="bs-banner-upload" type="file" accept="image/*" style="display:none;" onchange="updateBastionBanner(event)">
@@ -21493,48 +21576,41 @@ function renderBSettingsMain(tab) {
       {name:'Fortified',perks:['35 custom emoji slots','HD banner (1920×480)','256kbps HD voice quality','15 minute voice message limit','Custom role icons'],color:'#a78bfa'},
       {name:'Sovereign',perks:['50 custom emoji slots','384kbps voice quality','Custom bastion splash screen','Priority support badge'],color:'#fbbf24'},
     ];
+    // A perk is either unlocked or it is not, and that is the whole message. A
+    // filled green dot says it without a text glyph, and it keeps full strength
+    // while the label beside it stays muted: dim the label, never the mark.
+    const _perkDot = on => `<span style="flex:0 0 auto;width:9px;height:9px;border-radius:50%;${on?'background:#3ecf6e;':'border:2px solid var(--border);'}"></span>`;
     const tierCards = tiers.map((t,i)=>{
       const lv=i+1;
       const isActive=level>=lv;
       const isNext=level===lv-1;
       const monthlyCost=boostCost*lv;
-      return `<div style="padding:16px;border-radius:14px;border:1.5px solid ${isActive?t.color+'55':'var(--border)'};background:${isActive?t.color+'10':'var(--panel)'};position:relative;${isNext?'box-shadow:0 0 20px '+t.color+'20;':''}">
-        ${isActive?`<div style="position:absolute;top:10px;right:12px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:var(--radius-pill);background:${t.color}22;color:${t.color};border:1px solid ${t.color}33;">ACTIVE</div>`:''}
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-          ${_boostSvg('20')}
-          <div><div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:${t.color};">Level ${lv} — ${t.name}</div>
-            <div style="font-size:11px;color:var(--muted);">${monthlyCost} ${_onyxImg('13')}/month</div></div>
+      return `<div style="padding:16px;border-radius:var(--radius-lg);border:2px solid ${isActive?t.color+'66':'var(--border)'};background:${isActive?t.color+'12':'var(--panel)'};position:relative;">
+        ${isActive?`<div style="position:absolute;top:12px;right:14px;font-size:10px;font-weight:700;letter-spacing:.06em;padding:3px 9px;border-radius:var(--radius-pill);background:${t.color}22;color:${t.color};border:2px solid ${t.color}44;">ACTIVE</div>`:''}
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px;">
+          <span style="color:${isActive?t.color:'var(--muted-light)'};display:flex;">${_boostSvg('20')}</span>
+          <div><div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:${t.color};">Level ${lv} · ${t.name}</div>
+            <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;">${monthlyCost} ${_onyxImg('13')} per month</div></div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">
-          ${t.perks.map(p=>`<div style="font-size:12.5px;color:var(--muted-light);display:flex;align-items:center;gap:6px;"><span style="color:${isActive?'var(--green)':'var(--muted)'};">${isActive?'✓':'○'}</span>${p}</div>`).join('')}
+        <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;">
+          ${t.perks.map(p=>`<div style="font-size:12.5px;color:${isActive?'var(--text)':'var(--muted-light)'};display:flex;align-items:center;gap:9px;">${_perkDot(isActive)}${p}</div>`).join('')}
         </div>
-        ${!isActive&&isNext?`<button class="btn-a" onclick="boostBastion(${lv},${monthlyCost})" style="width:100%;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">${_boostSvg('15')} Boost for ${monthlyCost} ${_onyxImg('14')}</button>`:''}
-        ${!isActive&&!isNext?`<div style="font-size:11px;color:var(--muted);text-align:center;">Requires Level ${lv-1} first</div>`:''}
+        ${!isActive&&isNext?`<button class="fs-btn fs-btn--primary" onclick="boostBastion(${lv},${monthlyCost})" style="width:100%;font-size:13px;display:flex;align-items:center;justify-content:center;gap:7px;">${_boostSvg('15')} Boost for ${monthlyCost} ${_onyxImg('14')}</button>`:''}
+        ${!isActive&&!isNext?`<div style="font-size:11.5px;color:var(--muted);text-align:center;">Reach Level ${lv-1} first</div>`:''}
       </div>`;
     }).join('');
     main.innerHTML = `
-      <div class="bs-section-title" style="display:flex;align-items:center;gap:6px;">${_boostSvg('16')} Boost Perks</div>
-      <div class="bs-section-desc">Boost your bastion with ${_onyxImg('13')} Onyx to unlock perks. 90 ${_onyxImg('12')} per level per month.</div>
-      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 16px;background:var(--panel);border:2px solid var(--border);border-radius:var(--radius-lg);margin-bottom:18px;">
         ${_onyxImg('22')}
-        <div style="flex:1;"><div style="font-size:13px;font-weight:700;">Your Onyx Balance</div><div style="font-size:11px;color:var(--muted);">Available to spend</div></div>
-        <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent);">${CU.onyx||0}</div>
+        <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;">Your Onyx balance</div><div style="font-size:11.5px;color:var(--muted);">90 Onyx per level, per month.</div></div>
+        <div style="font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--accent);">${_ftzCompactNum(CU.onyx||0)}</div>
       </div>
       <div style="display:grid;gap:12px;">${tierCards}</div>
-      ${level>=3?`<div style="text-align:center;margin-top:16px;padding:16px;background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.02));border:1px solid rgba(251,191,36,.15);border-radius:14px;">
-        <span style="font-size:22px;">👑</span>
-        <div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--gold);margin-top:6px;">Sovereign Level — Maximum Boost!</div>
-        <div style="margin-top:12px;">
-          <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:rgba(255,255,255,.6);">Upload Limit</div>
-          <div style="font-size:13px;color:var(--gold);font-weight:700;">50 MB per file (up from 8 MB)</div>
-        </div>
-      </div>`:''}
-      ${level>0?`<div style="margin-top:16px;padding:14px 16px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;">
-        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Active Perks Summary</div>
-        <div style="font-size:12px;color:var(--muted-light);line-height:1.7;">
-          ${level>=1?'✅ 25+ emoji slots<br>✅ Animated icon<br>✅ 128kbps voice<br>':''}
-          ${level>=2?'✅ 35+ emoji slots<br>✅ HD banner<br>✅ 256kbps voice<br>✅ Custom role icons<br>':''}
-          ${level>=3?'✅ 50 emoji slots<br>✅ 384kbps voice<br>✅ Splash screen<br>':''}
+      ${level>=3?`<div style="margin-top:16px;padding:16px;background:var(--panel);border:2px solid rgba(251,191,36,.28);border-radius:var(--radius-lg);display:flex;align-items:center;gap:12px;">
+        <span style="color:var(--gold);display:flex;">${_boostSvg('26')}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--gold);">Sovereign, the highest tier</div>
+          <div style="font-size:12.5px;color:var(--muted-light);margin-top:3px;">Uploads here go up to 50 MB per file, from 8 MB.</div>
         </div>
       </div>`:''}`;
   }
@@ -22275,6 +22351,10 @@ function renderBSettingsMain(tab) {
   else {
     main.innerHTML = `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('construction','48')}</div><h3>Coming Soon</h3><p>This section is in development.</p></div>`;
   }
+
+  // The page header above the pane is the heading now. Every tab still opens
+  // with its own, which would read as the same title printed twice.
+  _bsetStripLegacyHead(main);
 }
 
 // ── Create & Marketplace helpers ──
@@ -26714,6 +26794,24 @@ const _FA_ICON_PATHS = {
   'circle-info':     { vb:'0 0 512 512', d:'M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM224 160a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm-8 64l48 0c13.3 0 24 10.7 24 24l0 88 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-80 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l24 0 0-64-24 0c-13.3 0-24-10.7-24-24s10.7-24 24-24z' },
   'logout':          { vb:'0 0 512 512', d:'M505 273c9.4-9.4 9.4-24.6 0-33.9L361 95c-6.9-6.9-17.2-8.9-26.2-5.2S320 102.3 320 112l0 80-112 0c-26.5 0-48 21.5-48 48l0 32c0 26.5 21.5 48 48 48l112 0 0 80c0 9.7 5.8 18.5 14.8 22.2s19.3 1.7 26.2-5.2L505 273zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z' },
   'link':            { vb:'0 0 576 512', d:'M419.5 96c-16.6 0-32.7 4.5-46.8 12.7-15.8-16-34.2-29.4-54.5-39.5 28.2-24 64.1-37.2 101.3-37.2 86.4 0 156.5 70 156.5 156.5 0 41.5-16.5 81.3-45.8 110.6l-71.1 71.1c-29.3 29.3-69.1 45.8-110.6 45.8-86.4 0-156.5-70-156.5-156.5 0-1.5 0-3 .1-4.5 .5-17.7 15.2-31.6 32.9-31.1s31.6 15.2 31.1 32.9c0 .9 0 1.8 0 2.6 0 51.1 41.4 92.5 92.5 92.5 24.5 0 48-9.7 65.4-27.1l71.1-71.1c17.3-17.3 27.1-40.9 27.1-65.4 0-51.1-41.4-92.5-92.5-92.5zM275.2 173.3c-1.9-.8-3.8-1.9-5.5-3.1-12.6-6.5-27-10.2-42.1-10.2-24.5 0-48 9.7-65.4 27.1L91.1 258.2c-17.3 17.3-27.1 40.9-27.1 65.4 0 51.1 41.4 92.5 92.5 92.5 16.5 0 32.6-4.4 46.7-12.6 15.8 16 34.2 29.4 54.6 39.5-28.2 23.9-64 37.2-101.3 37.2-86.4 0-156.5-70-156.5-156.5 0-41.5 16.5-81.3 45.8-110.6l71.1-71.1c29.3-29.3 69.1-45.8 110.6-45.8 86.6 0 156.5 70.6 156.5 156.9 0 1.3 0 2.6 0 3.9-.4 17.7-15.1 31.6-32.8 31.2s-31.6-15.1-31.2-32.8c0-.8 0-1.5 0-2.3 0-33.7-18-63.3-44.8-79.6z' },
+  // Bastion settings nav + page headers (phase 3a). Same FA Free 7 Solid set.
+  'house':           { vb:'0 0 576 512', d:'M303.5 5.7c-9-7.6-22.1-7.6-31.1 0l-264 224c-10.1 8.6-11.3 23.7-2.8 33.8s23.7 11.3 33.8 2.8L64 245.5 64 432c0 44.2 35.8 80 80 80l288 0c44.2 0 80-35.8 80-80l0-186.5 24.5 20.8c10.1 8.6 25.2 7.3 33.8-2.8s7.3-25.2-2.8-33.8l-264-224zM240 304l96 0c8.8 0 16 7.2 16 16l0 144-128 0 0-144c0-8.8 7.2-16 16-16z' },
+  'hashtag':         { vb:'0 0 448 512', d:'M181.3 32.4c17.4 2.9 29.2 19.4 26.3 36.8L197.8 128l95.1 0 11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3s29.2 19.4 26.3 36.8L357.3 128l58.7 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-69.3 0-21.3 128 58.7 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-69.3 0-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8l9.8-58.7-95.1 0-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8L90.7 384 32 384c-17.7 0-32-14.3-32-32s14.3-32 32-32l69.3 0 21.3-128L64 192c-17.7 0-32-14.3-32-32s14.3-32 32-32l69.3 0 11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3zM187.1 192l-21.3 128 95.1 0 21.3-128-95.1 0z' },
+  'shield':          { vb:'0 0 512 512', d:'M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2-.5 99.2-41.3 280.7-213.6 363.2-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z' },
+  'face-smile':      { vb:'0 0 512 512', d:'M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM372.4 317.7A152 152 0 0 1 139.6 317.7a12 12 0 0 1 18.4-15.4A128 128 0 0 0 354 302.3a12 12 0 0 1 18.4 15.4zM144 200a32 32 0 1 1 64 0 32 32 0 1 1-64 0zM304 200a32 32 0 1 1 64 0 32 32 0 1 1-64 0z' },
+  'clipboard':       { vb:'0 0 384 512', d:'M144 0c-26.5 0-48 21.5-48 48l0 16c0 26.5 21.5 48 48 48l96 0c26.5 0 48-21.5 48-48l0-16c0-26.5-21.5-48-48-48l-96 0zM64 48l0 16c0 44.2 35.8 80 80 80l96 0c44.2 0 80-35.8 80-80l0-16 16 0c35.3 0 64 28.7 64 64l0 336c0 35.3-28.7 64-64 64L48 512c-35.3 0-48-28.7-48-64L0 112C0 76.7 12.7 48 48 48l16 0z' },
+  'users':           { vb:'0 0 640 512', d:'M96 128a80 80 0 1 1 160 0 80 80 0 1 1 -160 0zm456 0a72 72 0 1 1 -144 0 72 72 0 1 1 144 0zM64 421.3c0-70.7 57.3-128 128-128l32 0c70.7 0 128 57.3 128 128 0 20.3-16.5 36.7-36.7 36.7l-214.6 0c-20.3 0-36.7-16.5-36.7-36.7zM440 288l48 0c61.9 0 112 50.1 112 112 0 26.5-21.5 48-48 48l-134.7 0c6.8-13.6 10.7-28.9 10.7-45.1 0-46.1-19.6-87.7-51-116.9 18.7-12.1 41-19.1 65-19.1z' },
+  'ban':             { vb:'0 0 512 512', d:'M367.2 412.5C335 434.5 296 447.4 254 448 118.3 448 8 337.7 8 202 8 160 20.9 121 42.9 88.8L367.2 412.5zM97.3 43.6C129.5 21.6 168.5 8.6 210.5 8 346.2 8 456.5 118.3 456.5 254c0 42-12.9 81-34.9 113.2L97.3 43.6z' },
+  'robot':           { vb:'0 0 640 512', d:'M320 0c17.7 0 32 14.3 32 32l0 32 120 0c48.6 0 88 39.4 88 88l0 16 32 0c26.5 0 48 21.5 48 48l0 96c0 26.5-21.5 48-48 48l-32 0 0 16c0 48.6-39.4 88-88 88l-304 0c-48.6 0-88-39.4-88-88l0-16-32 0c-26.5 0-48-21.5-48-48l0-96c0-26.5 21.5-48 48-48l32 0 0-16c0-48.6 39.4-88 88-88l120 0 0-32c0-17.7 14.3-32 32-32zM208 256a32 32 0 1 0 0 64 32 32 0 1 0 0-64zm192 0a32 32 0 1 0 0 64 32 32 0 1 0 0-64zM216 400l208 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-208 0c-13.3 0-24 10.7-24 24s10.7 24 24 24z' },
+  'clock':           { vb:'0 0 512 512', d:'M256 0a256 256 0 1 1 0 512 256 256 0 1 1 0-512zm-24 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z' },
+  'file-lines':      { vb:'0 0 384 512', d:'M64 0C28.7 0 0 28.7 0 64L0 448c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-288-128 0c-17.7 0-32-14.3-32-32L224 0 64 0zM256 0l0 128 128 0L256 0zM112 256L272 256L272 288L112 288ZM112 320L272 320L272 352L112 352ZM112 384L272 384L272 416L112 416Z' },
+  'bullhorn':        { vb:'0 0 512 512', d:'M480 32c0-12.9-7.8-24.6-19.8-29.6s-25.7-2.2-34.9 6.9L381.7 53c-48 48-113.1 75-181 75l-8.7 0-32 0-32 0c-35.3 0-64 28.7-64 64l0 96c0 35.3 28.7 64 64 64l0 128c0 17.7 14.3 32 32 32l64 0c17.7 0 32-14.3 32-32l0-128 8.7 0c67.9 0 133 27 181 75l43.6 43.6c9.2 9.2 22.9 11.9 34.9 6.9S480 492.9 480 480l0-448zM48 192l0 96c0 26.5 21.5 48 48 48l0-192c-26.5 0-48 21.5-48 48z' },
+  'chart-line':      { vb:'0 0 512 512', d:'M64 64c0-17.7-14.3-32-32-32S0 46.3 0 64L0 400c0 44.2 35.8 80 80 80l400 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L80 416c-8.8 0-16-7.2-16-16L64 64zm406.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L320 210.7l-57.4-57.4c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L240 221.3l57.4 57.4c12.5 12.5 32.8 12.5 45.3 0l128-128z' },
+  'star':            { vb:'0 0 576 512', d:'M287.9 0c9.2 0 17.6 5.2 21.6 13.5l68.6 141.3 153.2 22.2c9 1.3 16.5 7.6 19.3 16.3s.5 18.1-6 24.5L433.6 328.4l24.6 155.2c1.4 9-2.2 18-9.5 23.3s-16.9 6.1-24.9 1.9l-136-71.4-136.2 71.4c-8 4.2-17.6 3.4-24.9-1.9s-10.9-14.4-9.5-23.3l24.7-155.2L31.5 217.8c-6.5-6.4-8.8-15.9-6-24.5s10.3-15 19.3-16.3l153.2-22.2 68.6-141.3c4-8.3 12.4-13.5 21.6-13.5z' },
+  'heart':           { vb:'0 0 512 512', d:'M225.8 468.2l-2.5-2.3L48.1 303c-33.3-30.9-48.1-75.1-48.1-118 0-77.4 62.6-140 140-140 39.6 0 76.5 16.6 102.5 44.3l13.6 14.4 13.6-14.4c26-27.7 62.9-44.3 102.5-44.3 77.4 0 140 62.6 140 140 0 42.9-14.8 87.1-48.1 118l-175.2 162.9-2.5 2.3c-9.8 9.1-24.8 9.1-34.6 0z' },
+  'medal':           { vb:'0 0 512 512', d:'M4.1 38.2C1.4 34.2 0 29.4 0 24.6 0 11 11 0 24.6 0L133 0c14 0 27.1 7 34.8 18.6l72 108-96.6 96.6-139-185zM443.5 0C457 0 468 11 468 24.6c0 4.8-1.4 9.6-4.1 13.6l-139 185-96.6-96.6 72-108C308 7 321.1 0 335.1 0L443.5 0zM256 224a144 144 0 1 1 0 288 144 144 0 1 1 0-288zm0 80c-7.6 0-14.5 4.3-17.9 11.2l-13.9 28.1-31 4.5c-7.6 1.1-13.9 6.4-16.2 13.7s-.4 15.3 5.1 20.7l22.4 21.9-5.3 30.9c-1.3 7.5 1.8 15.1 8 19.6s14.4 5 21.2 1.5l27.7-14.6 27.7 14.6c6.8 3.6 15 3 21.2-1.5s9.3-12.1 8-19.6l-5.3-30.9 22.4-21.9c5.5-5.4 7.4-13.4 5.1-20.7s-8.6-12.6-16.2-13.7l-31-4.5-13.9-28.1c-3.4-6.9-10.4-11.2-17.9-11.2z' },
+  'trash':           { vb:'0 0 448 512', d:'M164.2 39.5L148.9 64 299.1 64 283.8 39.5C281.6 36 277.8 33.9 273.7 33.9l-99.4 0c-4.1 0-7.9 2.1-10.1 5.6zM313 5.5L349.6 64 384 64l64 0c8.8 0 16 7.2 16 16s-7.2 16-16 16L16 96C7.2 96 0 88.8 0 80s7.2-16 16-16l64 0 34.4 0L151 5.5C158.4-6.4 171.4-13.7 185.4-13.7l77.2 0c14 0 27 7.3 34.4 19.2zM32 128l384 0 0 320c0 35.3-28.7 64-64 64l-256 0c-35.3 0-64-28.7-64-64l0-320zm112 64c-8.8 0-16 7.2-16 16l0 208c0 8.8 7.2 16 16 16s16-7.2 16-16l0-208c0-8.8-7.2-16-16-16zm80 0c-8.8 0-16 7.2-16 16l0 208c0 8.8 7.2 16 16 16s16-7.2 16-16l0-208c0-8.8-7.2-16-16-16zm80 0c-8.8 0-16 7.2-16 16l0 208c0 8.8 7.2 16 16 16s16-7.2 16-16l0-208c0-8.8-7.2-16-16-16z' },
+  'bolt':            { vb:'0 0 448 512', d:'M349.4 44.6c5.6-13.1 1.3-28.3-10.3-36.6s-27.5-7.4-38.1 2L12.5 267.4C4.6 274.5 0 284.6 0 295.3 0 316.6 17.4 334 38.7 334l111.3 0-49.4 133.4c-5.6 13.1-1.3 28.3 10.3 36.6s27.5 7.4 38.1-2L438.5 244.6c7.9-7.1 12.5-17.2 12.5-27.9 0-21.3-17.4-38.7-38.7-38.7L301 178l48.4-133.4z' },
 };
 function _faIcon(name, size) {
   const ic = _FA_ICON_PATHS[name];

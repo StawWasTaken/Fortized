@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix513';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix514';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix513';
+    s4.src = '/firebase-compat-shim.js?v=2026fix514';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix513">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix514">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix513', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix514', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix513"></script>
+<script src="/app/utils.js?v=2026fix514"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -669,14 +669,20 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
 
 <!-- BASTION SETTINGS MODAL -->
 <div class="modal-overlay" role="dialog" id="modal-bsettings">
-  <div class="modal settings-modal">
+  <div class="modal settings-modal bset-modal">
+    <button class="settings-close" aria-label="Close bastion settings" onclick="closeModal('modal-bsettings')" data-tip="Close">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
     <div class="modal-bar"></div>
-    <div class="modal-body" style="padding:0;display:flex;height:100%;overflow:hidden;">
-      <div class="bsettings-nav" id="bsettings-nav"></div>
-      <div class="bsettings-main-wrap" style="flex:1;display:flex;overflow:hidden;">
-        <div class="bsettings-main" id="bsettings-main"></div>
-        <div class="bsettings-preview" id="bsettings-preview"></div>
-      </div>
+    <div class="modal-body bset-shell">
+      <aside class="bsettings-nav bset-rail" id="bsettings-nav"></aside>
+      <main class="bset-main">
+        <header class="bset-head" id="bsettings-head"></header>
+        <div class="bset-body">
+          <div class="bset-scroll"><div class="bsettings-main" id="bsettings-main"></div></div>
+          <aside class="bsettings-preview" id="bsettings-preview"></aside>
+        </div>
+      </main>
     </div>
   </div>
 </div>
@@ -1111,10 +1117,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix513"></script>
-<script src="/app/app.js?v=2026fix513"></script>
-<script src="/app/joy-system.js?v=2026fix513"></script>
-<script src="/app/chronicle-games.js?v=2026fix513"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix514"></script>
+<script src="/app/app.js?v=2026fix514"></script>
+<script src="/app/joy-system.js?v=2026fix514"></script>
+<script src="/app/chronicle-games.js?v=2026fix514"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

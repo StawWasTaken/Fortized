@@ -1524,6 +1524,14 @@ app.get('/app/fortshop', (_req, res) => sendHtmlNoCache(res, path.join(__dirname
 app.get('/app/quests',   (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
 app.get('/app/creator',  (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
 app.get('/app/bastion',  (_req, res) => sendHtmlNoCache(res, path.join(__dirname, 'app', 'index.html')));
+// The component kit — every component the platform is allowed to build out of,
+// in every state, rendered against the real stylesheet. It is a build tool, not
+// a page anyone should land on, so it is only served when FTZ_KIT=1 is set.
+// Without it the route 404s through to the SPA fallback like any other path.
+app.get('/app/__kit', (_req, res, next) => {
+  if (process.env.FTZ_KIT !== '1') return next();
+  sendHtmlNoCache(res, path.join(__dirname, 'app', 'kit', 'kit.html'));
+});
 // ── Short invite links ────────────────────────────────────────────────
 // Everything lands on /app?invite=CODE, which the client already resolves
 // (checkInviteLink -> joinByInvite -> the invite card). These are only nicer

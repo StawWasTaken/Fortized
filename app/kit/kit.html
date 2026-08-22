@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Fortized — component kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap">
+<!-- The REAL stylesheet. Nothing in this page may add a component rule of its
+     own: if a thing does not render correctly here, the bug is in styles.css,
+     which is the entire point of the page. -->
+<link rel="stylesheet" href="/app/styles.css">
+<style>
+/* Kit chrome only. Everything here is namespaced .kit-* and exists purely to
+   lay the page out — it must never style a component. */
+html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ui);margin:0;}
+.kit-wrap{display:flex;min-height:100vh;}
+.kit-rail{width:236px;flex:0 0 236px;background:var(--rail);border-right:2px solid var(--border);
+  padding:20px 12px 40px;position:sticky;top:0;height:100vh;overflow:auto;}
+.kit-brand{font-family:var(--font-display);font-weight:700;font-size:15px;letter-spacing:.01em;
+  padding:0 10px 14px;color:var(--text);}
+.kit-brand small{display:block;font-family:var(--font-ui);font-weight:400;font-size:11.5px;
+  color:var(--muted-light);letter-spacing:0;margin-top:3px;line-height:1.45;}
+.kit-navg{font-family:var(--font-display);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:700;padding:16px 10px 6px;}
+.kit-nav a{display:block;padding:7px 10px;border-radius:var(--radius-sm);color:var(--muted-light);
+  text-decoration:none;font-size:12.5px;font-family:var(--font-display);font-weight:600;}
+.kit-nav a:hover{background:var(--surface-2);color:var(--text);}
+.kit-main{flex:1;min-width:0;padding:28px 34px 120px;max-width:1180px;}
+.kit-h1{font-family:var(--font-display);font-size:26px;font-weight:700;margin:0 0 6px;}
+.kit-lead{color:var(--muted-light);font-size:13.5px;line-height:1.6;max-width:62ch;margin:0 0 22px;}
+.kit-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 26px;
+  padding:12px 14px;border:2px solid var(--border);border-radius:var(--radius-md);background:var(--panel);}
+.kit-bar label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--muted-light);}
+.kit-bar select{min-width:150px;}
+.kit-stat{margin-left:auto;font-size:12px;color:var(--muted-light);font-variant-numeric:tabular-nums;}
+.kit-group-t{font-family:var(--font-display);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:700;margin:38px 0 14px;padding-bottom:9px;border-bottom:2px solid var(--border);}
+.kit-c{margin:0 0 26px;border:2px solid var(--border);border-radius:var(--radius-lg);
+  background:var(--panel);overflow:hidden;}
+.kit-c-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding:14px 18px;
+  border-bottom:2px solid var(--border);background:var(--bg2);}
+.kit-c-n{font-family:var(--font-display);font-size:15px;font-weight:700;}
+.kit-c-cls{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--accent);}
+.kit-c-note{flex:1 1 100%;font-size:12.5px;color:var(--muted-light);line-height:1.6;}
+.kit-c-b{padding:18px;display:flex;flex-direction:column;gap:20px;}
+.kit-v{display:grid;grid-template-columns:150px 1fr;gap:16px;align-items:start;}
+.kit-v-l{font-family:var(--font-display);font-size:11.5px;font-weight:600;color:var(--muted);
+  padding-top:6px;line-height:1.5;}
+.kit-v-s{min-width:0;}
+.kit-miss{border-color:var(--red);}
+.kit-miss .kit-c-h{background:color-mix(in srgb,var(--red) 12%,var(--bg2));}
+.kit-miss-b{padding:16px 18px;font-size:13px;color:var(--text);line-height:1.6;}
+.kit-tok{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px;}
+.kit-tokc{border:2px solid var(--border);border-radius:var(--radius-md);overflow:hidden;background:var(--bg2);}
+.kit-tokc i{display:block;height:46px;}
+.kit-tokc b{display:block;font-family:ui-monospace,monospace;font-size:10.5px;font-weight:500;
+  padding:7px 9px 8px;color:var(--muted-light);word-break:break-all;}
+@media(max-width:900px){.kit-rail{display:none}.kit-v{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="kit-wrap">
+  <nav class="kit-rail">
+    <div class="kit-brand">Component kit
+      <small>Every component the platform is allowed to use, in every state. If it is not on this page, it does not exist.</small>
+    </div>
+    <div class="kit-nav" id="kit-nav"></div>
+  </nav>
+  <main class="kit-main">
+    <h1 class="kit-h1">Fortized component kit</h1>
+    <p class="kit-lead">This page loads the real <code>app/styles.css</code> and runs the real helper
+      functions out of <code>app/app.js</code>. Nothing here is a mock-up, so a component that looks
+      wrong here is broken in the app too. New surfaces get built out of this page.</p>
+    <div class="kit-bar">
+      <label for="kit-appearance">Appearance</label>
+      <select id="kit-appearance"></select>
+      <span class="kit-stat" id="kit-stat"></span>
+    </div>
+    <div id="kit-body"></div>
+  </main>
+</div>
+<script src="/app/kit/kit.js"></script>
+</body>
+</html>

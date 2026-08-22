@@ -11023,6 +11023,8 @@ function _chType(t){ return _FTZ_CH_TYPES[t||'text'] || _FTZ_CH_TYPES.text; }
 function _chTypeGlyph(t,size){ const e=_chType(t); return `<svg class="ch-ty-ico" viewBox="${e.vb}" width="${size||14}" height="${size||14}" fill="currentColor" aria-hidden="true"><path d="${e.d}"></path></svg>`; }
 function _chLockSvg(){ return '<svg viewBox="0 0 448 512" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M144 144l0 48 160 0 0-48c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192l0-48C80 64.5 144.5 0 224 0s144 64.5 144 144l0 48 16 0c35.3 0 64 28.7 64 64l0 192c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 256c0-35.3 28.7-64 64-64l16 0z"></path></svg>'; }
 function _chPlusSvg(){ return '<svg viewBox="0 0 448 512" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z"></path></svg>'; }
+function _chGearSvg(){ return '<svg viewBox="0 0 512 512" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M495.9 166.6c3.2 8.7 .5 18.4-6.4 24.6l-43.3 39.4c1.1 8.3 1.7 16.8 1.7 25.4s-.6 17.1-1.7 25.4l43.3 39.4c6.9 6.2 9.6 15.9 6.4 24.6c-4.4 11.9-9.7 23.3-15.8 34.3l-4.7 8.1c-6.6 11-14 21.4-22.1 31.2c-5.9 7.2-15.7 9.6-24.5 6.8l-55.7-17.7c-13.4 10.3-28.2 18.9-44 25.4l-12.5 57.1c-2 9.1-9 16.3-18.2 17.8c-13.8 2.3-28 3.5-42.5 3.5s-28.7-1.2-42.5-3.5c-9.2-1.5-16.2-8.7-18.2-17.8l-12.5-57.1c-15.8-6.5-30.6-15.1-44-25.4L83.1 425.9c-8.8 2.8-18.6 .3-24.5-6.8c-8.1-9.8-15.5-20.2-22.1-31.2l-4.7-8.1c-6.1-11-11.4-22.4-15.8-34.3c-3.2-8.7-.5-18.4 6.4-24.6l43.3-39.4C64.6 273.1 64 264.6 64 256s.6-17.1 1.7-25.4L22.4 191.2c-6.9-6.2-9.6-15.9-6.4-24.6c4.4-11.9 9.7-23.3 15.8-34.3l4.7-8.1c6.6-11 14-21.4 22.1-31.2c5.9-7.2 15.7-9.6 24.5-6.8l55.7 17.7c13.4-10.3 28.2-18.9 44-25.4l12.5-57.1c2-9.1 9-16.3 18.2-17.8C227.3 1.2 241.5 0 256 0s28.7 1.2 42.5 3.5c9.2 1.5 16.2 8.7 18.2 17.8l12.5 57.1c15.8 6.5 30.6 15.1 44 25.4l55.7-17.7c8.8-2.8 18.6-.3 24.5 6.8c8.1 9.8 15.5 20.2 22.1 31.2l4.7 8.1c6.1 11 11.4 22.4 15.8 34.3zM256 336a80 80 0 1 0 0-160 80 80 0 1 0 0 160z"></path></svg>'; }
+function _chInviteSvg(){ return '<svg viewBox="0 0 640 512" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304h91.4C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3zM504 312l0-64-64 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l64 0 0-64c0-13.3 10.7-24 24-24s24 10.7 24 24l0 64 64 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-64 0 0 64c0 13.3-10.7 24-24 24s-24-10.7-24-24z"></path></svg>'; }
 function _chFolderSvg(){ return '<svg viewBox="0 0 512 512" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M64 480H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H289.9c-10.1 0-19.6-4.7-25.6-12.8L245.8 58.7C232.7 41.2 212.5 32 191.1 32H64C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64z"></path></svg>'; }
 
 // One door into a channel, whatever kind it is.  The sidebar used to carry three
@@ -11117,6 +11119,233 @@ function _boostProgress(b){
   return { boosts, level, next, pct };
 }
 
+// ════════════════════════════════════════════
+// DRAG TO REORDER — in the rail, where the channels actually are
+// ════════════════════════════════════════════
+// ⚠️ `b.channels` HAS NO `position` FIELD.  The array's order IS the order, so a
+// reorder rewrites the array itself — and two things ride on that array: every
+// row's `ch-sb-N` id is an index into it, and `curChannel` is an index into it
+// too.  So the open channel is remapped by OBJECT IDENTITY across the splice,
+// never by number, or you would be reading one channel while the rail highlights
+// another.  Same rule the role ladder taught us in phase 2b: leave the list and
+// its consumers in disagreement and the bug is silent.
+let _bstDrag = null;
+
+function _bstDragClear() {
+  document.querySelectorAll('.ch-drop-before,.ch-drop-after,.is-dragging,.is-drop-in')
+    .forEach(el => el.classList.remove('ch-drop-before', 'ch-drop-after', 'is-dragging', 'is-drop-in'));
+}
+function _bstDragEnd() { _bstDrag = null; _bstDragClear(); }
+
+function _bstChDragStart(e, i) {
+  _bstDrag = { kind: 'ch', idx: i };
+  try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'ch:' + i); } catch (_) {}
+  e.currentTarget.classList.add('is-dragging');
+}
+function _bstChDragOver(e, i) {
+  if (!_bstDrag || _bstDrag.kind !== 'ch') return;
+  e.preventDefault(); e.stopPropagation();
+  try { e.dataTransfer.dropEffect = 'move'; } catch (_) {}
+  const r = e.currentTarget.getBoundingClientRect();
+  const after = (e.clientY - r.top) > r.height / 2;
+  e.currentTarget.classList.toggle('ch-drop-before', !after);
+  e.currentTarget.classList.toggle('ch-drop-after', after);
+}
+function _bstChDragLeave(e) { e.currentTarget.classList.remove('ch-drop-before', 'ch-drop-after'); }
+
+async function _bstChDrop(e, i) {
+  if (!_bstDrag || _bstDrag.kind !== 'ch') return;
+  e.preventDefault(); e.stopPropagation();
+  const r = e.currentTarget.getBoundingClientRect();
+  const after = (e.clientY - r.top) > r.height / 2;
+  const from = _bstDrag.idx;
+  _bstDrag = null; _bstDragClear();
+  const b = CU.bastions?.[curBastion];
+  const chs = b && Array.isArray(b.channels) ? b.channels : null;
+  if (!chs) return;
+  const moving = chs[from], target = chs[i];
+  if (!moving || !target || moving === target) return;
+  const open = (typeof curChannel === 'number') ? chs[curChannel] : null;
+  chs.splice(from, 1);
+  chs.splice(chs.indexOf(target) + (after ? 1 : 0), 0, moving);
+  // Dropping onto a row adopts that row's home: inside a category joins it,
+  // out in the loose list leaves it.  Without this a channel could sit visually
+  // in one category and belong to another.
+  if (target.categoryId) moving.categoryId = target.categoryId; else delete moving.categoryId;
+  if (open) curChannel = chs.indexOf(open);
+  await _bstOrderSave();
+}
+
+// The gaps: an empty category, or the end of a list.  The row handlers stop
+// propagation, so this only ever fires where no row is.
+function _bstBucketOver(e) {
+  if (!_bstDrag || _bstDrag.kind !== 'ch') return;
+  e.preventDefault();
+  try { e.dataTransfer.dropEffect = 'move'; } catch (_) {}
+  e.currentTarget.classList.add('is-drop-in');
+}
+function _bstBucketLeave(e) { e.currentTarget.classList.remove('is-drop-in'); }
+
+async function _bstChDropBucket(e, catId) {
+  if (!_bstDrag || _bstDrag.kind !== 'ch') return;
+  e.preventDefault(); e.stopPropagation();
+  const from = _bstDrag.idx;
+  _bstDrag = null; _bstDragClear();
+  const b = CU.bastions?.[curBastion];
+  const chs = b && Array.isArray(b.channels) ? b.channels : null;
+  if (!chs) return;
+  const moving = chs[from];
+  if (!moving) return;
+  const open = (typeof curChannel === 'number') ? chs[curChannel] : null;
+  chs.splice(from, 1);
+  // Land it at the end of whatever bucket it was dropped into, so it appears
+  // exactly where the drop indicator was.
+  let at = chs.length;
+  for (let k = chs.length - 1; k >= 0; k--) {
+    if ((chs[k].categoryId || '') === (catId || '')) { at = k + 1; break; }
+  }
+  chs.splice(at, 0, moving);
+  if (catId) moving.categoryId = catId; else delete moving.categoryId;
+  if (open) curChannel = chs.indexOf(open);
+  await _bstOrderSave();
+}
+
+// Categories reorder over `b.categories`, which is the list the sidebar walks —
+// no channel moves, so `curChannel` cannot drift here.
+function _bstCatDragStart(e, id) {
+  _bstDrag = { kind: 'cat', id };
+  try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'cat:' + id); } catch (_) {}
+  e.currentTarget.closest('.ch-cat-wrap')?.classList.add('is-dragging');
+}
+function _bstCatDragOver(e) {
+  if (!_bstDrag || _bstDrag.kind !== 'cat') return;
+  e.preventDefault(); e.stopPropagation();
+  const r = e.currentTarget.getBoundingClientRect();
+  const after = (e.clientY - r.top) > r.height / 2;
+  e.currentTarget.classList.toggle('ch-drop-before', !after);
+  e.currentTarget.classList.toggle('ch-drop-after', after);
+}
+function _bstCatDragLeave(e) { e.currentTarget.classList.remove('ch-drop-before', 'ch-drop-after'); }
+
+async function _bstCatDrop(e, id) {
+  if (!_bstDrag || _bstDrag.kind !== 'cat') return;
+  e.preventDefault(); e.stopPropagation();
+  const r = e.currentTarget.getBoundingClientRect();
+  const after = (e.clientY - r.top) > r.height / 2;
+  const fromId = _bstDrag.id;
+  _bstDrag = null; _bstDragClear();
+  const b = CU.bastions?.[curBastion];
+  const cats = b && Array.isArray(b.categories) ? b.categories : null;
+  if (!cats || fromId === id) return;
+  const moving = cats.find(c => c.id === fromId);
+  const target = cats.find(c => c.id === id);
+  if (!moving || !target) return;
+  cats.splice(cats.indexOf(moving), 1);
+  cats.splice(cats.indexOf(target) + (after ? 1 : 0), 0, moving);
+  await _bstOrderSave();
+}
+
+async function _bstOrderSave() {
+  const b = CU.bastions?.[curBastion];
+  if (!b) return;
+  try {
+    await saveUser();
+    await _syncBastionToGlobal(curBastion);
+    try { socket?.emit?.('bastion:update', { bastionId: b.globalId || b.id }); } catch (_) {}
+  } catch (err) {
+    toast('That order could not be saved', 'error');
+  }
+  const scroll = document.getElementById('sidebar-scroll');
+  if (scroll) renderBastionSidebar(scroll);
+}
+
+// ════════════════════════════════════════════
+// BROWSE CHANNELS — the directory the rail could never be
+// ════════════════════════════════════════════
+// The rail is a navigation strip: it shows a name and a glyph and nothing else,
+// which is right for jumping between the four channels you actually read.  It is
+// no use at all for finding out what a bastion HAS — the descriptions the owner
+// wrote in the channel editor were, until now, drawn nowhere a member could see.
+// This is that page.  It shows what a member is allowed to see and nothing more:
+// a channel you may not view is not listed, the same rule `_canSeeChannel` holds
+// everywhere else.
+let _bbcQuery = '';
+
+function openBrowseChannels() {
+  const b = CU.bastions?.[curBastion];
+  if (!b) return;
+  _bbcQuery = '';
+  document.getElementById('bbc-overlay')?.remove();
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay';
+  ov.id = 'bbc-overlay';
+  ov.innerHTML = `<div class="ftz-confirm-card ftz-ac-card bbc-card" role="dialog" aria-label="Browse channels">
+    <button class="settings-close bbc-x" type="button" aria-label="Close" onclick="document.getElementById('bbc-overlay')?.remove()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="bbc-head">
+      <div class="bbc-title">Browse Channels</div>
+      <div class="bbc-sub">Everything in ${escapeHTML(b.name)} that is open to you.</div>
+      <input class="settings-input bbc-search" id="bbc-search" type="text" placeholder="Search channels" autocomplete="off" oninput="_bbcSearch(this.value)">
+    </div>
+    <div class="bbc-body" id="bbc-body"></div>
+  </div>`;
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
+  document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { document.getElementById('bbc-overlay')?.remove(); document.removeEventListener('keydown', esc); } });
+  _bbcPaint();
+  setTimeout(() => document.getElementById('bbc-search')?.focus(), 40);
+}
+
+function _bbcSearch(v) { _bbcQuery = String(v || '').toLowerCase().trim(); _bbcPaint(); }
+
+function _bbcOpen(i) {
+  document.getElementById('bbc-overlay')?.remove();
+  _openChannel(i);
+}
+
+function _bbcPaint() {
+  const host = document.getElementById('bbc-body');
+  const b = CU.bastions?.[curBastion];
+  if (!host || !b) return;
+  const chs = b.channels || [];
+  const cats = Array.isArray(b.categories) ? b.categories : [];
+  const q = _bbcQuery;
+  const rows = [];
+  chs.forEach((ch, i) => {
+    if (!_canSeeChannel(b, ch)) return;
+    if (q && !((ch.name || '').toLowerCase().includes(q) || (ch.desc || '').toLowerCase().includes(q))) return;
+    rows.push({ ch, i });
+  });
+  if (!rows.length) {
+    host.innerHTML = _ftzNotFound(q ? 'No channel by that name' : 'Nothing open to you yet', q ? 'Try a shorter word.' : '', { art: q ? 'search' : 'battle' });
+    return;
+  }
+  const row = ({ ch, i }) => {
+    const t = _chType(ch.type);
+    return `<div class="bbc-row" role="button" tabindex="0" onclick="_bbcOpen(${i})" onkeydown="if(event.key==='Enter')_bbcOpen(${i})">
+      <span class="bbc-glyph">${_chTypeGlyph(t.id, 16)}</span>
+      <span class="bbc-txt">
+        <span class="bbc-n">${escapeHTML(ch.name || '')}${ch.nsfw ? '<span class="ch-nsfw">18+</span>' : ''}</span>
+        ${ch.desc ? `<span class="bbc-d">${escapeHTML(ch.desc)}</span>` : ''}
+      </span>
+      <span class="bbc-kind">${escapeHTML(t.label || t.id)}</span>
+    </div>`;
+  };
+  // Searching collapses the groups into one list — a query wants an answer, not
+  // the shape of the bastion.  Same call Discover makes.
+  if (q) { host.innerHTML = `<div class="bbc-list">${rows.map(row).join('')}</div>`; return; }
+  let html = '';
+  const loose = rows.filter(r => !r.ch.categoryId || !cats.some(c => c.id === r.ch.categoryId));
+  if (loose.length) html += `<div class="bbc-group"><div class="bbc-gh">No category</div><div class="bbc-list">${loose.map(row).join('')}</div></div>`;
+  cats.forEach(c => {
+    const mine = rows.filter(r => r.ch.categoryId === c.id);
+    if (!mine.length) return;
+    html += `<div class="bbc-group"><div class="bbc-gh">${escapeHTML(c.name || 'Category')}<span class="bbc-gc">${mine.length}</span></div><div class="bbc-list">${mine.map(row).join('')}</div></div>`;
+  });
+  host.innerHTML = html;
+}
+
 function renderBastionSidebar(scroll) {
   const b=CU.bastions?.[curBastion];
   if (!b||!scroll) return;
@@ -11155,7 +11384,6 @@ function renderBastionSidebar(scroll) {
     ${bannerSrc?'':`<div class="bastion-emblem">${emblemHTML}</div>`}
     <div class="bastion-meta">
       <div class="bm-name bm-name-clickable" id="bastion-name-toggle" onclick="toggleBastionNameDropdown(event)">${escapeHTML(b.name)}${b.verified?_verifiedBadge(14):''} ${_boostPillHTML(b)} <span class="bm-chevron">▼</span></div>
-      ${b.tagline?`<div class="bm-tagline">${escapeHTML(b.tagline)}</div>`:''}
     </div>
     <div id="bastion-name-dd-anchor"></div>
   </div>`;
@@ -11173,22 +11401,31 @@ function renderBastionSidebar(scroll) {
     <div class="bst-bar-track"><div class="bst-bar-fill" style="width:${bp.pct}%;"></div></div>
   </div>`;
 
-  // ── Custom Emojis Display ──
-  const emojis = b.customEmojis || [];
-  if (emojis.length > 0) {
-    const emojiDisplay = emojis.slice(0, 8).map(e => `<span title=":${e.name}:" style="cursor:default;font-size:16px;display:inline-block;">${e.data ? `<img src="${e.data}" style="width:20px;height:20px;display:inline-block;">` : '?'}</span>`).join('');
-    html += `<div style="padding:8px 16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:rgba(255,255,255,.02);border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);">
-      <span style="font-weight:700;">Custom Emojis (${emojis.length})</span>
-      <div style="display:flex;gap:3px;flex-wrap:wrap;">${emojiDisplay}${emojis.length > 8 ? `<span style="font-size:12px;opacity:.6;">+${emojis.length - 8}</span>` : ''}</div>
-    </div>`;
-  }
+  // ⚠️ THE "CUSTOM EMOJIS (N)" STRIP IS GONE.  It was a row of inline styles
+  // pinned above the channel list showing eight emojis at 20px with no way to
+  // use one of them.  Emojis have their own settings page and their own panel in
+  // the chatbar; a read-only sample of them is not navigation, it is clutter in
+  // the one place a member is trying to find a channel.
 
   html+=`<div class="sidebar-divider"></div>`;
 
-  // ── Overview, Events & Bastion Boosts (modal cards) ──
+  // ── The integrated pages: everything that is NOT a channel ──
+  // Guilded's shape.  These were three scattered rows (Overview, Events, Boosts)
+  // and the two a member reaches for most — the channel directory and the member
+  // list — had no door here at all: Browse Channels did not exist, and Members
+  // was buried inside the settings card an ordinary member cannot open.
   html+=`<div class="ch-sidebar-action" onclick="openOverviewRoom()">
     <span class="sa-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
     <span>Overview</span>
+  </div>`;
+  html+=`<div class="ch-sidebar-action" onclick="openBrowseChannels()">
+    <span class="sa-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="14" y2="17"/></svg></span>
+    <span>Browse Channels</span>
+  </div>`;
+  html+=`<div class="ch-sidebar-action" onclick="openBastionMembersCard()">
+    <span class="sa-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+    <span>Members</span>
+    <span class="sa-count">${memberCount}</span>
   </div>`;
   html+=`<div class="ch-sidebar-action" onclick="openBastionSettings('events')" id="sidebar-events-btn">
     <span class="sa-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
@@ -11234,7 +11471,12 @@ function renderBastionSidebar(scroll) {
     if(t.voice) cls.push('ch-item--voice');
     if(live) cls.push('active-vc');
     if(blocked) cls.push('ch-item--blocked');
-    return `<div class="${cls.join(' ')}" id="ch-sb-${i}" data-chtype="${t.id}"${blocked?'':` onclick="_openChannel(${i})"`} oncontextmenu="showChannelCtxMenu(event,${i})" title="${escapeHTML(ch.name)}">
+    // A channel is dragged and edited HERE, in the rail, not three clicks deep in
+    // a settings card.  The gear routes to the SAME editor the settings card
+    // opens — one editor, so the two surfaces can never disagree about what a
+    // channel is.
+    const drag=canManageChannels?` draggable="true" ondragstart="_bstChDragStart(event,${i})" ondragend="_bstDragEnd(event)" ondragover="_bstChDragOver(event,${i})" ondragleave="_bstChDragLeave(event)" ondrop="_bstChDrop(event,${i})"`:'';
+    return `<div class="${cls.join(' ')}" id="ch-sb-${i}" data-chtype="${t.id}" data-chi="${i}"${drag}${blocked?'':` onclick="_openChannel(${i})"`} oncontextmenu="showChannelCtxMenu(event,${i})" title="${escapeHTML(ch.name)}">
       <span class="ch-hash">${_chTypeGlyph(t.id,15)}</span>
       <span class="ch-name">${escapeHTML(ch.name)}</span>
       ${ch.focusMode?'<span class="focus-mode-badge">FOCUS</span>':''}
@@ -11242,6 +11484,10 @@ function renderBastionSidebar(scroll) {
       ${live?'<span class="vc-live">LIVE</span>':''}
       ${unread.mentions>0?`<span class="ch-mention-badge">${unread.mentions>9?'9+':unread.mentions}</span>`:''}
       ${blocked?`<span class="ch-locked" data-tip="Age restricted">${_chLockSvg()}</span>`:''}
+      ${canManageChannels?`<span class="ch-acts">
+        <button class="ch-act" type="button" data-tip="Invite people" onclick="event.stopPropagation();showBastionInviteUI(curBastion)">${_chInviteSvg()}</button>
+        <button class="ch-act" type="button" data-tip="Edit channel" onclick="event.stopPropagation();_bstChEditFromRail(${i})">${_chGearSvg()}</button>
+      </span>`:''}
     </div>`;
   }
 
@@ -11262,7 +11508,8 @@ function renderBastionSidebar(scroll) {
   // a bastion that has never made a category reads as one plain list, which is
   // what it is.  A heading over them ("Uncategorised") would invent structure
   // the owner did not create.
-  if (loose.length) html+=`<div class="ch-loose">${loose.map(i=>chRow(chs[i],i)).join('')}</div>`;
+  const looseDrop=canManageChannels?` ondragover="_bstBucketOver(event)" ondragleave="_bstBucketLeave(event)" ondrop="_bstChDropBucket(event,'')"`:'';
+  if (loose.length||canManageChannels) html+=`<div class="ch-loose"${looseDrop}>${loose.map(i=>chRow(chs[i],i)).join('')}</div>`;
 
   cats.forEach(c=>{
     const idxs=inCat.get(c.id)||[];
@@ -11270,12 +11517,18 @@ function renderBastionSidebar(scroll) {
     // it; nobody else does.
     if (!idxs.length && !canManageChannels) return;
     const isCollapsed=!!collapsedCats[c.id];
-    html+=`<div class="ch-cat-wrap${isCollapsed?' collapsed':''}" data-cat="${escapeHTML(c.id)}">
-      <div class="ch-category" onclick="toggleChCat(this,'${escapeHTML(c.id)}')" oncontextmenu="showCategoryCtxMenu(event,this.parentElement.dataset.cat)">
+    const cid=escapeHTML(c.id);
+    const catDrag=canManageChannels?` draggable="true" ondragstart="_bstCatDragStart(event,'${cid}')" ondragend="_bstDragEnd(event)" ondragover="_bstCatDragOver(event,'${cid}')" ondragleave="_bstCatDragLeave(event)" ondrop="_bstCatDrop(event,'${cid}')"`:'';
+    const bucketDrop=canManageChannels?` ondragover="_bstBucketOver(event)" ondragleave="_bstBucketLeave(event)" ondrop="_bstChDropBucket(event,'${cid}')"`:'';
+    html+=`<div class="ch-cat-wrap${isCollapsed?' collapsed':''}" data-cat="${cid}">
+      <div class="ch-category"${catDrag} onclick="toggleChCat(this,'${cid}')" oncontextmenu="showCategoryCtxMenu(event,this.parentElement.dataset.cat)">
         <span class="cat-chevron">▼</span><span class="cat-label">${escapeHTML(c.name||'Category')}</span>
-        ${canManageChannels?`<button class="cat-add" data-tip="Create channel" onclick="event.stopPropagation();addChannel(${curBastion},null,'${escapeHTML(c.id)}')">+</button>`:''}
+        ${canManageChannels?`<span class="ch-acts cat-acts">
+          <button class="ch-act" type="button" data-tip="Rename category" onclick="event.stopPropagation();renameCategory('${cid}')">${_chGearSvg()}</button>
+          <button class="ch-act" type="button" data-tip="Create channel" onclick="event.stopPropagation();addChannel(${curBastion},null,'${cid}')">${_chPlusSvg()}</button>
+        </span>`:''}
       </div>
-      <div class="ch-cat-items">${idxs.map(i=>chRow(chs[i],i)).join('')}</div>
+      <div class="ch-cat-items"${bucketDrop}>${idxs.map(i=>chRow(chs[i],i)).join('')}${!idxs.length?'<div class="ch-cat-empty">Drop a channel here</div>':''}</div>
     </div>`;
   });
 

@@ -525,8 +525,8 @@ const _STANDING_META = [
   { id:0, label:'All good',     color:'#3ecf6e', tint:'rgba(62,207,110,.08)',  border:'rgba(62,207,110,.22)', msg:"Thanks for keeping it clean. If you break the rules, it'll show up here." },
   { id:1, label:'Limited',      color:'#f59e0b', tint:'rgba(245,158,11,.08)',  border:'rgba(245,158,11,.28)', msg:"You've received a warning. Stay clear of further violations to recover." },
   { id:2, label:'Very limited', color:'#f97316', tint:'rgba(249,115,22,.10)',  border:'rgba(249,115,22,.32)', msg:"Multiple warnings on record. Continued violations risk suspension." },
-  { id:3, label:'At risk',      color:'#ff0033', tint:'rgba(255, 0, 51,.12)',   border:'rgba(255, 0, 51,.38)',  msg:"Your account is at risk. Any further infraction may suspend you." },
-  { id:4, label:'Suspended',    color:'#ff0033', tint:'rgba(255, 0, 51,.14)',   border:'rgba(127,29,29,.55)',  msg:"Your account is suspended. Access is limited until the suspension ends." },
+  { id:3, label:'At risk',      color:'#fb0335', tint:'rgba(251,3,53,.12)',   border:'rgba(251,3,53,.38)',  msg:"Your account is at risk. Any further infraction may suspend you." },
+  { id:4, label:'Suspended',    color:'#fb0335', tint:'rgba(251,3,53,.14)',   border:'rgba(127,29,29,.55)',  msg:"Your account is suspended. Access is limited until the suspension ends." },
 ];
 // New-model violations (u.violations) mapped into the legacy standing shape so
 // the Account Standing track counts staff + automod actions in one place.
@@ -1460,7 +1460,7 @@ const FtzStatus = (() => {
   const MODES = Object.freeze({
     online:    { color: '#3ecf6e', label: 'Online',          order: 0 },
     away:      { color: '#fff93e', label: 'Idle',            order: 1 },
-    dnd:       { color: '#ff0033', label: 'Do Not Disturb',  order: 2 },
+    dnd:       { color: '#fb0335', label: 'Do Not Disturb',  order: 2 },
     invisible: { color: '#6b7280', label: 'Invisible',       order: 3 },
     offline:   { color: '#6b7280', label: 'Offline',         order: 4 },
   });
@@ -5359,7 +5359,7 @@ function _updateUserbarActivity() {
 
     if (actionBtn) {
       actionBtn.title = 'Stop Activity';
-      actionBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff0033" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      actionBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fb0335" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
     }
 
     // Elapsed time
@@ -5586,7 +5586,7 @@ function _openMobileSettings() {
   }
   if (statusEl) {
     const st = FtzStatus?.current?.() || 'online';
-    const dot = '<span style="width:8px;height:8px;border-radius:50%;background:' + (st==='online'?'#3ecf6e':st==='idle'?'#fbbf24':st==='dnd'?'#ff0033':'#6b7280') + ';display:inline-block;"></span>';
+    const dot = '<span style="width:8px;height:8px;border-radius:50%;background:' + (st==='online'?'#3ecf6e':st==='idle'?'#fbbf24':st==='dnd'?'#fb0335':'#6b7280') + ';display:inline-block;"></span>';
     statusEl.innerHTML = dot + ' ' + (st==='dnd'?'Do Not Disturb':st.charAt(0).toUpperCase()+st.slice(1));
   }
   drawer.classList.add('open');
@@ -5987,11 +5987,11 @@ function renderAtelierSidebar(scroll) {
 }
 // Curated palette of good-looking colors for default avatars
 const _AVATAR_COLORS = [
-  '#ff0033', '#FF8C42', '#FFA500', '#FFD700', '#52A7E3',
-  '#6BCB77', '#4D96FF', '#9B59B6', '#ff0033', '#3498DB',
+  '#fb0335', '#FF8C42', '#FFA500', '#FFD700', '#52A7E3',
+  '#6BCB77', '#4D96FF', '#9B59B6', '#fb0335', '#3498DB',
   '#1ABC9C', '#F39C12', '#E67E22', '#95A5A6', '#34495E',
-  '#2ECC71', '#ff0033', '#8E44AD', '#16A085', '#F1C40F',
-  '#27AE60', '#2980B9', '#D35400', '#ff0033', '#BDC3C7'
+  '#2ECC71', '#fb0335', '#8E44AD', '#16A085', '#F1C40F',
+  '#27AE60', '#2980B9', '#D35400', '#fb0335', '#BDC3C7'
 ];
 
 function _getUserAvatarColor(username) {
@@ -7177,7 +7177,7 @@ async function _renderHomeFriendsToday() {
       const pfp = realPfp || _defaultPfpUrl(u);
       const dn = ud.displayName || u;
       const status = presence?.[u]?.status || 'offline';
-      const statusColor = (typeof FtzStatus !== 'undefined') ? FtzStatus.color(status) : (status==='online'?'#3ecf6e':status==='away'?'#f59e0b':status==='dnd'?'#ff0033':'rgba(255,255,255,.15)');
+      const statusColor = (typeof FtzStatus !== 'undefined') ? FtzStatus.color(status) : (status==='online'?'#3ecf6e':status==='away'?'#f59e0b':status==='dnd'?'#fb0335':'rgba(255,255,255,.15)');
       const _hocStyle = realPfp ? '' : `background:${_getUserAvatarColor(u)};object-fit:contain;`;
       return `<div class="home-online-chip" onclick="openDMView('${escapeHTML(u)}')" title="${escapeHTML(dn)}">
         <span class="hoc-av-wrap">
@@ -7519,7 +7519,7 @@ function _showAdMenu(e, adId, productName, paidBy) {
   menu.innerHTML = `
     <div onclick="this.closest('#ad-menu-popup').remove();_rotateHomeAd();" style="padding:10px 16px;font-size:14px;color:#fff;cursor:pointer;">Not interested</div>
     <div onclick="this.closest('#ad-menu-popup').remove();_showWhyAd('${escapeHTML(productName)}', '${escapeHTML(paidBy)}')" style="padding:10px 16px;font-size:14px;color:#fff;cursor:pointer;">Why this ad</div>
-    <div onclick="this.closest('#ad-menu-popup').remove();_reportAd('${escapeHTML(adId)}', '', '')" style="padding:10px 16px;font-size:14px;color:#ff0033;cursor:pointer;">Report ad</div>
+    <div onclick="this.closest('#ad-menu-popup').remove();_reportAd('${escapeHTML(adId)}', '', '')" style="padding:10px 16px;font-size:14px;color:#fb0335;cursor:pointer;">Report ad</div>
   `;
   
   document.body.appendChild(menu);
@@ -11091,11 +11091,16 @@ function _openChannel(i){
 // unlock we never advertised.
 const _FTZ_BOOST_NAMES = [
   { level:1, need:2, name:'Tier 1', blurb:'The first unlocks', tint:'#b06fd6',
-    perks:['25 emoji slots and 25 sticker slots', 'A Tier 1 badge beside the bastion name'] },
+    perks:[{ icon:'face-smile', text:'25 emoji slots and 25 sticker slots' },
+           { icon:'medal',      text:'A Tier 1 badge beside the bastion name' }] },
   { level:2, need:4, name:'Tier 2', blurb:'More room, more voice', tint:'#ef5fb0',
-    perks:['35 emoji slots and 35 sticker slots', 'Pick the welcome sticker from this bastion’s own stickers', 'A Tier 2 badge beside the bastion name'] },
+    perks:[{ icon:'face-smile', text:'35 emoji slots and 35 sticker slots' },
+           { icon:'image',      text:'Pick the welcome sticker from this bastion’s own stickers' },
+           { icon:'medal',      text:'A Tier 2 badge beside the bastion name' }] },
   { level:3, need:6, name:'Tier 3', blurb:'Everything a bastion can hold', tint:'#fff93e',
-    perks:['50 emoji slots and 50 sticker slots', 'A custom invite link, invite.fortized.com/yourname', 'A Tier 3 badge beside the bastion name'] },
+    perks:[{ icon:'face-smile', text:'50 emoji slots and 50 sticker slots' },
+           { icon:'link',       text:'A custom invite link, invite.fortized.com/yourname' },
+           { icon:'medal',      text:'A Tier 3 badge beside the bastion name' }] },
 ];
 function _boostTierName(lv){ return _FTZ_BOOST_NAMES[Math.max(0,Math.min(2,(lv|0)-1))] || null; }
 
@@ -11310,18 +11315,27 @@ function openBrowseChannels() {
   const b = CU.bastions?.[curBastion];
   if (!b) return;
   _bbcQuery = '';
+  _bbcType = 'all';
   document.getElementById('bbc-overlay')?.remove();
   const ov = document.createElement('div');
-  ov.className = 'ftz-confirm-overlay';
+  ov.className = 'modal-overlay show';
   ov.id = 'bbc-overlay';
-  ov.innerHTML = `<div class="ftz-confirm-card ftz-ac-card bbc-card" role="dialog" aria-label="Browse channels">
-    <button class="settings-close bbc-x" type="button" aria-label="Close" onclick="document.getElementById('bbc-overlay')?.remove()">
+  ov.setAttribute('role', 'dialog');
+  ov.innerHTML = `<div class="modal settings-modal bbc-card" role="document" aria-label="Browse channels">
+    <button class="settings-close" type="button" aria-label="Close" data-tip="Close" onclick="document.getElementById('bbc-overlay')?.remove()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
     <div class="bbc-head">
-      <div class="bbc-title">Browse Channels</div>
-      <div class="bbc-sub">Everything in ${escapeHTML(b.name)} that is open to you.</div>
+      <div class="bbc-hero">
+        <span class="bbc-hglyph">${_faIcon('hashtag', 24)}</span>
+        <div class="bbc-htx">
+          <div class="bbc-eyebrow">${escapeHTML(b.name)}</div>
+          <div class="bbc-title">Browse channels</div>
+          <div class="bbc-sub">Every room here that is open to you, grouped the way the bastion is.</div>
+        </div>
+      </div>
       <input class="settings-input bbc-search" id="bbc-search" type="text" placeholder="Search channels" autocomplete="off" oninput="_bbcSearch(this.value)">
+      <div class="bbc-chips" id="bbc-chips"></div>
     </div>
     <div class="bbc-body" id="bbc-body"></div>
   </div>`;
@@ -11333,6 +11347,10 @@ function openBrowseChannels() {
 }
 
 function _bbcSearch(v) { _bbcQuery = String(v || '').toLowerCase().trim(); _bbcPaint(); }
+// The chip row only ever offers a type this bastion ACTUALLY has. A filter for
+// something that cannot be there is a filter that always empties the list.
+let _bbcType = 'all';
+function _bbcSetType(t) { _bbcType = t; _bbcPaint(); }
 
 function _bbcOpen(i) {
   document.getElementById('bbc-overlay')?.remove();
@@ -11347,11 +11365,22 @@ function _bbcPaint() {
   const cats = Array.isArray(b.categories) ? b.categories : [];
   const q = _bbcQuery;
   const rows = [];
+  const seen = [];
   chs.forEach((ch, i) => {
     if (!_canSeeChannel(b, ch)) return;
+    const t = _chType(ch.type);
+    if (!seen.some(s => s.id === t.id)) seen.push({ id: t.id, label: t.label || t.id });
+    if (_bbcType !== 'all' && t.id !== _bbcType) return;
     if (q && !((ch.name || '').toLowerCase().includes(q) || (ch.desc || '').toLowerCase().includes(q))) return;
     rows.push({ ch, i });
   });
+  const chips = document.getElementById('bbc-chips');
+  if (chips) {
+    chips.innerHTML = seen.length < 2 ? '' :
+      [{ id: 'all', label: 'Everything' }].concat(seen).map(t =>
+        `<button class="bbc-chip${_bbcType === t.id ? ' on' : ''}" type="button" onclick="_bbcSetType('${t.id}')">${escapeHTML(t.label)}</button>`
+      ).join('');
+  }
   if (!rows.length) {
     host.innerHTML = _ftzNotFound(q ? 'No channel by that name' : 'Nothing open to you yet', q ? 'Try a shorter word.' : '', { art: q ? 'search' : 'battle' });
     return;
@@ -11804,7 +11833,7 @@ function selectChannel(idx) {
   if (!wrap) return;
   const access=checkNSFWAccess(ch);
   if (access===false) {
-    wrap.innerHTML=`<div class="empty-state" style="margin:20px;background:rgba(255, 0, 51,.04);border:1px solid rgba(255, 0, 51,.2);border-radius:18px;padding:40px;"><div class="ei" style="font-size:48px;color:rgba(255,255,255,.15);">${ftzIcon('lock','48')}</div><h3 style="color:var(--red);">Age-Restricted Channel</h3><p>This channel is restricted for your age group.</p></div>`;
+    wrap.innerHTML=`<div class="empty-state" style="margin:20px;background:rgba(251,3,53,.04);border:1px solid rgba(251,3,53,.2);border-radius:18px;padding:40px;"><div class="ei" style="font-size:48px;color:rgba(255,255,255,.15);">${ftzIcon('lock','48')}</div><h3 style="color:var(--red);">Age-Restricted Channel</h3><p>This channel is restricted for your age group.</p></div>`;
     return;
   }
   if (access===null) {
@@ -11814,7 +11843,7 @@ function selectChannel(idx) {
       <p style="font-size:13.5px;color:var(--muted-light);max-width:340px;line-height:1.65;margin-bottom:20px;">
         <strong>#${escapeHTML(ch.name)}</strong> is marked as containing sensitive content. By proceeding, you confirm you understand this.
       </p>
-      <div style="background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.2);border-radius:14px;padding:14px 18px;max-width:340px;font-size:12.5px;color:var(--red);margin-bottom:20px;">
+      <div style="background:rgba(251,3,53,.08);border:1px solid rgba(251,3,53,.2);border-radius:14px;padding:14px 18px;max-width:340px;font-size:12.5px;color:var(--red);margin-bottom:20px;">
         ⚠️ This action is logged for platform safety and compliance.
       </div>
       <button class="btn-d" onclick="proceedToNSFWChannel(${idx})" style="padding:12px 28px;font-size:14px;">View Sensitive Content</button>
@@ -11845,7 +11874,7 @@ function loadChatChannel(idx) {
     _loadAnnouncementRoom(wrap, b, ch, idx);
     return;
   }
-  const nsfwBadge=ch.nsfw?`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);background:rgba(255, 0, 51,.15);color:var(--red);margin-left:6px;">NSFW</span>`:'';
+  const nsfwBadge=ch.nsfw?`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);background:rgba(251,3,53,.15);color:var(--red);margin-left:6px;">NSFW</span>`:'';
   // Channel name is displayed in the room-topbar above the chat, not in the main Fortized topbar
   const sep=document.getElementById('tb-sep');
   const desc=document.getElementById('tb-desc');
@@ -12097,7 +12126,7 @@ function _buildAnnCard(msg, idx, canPost) {
         <div class="ann-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;">${safeFrom}</div>
         <div class="ann-time">${time}</div>
       </div>
-      ${canDelete ? `<button onclick="deleteMsg('${safeMid}','ch')" title="Delete" style="background:none;border:none;color:rgba(255, 0, 51,.4);cursor:pointer;padding:4px;transition:color .12s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>` : ''}
+      ${canDelete ? `<button onclick="deleteMsg('${safeMid}','ch')" title="Delete" style="background:none;border:none;color:rgba(251,3,53,.4);cursor:pointer;padding:4px;transition:color .12s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>` : ''}
     </div>
     <div class="ann-body">${text}</div>
   </div>`;
@@ -13020,7 +13049,7 @@ function _fmtMsgFullTime(ts) {
 // Authors of new system events can also pass `msg.systemEvent` directly
 // (e.g. systemEvent:'join') to skip the heuristic.
 // Colours pulled from the Fortized brand schema:
-//   yellized #fff93e · green #3ecf6e · pink #ff77e4 · red #ff0033
+//   yellized #fff93e · green #3ecf6e · pink #ff77e4 · red #fb0335
 //   orange  #fe9c3b · white  #ffffff · black #13161f
 // Bot is the only exception — explicitly blue (matches the chatbar
 // bot-command button affordance).
@@ -13031,8 +13060,8 @@ const _SYSTEM_EVENT_PATTERNS = [
   // nothing. The renderer already prefers iconHTML and wraps it in a span
   // coloured `ev.color`, which the mask inherits through currentColor.
   { key: 'join',       icon: 'sys_join',     iconHTML: _ftzMarkHTML('newmember', 'height:14px'), color: '#3ecf6e', test: /\b(joined|welcome to|has entered|just joined|has joined)\b/i },
-  { key: 'leave',      icon: 'sys_leave',    color: '#ff0033', test: /\b(left|has left|kicked|removed from)\b/i },
-  { key: 'ban',        icon: 'sys_ban',      color: '#ff0033', test: /\b(banned|banished)\b/i },
+  { key: 'leave',      icon: 'sys_leave',    color: '#fb0335', test: /\b(left|has left|kicked|removed from)\b/i },
+  { key: 'ban',        icon: 'sys_ban',      color: '#fb0335', test: /\b(banned|banished)\b/i },
   { key: 'bot',        iconHTML: '<svg viewBox="0 0 24 24" fill="#212121" style="width:14px;height:14px;display:inline-block;vertical-align:middle;filter:invert(57%) sepia(91%) saturate(2167%) hue-rotate(193deg) brightness(101%) contrast(94%);"><path d="M17.75,14C19,14 20,15.01 20,16.25V17.16C20,18.25 19.53,19.29 18.7,20C17.13,21.34 14.89,22 12,22C9.11,22 6.87,21.34 5.31,20C4.48,19.29 4,18.25 4,17.16V16.25C4,15.01 5.01,14 6.25,14H17.75ZM11.9,2C12.28,2 12.6,2.28 12.64,2.65L12.65,2.75L12.65,3.5L16.25,3.5C17.49,3.5 18.5,4.51 18.5,5.75V10.25C18.5,11.5 17.49,12.5 16.25,12.5H7.75C6.51,12.5 5.5,11.5 5.5,10.25V5.75C5.5,4.51 6.51,3.5 7.75,3.5L11.25,3.5L11.25,2.75C11.25,2.37 11.53,2.06 11.9,2.01L12,2L11.9,2ZM9.75,6.5C9.06,6.5 8.5,7.06 8.5,7.75C8.5,8.44 9.06,9 9.75,9C10.44,9 11,8.44 11,7.75C11,7.06 10.44,6.5 9.75,6.5ZM14.24,6.5C13.55,6.5 12.99,7.06 12.99,7.75C12.99,8.44 13.55,9 14.24,9C14.93,9 15.49,8.44 15.49,7.75C15.49,7.06 14.93,6.5 14.24,6.5Z"/></svg>', color: '#60a5fa', test: /\b(integrated|deployed|bot added|installed bot)\b/i },
   { key: 'channel',    icon: 'sys_channel',  color: '#3ecf6e', test: /\b(channel created|created the channel|new channel)\b/i },
   { key: 'rename',     icon: 'sys_rename',   color: '#fe9c3b', test: /\b(renamed|name changed)\b/i },
@@ -14642,7 +14671,7 @@ function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastio
   if (failedRow && failedRow.classList.contains('msg-row--failed')) {
     return ''
       + `<button onclick="event.stopPropagation();_retryFailedMessageById('${safeId}')" title="Retry">${_faMsg('retry')}</button>`
-      + `<button onclick="event.stopPropagation();_deleteFailedMessageById('${safeId}')" title="Delete" style="color:rgba(255, 0, 51,.85);">${_faMsg('trash')}</button>`;
+      + `<button onclick="event.stopPropagation();_deleteFailedMessageById('${safeId}')" title="Delete" style="color:rgba(251,3,53,.85);">${_faMsg('trash')}</button>`;
   }
 
   if (_shiftHeld) {
@@ -14654,7 +14683,7 @@ function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastio
       + `<button onclick="addReactionUI(event,'${safeId}','${context}')" title="Add Reaction">${_ADD_REACTION_ICON_HTML}</button>`
       + (isOwn ? `<button onclick="editMsg('${safeId}')" title="Edit">${_faMsg('edit')}</button>` : '')
       + `<button onclick="forwardFromMsgEl(this,'${safeText}')" title="Forward">${_faMsg('forward')}</button>`
-      + (canDel ? `<button onclick="deleteMsg('${safeId}','${context}')" title="Delete" style="color:rgba(255, 0, 51,.6);">${_faMsg('trash')}</button>` : '');
+      + (canDel ? `<button onclick="deleteMsg('${safeId}','${context}')" title="Delete" style="color:rgba(251,3,53,.6);">${_faMsg('trash')}</button>` : '');
   }
 
   // Default mode: Quick reactions (3), Add Reaction, Reply/Edit, Forward, More
@@ -16043,19 +16072,19 @@ function _renderVoicePanel(ch, idx) {
       </div>
       <!-- Controls -->
       <div class="voice-controls" style="display:flex;gap:14px;align-items:center;padding:18px 28px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:20px;backdrop-filter:none;">
-        <button class="vc-btn ${isMuted?'active':''}" onclick="toggleVoiceMute()" title="${isMuted?'Unmute':'Mute'}" style="width:52px;height:52px;border-radius:50%;background:${isMuted?'rgba(255, 0, 51,.18)':'rgba(255,255,255,.06)'};border:1.5px solid ${isMuted?'rgba(255, 0, 51,.35)':'rgba(255,255,255,.1)'};color:${isMuted?'#ff0033':'#fff'};cursor:pointer;font-size:20px;transition:all .2s;display:flex;align-items:center;justify-content:center;">${isMuted?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'}</button>
+        <button class="vc-btn ${isMuted?'active':''}" onclick="toggleVoiceMute()" title="${isMuted?'Unmute':'Mute'}" style="width:52px;height:52px;border-radius:50%;background:${isMuted?'rgba(251,3,53,.18)':'rgba(255,255,255,.06)'};border:1.5px solid ${isMuted?'rgba(251,3,53,.35)':'rgba(255,255,255,.1)'};color:${isMuted?'#fb0335':'#fff'};cursor:pointer;font-size:20px;transition:all .2s;display:flex;align-items:center;justify-content:center;">${isMuted?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'}</button>
         <button class="vc-btn ${isDeafened?'active':''}" onclick="toggleVoiceDeafen()" title="${isDeafened?'Undeafen':'Deafen'}" style="width:52px;height:52px;border-radius:50%;background:${isDeafened?'rgba(245,158,11,.18)':'rgba(255,255,255,.06)'};border:1.5px solid ${isDeafened?'rgba(245,158,11,.35)':'rgba(255,255,255,.1)'};color:${isDeafened?'#f59e0b':'#fff'};cursor:pointer;font-size:20px;transition:all .2s;display:flex;align-items:center;justify-content:center;">${isDeafened?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3z"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>'}</button>
         <div style="width:1px;height:32px;background:rgba(255,255,255,.08);margin:0 4px;"></div>
         <button onclick="startScreenShare()" style="width:52px;height:52px;border-radius:50%;background:rgba(96,165,250,.08);border:1.5px solid rgba(96,165,250,.2);color:var(--blue);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.08)';this.style.background='rgba(96,165,250,.15)'" onmouseleave="this.style.transform='scale(1)';this.style.background='rgba(96,165,250,.08)'" title="Share Screen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></button>
         <button onclick="startWatchTogether()" style="width:52px;height:52px;border-radius:50%;background:rgba(167,139,250,.08);border:1.5px solid rgba(167,139,250,.2);color:var(--purple);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.08)';this.style.background='rgba(167,139,250,.15)'" onmouseleave="this.style.transform='scale(1)';this.style.background='rgba(167,139,250,.08)'" title="Watch Together"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg></button>
         <div style="width:1px;height:32px;background:rgba(255,255,255,.08);margin:0 4px;"></div>
-        <button class="vc-btn" onclick="disconnectVoice()" title="Leave Call" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,rgba(255, 0, 51,.25),rgba(255, 0, 51,.2));border:2px solid rgba(255, 0, 51,.4);color:#ff0033;cursor:pointer;font-size:22px;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.1)';this.style.background='rgba(255, 0, 51,.35)'" onmouseleave="this.style.transform='scale(1)';this.style.background='linear-gradient(135deg,rgba(255, 0, 51,.25),rgba(255, 0, 51,.2))'"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1-.22 1.12.43 2.33.66 3.6.66.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.29 21 3 13.71 3 4.5c0-.55.45-1 1-1H7.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.1.32.01.7-.22.98L6.6 10.8z" transform="rotate(135 12 12)"/></svg></button>
+        <button class="vc-btn" onclick="disconnectVoice()" title="Leave Call" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,rgba(251,3,53,.25),rgba(251,3,53,.2));border:2px solid rgba(251,3,53,.4);color:#fb0335;cursor:pointer;font-size:22px;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.1)';this.style.background='rgba(251,3,53,.35)'" onmouseleave="this.style.transform='scale(1)';this.style.background='linear-gradient(135deg,rgba(251,3,53,.25),rgba(251,3,53,.2))'"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1-.22 1.12.43 2.33.66 3.6.66.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.29 21 3 13.71 3 4.5c0-.55.45-1 1-1H7.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.1.32.01.7-.22.98L6.6 10.8z" transform="rotate(135 12 12)"/></svg></button>
       </div>
     </div>`;
 }
 function _renderVoiceAvatar(p) {
   const speakRing = p.speaking ? 'box-shadow:0 0 0 4px rgba(62,207,110,.5),0 0 20px rgba(62,207,110,.25);border-color:rgba(62,207,110,.6);' : '';
-  const mutedIcon = p.muted ? '<div style="position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:rgba(255, 0, 51,.9);display:flex;align-items:center;justify-content:center;border:3px solid var(--bg);z-index:2;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/></svg></div>' : '';
+  const mutedIcon = p.muted ? '<div style="position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:rgba(251,3,53,.9);display:flex;align-items:center;justify-content:center;border:3px solid var(--bg);z-index:2;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/></svg></div>' : '';
   return `<div class="voice-avatar-card" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px;border-radius:16px;transition:all .2s;cursor:default;">
     <div class="voice-avatar-ring" style="position:relative;width:82px;height:82px;border-radius:50%;border:3px solid rgba(255,255,255,.1);overflow:visible;display:flex;align-items:center;justify-content:center;${speakRing}transition:all .25s;">
       <div style="width:76px;height:76px;border-radius:50%;overflow:hidden;">${buildAvatarHTML(p.pfp,p.name,76)}</div>
@@ -16063,7 +16092,7 @@ function _renderVoiceAvatar(p) {
     </div>
     <div style="text-align:center;">
       <div class="voice-avatar-name" style="font-size:13px;font-weight:700;color:rgba(255,255,255,.85);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(p.name)}</div>
-      <div style="font-size:10px;color:${p.muted?'#ff0033':'rgba(62,207,110,.6)'};font-weight:600;margin-top:2px;">${p.muted?'Muted':p.speaking?'Speaking':'Connected'}</div>
+      <div style="font-size:10px;color:${p.muted?'#fb0335':'rgba(62,207,110,.6)'};font-weight:600;margin-top:2px;">${p.muted?'Muted':p.speaking?'Speaking':'Connected'}</div>
     </div>
   </div>`;
 }
@@ -16133,9 +16162,9 @@ function toggleVoiceDeafen(){
   }
 }
 const _UB_MIC_ON    = '<svg width="14" height="14" viewBox="0 0 384 512" fill="currentColor"><path d="M192 0C139 0 96 43 96 96l0 128c0 53 43 96 96 96s96-43 96-96l0-128c0-53-43-96-96-96zM48 184c0-13.3-10.7-24-24-24S0 170.7 0 184l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c94.7-11.8 168-92.6 168-190.5l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 79.5-64.5 144-144 144S48 303.5 48 224l0-40z"/></svg>';
-const _UB_MIC_OFF   = '<svg width="14" height="14" viewBox="0 0 576 512" fill="#ff0033"><path d="M41-24.9c-9.4-9.4-24.6-9.4-33.9 0S-2.3-.3 7 9.1l528 528c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9L424.7 358.8C458.9 324.2 480 276.6 480 224l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 39.3-15.7 74.9-41.3 100.9L356.8 291C373.6 273.7 384 250 384 224l0-128c0-53-43-96-96-96s-96 43-96 96l0 30.2-151-151zm298.3 434l-41.4-41.4c-3.3 .2-6.5 .3-9.8 .3-79.5 0-144-64.5-144-144l0-10.2-43.6-43.6c-2.8 3.9-4.4 8.7-4.4 13.8l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c9.3-1.2 18.4-3 27.3-5.4z"/></svg>';
+const _UB_MIC_OFF   = '<svg width="14" height="14" viewBox="0 0 576 512" fill="#fb0335"><path d="M41-24.9c-9.4-9.4-24.6-9.4-33.9 0S-2.3-.3 7 9.1l528 528c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9L424.7 358.8C458.9 324.2 480 276.6 480 224l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 39.3-15.7 74.9-41.3 100.9L356.8 291C373.6 273.7 384 250 384 224l0-128c0-53-43-96-96-96s-96 43-96 96l0 30.2-151-151zm298.3 434l-41.4-41.4c-3.3 .2-6.5 .3-9.8 .3-79.5 0-144-64.5-144-144l0-10.2-43.6-43.6c-2.8 3.9-4.4 8.7-4.4 13.8l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c9.3-1.2 18.4-3 27.3-5.4z"/></svg>';
 const _UB_HEAD_ON   = '<svg width="14" height="14" viewBox="0 0 640 640" fill="currentColor"><path d="M320 96C214 96 128 182 128 288l0 32 32 0c35.3 0 64 28.7 64 64l0 64c0 35.3-28.7 64-64 64l-32 0c-35.3 0-64-28.7-64-64l0-160C64 146.6 178.6 32 320 32S576 146.6 576 288l0 160c0 35.3-28.7 64-64 64l-32 0c-35.3 0-64-28.7-64-64l0-64c0-35.3 28.7-64 64-64l32 0 0-32c0-106-86-192-192-192z"/></svg>';
-const _UB_HEAD_OFF  = '<svg width="14" height="14" viewBox="0 0 640 640" fill="#ff0033"><path d="M16 41C6.6 31.6 6.6 16.4 16 7s24.6-9.4 33.9 0l574 574c9.4 9.4 9.4 24.6 0 34s-24.6 9.4-33.9 0l-66.7-66.7C513.7 525.7 480 491.5 480 449l0-65c0-35.3 28.7-64 64-64l32 0 0-32c0-83.4-53.2-154.4-127.4-180.7L380 65.4C357.5 53.6 339.2 32 320 32 178.6 32 64 146.6 64 288l0 160c0 18.8 8.1 35.7 21 47.4l-69-69V41zM160 320l-32 0 0 128 32 0c35.3 0 64-28.7 64-64l0-64c0-35.3-28.7-64-64-64z"/></svg>';
+const _UB_HEAD_OFF  = '<svg width="14" height="14" viewBox="0 0 640 640" fill="#fb0335"><path d="M16 41C6.6 31.6 6.6 16.4 16 7s24.6-9.4 33.9 0l574 574c9.4 9.4 9.4 24.6 0 34s-24.6 9.4-33.9 0l-66.7-66.7C513.7 525.7 480 491.5 480 449l0-65c0-35.3 28.7-64 64-64l32 0 0-32c0-83.4-53.2-154.4-127.4-180.7L380 65.4C357.5 53.6 339.2 32 320 32 178.6 32 64 146.6 64 288l0 160c0 18.8 8.1 35.7 21 47.4l-69-69V41zM160 320l-32 0 0 128 32 0c35.3 0 64-28.7 64-64l0-64c0-35.3-28.7-64-64-64z"/></svg>';
 function _ubInitButtons() {
   const m = document.getElementById('mic-btn');
   if (m) { m.innerHTML = isMuted ? _UB_MIC_OFF : _UB_MIC_ON; m.classList.toggle('active', !!isMuted); }
@@ -17429,7 +17458,7 @@ function openActivityOverview(id) {
       </div>` : ''}
 
       <div style="padding:8px 32px 0;">
-        <button onclick="_reportActivity('${act.id}')" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11.5px;font-family:var(--font-ui);cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:5px;transition:color .15s;" onmouseover="this.style.color='rgba(255, 0, 51,.6)'" onmouseout="this.style.color='rgba(255,255,255,.2)'">
+        <button onclick="_reportActivity('${act.id}')" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11.5px;font-family:var(--font-ui);cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:5px;transition:color .15s;" onmouseover="this.style.color='rgba(251,3,53,.6)'" onmouseout="this.style.color='rgba(255,255,255,.2)'">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
           Report
         </button>
@@ -17766,7 +17795,7 @@ function _renderOffendingContent(data) {
     const cleanText = text.replace(/\[FTZ(?:IMG|VID|AUD|GIF|STICKER):[^\]]*\]/gi, '').trim();
     if (cleanText) html += `<div style="display:flex;justify-content:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);flex-direction:column;gap:6px;">
       <span style="color:#5a6478;font-size:13px;">Offending Content</span>
-      <div style="background:rgba(255, 0, 51,.04);border:1px solid rgba(255, 0, 51,.12);border-left:3px solid #ff0033;border-radius:8px;padding:10px 14px;font-size:13px;color:#c8d0dc;line-height:1.6;word-break:break-word;">${escapeHTML(cleanText.slice(0,300))}${cleanText.length>300?'...':''}</div>
+      <div style="background:rgba(251,3,53,.04);border:1px solid rgba(251,3,53,.12);border-left:3px solid #fb0335;border-radius:8px;padding:10px 14px;font-size:13px;color:#c8d0dc;line-height:1.6;word-break:break-word;">${escapeHTML(cleanText.slice(0,300))}${cleanText.length>300?'...':''}</div>
     </div>`;
   }
   if (media.length) html += `<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:6px;">
@@ -17798,7 +17827,7 @@ const FTZ_MAX_APPEALS = 3;
 const _VIO_ICONS = {
   warning:    { color:'#f59e0b', vb:'0 0 512 512', path:'M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.4 27.7 .2 40.1S486.3 480 472 480L40 480c-14.3 0-27.6-7.6-34.7-20.1s-7-27.7 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z' },
   suspension: { color:'#f59e0b', vb:'0 0 512 512', path:'M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z' },
-  ban:        { color:'#ff0033', vb:'0 0 512 512', path:'M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192c41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192c-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z' },
+  ban:        { color:'#fb0335', vb:'0 0 512 512', path:'M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192c41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192c-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z' },
 };
 const _VIO_TITLES = { warning:'Warning', suspension:'Account Suspended', ban:'Account Banned' };
 
@@ -18048,11 +18077,11 @@ function _showThreatRecipientCard(senderUsername, text) {
   overlay.id = 'ftz-threat-recipient-card';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(8,10,15,.92);backdrop-filter:none;display:flex;align-items:center;justify-content:center;font-family:"Syne",system-ui,-apple-system,sans-serif;animation:fadeIn .25s ease;';
   overlay.innerHTML = `<div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;width:100%;max-width:520px;padding:40px 36px;text-align:center;border-radius:22px;box-shadow:0 32px 80px rgba(0,0,0,.7);">
-    <div style="width:60px;height:60px;border-radius:16px;background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.22);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+    <div style="width:60px;height:60px;border-radius:16px;background:rgba(251,3,53,.08);border:1px solid rgba(251,3,53,.22);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-        <path d="M12 2L1 21h22L12 2z" stroke="#ff0033" stroke-width="2" fill="none" stroke-linejoin="round"/>
-        <rect x="11" y="9" width="2" height="5" rx="1" fill="#ff0033"/>
-        <circle cx="12" cy="17" r="1.2" fill="#ff0033"/>
+        <path d="M12 2L1 21h22L12 2z" stroke="#fb0335" stroke-width="2" fill="none" stroke-linejoin="round"/>
+        <rect x="11" y="9" width="2" height="5" rx="1" fill="#fb0335"/>
+        <circle cx="12" cy="17" r="1.2" fill="#fb0335"/>
       </svg>
     </div>
     <div style="font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.3px;">Possible threat detected</div>
@@ -18062,7 +18091,7 @@ function _showThreatRecipientCard(senderUsername, text) {
       <div style="color:#c8d0dc;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word;">${escapeHTML(String(text||'').slice(0,400))}</div>
     </div>
     <div style="display:flex;gap:8px;justify-content:center;">
-      <button onclick="document.getElementById('ftz-threat-recipient-card').remove();reportUser('${escapeHTML(senderUsername)}')" style="background:rgba(255, 0, 51,.12);border:1px solid rgba(255, 0, 51,.3);color:#ff0033;border-radius:10px;padding:11px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Report user</button>
+      <button onclick="document.getElementById('ftz-threat-recipient-card').remove();reportUser('${escapeHTML(senderUsername)}')" style="background:rgba(251,3,53,.12);border:1px solid rgba(251,3,53,.3);color:#fb0335;border-radius:10px;padding:11px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Report user</button>
       <button onclick="document.getElementById('ftz-threat-recipient-card').remove()" class="warning-ack-btn">Acknowledge</button>
     </div>
   </div>`;
@@ -18096,7 +18125,7 @@ function _showWarningOverlay(reason, issuedBy, contentData) {
 // ═══════════════════════════════════════════════════════════════════════════
 function _ftzVioStatusChip(v) {
   let label, color;
-  if (v.type === 'ban') { label = v.active === false ? 'Lifted' : 'Active'; color = v.active === false ? '#3ecf6e' : '#ff0033'; }
+  if (v.type === 'ban') { label = v.active === false ? 'Lifted' : 'Active'; color = v.active === false ? '#3ecf6e' : '#fb0335'; }
   else if (v.type === 'suspension') { const ended = (v.until && new Date(v.until) <= new Date()) || v.active === false; label = ended ? 'Ended' : 'Active'; color = ended ? '#8b95a8' : '#f59e0b'; }
   else { label = 'On record'; color = '#8b95a8'; }
   return `<span style="font-size:11px;font-weight:700;color:${color};background:${color}1a;border:1px solid ${color}33;border-radius:100px;padding:3px 10px;">${label}</span>`;
@@ -18104,7 +18133,7 @@ function _ftzVioStatusChip(v) {
 function _ftzAppealsRemaining(v) { return Math.max(0, FTZ_MAX_APPEALS - ((v.appeals || []).length)); }
 function _ftzAppealStatusMeta(s) {
   return s === 'accepted' ? { label:'Accepted', color:'#3ecf6e' }
-       : s === 'declined' ? { label:'Declined', color:'#ff0033' }
+       : s === 'declined' ? { label:'Declined', color:'#fb0335' }
        : { label:'Under review', color:'#f59e0b' };
 }
 
@@ -18177,7 +18206,7 @@ function _ftzVioHistoryCard(v, focused) {
       </div>
     </div>`;
   } else {
-    appealBox = `<div style="margin-top:12px;font-size:12.5px;color:#8b95a8;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.16);border-radius:10px;padding:11px 13px;line-height:1.55;">You've used all ${FTZ_MAX_APPEALS} appeals for this violation and each was declined. If you truly can't move forward, you may <a href="${FTZ_SUPPORT_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">contact Support</a> — though tickets about closed appeals are only accepted in rare cases. Otherwise, the decision stands.</div>`;
+    appealBox = `<div style="margin-top:12px;font-size:12.5px;color:#8b95a8;background:rgba(251,3,53,.06);border:1px solid rgba(251,3,53,.16);border-radius:10px;padding:11px 13px;line-height:1.55;">You've used all ${FTZ_MAX_APPEALS} appeals for this violation and each was declined. If you truly can't move forward, you may <a href="${FTZ_SUPPORT_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">contact Support</a> — though tickets about closed appeals are only accepted in rare cases. Otherwise, the decision stands.</div>`;
   }
 
   const ev = _renderViolationEvidence(v.evidence);
@@ -18838,7 +18867,7 @@ function initFortizedUXResilience() {
         // Cache the live status for use in renderMemberList fallback
         _liveStatusCache[data.username] = data.status;
         if (data.gameActivity !== undefined) _liveGameActivityCache[data.username] = data.gameActivity || null;
-        const color = typeof FtzStatus !== 'undefined' ? FtzStatus.color(data.status) : (data.status==='online'?'#3ecf6e':data.status==='away'?'#f59e0b':data.status==='dnd'?'#ff0033':'rgba(255,255,255,.15)');
+        const color = typeof FtzStatus !== 'undefined' ? FtzStatus.color(data.status) : (data.status==='online'?'#3ecf6e':data.status==='away'?'#f59e0b':data.status==='dnd'?'#fb0335':'rgba(255,255,255,.15)');
         const isOnline = data.status==='online'||data.status==='away'||data.status==='dnd';
 
         // ── SELF STATUS SYNC (cross-tab/device) ──
@@ -19974,7 +20003,7 @@ function renderBastionTemplateGrid() {
   const templates = [
     {id:'gaming',emoji:'🎮',name:'Game Hall',desc:'Play together',icon:'fa-gamepad',color:'#60a5fa'},
     {id:'fellowship',emoji:'🤝',name:'Fellowship',desc:'Friends & community',icon:'fa-user-group',color:'#3ecf6e'},
-    {id:'guild',emoji:'⚔️',name:'Guild',desc:'Team & coordination',icon:'fa-shield-halved',color:'#ff0033'},
+    {id:'guild',emoji:'⚔️',name:'Guild',desc:'Team & coordination',icon:'fa-shield-halved',color:'#fb0335'},
     {id:'study',emoji:'📚',name:'Study Circle',desc:'Learn together',icon:'fa-book-open',color:'#a78bfa'},
     {id:'artisan',emoji:'🎨',name:'Artisans',desc:'Create & showcase',icon:'fa-palette',color:'#e879f9'},
     {id:'academy',emoji:'🎓',name:'Academy',desc:'Teaching & courses',icon:'fa-graduation-cap',color:'#fbbf24'},
@@ -20109,7 +20138,7 @@ const BASTION_TEMPLATES = {
     ],
     roles:[
       {id:'admin',name:'Guild Master',color:'#fbbf24'},
-      {id:'officer',name:'Officer',color:'#ff0033'},
+      {id:'officer',name:'Officer',color:'#fb0335'},
       {id:'veteran',name:'Veteran',color:'#fb923c'},
       {id:'member',name:'Member',color:'#60a5fa'},
       {id:'recruit',name:'Recruit',color:'#9ca3af'},
@@ -20194,7 +20223,7 @@ const ROLE_TEMPLATES = {
     roles:[
       {id:'leader',name:'Clan Leader',color:'#fbbf24',permissions:['administrator'],priority:100,displayAsTag:true},
       {id:'colead',name:'Co-Leader',color:'#fb923c',permissions:['manage_messages','kick_members','ban_members','manage_channels','manage_roles','view_audit_log'],priority:90,displayAsTag:true},
-      {id:'elder',name:'Elder',color:'#ff0033',permissions:['manage_messages','kick_members','timeout_members','manage_channels'],priority:60,displayAsTag:true},
+      {id:'elder',name:'Elder',color:'#fb0335',permissions:['manage_messages','kick_members','timeout_members','manage_channels'],priority:60,displayAsTag:true},
       {id:'officer',name:'Officer',color:'#a78bfa',permissions:['send_messages','read_history','add_reactions','attach_files','embed_links','mention_everyone'],priority:40,displayAsTag:true},
       {id:'warrior',name:'Warrior',color:'#60a5fa',permissions:['send_messages','read_history','add_reactions','attach_files'],priority:15,displayAsTag:false},
       {id:'recruit',name:'Initiate',color:'#9ca3af',permissions:['send_messages','read_history','add_reactions'],priority:1,displayAsTag:false},
@@ -20221,7 +20250,7 @@ const ROLE_TEMPLATES = {
     roles:[
       {id:'owner',name:'Team Owner',color:'#fbbf24',permissions:['administrator'],priority:100,displayAsTag:true},
       {id:'coach',name:'Coach',color:'#fb923c',permissions:['manage_messages','manage_channels','manage_events','mention_everyone','view_audit_log'],priority:80,displayAsTag:true},
-      {id:'captain',name:'Captain',color:'#ff0033',permissions:['manage_messages','mention_everyone','manage_events'],priority:60,displayAsTag:true},
+      {id:'captain',name:'Captain',color:'#fb0335',permissions:['manage_messages','mention_everyone','manage_events'],priority:60,displayAsTag:true},
       {id:'player',name:'Player',color:'#60a5fa',permissions:['send_messages','read_history','add_reactions','attach_files','embed_links'],priority:30,displayAsTag:true},
       {id:'sub',name:'Substitute',color:'#22d3ee',permissions:['send_messages','read_history','add_reactions','attach_files'],priority:15,displayAsTag:false},
       {id:'fan',name:'Fan',color:'#9ca3af',permissions:['send_messages','read_history','add_reactions'],priority:1,displayAsTag:false},
@@ -20942,7 +20971,7 @@ function renderBastionHub() {
       </div>
     </div>
 
-    <div class="bhub-card" style="border-color:rgba(255, 0, 51,.15);">
+    <div class="bhub-card" style="border-color:rgba(251,3,53,.15);">
       <div class="bhub-title" style="color:var(--red);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Leave</div>
       <div class="bhub-desc">Leave this bastion. You'll need an invite to rejoin.</div>
       <button class="btn-d" style="font-size:12.5px;padding:8px 16px;" onclick="openModal('modal-leave-bastion')">Leave Bastion</button>
@@ -20968,222 +20997,197 @@ function openOverviewRoom() {
   openModal('modal-overview');
 }
 
+// ── THE BASTION OVERVIEW CARD ────────────────────────────────────────────
+// Rebuilt on the app's own parts. What was here before was the oldest markup
+// left in the bastion: inline style="…" on nearly every element, hardcoded
+// rgba yellow that ignored the appearance themes, and OS emoji (👥 🌍 📂 👑)
+// standing in for icons. It is a real card now, on the same hero + sections
+// shape as Discover and the Fortshop.
+//
+// ⚠️ The banner dissolves into the card through a colour-mix ramp built from
+// var(--panel), NOT a hardcoded dark. Every other hero on the platform learned
+// this the hard way: a fixed colour meets a themed page at a visible seam.
 function renderOverviewRoom() {
   const b = CU.bastions?.[curBastion];
   const wrap = document.getElementById('overview-modal-body') || document.getElementById('bastion-chat-wrap');
   if (!b || !wrap) return;
   const isOwner = b.owner === CU.username;
-  const hasAdmin = hasPerm('administrator') || hasPerm('manage_channels');
-  const canEdit = isOwner || hasAdmin;
+  const canEdit = isOwner || hasPerm('administrator') || hasPerm('manage_channels');
   const ov = b.overview || {};
-  const bannerSrc = b.banner || b.icon || '';
-  const emblemHTML = b.icon ? '<img src="' + escapeHTML(b.icon) + '" onerror="this.outerHTML=\'🏰\'">' : '<span style="font-size:28px;">' + (b.emblem||'🏰') + '</span>';
-  const memberCount = Object.keys(b.memberRoles||{}).length || (b.members||[]).length || 1;
-  const channelCount = (b.channels||[]).length;
-  const boostLv = b.boostLevel || 0;
-  const tierNames = ['None', ..._FTZ_BOOST_NAMES.map(t => t.name)];
   const chs = b.channels || [];
   const roles = b.roles || [];
+  const memberCount = Object.keys(b.memberRoles || {}).length || (b.members || []).length || 1;
+  const boostLv = b.boostLevel || 0;
+  const tierName = boostLv > 0 ? (_FTZ_BOOST_NAMES[boostLv - 1] || {}).name : '';
+  const bannerSrc = b.banner || '';
+  const emblem = b.icon
+    ? `<img src="${escapeHTML(b.icon)}" alt="" onerror="this.remove()">`
+    : `<span class="bov-emblem-l">${escapeHTML((b.name || '?').charAt(0).toUpperCase())}</span>`;
 
   const annChs = chs.filter(c => c.type === 'announcement');
   const forumChs = chs.filter(c => c.type === 'forum');
-
-  const welcomeText = ov.welcomeText || b.desc || '';
   const showAnnouncements = ov.showAnnouncements !== false;
   const showForums = ov.showForums !== false;
   const showRoles = ov.showRoles !== false;
   const showInvite = ov.showInvite !== false;
-  const ovAccent = ov.accentColor || '';
 
-  let html = '<div class="overview-room">';
+  const stat = (icon, text, cls) =>
+    `<span class="bov-stat${cls ? ' ' + cls : ''}">${_faIcon(icon, 12)}${text}</span>`;
 
-  // ── Banner + emblem ──
-  if (bannerSrc) {
-    html += '<div class="ov-banner" style="height:140px;">'
-      + '<img src="' + escapeHTML(bannerSrc) + '" onerror="this.style.display=\'none\'" alt="" style="height:140px;">'
-      + '</div>'
-      + '<div class="ov-emblem"><div class="ov-icon">' + emblemHTML + '</div></div>';
-  }
-
-  // ── Identity: name, tagline, badge ──
-  html += '<div class="ov-identity" style="' + (bannerSrc ? '' : 'padding-top:24px;') + '">'
-    + (bannerSrc ? '' : '<div class="ov-emblem" style="position:relative;margin-bottom:12px;"><div class="ov-icon">' + emblemHTML + '</div></div>')
-    + '<div class="ov-name">' + escapeHTML(b.name) + (b.verified?_verifiedBadge(16):'') + _boostBadge(b,15) + '</div>'
-    + (b.tagline ? '<div class="ov-tagline">' + escapeHTML(b.tagline) + '</div>' : '')
-    + '</div>';
-
-  // ── Badges row ──
-  const ownerName = b.owner || 'Unknown';
-  const badgeAccStyle = ovAccent ? 'color:' + ovAccent + ';border-color:' + ovAccent + '33;background:' + ovAccent + '0d;' : '';
-  html += '<div class="ov-badges">'
-    + '<span class="ov-badge">👥 ' + memberCount + ' member' + (memberCount!==1?'s':'') + '</span>'
-    + '<span class="ov-badge">' + (b.public!==false?'🌍 Public':'🔒 Private') + '</span>'
-    + (boostLv > 0 ? '<span class="ov-badge" style="' + (badgeAccStyle||'color:var(--accent);border-color:rgba(255,249,62,.15);background:rgba(255,249,62,.05);') + 'display:inline-flex;align-items:center;gap:4px;">' + _boostSvg('12') + ' ' + tierNames[boostLv] + '</span>' : '')
-    + '<span class="ov-badge">📂 ' + channelCount + ' room' + (channelCount!==1?'s':'') + '</span>'
-    + '<span class="ov-badge" onclick="viewUserProfile(\'' + escapeHTML(ownerName) + '\')" style="cursor:pointer;">👑 ' + escapeHTML(ownerName) + '</span>'
-    + '</div>';
-
-  html += '<div class="ov-content">';
-
-  // ── Owner Management Hub ──
-  if (isOwner) {
-    const _mhSvg = (k)=>({
-      gear:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
-      members:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-      roles:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>',
-      invite:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
-    })[k];
-    html += `<div style="padding:14px 16px;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));border:1px solid rgba(255,249,62,.15);border-radius:12px;margin-bottom:18px;">
-      <div style="font-size:12px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-        ${_mhSvg('gear')} Management Hub
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
-        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:5px;justify-content:center;" onclick="closeModal('modal-overview');openBastionMembersCard()">${_mhSvg('members')} Members</button>
-        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:5px;justify-content:center;" onclick="openBastionSettings('roles');closeModal('modal-overview')">${_mhSvg('roles')} Roles</button>
-        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:5px;justify-content:center;" onclick="openBastionSettings('invites');closeModal('modal-overview')">${_mhSvg('invite')} Invites</button>
-        <button class="btn-a" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;grid-column:1/-1;" onclick="closeModal('modal-overview');openBastionBoostsCard()">${_boostSvg('13')} Boost Bastion</button>
+  const hero = `
+    <div class="bov-hero${bannerSrc ? ' has-banner' : ''}">
+      ${bannerSrc ? `<div class="bov-hero-bg" style="background-image:url('${escapeHTML(bannerSrc)}')"></div>` : ''}
+      <div class="bov-hero-in">
+        <div class="bov-emblem">${emblem}</div>
+        <div class="bov-htx">
+          <div class="bov-name">${escapeHTML(b.name || 'Bastion')}${b.verified ? _verifiedBadge(17) : ''}${_boostBadge(b, 16)}</div>
+          ${b.tagline ? `<div class="bov-tagline">${escapeHTML(b.tagline)}</div>` : ''}
+          <div class="bov-stats">
+            ${stat('users', memberCount + ' member' + (memberCount !== 1 ? 's' : ''))}
+            ${stat('hashtag', chs.length + ' channel' + (chs.length !== 1 ? 's' : ''))}
+            ${b.public !== false ? stat('eye', 'Open entry') : stat('lock', 'Invite only')}
+            ${boostLv > 0 ? stat('bolt', tierName, 'bov-stat--boost') : ''}
+          </div>
+        </div>
       </div>
     </div>`;
-  }
 
-  // ── Edit bar (top of content for admins) ──
-  if (canEdit) {
-    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">'
-      + '<button class="btn-g" style="font-size:11px;padding:6px 12px;display:flex;align-items:center;gap:5px;border-radius:8px;" onclick="openOverviewEditor()">'
-      + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
-      + ' Edit Bastion</button></div>';
-  }
+  const welcome = (ov.welcomeText || b.desc || '').trim();
 
-  // ── Upcoming Events (Guilded-style horizontal cards) ──
+  // The one row of things an owner actually comes here to reach. It used to be
+  // a yellow-tinted panel of four hand-styled buttons; it is the platform's
+  // own 3D button family now, so it presses like every other button we ship.
+  const manage = canEdit ? `
+    <div class="bov-acts">
+      <button class="fs-btn" onclick="closeModal('modal-overview');openBastionMembersCard()">${_faIcon('users', 12)}Members</button>
+      <button class="fs-btn" onclick="closeModal('modal-overview');openBastionSettings('roles')">${_faIcon('shield', 12)}Roles</button>
+      <button class="fs-btn" onclick="closeModal('modal-overview');openBastionSettings('invites')">${_faIcon('link', 12)}Invites</button>
+      <button class="fs-btn" onclick="openOverviewEditor()">${_faIcon('pen', 12)}Edit overview</button>
+      <span class="bstr-spacer"></span>
+      <button class="fs-btn fs-btn--primary" onclick="closeModal('modal-overview');openBastionBoostsCard()">${_faIcon('bolt', 12)}Boost this bastion</button>
+    </div>` : '';
+
+  const section = (title, link, body) => `
+    <div class="bov-sec">
+      <div class="bov-sech">
+        <span class="bov-sect">${title}</span>
+        ${link || ''}
+      </div>
+      ${body}
+    </div>`;
+
   const bastionId = b.globalId || b.name;
-  html += '<div class="ov-section" id="ov-events-section">'
-    + '<div class="ov-section-header">'
-    + '<span class="ov-section-title">Upcoming events</span>'
-    + '<span class="ov-section-link" onclick="openBastionSettings(\'events\')">See all</span>'
-    + '</div>'
-    + '<div class="ov-ev-row" id="ov-events-row"><div style="padding:10px;display:flex;justify-content:center;"><div class="pl-spinner" style="width:14px;height:14px;border-width:2px;"></div></div></div>'
-    + '</div>';
+  const events = section('Upcoming events',
+    `<button class="bov-secl" onclick="closeModal('modal-overview');openBastionSettings('events')">See all</button>`,
+    `<div class="bov-row" id="ov-events-row"><div class="bov-loading"><div class="pl-spinner" style="width:15px;height:15px;border-width:2px;"></div></div></div>`);
 
-  // Load events async into the row
-  setTimeout(() => _loadOverviewEvents(bastionId), 50);
-
-  // ── Latest Announcements ──
-  if (showAnnouncements && annChs.length > 0) {
-    html += '<div class="ov-section">'
-      + '<div class="ov-section-header">'
-      + '<span class="ov-section-title">Latest announcements</span>'
-      + '<span class="ov-section-link" onclick="selectChannel(' + chs.indexOf(annChs[0]) + ')">See all</span>'
-      + '</div><div class="ov-card-row">';
-    annChs.forEach(ch => {
+  let ann = '';
+  if (showAnnouncements && annChs.length) {
+    ann = section('Announcement channels', '', `<div class="bov-row">${annChs.map(ch => {
       const ri = chs.indexOf(ch);
-      html += '<div class="ov-ann-card" onclick="selectChannel(' + ri + ');closeModal(\'modal-overview\')">'
-        + '<div class="ov-ac-title">📢 ' + escapeHTML(ch.name) + '</div>'
-        + '<div class="ov-ac-meta"><span>in #' + escapeHTML(ch.name) + '</span></div>'
-        + '</div>';
-    });
-    html += '</div></div>';
+      return `<button class="bov-ch" onclick="closeModal('modal-overview');selectChannel(${ri})">
+        <span class="bov-chg">${_faIcon('bullhorn', 15)}</span>
+        <span class="bov-cht">${escapeHTML(ch.name)}</span>
+        <span class="bov-chd">${escapeHTML(ch.desc || 'Announcements')}</span>
+      </button>`;
+    }).join('')}</div>`);
   }
 
-  // ── Recent Wall Activity ──
-  if (showForums && forumChs.length > 0) {
-    html += '<div class="ov-section">'
-      + '<div class="ov-section-header">'
-      + '<span class="ov-section-title">Recent wall activity</span>'
-      + '<span class="ov-section-link" onclick="selectChannel(' + chs.indexOf(forumChs[0]) + ')">See all</span>'
-      + '</div><div class="ov-card-row">';
-    forumChs.forEach(ch => {
+  let wall = '';
+  if (showForums && forumChs.length) {
+    wall = section('Wall rooms', '', `<div class="bov-row">${forumChs.map(ch => {
       const ri = chs.indexOf(ch);
-      html += '<div class="ov-ann-card" onclick="openForumChannel(' + ri + ');closeModal(\'modal-overview\')">'
-        + '<div class="ov-ac-title">' + ftzIcon('chat','14') + ' ' + escapeHTML(ch.name) + '</div>'
-        + '<div class="ov-ac-meta"><span>Wall room</span></div>'
-        + '</div>';
-    });
-    html += '</div></div>';
+      return `<button class="bov-ch" onclick="closeModal('modal-overview');openForumChannel(${ri})">
+        <span class="bov-chg">${_faIcon('file-lines', 15)}</span>
+        <span class="bov-cht">${escapeHTML(ch.name)}</span>
+        <span class="bov-chd">${escapeHTML(ch.desc || 'A wall of posts')}</span>
+      </button>`;
+    }).join('')}</div>`);
   }
 
-  // ── Your Roles ──
+  let mine = '';
   if (showRoles) {
-    const myRoles = ((b.memberRoles||{})[CU.username]||[]).map(rid => roles.find(r => r.id===rid)).filter(Boolean);
+    const myRoles = ((b.memberRoles || {})[CU.username] || [])
+      .map(rid => roles.find(r => r.id === rid)).filter(Boolean);
     if (myRoles.length) {
-      html += '<div class="ov-section">'
-        + '<div class="ov-section-header"><span class="ov-section-title">Your Roles</span></div>'
-        + '<div style="display:flex;flex-wrap:wrap;gap:5px;">';
-      myRoles.forEach(r => {
-        html += '<span class="role-tag" style="color:' + r.color + ';background:' + r.color + '22;border:1px solid ' + r.color + '44;">' + escapeHTML(r.name) + '</span>';
-      });
-      html += '</div></div>';
+      mine = section('Your roles', '', `<div class="bov-roles">${myRoles.map(r => {
+        const c = r.color || 'var(--muted-light)';
+        return `<span class="bov-role" style="border-color:color-mix(in srgb,${c} 55%,var(--border));background:color-mix(in srgb,${c} 12%,transparent);">
+          <span class="bov-roledot" style="background:${c};"></span>${escapeHTML(r.name || 'Role')}</span>`;
+      }).join('')}</div>`);
     }
   }
 
-  // ── Invite section ──
+  let invite = '';
   if (showInvite) {
-    const invites = b.invites || [];
-    const activeInvite = invites.find(inv => {
-      if (inv.expires && new Date(inv.expires) < new Date()) return false;
+    const now = new Date();
+    const active = (b.invites || []).find(inv => {
+      if (inv.expires && new Date(inv.expires) < now) return false;
       if (inv.maxUses && inv.uses >= inv.maxUses) return false;
       return true;
     });
-    const inviteCode = activeInvite?.code ?? null;
-    html += '<div class="ov-section">'
-      + '<div class="ov-section-header"><span class="ov-section-title">Invite Friends</span></div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
-      + (inviteCode ? '<button class="btn-a" style="font-size:11px;padding:6px 14px;" onclick="copyInvite(\'' + inviteCode + '\')">Copy Invite Link</button>' : '')
-      + '<button class="btn-g" style="font-size:11px;padding:6px 14px;" onclick="showBastionInviteUI()">Invite Friends</button>'
-      + '</div></div>';
+    invite = section('Bring somebody in', '', `<div class="bov-invite">
+      <div class="bov-invt">Share the door. An invite drops them straight into ${escapeHTML(b.name || 'this bastion')}.</div>
+      <div class="bov-invb">
+        ${active ? `<button class="fs-btn fs-btn--primary" onclick="copyInvite('${escapeHTML(active.code)}')">${_faIcon('link', 12)}Copy invite link</button>` : ''}
+        <button class="fs-btn" onclick="showBastionInviteUI()">${_faIcon('user-plus', 12)}Invite friends</button>
+      </div>
+    </div>`);
   }
 
-  // ── Footer ──
-  if (ov.footerText) {
-    html += '<div style="margin-top:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.04);">'
-      + '<div style="font-size:11px;color:var(--muted);text-align:center;line-height:1.5;">' + escapeHTML(ov.footerText) + '</div></div>';
-  }
+  const owner = b.owner || 'Unknown';
+  const foot = `<div class="bov-foot">
+    <button class="bov-owner" onclick="viewUserProfile('${escapeHTML(owner)}')">${_faIcon('crown', 12)}Run by <b>${escapeHTML(owner)}</b></button>
+    ${ov.footerText ? `<div class="bov-footnote">${escapeHTML(ov.footerText)}</div>` : ''}
+  </div>`;
 
-  html += '</div>'; // close ov-content
+  wrap.innerHTML = hero + `<div class="bov-body">
+    ${welcome ? `<div class="bov-welcome">${escapeHTML(welcome)}</div>` : ''}
+    ${manage}${events}${ann}${wall}${mine}${invite}${foot}
+  </div>`;
 
-  // ── Post an announcement bar (like Guilded) ──
-  if (canEdit && annChs.length > 0) {
-    const annIdx = chs.indexOf(annChs[0]);
-    html += '<div class="ov-post-bar">'
-      + '<input type="text" placeholder="Post an announcement…" readonly onclick="selectChannel(' + annIdx + ');closeModal(\'modal-overview\')" style="cursor:pointer;">'
-      + '</div>';
-  }
-
-  html += '</div>'; // close overview-room
-  wrap.innerHTML = html;
+  setTimeout(() => _loadOverviewEvents(bastionId), 50);
 }
 
-// Load upcoming events into overview mini-cards
+// The events strip. Each card is the same shape as the rails elsewhere in the
+// app: a thick stroke, a panel fill, and a hover lift. ⚠️ The RSVP button
+// reflects real state — an "I'm going" that does not remember you is worse
+// than no button at all.
 async function _loadOverviewEvents(bastionId) {
   const row = document.getElementById('ov-events-row');
   if (!row) return;
+  const empty = (msg) => { row.innerHTML = `<div class="bov-empty">${escapeHTML(msg)}</div>`; };
   try {
     const snap = await firebase.database().ref('events/' + bastionId).get();
-    if (!snap.exists()) { row.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:10px;">No upcoming events</div>'; return; }
+    if (!snap.exists()) return empty('Nothing on the calendar yet.');
     const events = [];
     snap.forEach(c => { const v = c.val(); v._key = c.key; events.push(v); });
     const now = new Date();
-    const upcoming = events.filter(ev => !ev.cancelled && (new Date(ev.date) >= now || ev.status === 'live'));
-    upcoming.sort((a,b) => new Date(a.date) - new Date(b.date));
-    if (!upcoming.length) { row.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:10px;">No upcoming events</div>'; return; }
-    let html = '';
-    upcoming.slice(0, 8).forEach(ev => {
+    const upcoming = events
+      .filter(ev => !ev.cancelled && (new Date(ev.date) >= now || ev.status === 'live'))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    if (!upcoming.length) return empty('Nothing on the calendar yet.');
+    row.innerHTML = upcoming.slice(0, 8).map(ev => {
       const d = new Date(ev.date);
-      const rsvps = ev.rsvps ? Object.keys(ev.rsvps).length : 0;
-      const userRsvp = ev.rsvps?.[CU.username];
-      const isLive = ev.status === 'live';
-      const dateStr = d.toLocaleString('en',{weekday:'short'}) + ', ' + d.toLocaleString('en',{month:'short',day:'numeric'}) + ' at ' + d.toLocaleString('en',{hour:'numeric',minute:'2-digit'});
-      html += '<div class="ov-ev-mini' + (isLive ? ' ev-card-live' : '') + '">'
-        + '<div class="ov-evm-title">' + (isLive ? '🔴 ' : '') + escapeHTML(ev.title||'Event') + '</div>'
-        + '<div class="ov-evm-going">' + rsvps + ' are going</div>'
-        + '<div class="ov-evm-date"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ' + dateStr + '</div>'
-        + '<div class="ov-evm-actions">'
-        + '<button class="ov-evm-btn' + (userRsvp ? ' active' : '') + '" onclick="event.stopPropagation();_rsvpEvent(\'' + escapeHTML(bastionId) + '\',\'' + ev._key + '\')" title="Going">✓</button>'
-        + '<button class="ov-evm-btn" onclick="event.stopPropagation();_rsvpEvent(\'' + escapeHTML(bastionId) + '\',\'' + ev._key + '\')" title="Maybe">?</button>'
-        + '<button class="ov-evm-btn" title="Not interested" style="color:var(--muted);">✕</button>'
-        + '</div></div>';
-    });
-    row.innerHTML = html;
-  } catch(e) { row.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:10px;">Could not load events</div>'; }
+      const going = ev.rsvps ? Object.keys(ev.rsvps).length : 0;
+      const mineRsvp = !!(ev.rsvps || {})[CU.username];
+      const live = ev.status === 'live';
+      const when = d.toLocaleString('en', { weekday: 'short', month: 'short', day: 'numeric' })
+        + ' at ' + d.toLocaleString('en', { hour: 'numeric', minute: '2-digit' });
+      return `<div class="bov-ev${live ? ' is-live' : ''}">
+        ${live ? `<span class="bov-evlive">Live now</span>` : ''}
+        <div class="bov-evt">${escapeHTML(ev.title || 'Event')}</div>
+        <div class="bov-evd">${_faIcon('calendar', 11)}${escapeHTML(when)}</div>
+        <div class="bov-evg">${going} going</div>
+        <button class="fs-btn bov-evb${mineRsvp ? ' fs-btn--primary' : ''}"
+          onclick="event.stopPropagation();_rsvpEvent('${escapeHTML(bastionId)}','${ev._key}')">
+          ${mineRsvp ? _faIcon('check', 11) + 'Going' : 'I am going'}
+        </button>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    empty('Could not load the calendar.');
+  }
 }
 
 // Overview editor for owners/admins
@@ -21200,7 +21204,7 @@ function openOverviewEditor() {
     {val:'#60a5fa',label:'Blue',hex:'#60a5fa'},
     {val:'#3ecf6e',label:'Green',hex:'#3ecf6e'},
     {val:'#a78bfa',label:'Purple',hex:'#a78bfa'},
-    {val:'#ff0033',label:'Red',hex:'#ff0033'},
+    {val:'#fb0335',label:'Red',hex:'#fb0335'},
     {val:'#fb923c',label:'Orange',hex:'#fb923c'},
     {val:'#e879f9',label:'Pink',hex:'#e879f9'},
     {val:'#22d3ee',label:'Cyan',hex:'#22d3ee'},
@@ -21342,13 +21346,17 @@ function openBastionBoostsCard() {
   if (!b) return;
   document.getElementById('bbo-overlay')?.remove();
   const ov = document.createElement('div');
-  ov.className = 'ftz-confirm-overlay';
+  // ⚠️ BIG CARD. It carries three landscape tier cards side by side plus a
+  // wallet column, so it wears the settings shell and `.settings-close` — the
+  // small-card `.ftz-close-btn.ftz-ac-x` belongs to `.ftz-ac-card` popups only.
+  ov.className = 'modal-overlay show';
   ov.id = 'bbo-overlay';
-  ov.innerHTML = `<div class="ftz-confirm-card ftz-ac-card bbo-card" role="dialog" aria-label="Bastion Boosts">
-    <button class="settings-close bbo-x" type="button" aria-label="Close" onclick="document.getElementById('bbo-overlay')?.remove()">
+  ov.setAttribute('role', 'dialog');
+  ov.innerHTML = `<div class="modal settings-modal bbo-modal" role="document" aria-label="Bastion Boosts">
+    <button class="settings-close" type="button" aria-label="Close" data-tip="Close" onclick="document.getElementById('bbo-overlay')?.remove()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
-    <div class="bbo-body" id="bbo-body"></div>
+    <div class="bbo-scroll"><div class="bbo-body" id="bbo-body"></div></div>
   </div>`;
   ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
   document.body.appendChild(ov);
@@ -21358,6 +21366,17 @@ function openBastionBoostsCard() {
 // Kept so the old entry points (the rail row, legacy calls) land on the card.
 function openBoostModal() { openBastionBoostsCard(); }
 
+// Perks that are not tied to a rung. Discord calls this Additional Perks; ours
+// only lists things a boost genuinely buys today.
+const _FTZ_BOOST_EXTRAS = [
+  { icon:'bolt',   title:'The bastion keeps every unlock',
+    text:'Perks stay on for as long as the boosts do. Take a boost back and the bastion falls to the tier it can still afford.' },
+  { icon:'users',  title:'Anybody can boost',
+    text:'A boost belongs to a person, not to an owner. Any member can spend one here, and take it back whenever they like.' },
+  { icon:'medal',  title:'Your name on it',
+    text:'Boosters are credited on the bastion. The badge beside the name is the whole bastion’s, the credit is yours.' },
+];
+
 function _bboPaint() {
   const host = document.getElementById('bbo-body');
   const b = CU.bastions?.[curBastion];
@@ -21366,12 +21385,13 @@ function _bboPaint() {
   const avail = _myBoostsAvailable();
   const mine  = _myBoostsOn(b);
   const total = _myBoostsTotal();
+  const tier  = p.level ? _boostTierName(p.level) : null;
 
-  const hero = `<div class="bbo-hero">
-    <div class="bbo-mark">${_boostLogoHTML(46, '', p.level ? _boostTierName(p.level).tint : 'var(--muted)')}</div>
+  const hero = `<div class="bbo-hero"${tier ? ` style="--tint:${tier.tint}"` : ''}>
+    <div class="bbo-mark">${_boostLogoHTML(44, '', tier ? tier.tint : 'var(--muted-light)')}</div>
     <div class="bbo-htx">
       <div class="bbo-eyebrow">Bastion Boosts</div>
-      <div class="bbo-title">${p.level ? escapeHTML(b.name) + ' is ' + _boostTierName(p.level).name : escapeHTML(b.name) + ' is not boosted yet'}</div>
+      <div class="bbo-title">${tier ? escapeHTML(b.name) + ' is ' + tier.name : escapeHTML(b.name) + ' is not boosted yet'}</div>
       <div class="bbo-lead">${p.next === null
         ? 'Every tier is unlocked. Extra boosts keep them there.'
         : `${p.boosts} boost${p.boosts !== 1 ? 's' : ''} of the ${p.next} it takes to reach ${_FTZ_BOOST_NAMES[p.level].name}.`}</div>
@@ -21379,38 +21399,61 @@ function _bboPaint() {
     </div>
   </div>`;
 
-  // Your wallet. Available is Total minus everything you have spent ANYWHERE,
-  // not just here, so the number cannot promise a boost you already gave away.
-  const wallet = `<div class="bbo-wallet">
-    <div class="bbo-w3">
-      ${[['Available', avail], ['On this bastion', mine], ['Yours in total', total]].map(([l, v]) =>
-        `<div class="bbo-wt"><div class="bbo-wv">${_boostLogoHTML(15)}${v}</div><div class="bbo-wl">${l}</div></div>`).join('')}
-    </div>
-    <div class="bbo-wacts">
-      ${avail > 0
-        ? `<button class="fs-btn fs-btn--primary" type="button" onclick="_bboGive()">Boost this bastion</button>`
-        : `<button class="fs-btn fs-btn--primary" type="button" onclick="_bboBuy()">Get a boost · ${_FTZ_BOOST_PRICE} Onyx a month</button>`}
-      ${mine > 0 ? `<button class="fs-btn" type="button" onclick="_bboTake()">Take one back</button>` : ''}
-    </div>
-    <div class="bbo-wnote">${_hasRadiance(CU)
-      ? `Radiance includes ${_FTZ_BOOST_RADIANCE_GRANT} boosts. Extra ones are ${_FTZ_BOOST_PRICE} Onyx a month each.`
-      : `You have no boosts from Radiance. One costs ${_FTZ_BOOST_PRICE} Onyx a month, or Radiance includes ${_FTZ_BOOST_RADIANCE_GRANT}.`}</div>
-  </div>`;
-
-  const tiers = `<div class="bbo-sec">Tiers</div>
-    <div class="bbo-tiers">${_FTZ_BOOST_NAMES.map(t => {
+  // ── Levels: three LANDSCAPE cards, side by side ──
+  const levels = `<div class="bbo-sec">Levels</div>
+    <div class="bbo-levels">${_FTZ_BOOST_NAMES.map(t => {
       const on = p.boosts >= t.need;
       const short = Math.max(0, t.need - p.boosts);
-      return `<div class="bbo-tier${on ? ' is-on' : ''}" style="--tint:${t.tint}">
-        <div class="bbo-th"><span class="bbo-tmark">${_boostLogoHTML(17, '', t.tint)}</span><span class="bbo-tn">${t.name}</span>${on ? '<span class="bbo-tok">Unlocked</span>' : ''}</div>
-        <div class="bbo-tb">${t.blurb}</div>
-        <ul class="bbo-tp">${t.perks.map(x => `<li>${escapeHTML(x)}</li>`).join('')}</ul>
-        <div class="bbo-tf">${on ? `${t.need} boosts` : `${short} more boost${short !== 1 ? 's' : ''} to go`}</div>
+      const filled = Math.max(0, Math.min(t.need, p.boosts));
+      return `<div class="bbo-lv${on ? ' is-on' : ''}" style="--tint:${t.tint}">
+        <div class="bbo-lvpips">${Array.from({length:t.need},(_,i)=>
+          `<span class="bbo-pip${i < filled ? ' is-on' : ''}"></span>`).join('')}</div>
+        <div class="bbo-lvh">
+          <span class="bbo-lvmark">${_boostLogoHTML(18, '', t.tint)}</span>
+          <span class="bbo-lvn">${t.name}</span>
+          ${on ? `<span class="bbo-lvok">${_faIcon('check', 10)}Unlocked</span>` : ''}
+        </div>
+        <div class="bbo-lvb">${escapeHTML(t.blurb)}</div>
+        <ul class="bbo-lvp">${t.perks.map(x =>
+          `<li><span class="bbo-lvpi">${_faIcon(x.icon, 12)}</span><span>${escapeHTML(x.text)}</span></li>`).join('')}</ul>
+        <div class="bbo-lvf">${on
+          ? `${_boostLogoHTML(12)}${t.need} boosts`
+          : `${short} more boost${short !== 1 ? 's' : ''} to go`}</div>
       </div>`;
-    }).join('')}</div>
-    <div class="bbo-more">More perks are coming to these tiers. Nothing is listed above that a boost does not already buy you.</div>`;
+    }).join('')}</div>`;
 
-  host.innerHTML = hero + wallet + tiers;
+  const extras = `<div class="bbo-sec">Additional perks</div>
+    <div class="bbo-extras">${_FTZ_BOOST_EXTRAS.map(x =>
+      `<div class="bbo-ex">
+        <span class="bbo-exi">${_faIcon(x.icon, 16)}</span>
+        <div class="bbo-ext"><div class="bbo-exn">${escapeHTML(x.title)}</div><div class="bbo-exd">${escapeHTML(x.text)}</div></div>
+      </div>`).join('')}</div>`;
+
+  // ── The wallet, as a side column ──
+  const wallet = `<aside class="bbo-side">
+    <div class="bbo-panel">
+      <div class="bbo-pt">Your boosts</div>
+      <div class="bbo-w3">
+        ${[['Available', avail], ['On this bastion', mine], ['Yours in total', total]].map(([l, v]) =>
+          `<div class="bbo-wt"><div class="bbo-wv">${_boostLogoHTML(14)}${v}</div><div class="bbo-wl">${l}</div></div>`).join('')}
+      </div>
+      <div class="bbo-wacts">
+        ${avail > 0
+          ? `<button class="fs-btn fs-btn--primary bbo-cta" type="button" onclick="_bboGive()">Boost this bastion</button>`
+          : `<button class="fs-btn fs-btn--primary bbo-cta" type="button" onclick="_bboBuy()">Get a boost · ${_FTZ_BOOST_PRICE} Onyx a month</button>`}
+        ${mine > 0 ? `<button class="fs-btn bbo-cta" type="button" onclick="_bboTake()">Take one back</button>` : ''}
+      </div>
+    </div>
+    <div class="bbo-panel bbo-panel--note">
+      <div class="bbo-pt">${_hasRadiance(CU) ? 'Radiance' : 'Where boosts come from'}</div>
+      <div class="bbo-note">${_hasRadiance(CU)
+        ? `Radiance includes ${_FTZ_BOOST_RADIANCE_GRANT} boosts, which is exactly Tier 1. Extra ones are ${_FTZ_BOOST_PRICE} Onyx a month each.`
+        : `You have no boosts from Radiance. One costs ${_FTZ_BOOST_PRICE} Onyx a month, or Radiance includes ${_FTZ_BOOST_RADIANCE_GRANT}.`}</div>
+      <div class="bbo-note">A boost is billed monthly. Taking it back frees it for another bastion straight away.</div>
+    </div>
+  </aside>`;
+
+  host.innerHTML = hero + `<div class="bbo-cols"><div class="bbo-main">${levels}${extras}</div>${wallet}</div>`;
 }
 
 // Spend one of yours on this bastion.
@@ -21673,14 +21716,23 @@ function openBastionMembersCard(tab) {
   _bmcTab = tab || 'all'; _bmcQuery = ''; _bmcSort = 'joined'; _bmcRows = []; _bmcSel = new Set(); _bmcPage = 0;
   document.getElementById('bmc-overlay')?.remove();
   const ov = document.createElement('div');
-  ov.className = 'ftz-confirm-overlay';
+  ov.className = 'modal-overlay show';
   ov.id = 'bmc-overlay';
-  ov.innerHTML = `<div class="ftz-confirm-card ftz-ac-card bmc-card" role="dialog" aria-label="Members">
-      <button class="settings-close bmc-x" type="button" aria-label="Close" onclick="document.getElementById('bmc-overlay')?.remove()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+  ov.setAttribute('role', 'dialog');
+  ov.innerHTML = `<div class="modal settings-modal bmc-card" role="document" aria-label="Members">
+    <button class="settings-close" type="button" aria-label="Close" data-tip="Close" onclick="document.getElementById('bmc-overlay')?.remove()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
       <div class="bmc-head">
-        <div class="bmc-title">Members</div>
+        <div class="bmc-hero">
+          <span class="bmc-hglyph">${_faIcon('users', 24)}</span>
+          <div class="bmc-htx">
+            <div class="bmc-eyebrow">${escapeHTML(b.name)}</div>
+            <div class="bmc-title">Members</div>
+            <div class="bmc-sub">Everybody here, what they can do, and when they arrived.</div>
+          </div>
+          <div class="bmc-hstats" id="bmc-hstats"></div>
+        </div>
         <div class="bmc-tabs" id="bmc-tabs"></div>
       </div>
       <div class="bmc-body" id="bmc-body"></div>
@@ -21722,6 +21774,17 @@ function _bmcGoPage(n) { _bmcPage = n; _bmcPaintBody(); const bd=document.getEle
 
 function _bmcPaint() {
   const b = CU.bastions?.[curBastion]; if (!b) return;
+  const st = document.getElementById('bmc-hstats');
+  if (st) {
+    // ⚠️ The counts come from what is already in memory. Nothing here is worth
+    // a second read of the users table.
+    const total = _bmcRows.length || (b.memberCount || 1);
+    const pend = _bmcApps(b, 'pending').length;
+    st.innerHTML =
+      `<span class="bmc-hstat">${_faIcon('users', 12)}${total} member${total !== 1 ? 's' : ''}</span>`
+      + `<span class="bmc-hstat">${_faIcon('shield', 12)}${(b.roles || []).length} role${(b.roles || []).length !== 1 ? 's' : ''}</span>`
+      + (pend ? `<span class="bmc-hstat bmc-hstat--warn">${_faIcon('clock', 12)}${pend} waiting</span>` : '');
+  }
   const tabsEl = document.getElementById('bmc-tabs');
   if (tabsEl) {
     const hasApps = (b.applicationQuestions || []).length > 0 || (b.applications || []).length > 0;
@@ -21908,9 +21971,7 @@ function _bmcAppOpen(applicant, status) {
   ov.className = 'ftz-confirm-overlay';
   ov.id = 'bap-overlay';
   ov.innerHTML = `<div class="ftz-confirm-card ftz-ac-card bap-card" role="dialog" aria-label="Application">
-      <button class="settings-close bmc-x" type="button" aria-label="Close" onclick="document.getElementById('bap-overlay')?.remove()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+      <button class="ftz-close-btn ftz-ac-x" type="button" aria-label="Close" onclick="document.getElementById('bap-overlay')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
       <div class="bap-head">
         ${id.av}
         <div class="bap-who"><div class="bap-d">${id.name}</div><div class="bap-u">@${escapeHTML(applicant)}</div></div>
@@ -22107,7 +22168,7 @@ function renderBSettingsMain(tab) {
       <div class="bs-divider"></div>
       <div class="bset-fgroup" style="max-width:220px;">
         <label class="bset-flabel" for="mention-limit">Mentions per message</label>
-        <input class="bset-uline" type="number" id="mention-limit" value="${am.mentionLimit||10}" min="1" max="25">
+        ${_stfStep('mention-limit', am.mentionLimit || 10, { min: 1, max: 25 })}
         <div class="bset-fhelp">Anything above this is held back.</div>
       </div>
       ${am.blockLinks ? `<div class="bset-fgroup">
@@ -22323,7 +22384,7 @@ function renderBSettingsMain(tab) {
     const isOwner = b.owner === CU.username;
     main.innerHTML = `
       <div class="bcm-state${c.on?' is-on':''}">
-        <div class="bcm-mark">${_boostLogoHTML(30)}</div>
+        <div class="bcm-mark">${_faIcon('community', 30)}</div>
         <div class="bcm-stx">
           <div class="bcm-st">${c.on ? 'This is a Community Bastion' : 'Not a Community Bastion yet'}</div>
           <div class="bcm-sl">${c.on
@@ -22363,7 +22424,7 @@ function renderBSettingsMain(tab) {
       <div class="bau-filters">
         <div class="bau-f">
           <div class="bset-flabel">Filter by member</div>
-          ${_ftzSelectHTML('bau-who', who, [{value:'',label:'Everyone'}].concat(people.map(p=>({value:p,label:p}))), '_bstAuditFilter("who",__VALUE__)')}
+          ${_ftzSelectHTML('bau-who', who, [{value:'',label:'Everyone'}].concat(people.map(p=>({value:p,label:((_bauUser(p)||{}).displayName || (_bauUser(p)||{}).display_name || p)}))), '_bstAuditFilter("who",__VALUE__)')}
         </div>
         <div class="bau-f">
           <div class="bset-flabel">Filter by action</div>
@@ -22371,19 +22432,21 @@ function renderBSettingsMain(tab) {
         </div>
         ${(who||what) ? '<button class="fs-btn bau-clear" type="button" onclick="_bstAuditFilter(\'clear\',\'\')">Clear</button>' : ''}
       </div>
-      ${rows.length ? `<div class="bau-list">${rows.map(e => `
-        <div class="bau-row">
-          <div class="bau-av">${buildAvatarHTML(_pfpCache[e.by] || null, e.by || '?', 32)}</div>
+      ${rows.length ? `<div class="bau-list">${rows.map(e => {
+          const u = _bauUser(e.by);
+          return `<div class="bau-row">
+          <div class="bau-av">${buildAvatarHTML(u ? (u.pfp || null) : (_pfpCache[e.by] || null), e.by || '?', 34)}</div>
           <div class="bau-tx">
-            <div class="bau-l"><strong>${escapeHTML(e.by || 'Someone')}</strong> ${escapeHTML(_BST_AUDIT_LABELS[e.action] || e.action || 'made a change')}${e.target ? ' <em>' + escapeHTML(e.target) + '</em>' : ''}</div>
-            ${e.detail ? `<div class="bau-d">${escapeHTML(e.detail)}</div>` : ''}
+            <div class="bau-l">${_ftzStyledNameHTML(u, e.by || 'Someone', 'bau-name')} ${escapeHTML(_BST_AUDIT_LABELS[e.action] || e.action || 'made a change')}${e.target ? ' <em>' + escapeHTML(e.target) + '</em>' : ''}</div>
+            <div class="bau-d">${escapeHTML('@' + (e.by || 'unknown'))}${e.detail ? ' · ' + escapeHTML(e.detail) : ''}</div>
           </div>
           <div class="bau-t">${_bmcDate(e.at)}</div>
-        </div>`).join('')}</div>`
+        </div>`; }).join('')}</div>`
         : (log.length
           ? _ftzNotFound('Nothing matches', 'No entry fits those two filters. Clear one and try again.', {art:'search'})
           : _ftzNotFound('Nothing logged yet', 'Every change anyone makes here shows up on this page.', {art:'celebrate'}))}
       <div class="bset-note">The log keeps the last ${_BST_AUDIT_CAP} changes made to this bastion's settings, channels, roles and members. Messages are not logged here.</div>`;
+    _bauHydrate(people);
   }
   else if (tab==='danger') {
     const isOwner = b.owner === CU.username;
@@ -23691,6 +23754,36 @@ function _bstAudit(b, action, target, detail) {
   b.auditLog.push({ at: Date.now(), by: CU?.username || '', action, target: target || '', detail: detail || '' });
   if (b.auditLog.length > _BST_AUDIT_CAP) b.auditLog = b.auditLog.slice(-_BST_AUDIT_CAP);
 }
+// ⚠️ THE LOG STORES A USERNAME AND NOTHING ELSE — anything more would ride
+// along in every bastion sync, forever, for a list of 150 entries. So the row
+// has to resolve the person at paint time. `_pfpCache` alone was not enough:
+// it only holds people this session has already drawn, so a log full of
+// members you have never opened rendered a wall of bare initials.
+//
+// ⚠️ Egress: this is `getUsersByNames`, which is per-user cached and reads
+// only the columns a row needs — NOT `getUsers()`, which scans the whole
+// table. One batch per distinct author, once, then the cache answers.
+const _bauCache = new Map();
+let _bauLoading = false;
+function _bauUser(name) { return name ? (_bauCache.get(String(name).toLowerCase()) || null) : null; }
+async function _bauHydrate(names) {
+  const want = (names || []).map(n => String(n || '').toLowerCase()).filter(n => n && !_bauCache.has(n));
+  if (!want.length || _bauLoading || !FortizedSocial?.getUsersByNames) return;
+  _bauLoading = true;
+  try {
+    const list = await FortizedSocial.getUsersByNames(want).catch(() => []);
+    for (const u of (list || [])) {
+      if (!u || !u.username) continue;
+      _bauCache.set(String(u.username).toLowerCase(), u);
+      if (u.pfp && !_pfpCache[u.username]) _pfpCache[u.username] = u.pfp;
+    }
+    // Anything the table did not answer for is recorded as a miss, so a
+    // deleted account cannot make this refetch on every repaint.
+    for (const n of want) if (!_bauCache.has(n)) _bauCache.set(n, null);
+  } finally { _bauLoading = false; }
+  if (_bsetActiveTab === 'audit' && document.querySelector('.bau-filters')) renderBSettingsMain('audit');
+}
+
 function _bstAuditFilter(which, v) {
   if (which === 'clear') { window._bauWho = ''; window._bauWhat = ''; }
   else if (which === 'who') window._bauWho = v || '';
@@ -24762,12 +24855,6 @@ function _bstRoleDisplayHTML(b, d) {
     `<button class="bstr-sw${c.toLowerCase() === String(val).toLowerCase() ? ' sel' : ''}" style="background:${c};"
       title="${c}" onclick="_bstRoleSetField('${key}','${c}')"></button>`).join('');
 
-  const emotes = (b.customEmojis || []).slice(0, 48).map(e => {
-    const on = d.icon && d.icon.kind === 'emote' && d.icon.name === e.name;
-    return `<button class="bstr-emote${on ? ' sel' : ''}" title=":${escapeHTML(e.name)}:"
-      onclick="_bstRoleIconEmote('${escapeHTML(e.name)}')"><img src="${escapeHTML(e.data || '')}" alt=""></button>`;
-  }).join('');
-
   const tog = (key, label, desc) => `<div class="bstr-opt">
     <div class="bstr-opt-txt"><div class="bstr-opt-l">${label}</div><div class="bstr-opt-d">${desc}</div></div>
     <div class="toggle ${d[key] ? 'on' : ''}" role="switch" aria-checked="${d[key] ? 'true' : 'false'}" tabindex="0"
@@ -24796,11 +24883,15 @@ function _bstRoleDisplayHTML(b, d) {
 
     <label class="bstr-lb">Role icon</label>
     <div class="bstr-iconrow">
-      <span class="bstr-iconprev">${_bstRoleIconHTML(d, 26, b) || `<span class="bstr-dot bstr-dot--lg" style="background:${col};"></span>`}</span>
-      <button class="fs-btn" onclick="_bstRoleIconUpload()">Upload</button>
-      ${d.icon ? '<button class="fs-btn" onclick="_bstRoleIconClear()">Remove</button>' : ''}
+      <button class="bstr-iconfield" type="button" id="bstr-iconfield" onclick="_bstRoleIconPicker()">
+        <span class="bstr-iconprev">${_bstRoleIconHTML(d, 24, b) || `<span class="bstr-dot bstr-dot--lg" style="background:${col};"></span>`}</span>
+        <span class="bstr-iconlb">${d.icon ? (d.icon.kind === 'emote' ? ':' + escapeHTML(d.icon.name || '') + ':' : 'Your own picture') : 'Pick an emoji'}</span>
+        <span class="bstr-iconch">${_faIcon('chevron-down', 11)}</span>
+      </button>
+      <button class="fs-btn bmc-mini" type="button" onclick="_bstRoleIconUpload()">${_faIcon('upload', 11)}Upload</button>
+      ${d.icon ? `<button class="fs-btn bmc-mini" type="button" onclick="_bstRoleIconClear()">${_faIcon('trash', 11)}Remove</button>` : ''}
     </div>
-    ${emotes ? `<div class="bstr-emotes">${emotes}</div>` : '<div class="bstr-hint">Add emotes to this bastion and you can use one as the icon.</div>'}
+    <div class="bset-fhelp">An emoji reads best. It sits beside the role name in the member list, on role tags and in the roles list.</div>
 
     <label class="bstr-lb">Behaviour</label>
     ${tog('hoist', 'Display separately', 'Members with this role get their own group at the top of the member list.')}
@@ -24917,6 +25008,112 @@ function _bstRoleRepaintDots() {
   const d = _bstRoleDraft; if (!d) return;
   document.querySelectorAll('.bstr-body .bstr-dot, .bstr-edithead .bstr-dot')
     .forEach(el => { el.style.background = d.color || '#60a5fa'; });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// ROLE ICON PICKER — Guilded's emote picker, with OUR emojis in it
+// ════════════════════════════════════════════════════════════════════
+// Guilded calls them emotes; here they are emojis, so the picker is built from
+// the two sets a bastion actually has: its own uploads, and the Fortized Guide
+// pack every bastion carries. A footer names what you are hovering and where
+// it comes from, which is the part that makes the grid readable.
+//
+// ⚠️ Portalled to <body> and positioned `fixed`. The settings pane clips its
+// own overflow, so a popover anchored inside it dies at the pane's edge —
+// the same lesson the staff-console member picker taught us.
+//
+// ⚠️ A GUIDE EMOJI IS STORED BY URL, NOT BY NAME. `_bstRoleIconHTML` resolves
+// `kind:'emote'` against `b.customEmojis`, and a guide emoji is not in there,
+// so storing it that way would draw nothing. It is stored as `kind:'img'` with
+// the same-origin path, which costs a URL string and no base64.
+let _bstRoleIconQ = '';
+function _bstRoleIconPicker() {
+  document.getElementById('bstr-icp')?.remove();
+  const b = CU?.bastions?.[curBastion];
+  const anchor = document.getElementById('bstr-iconfield');
+  if (!b || !anchor) return;
+  _bstRoleIconQ = '';
+  const ov = document.createElement('div');
+  ov.id = 'bstr-icp';
+  ov.className = 'bstr-icp';
+  ov.innerHTML = `
+    <div class="bstr-icp-h">
+      <input class="settings-input bstr-icp-s" id="bstr-icp-s" placeholder="Search emojis" autocomplete="off" oninput="_bstRoleIconSearch(this.value)">
+    </div>
+    <div class="bstr-icp-b" id="bstr-icp-b"></div>
+    <div class="bstr-icp-f" id="bstr-icp-f"><span class="bstr-icp-fi"></span><span class="bstr-icp-ft">Pick one to put it on the role</span></div>`;
+  document.body.appendChild(ov);
+  const r = anchor.getBoundingClientRect();
+  const w = 328, h = 372;
+  ov.style.left = Math.max(10, Math.min(window.innerWidth - w - 10, r.left)) + 'px';
+  ov.style.top  = (r.bottom + h + 12 > window.innerHeight ? Math.max(10, r.top - h - 8) : r.bottom + 8) + 'px';
+  _bstRoleIconPaint();
+  setTimeout(() => document.getElementById('bstr-icp-s')?.focus(), 30);
+  setTimeout(() => document.addEventListener('mousedown', _bstRoleIconAway, true), 0);
+  document.addEventListener('keydown', _bstRoleIconEsc);
+}
+function _bstRoleIconAway(e) {
+  const ov = document.getElementById('bstr-icp');
+  if (!ov) return _bstRoleIconClose();
+  if (!ov.contains(e.target) && !e.target.closest?.('#bstr-iconfield')) _bstRoleIconClose();
+}
+function _bstRoleIconEsc(e) { if (e.key === 'Escape') _bstRoleIconClose(); }
+function _bstRoleIconClose() {
+  document.getElementById('bstr-icp')?.remove();
+  document.removeEventListener('mousedown', _bstRoleIconAway, true);
+  document.removeEventListener('keydown', _bstRoleIconEsc);
+}
+function _bstRoleIconSearch(v) { _bstRoleIconQ = String(v || '').toLowerCase().trim(); _bstRoleIconPaint(); }
+
+// Recently used, per browser. A picker that always opens on the same first
+// row makes you hunt for the one you just used on the last role.
+function _bstRoleIconRecent() {
+  try { return JSON.parse(localStorage.getItem('ftz_role_icon_recent') || '[]').slice(0, 12); } catch (_) { return []; }
+}
+function _bstRoleIconRemember(entry) {
+  try {
+    const list = _bstRoleIconRecent().filter(x => !(x.name === entry.name && x.group === entry.group));
+    list.unshift(entry);
+    localStorage.setItem('ftz_role_icon_recent', JSON.stringify(list.slice(0, 12)));
+  } catch (_) {}
+}
+
+function _bstRoleIconSets() {
+  const b = CU?.bastions?.[curBastion] || {};
+  const own = (b.customEmojis || []).map(e => ({ name: e.name, src: e.data || e.url || '', group: b.name || 'This bastion', own: true }));
+  const guide = FORTIZED_EMOJIS.map(n => ({ name: n, src: FORTIZED_EMOJI_MAP[n] || '', group: 'Fortized Guide', own: false }))
+    .filter(x => x.src);
+  return { own, guide };
+}
+
+function _bstRoleIconPaint() {
+  const host = document.getElementById('bstr-icp-b');
+  if (!host) return;
+  const q = _bstRoleIconQ;
+  const { own, guide } = _bstRoleIconSets();
+  const hit = x => !q || String(x.name || '').toLowerCase().includes(q);
+  const cell = x => `<button class="bstr-icp-c" type="button" title=":${escapeHTML(x.name)}:"
+      onmouseenter="_bstRoleIconHover('${escapeHTML(x.name)}','${escapeHTML(x.group)}')"
+      onclick="_bstRoleIconPick('${escapeHTML(x.name)}','${escapeHTML(x.src)}',${x.own ? 'true' : 'false'},'${escapeHTML(x.group)}')"><img src="${escapeHTML(x.src)}" alt="" loading="lazy"></button>`;
+  const section = (title, list) => list.length
+    ? `<div class="bstr-icp-sec"><div class="bstr-icp-st">${escapeHTML(title)}</div><div class="bstr-icp-g">${list.map(cell).join('')}</div></div>` : '';
+
+  const recent = q ? [] : _bstRoleIconRecent().filter(x => x && x.src);
+  const html = section('Frequently used', recent)
+    + section(own.length ? ((CU?.bastions?.[curBastion]?.name) || 'This bastion') : '', own.filter(hit))
+    + section('Fortized Guide', guide.filter(hit));
+  host.innerHTML = html || `<div class="bstr-icp-none">Nothing matches "${escapeHTML(q)}".</div>`;
+}
+function _bstRoleIconHover(name, group) {
+  const f = document.getElementById('bstr-icp-f');
+  if (f) f.innerHTML = `<span class="bstr-icp-fn">:${escapeHTML(name)}:</span><span class="bstr-icp-ft">in ${escapeHTML(group)}</span>`;
+}
+function _bstRoleIconPick(name, src, own, group) {
+  if (!_bstRoleDraft) return;
+  _bstRoleDraft.icon = own ? { kind: 'emote', name } : { kind: 'img', data: src };
+  _bstRoleIconRemember({ name, src, group, own: !!own });
+  _bstRoleIconClose();
+  _bstRoleRender();
 }
 
 function _bstRoleIconEmote(name) {
@@ -25188,12 +25385,13 @@ function openBastionChannelCard(idx) {
   if (!b || !(b.channels || [])[idx]) return;
   document.getElementById('bch-overlay')?.remove();
   const ov = document.createElement('div');
-  ov.className = 'ftz-confirm-overlay';
+  ov.className = 'modal-overlay show';
   ov.id = 'bch-overlay';
-  ov.innerHTML = `<div class="ftz-confirm-card ftz-ac-card bch-card" role="dialog" aria-label="Channel settings">
-      <button class="settings-close bmc-x" type="button" aria-label="Close" onclick="_bstChBack()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+  ov.setAttribute('role', 'dialog');
+  ov.innerHTML = `<div class="modal settings-modal bch-card" role="document" aria-label="Channel settings">
+    <button class="settings-close" type="button" aria-label="Close" data-tip="Close" onclick="_bstChBack()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
       <div class="bch-body bsettings-main" id="bch-body"></div>
     </div>`;
   ov.addEventListener('click', e => { if (e.target === ov) _bstChBack(); });
@@ -25212,23 +25410,34 @@ function _bstChRender() {
   if (!b || !d || !main) return;
   const t = _chType(d.type);
   const body = _bstChTab === 'permissions' ? _bstChPermsHTML(b, d) : _bstChOverviewHTML(b, d);
+  const card = !!document.getElementById('bch-overlay');
+  const cat = (b.categories || []).find(c => c.id === d.categoryId);
+  const ovc = Object.keys(d.overrides || {}).filter(k => ((d.overrides[k] || {}).allow || []).length || ((d.overrides[k] || {}).deny || []).length).length;
   main.innerHTML = `
-    ${document.getElementById('bch-overlay') ? '' : `<button class="bstr-back" onclick="_bstChBack()">${_BSTR_CHEVL}<span>Channels</span></button>`}
-    <div class="bstr-edithead">
-      <span class="bstr-mark bstr-mark--lg bstc-headglyph">${_chTypeGlyph(d.type, 22)}</span>
-      <div class="bs-section-title bstr-title" id="bstc-preview-name">${escapeHTML(d.name || '')}</div>
+    ${card ? '' : `<button class="bstr-back" onclick="_bstChBack()">${_BSTR_CHEVL}<span>Channels</span></button>`}
+    <div class="bch-hero">
+      <span class="bch-glyph">${_chTypeGlyph(d.type, 26)}</span>
+      <div class="bch-htx">
+        <div class="bch-eyebrow">${escapeHTML(t.label)} channel</div>
+        <div class="bch-name" id="bstc-preview-name">${escapeHTML(d.name || '')}</div>
+        <div class="bch-lead">${escapeHTML(t.desc)}</div>
+      </div>
+      <div class="bch-stats">
+        <span class="bch-stat">${_faIcon('clipboard', 11)}${cat ? escapeHTML(cat.name) : 'No category'}</span>
+        <span class="bch-stat">${_BSTC_LOCK}${ovc ? ovc + ' override' + (ovc === 1 ? '' : 's') : 'No overrides'}</span>
+        ${d.nsfw ? `<span class="bch-stat bch-stat--warn">${_faIcon('ban', 11)}Age restricted</span>` : ''}
+      </div>
     </div>
-    <div class="bs-section-desc">${escapeHTML(t.label)} channel · ${escapeHTML(t.desc)}</div>
-    <div class="bstr-tabs">
+    <div class="bstr-tabs bch-tabs">
       <button class="bstr-tab${_bstChTab === 'overview' ? ' on' : ''}" onclick="_bstChSetTab('overview')">Overview</button>
       <button class="bstr-tab${_bstChTab === 'permissions' ? ' on' : ''}" onclick="_bstChSetTab('permissions')">Permissions</button>
     </div>
-    <div class="bstr-body">${body}</div>
-    <div class="bstr-foot">
-      <button class="fs-btn bstr-del" onclick="_bstChDelete()">Delete channel</button>
+    <div class="bstr-body bch-scroll">${body}</div>
+    <div class="ftz-modal-foot bch-foot">
+      <button class="fs-btn bch-del" onclick="_bstChDelete()">${_faIcon('trash', 12)}Delete channel</button>
       <span class="bstr-spacer"></span>
       <button class="fs-btn" onclick="_bstChBack()">Cancel</button>
-      <button class="fs-btn fs-btn--primary" onclick="_bstChSave()">Save</button>
+      <button class="fs-btn fs-btn--primary" onclick="_bstChSave()">Save changes</button>
     </div>`;
 }
 
@@ -25517,13 +25726,13 @@ const _BSET_EXPR = {
     label: 'Emoji', plural: 'emojis', field: 'customEmojis', tile: 34,
     accept: 'image/png,image/gif,image/webp,image/jpeg',
     help: 'PNG, GIF or WebP, up to 512KB. 128x128 reads best. Names take letters, numbers and underscores only.',
-    use: 'Type :name: in any channel here, or pick it from the emoji panel. Reactions work too.',
+    use: 'Typed as <code>:name:</code> in any channel here, or picked from the emoji panel. They work as reactions too.',
   },
   sticker: {
     label: 'Sticker', plural: 'stickers', field: 'stickers', tile: 60,
     accept: 'image/png,image/gif,image/webp',
     help: 'PNG, GIF or WebP, up to 512KB. 320x320 reads best. Names take letters, numbers and underscores only.',
-    use: 'Send one on its own from the sticker panel. Stickers are a whole message, not part of one.',
+    use: 'Sent on their own from the sticker panel. A sticker is a whole message, and it has no colon shortcut, so it cannot be typed in chat.',
   },
 };
 let _bsetExprQ = '';
@@ -25557,8 +25766,8 @@ function _bsetExprHTML(b, kind) {
       <div class="bxp-c">${it.by ? escapeHTML(it.by) : '<span class="bmc-dim">Unknown</span>'}</div>
       <div class="bxp-c">${_bmcDate(it.at)}</div>
       <div class="bxp-c bxp-c--a">
-        <button class="fs-btn bmc-mini" type="button" onclick="_bsetExprRename('${kind}',${i})">Rename</button>
-        <button class="fs-btn stf-btn--danger bmc-mini" type="button" onclick="_bsetExprDelete('${kind}',${i})">Delete</button>
+        <button class="fs-btn bmc-mini" type="button" onclick="_bsetExprEdit('${kind}',${i})">${_faIcon('pen', 11)}Edit</button>
+        <button class="fs-btn bmc-mini bxp-del" type="button" onclick="_bsetExprDelete('${kind}',${i})">${_faIcon('trash', 11)}Delete</button>
       </div>
     </div>`).join('');
 
@@ -25566,11 +25775,11 @@ function _bsetExprHTML(b, kind) {
     <div class="bxp-top">
       <div class="bxp-meter">
         <div class="bxp-meter-h"><span>${items.length} of ${limit} slots used</span>${lvl < 3
-          ? `<button class="bxp-link" type="button" onclick="renderBSettingsMain('boost')">Boost to ${next} slots</button>`
+          ? `<button class="bxp-link" type="button" onclick="openBastionBoostsCard()">Boost to ${next} slots</button>`
           : '<span class="bxp-max">Every slot unlocked</span>'}</div>
         <div class="bxp-bar"><div class="bxp-fill" style="width:${pct}%;"></div></div>
       </div>
-      <button class="fs-btn fs-btn--primary" type="button" ${items.length >= limit ? 'disabled' : ''} onclick="_bsetExprUpload('${kind}')">Upload ${M.label.toLowerCase()}</button>
+      <button class="fs-btn fs-btn--primary bxp-upbtn" type="button" ${items.length >= limit ? 'disabled' : ''} onclick="_bsetExprUpload('${kind}')">${_faIcon('upload', 13)}Upload ${M.label.toLowerCase()}</button>
     </div>
     <div class="bxp-use">${M.use}</div>
     ${items.length ? `<div class="bxp-tools">
@@ -25595,129 +25804,385 @@ function _bsetExprSearch(v) {
   if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
 }
 
-// One upload card: drop it, browse for it, or paste it. Named before it lands.
-function _bsetExprUpload(kind) {
-  const M = _BSET_EXPR[kind];
-  document.getElementById('bxp-up')?.remove();
-  const ov = document.createElement('div');
-  ov.className = 'ftz-confirm-overlay';
-  ov.id = 'bxp-up';
-  ov.innerHTML = `<div class="ftz-confirm-card ftz-ac-card bxp-card">
-      <button class="ftz-close-btn ftz-ac-x" type="button" aria-label="Close" onclick="document.getElementById('bxp-up')?.remove()">
-        <svg viewBox="0 0 384 512" width="1em" height="1em" fill="currentColor"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg>
-      </button>
-      <div class="bxp-card-h">Upload ${escapeHTML(M.label.toLowerCase())}</div>
-      <div class="bxp-drop" id="bxp-drop" tabindex="0">
-        <div class="bxp-drop-in" id="bxp-drop-in">
-          <div class="bxp-drop-t">Drop an image, or browse your files</div>
-          <div class="bxp-drop-s">You can paste one straight from your clipboard too.</div>
-        </div>
-        <input id="bxp-file" type="file" accept="${M.accept}" hidden>
-      </div>
-      <div class="bset-fgroup">
-        <label class="bset-flabel" for="bxp-name">${escapeHTML(M.label)} name</label>
-        <input class="bset-uline" id="bxp-name" placeholder="a_good_name" maxlength="32" oninput="_bsetExprNameIn(this)">
-        <div class="bset-fhelp">${escapeHTML(M.help)}</div>
-        <div class="bxp-err" id="bxp-err"></div>
-      </div>
-      <div class="ftz-modal-foot">
-        <button class="fs-btn" type="button" onclick="document.getElementById('bxp-up')?.remove()">Cancel</button>
-        <button class="fs-btn fs-btn--primary" type="button" id="bxp-go" disabled onclick="_bsetExprCommit('${kind}')">Upload</button>
-      </div>
-    </div>`;
-  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
-  document.body.appendChild(ov);
+// ════════════════════════════════════════════════════════════════════
+// THE UPLOAD / EDIT CARD — one card, both jobs, both kinds
+// ════════════════════════════════════════════════════════════════════
+// Discord's shape: the picture on the left with a square crop frame you can
+// drag, rotate, flip, zoom and reset; the name, the destination and the two
+// live previews on the right.
+//
+// ⚠️ THE CROP FRAME IS LOCKED SQUARE. An emoji is drawn into a square box
+// everywhere it appears (inline in a message, in a reaction pill, in the
+// picker), so a free-ratio crop would only ever be squashed back later.
+//
+// ⚠️ A GIF IS NEVER RE-DRAWN. Cropping goes through a canvas, and a canvas
+// holds exactly ONE frame — running an animated emoji through it would
+// silently deliver a still image. Animated uploads keep their original bytes
+// and the crop tools are disabled with the reason on screen.
+const _BXU_FRAME = 236;                       // the on-screen crop frame, px
+const _BXU_OUT   = { emoji: 128, sticker: 320 };
+let _bxu = null;
 
-  const drop = ov.querySelector('#bxp-drop');
-  const file = ov.querySelector('#bxp-file');
-  drop.addEventListener('click', () => file.click());
-  drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); } });
-  file.addEventListener('change', () => _bsetExprTake(kind, file.files[0]));
-  ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
-  ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
-  drop.addEventListener('drop', e => _bsetExprTake(kind, e.dataTransfer?.files?.[0]));
-  const onPaste = e => {
-    if (!document.getElementById('bxp-up')) { document.removeEventListener('paste', onPaste); return; }
-    const it = [...(e.clipboardData?.items || [])].find(x => x.type.startsWith('image/'));
-    if (it) _bsetExprTake(kind, it.getAsFile());
+function _bsetExprUpload(kind) { _bxuOpen(kind, -1); }
+function _bsetExprEdit(kind, i) { _bxuOpen(kind, i); }
+
+function _bxuOpen(kind, editIdx) {
+  const b = CU.bastions?.[curBastion];
+  const M = _BSET_EXPR[kind];
+  if (!b || !M) return;
+  const existing = editIdx >= 0 ? _bsetExprItems(b, kind)[editIdx] : null;
+  if (editIdx >= 0 && !existing) return;
+
+  _bxu = {
+    kind, editIdx,
+    img: null, src: existing ? _bsetExprSrc(existing) : '',
+    animated: existing ? !!(existing.animated || /^data:image\/gif/.test(_bsetExprSrc(existing))) : false,
+    zoom: 1, rot: 0, flip: false, ox: 0, oy: 0,
+    name: existing ? (existing.name || '') : '',
+    target: b.globalId || b.name,
+    drag: null, cropped: false,
   };
-  document.addEventListener('paste', onPaste);
+
+  document.getElementById('bxu-overlay')?.remove();
+  const ov = document.createElement('div');
+  // BIG card: two columns, a crop stage and two live previews.
+  ov.className = 'modal-overlay show';
+  ov.id = 'bxu-overlay';
+  ov.setAttribute('role', 'dialog');
+  ov.innerHTML = `<div class="modal settings-modal bxu-modal" role="document" aria-label="${editIdx >= 0 ? 'Edit' : 'Upload'} ${escapeHTML(M.label.toLowerCase())}">
+    <button class="settings-close" type="button" aria-label="Close" data-tip="Close" onclick="_bxuClose()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="bxu-h">
+      <div class="bxu-ht">${editIdx >= 0 ? 'Edit' : 'Upload'} ${escapeHTML(M.label.toLowerCase())}</div>
+      <div class="bxu-hs">${editIdx >= 0
+        ? 'Change the name, or replace the picture. Everyone in the bastion sees it straight away.'
+        : escapeHTML(M.help)}</div>
+    </div>
+    <div class="bxu-scroll"><div class="bxu-body" id="bxu-body"></div></div>
+    <div class="ftz-modal-foot bxu-foot">
+      <button class="fs-btn" type="button" onclick="_bxuClose()">Cancel</button>
+      <button class="fs-btn fs-btn--primary" type="button" id="bxu-go" onclick="_bxuCommit()">${editIdx >= 0 ? 'Save changes' : 'Upload'}</button>
+    </div>
+  </div>`;
+  ov.addEventListener('click', e => { if (e.target === ov) _bxuClose(); });
+  document.body.appendChild(ov);
+  document.addEventListener('keydown', _bxuEsc);
+  document.addEventListener('paste', _bxuPaste);
+  _bxuPaint();
+  if (_bxu.src) _bxuLoadImage(_bxu.src);
 }
 
-let _bsetExprPending = null;
+function _bxuEsc(e) { if (e.key === 'Escape') _bxuClose(); }
+function _bxuPaste(e) {
+  if (!_bxu || !document.getElementById('bxu-overlay')) { document.removeEventListener('paste', _bxuPaste); return; }
+  const it = [...(e.clipboardData?.items || [])].find(x => x.type.startsWith('image/'));
+  if (it) _bxuTake(it.getAsFile());
+}
+function _bxuClose() {
+  document.getElementById('bxu-overlay')?.remove();
+  document.removeEventListener('keydown', _bxuEsc);
+  document.removeEventListener('paste', _bxuPaste);
+  _bxu = null;
+}
 
-function _bsetExprTake(kind, f) {
-  const M = _BSET_EXPR[kind];
-  const err = document.getElementById('bxp-err');
-  const set = m => { if (err) err.textContent = m; };
-  if (!f) return;
-  if (!/^image\//.test(f.type)) return set('That is not an image.');
-  if (!M.accept.split(',').includes(f.type)) return set('That format is not supported. Use ' + (kind === 'emoji' ? 'PNG, GIF, WebP or JPEG' : 'PNG, GIF or WebP') + '.');
+// Where it lands. Only bastions you may actually add to are listed, and each
+// one carries how much room it has left, so a full bastion is visible BEFORE
+// the upload rather than as an error after it.
+function _bxuTargets() {
+  const kind = _bxu.kind;
+  return (CU.bastions || []).map((b, i) => ({ b, i }))
+    .filter(({ b }) => _bstIsAdmin(b, CU?.username) || _bstCan(b, CU?.username, 'manage_emojis'))
+    .map(({ b, i }) => {
+      const used = _bsetExprItems(b, kind).length, cap = _bsetExprLimit(b);
+      return { value: b.globalId || b.name, idx: i, name: b.name, used, cap,
+               label: `${b.name} · ${Math.max(0, cap - used)} slot${cap - used === 1 ? '' : 's'} left`,
+               full: used >= cap };
+    });
+}
+function _bxuTargetB() {
+  const t = _bxuTargets().find(x => x.value === _bxu.target);
+  return t ? CU.bastions[t.idx] : (CU.bastions?.[curBastion] || null);
+}
+function _bxuSetTarget(v) { if (_bxu) { _bxu.target = v; _bxuPaint(); } }
+
+function _bxuPaint() {
+  const host = document.getElementById('bxu-body');
+  if (!host || !_bxu) return;
+  const kind = _bxu.kind, M = _BSET_EXPR[kind];
+  const targets = _bxuTargets();
+  const has = !!_bxu.src;
+
+  const stage = has ? `
+    <div class="bxu-stage${_bxu.animated ? ' is-locked' : ''}">
+      <canvas id="bxu-cv" class="bxu-cv" width="${_BXU_FRAME}" height="${_BXU_FRAME}"></canvas>
+      <div class="bxu-grid" aria-hidden="true"></div>
+    </div>
+    <div class="bxu-tools">
+      ${_bxu.animated ? '' : `
+      <button class="bxu-tool" type="button" data-tip="Zoom out" onclick="_bxuZoom(-1)">${_faIcon('minus', 13)}</button>
+      <input class="bxu-range" id="bxu-zoom" type="range" min="100" max="320" value="${Math.round(_bxu.zoom * 100)}" oninput="_bxuZoomSet(this.value)">
+      <button class="bxu-tool" type="button" data-tip="Zoom in" onclick="_bxuZoom(1)">${_faIcon('plus', 13)}</button>
+      <span class="bxu-tsep"></span>
+      <button class="bxu-tool" type="button" data-tip="Rotate" onclick="_bxuRotate()">${_faIcon('rotate-right', 13)}</button>
+      <button class="bxu-tool${_bxu.flip ? ' is-on' : ''}" type="button" data-tip="Flip" onclick="_bxuFlip()">${_faIcon('flip', 13)}</button>
+      <button class="bxu-tool" type="button" data-tip="Reset modifications" onclick="_bxuReset()">${_faIcon('reset', 13)}</button>`}
+    </div>
+    ${_bxu.animated
+      ? `<div class="bxu-hint">${_faIcon('circle-info', 12)}<span>This one is animated, so it is kept exactly as it is. Cropping goes through a single frame and would leave you with a still picture.</span></div>`
+      : `<div class="bxu-hint">${_faIcon('crop', 12)}<span>Drag the picture to move it. The frame is locked square, which is how ${escapeHTML(M.plural)} are drawn everywhere.</span></div>`}
+    <button class="fs-btn bxu-replace" type="button" onclick="document.getElementById('bxu-file')?.click()">${_faIcon('image', 12)}Pick a different picture</button>`
+  : `
+    <div class="bxu-drop" id="bxu-drop" tabindex="0" role="button">
+      <span class="bxu-dropi">${_faIcon('upload', 22)}</span>
+      <div class="bxu-dropt">Drop a picture, or browse your files</div>
+      <div class="bxu-drops">You can paste one straight from your clipboard too.</div>
+    </div>`;
+
+  const nameShown = _bxu.name || (kind === 'emoji' ? 'name' : 'name');
+  const previews = `
+    <div class="bxu-pv">
+      <div class="bxu-pvl">${kind === 'emoji' ? 'Emoji preview' : 'Sticker preview'}</div>
+      <div class="bxu-msg">
+        <span class="bxu-msgav">${(CU?.displayName || CU?.username || 'Y').charAt(0).toUpperCase()}</span>
+        <div class="bxu-msgb">
+          <div class="bxu-msgn">${escapeHTML(CU?.displayName || CU?.username || 'You')}</div>
+          ${kind === 'emoji'
+            ? `<div class="bxu-msgt">Look at this ${_bxuImgTag('bxu-pv-a', 22)}</div>`
+            : `<div class="bxu-msgt">${_bxuImgTag('bxu-pv-a', 96)}</div>`}
+        </div>
+      </div>
+    </div>
+    ${kind === 'emoji' ? `<div class="bxu-pv">
+      <div class="bxu-pvl">Reaction preview</div>
+      <div class="bxu-reacts">
+        <span class="bxu-react is-mine">${_bxuImgTag('bxu-pv-b', 16)}<b>2</b></span>
+        <span class="bxu-react">${_bxuImgTag('bxu-pv-c', 16)}<b>1</b></span>
+      </div>
+    </div>` : ''}
+    <div class="bxu-pv">
+      <div class="bxu-pvl">How it is used</div>
+      <div class="bxu-usenote">${kind === 'emoji'
+        ? `Type <code>:${escapeHTML(nameShown)}:</code> in any channel here, or pick it from the emoji panel. It works as a reaction too.`
+        : 'Send it on its own from the sticker panel. A sticker is a whole message, and it has no colon shortcut, so it cannot be typed in chat.'}</div>
+    </div>`;
+
+  host.innerHTML = `
+    <input id="bxu-file" type="file" accept="${M.accept}" hidden>
+    <div class="bxu-cols">
+      <div class="bxu-left">${stage}</div>
+      <div class="bxu-right">
+        <div class="bset-fgroup">
+          <label class="bset-flabel" for="bxu-name">${escapeHTML(M.label)} name</label>
+          <input class="settings-input" id="bxu-name" placeholder="a_good_name" maxlength="32" value="${escapeHTML(_bxu.name)}" oninput="_bxuNameIn(this)">
+          <div class="bset-fhelp">Letters, numbers and underscores. It is taken from the file name until you change it.</div>
+        </div>
+        ${_bxu.editIdx < 0 && targets.length ? `<div class="bset-fgroup">
+          <label class="bset-flabel">Upload to</label>
+          ${_ftzSelectHTML('bxu-target', _bxu.target, targets.map(t => ({ value: t.value, label: t.label })), '_bxuSetTarget(__VALUE__)')}
+        </div>` : ''}
+        <div class="bxu-err" id="bxu-err"></div>
+        ${previews}
+      </div>
+    </div>`;
+
+  const file = host.querySelector('#bxu-file');
+  file.addEventListener('change', () => _bxuTake(file.files[0]));
+  const drop = host.querySelector('#bxu-drop');
+  if (drop) {
+    drop.addEventListener('click', () => file.click());
+    drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); } });
+    ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+    ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+    drop.addEventListener('drop', e => _bxuTake(e.dataTransfer?.files?.[0]));
+  }
+  const cv = host.querySelector('#bxu-cv');
+  if (cv && !_bxu.animated) {
+    cv.addEventListener('pointerdown', _bxuDown);
+    cv.addEventListener('wheel', e => { e.preventDefault(); _bxuZoom(e.deltaY < 0 ? 1 : -1); }, { passive: false });
+  }
+  _bxuDraw();
+  _bxuSync();
+}
+
+function _bxuImgTag(id, size) {
+  const src = _bxu && _bxu.src ? escapeHTML(_bxu.src) : '';
+  return `<img id="${id}" class="bxu-pvimg" style="--s:${size}px" alt="" ${src ? `src="${src}"` : 'hidden'}>`;
+}
+
+function _bxuTake(f) {
+  if (!f || !_bxu) return;
+  const M = _BSET_EXPR[_bxu.kind];
+  const set = m => { const e = document.getElementById('bxu-err'); if (e) e.textContent = m || ''; };
+  if (!/^image\//.test(f.type)) return set('That is not a picture.');
+  if (!M.accept.split(',').includes(f.type)) return set('That format is not supported. Use ' + (_bxu.kind === 'emoji' ? 'PNG, GIF, WebP or JPEG' : 'PNG, GIF or WebP') + '.');
   if (f.size > 512 * 1024) return set('That file is ' + Math.round(f.size / 1024) + 'KB. The limit is 512KB.');
   set('');
   const r = new FileReader();
   r.onload = ev => {
-    _bsetExprPending = { data: ev.target.result, animated: f.type === 'image/gif' };
-    const inn = document.getElementById('bxp-drop-in');
-    if (inn) inn.innerHTML = `<img class="bxp-prev" src="${_bsetExprPending.data}" alt=""><div class="bxp-drop-s">Click to pick a different one.</div>`;
-    const nm = document.getElementById('bxp-name');
-    if (nm && !nm.value) { nm.value = _bsetExprClean((f.name || '').replace(/\.[^.]+$/, '')); _bsetExprNameIn(nm); }
-    _bsetExprSync();
+    _bxu.src = ev.target.result;
+    _bxu.animated = f.type === 'image/gif';
+    _bxu.zoom = 1; _bxu.rot = 0; _bxu.flip = false; _bxu.ox = 0; _bxu.oy = 0; _bxu.cropped = false;
+    // The name comes from the file name unless you have already typed one.
+    if (!_bxu.name) _bxu.name = _bsetExprClean((f.name || '').replace(/\.[^.]+$/, ''));
+    _bxuPaint();
+    _bxuLoadImage(_bxu.src);
   };
   r.readAsDataURL(f);
 }
 
-function _bsetExprClean(v) { return String(v || '').trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '').slice(0, 32); }
-function _bsetExprNameIn(el) { const c = el.selectionStart, was = el.value; el.value = _bsetExprClean(was); el.setSelectionRange(Math.max(0, c - (was.length - el.value.length)), Math.max(0, c - (was.length - el.value.length))); _bsetExprSync(); }
-function _bsetExprSync() {
-  const go = document.getElementById('bxp-go');
-  const nm = document.getElementById('bxp-name');
-  if (go) go.disabled = !(_bsetExprPending && nm && nm.value.length >= 2);
+function _bxuLoadImage(src) {
+  const im = new Image();
+  im.onload = () => { if (_bxu) { _bxu.img = im; _bxuClamp(); _bxuDraw(); } };
+  im.src = src;
 }
 
-async function _bsetExprCommit(kind) {
+// Cover-the-frame scale. Rotating by a quarter turn swaps the footprint but
+// not which side is the short one, so the same base scale holds for every
+// rotation and the picture can never be dragged off the frame.
+function _bxuBase() {
+  const im = _bxu?.img; if (!im) return 1;
+  return _BXU_FRAME / Math.min(im.naturalWidth, im.naturalHeight);
+}
+function _bxuFootprint() {
+  const im = _bxu.img, s = _bxuBase() * _bxu.zoom;
+  const q = ((_bxu.rot % 360) + 360) % 360;
+  const w = im.naturalWidth * s, h = im.naturalHeight * s;
+  return (q === 90 || q === 270) ? { w: h, h: w } : { w, h };
+}
+function _bxuClamp() {
+  if (!_bxu?.img) return;
+  const f = _bxuFootprint();
+  const mx = Math.max(0, (f.w - _BXU_FRAME) / 2), my = Math.max(0, (f.h - _BXU_FRAME) / 2);
+  _bxu.ox = Math.max(-mx, Math.min(mx, _bxu.ox));
+  _bxu.oy = Math.max(-my, Math.min(my, _bxu.oy));
+}
+function _bxuPaintTo(ctx, size) {
+  const im = _bxu.img; if (!im) return;
+  const k = size / _BXU_FRAME;
+  const s = _bxuBase() * _bxu.zoom * k;
+  ctx.clearRect(0, 0, size, size);
+  ctx.save();
+  ctx.translate(size / 2 + _bxu.ox * k, size / 2 + _bxu.oy * k);
+  ctx.rotate(_bxu.rot * Math.PI / 180);
+  ctx.scale(_bxu.flip ? -1 : 1, 1);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(im, -im.naturalWidth * s / 2, -im.naturalHeight * s / 2, im.naturalWidth * s, im.naturalHeight * s);
+  ctx.restore();
+}
+function _bxuDraw() {
+  const cv = document.getElementById('bxu-cv');
+  if (!cv || !_bxu?.img) return;
+  _bxuPaintTo(cv.getContext('2d'), _BXU_FRAME);
+  _bxuPreview();
+}
+// The previews show the CROPPED picture, not the file you picked, so what you
+// approve is what lands in the bastion.
+function _bxuPreview() {
+  const src = _bxu.animated || !_bxu.img ? _bxu.src : _bxuOut();
+  ['bxu-pv-a', 'bxu-pv-b', 'bxu-pv-c'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && src) { el.src = src; el.hidden = false; }
+  });
+}
+function _bxuOut() {
+  const size = _BXU_OUT[_bxu.kind] || 128;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  _bxuPaintTo(c.getContext('2d'), size);
+  return c.toDataURL('image/png');
+}
+
+function _bxuDown(e) {
+  if (!_bxu?.img) return;
+  e.preventDefault();
+  const cv = e.currentTarget;
+  cv.setPointerCapture(e.pointerId);
+  _bxu.drag = { x: e.clientX, y: e.clientY, ox: _bxu.ox, oy: _bxu.oy };
+  const move = ev => {
+    if (!_bxu?.drag) return;
+    _bxu.ox = _bxu.drag.ox + (ev.clientX - _bxu.drag.x);
+    _bxu.oy = _bxu.drag.oy + (ev.clientY - _bxu.drag.y);
+    _bxuClamp(); _bxuDraw();
+  };
+  const up = () => {
+    if (_bxu) _bxu.drag = null;
+    cv.removeEventListener('pointermove', move);
+    cv.removeEventListener('pointerup', up);
+    cv.removeEventListener('pointercancel', up);
+  };
+  cv.addEventListener('pointermove', move);
+  cv.addEventListener('pointerup', up);
+  cv.addEventListener('pointercancel', up);
+}
+function _bxuZoom(dir) { _bxuZoomSet(Math.round(_bxu.zoom * 100) + dir * 10); }
+function _bxuZoomSet(v) {
+  if (!_bxu) return;
+  _bxu.zoom = Math.max(1, Math.min(3.2, (parseInt(v, 10) || 100) / 100));
+  const r = document.getElementById('bxu-zoom');
+  if (r) r.value = Math.round(_bxu.zoom * 100);
+  _bxuClamp(); _bxuDraw();
+}
+function _bxuRotate() { if (!_bxu) return; _bxu.rot = (_bxu.rot + 90) % 360; _bxuClamp(); _bxuDraw(); }
+function _bxuFlip()   { if (!_bxu) return; _bxu.flip = !_bxu.flip; _bxuDraw(); _bxuPaint(); }
+function _bxuReset()  { if (!_bxu) return; _bxu.zoom = 1; _bxu.rot = 0; _bxu.flip = false; _bxu.ox = 0; _bxu.oy = 0; _bxuDraw(); _bxuPaint(); }
+
+function _bxuNameIn(el) {
+  const c = el.selectionStart, was = el.value;
+  el.value = _bsetExprClean(was);
+  const back = Math.max(0, c - (was.length - el.value.length));
+  el.setSelectionRange(back, back);
+  _bxu.name = el.value;
+  const use = document.querySelector('.bxu-usenote code');
+  if (use) use.textContent = ':' + (el.value || 'name') + ':';
+  _bxuSync();
+}
+function _bxuSync() {
+  const go = document.getElementById('bxu-go');
+  if (go) go.disabled = !(_bxu && _bxu.src && (_bxu.name || '').length >= 2);
+}
+
+async function _bxuCommit() {
+  if (!_bxu) return;
+  const { kind, editIdx } = _bxu;
   const M = _BSET_EXPR[kind];
-  const b = CU.bastions?.[curBastion]; if (!b || !_bsetExprPending) return;
-  const name = _bsetExprClean(document.getElementById('bxp-name')?.value);
-  const err = document.getElementById('bxp-err');
-  if (name.length < 2) { if (err) err.textContent = 'Give it a name of at least two characters.'; return; }
-  const items = _bsetExprItems(b, kind);
-  if (items.some(x => String(x.name || '').toLowerCase() === name)) { if (err) err.textContent = 'You already have one called that.'; return; }
-  if (items.length >= _bsetExprLimit(b)) { if (err) err.textContent = 'Every slot is used. Boost the bastion for more.'; return; }
+  const err = document.getElementById('bxu-err');
+  const set = m => { if (err) err.textContent = m || ''; };
+  const name = _bsetExprClean(_bxu.name);
+  if (name.length < 2) return set('Give it a name of at least two characters.');
+  if (!_bxu.src) return set('Pick a picture first.');
+
+  const b = editIdx >= 0 ? (CU.bastions?.[curBastion]) : _bxuTargetB();
+  if (!b) return set('That bastion is no longer available.');
+  const idx = CU.bastions.indexOf(b);
+  const items = [..._bsetExprItems(b, kind)];
+  if (items.some((x, xi) => xi !== editIdx && String(x.name || '').toLowerCase() === name)) return set('You already have one called that.');
+  if (editIdx < 0 && items.length >= _bsetExprLimit(b)) return set('Every slot there is used. Boost that bastion for more room.');
+
+  const data = (_bxu.animated || !_bxu.img) ? _bxu.src : _bxuOut();
   const entry = kind === 'sticker'
-    ? { name, url: _bsetExprPending.data, data: _bsetExprPending.data, type: 'sticker', by: CU.username, at: new Date().toISOString() }
-    : { name, data: _bsetExprPending.data, type: 'img', animated: _bsetExprPending.animated, by: CU.username, at: new Date().toISOString() };
-  b[M.field] = [...items, entry];
-  _bsetExprPending = null;
-  document.getElementById('bxp-up')?.remove();
+    ? { name, url: data, data, type: 'sticker', by: CU.username, at: new Date().toISOString() }
+    : { name, data, type: 'img', animated: _bxu.animated, by: CU.username, at: new Date().toISOString() };
+  if (editIdx >= 0) entry.at = items[editIdx]?.at || entry.at, entry.by = items[editIdx]?.by || entry.by;
+
+  if (editIdx >= 0) items[editIdx] = entry; else items.push(entry);
+  b[M.field] = items;
+  _bstAudit(b, kind === 'sticker' ? (editIdx >= 0 ? 'sticker_add' : 'sticker_add') : 'emoji_add', name);
+  _bxuClose();
   await saveUser();
-  _syncBastionToGlobal(curBastion);
+  try { _syncBastionToGlobal(idx >= 0 ? idx : curBastion); } catch (_) {}
   renderBSettingsMain(kind === 'sticker' ? 'stickers' : 'emojis');
-  toast(kind === 'emoji' ? ':' + name + ': added' : name + ' added', 'success');
+  toast(editIdx >= 0 ? 'Saved' : (kind === 'emoji' ? ':' + name + ': added' : name + ' added'), 'success');
 }
 
-function _bsetExprRename(kind, i) {
-  const b = CU.bastions?.[curBastion]; if (!b) return;
-  const items = _bsetExprItems(b, kind);
-  const it = items[i]; if (!it) return;
-  showCustomInput('Rename', 'Letters, numbers and underscores.', async (v) => {
-    const name = _bsetExprClean(v);
-    if (name.length < 2) { toast('That name is too short', 'error'); return; }
-    if (items.some((x, xi) => xi !== i && String(x.name || '').toLowerCase() === name)) { toast('You already have one called that', 'error'); return; }
-    it.name = name;
-    b[_BSET_EXPR[kind].field] = items;
-    await saveUser();
-    _syncBastionToGlobal(curBastion);
-    renderBSettingsMain(kind === 'sticker' ? 'stickers' : 'emojis');
-    toast('Renamed', 'success');
-  }, it.name);
-}
+function _bsetExprClean(v) { return String(v || '').trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '').slice(0, 32); }
 
 function _bsetExprDelete(kind, i) {
   const b = CU.bastions?.[curBastion]; if (!b) return;
   const items = _bsetExprItems(b, kind);
   const it = items[i]; if (!it) return;
   showCustomConfirm(`Delete ${kind === 'emoji' ? ':' + (it.name || '') + ':' : (it.name || 'this sticker')}? Anyone who used it will see a broken mark.`, async () => {
+    _bstAudit(b, kind === 'sticker' ? 'sticker_delete' : 'emoji_delete', it.name || '');
     items.splice(i, 1);
     b[_BSET_EXPR[kind].field] = items;
     await saveUser();
@@ -25875,8 +26340,8 @@ const BLOCK_ACTIONS = [
   {id:'assign_role', label:'Assign Role', icon:ftzIcon('shield','14'), color:'#60a5fa'},
   {id:'remove_role', label:'Remove Role', icon:ftzIcon('lock','14'), color:'#f59e0b'},
   {id:'add_onyx', label:'Add Onyx', icon:ftzIcon('gem','14'), color:'#fbbf24'},
-  {id:'delete_message', label:'Delete Message', icon:ftzIcon('trash','14'), color:'#ff0033'},
-  {id:'timeout_user', label:'Timeout User', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', color:'#ff0033'},
+  {id:'delete_message', label:'Delete Message', icon:ftzIcon('trash','14'), color:'#fb0335'},
+  {id:'timeout_user', label:'Timeout User', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', color:'#fb0335'},
   {id:'trigger_quest', label:'Trigger Quest', icon:ftzIcon('sword','14'), color:'#a78bfa'},
 ];
 
@@ -27706,6 +28171,24 @@ const _FA_ICON_PATHS = {
   'heart':           { vb:'0 0 512 512', d:'M225.8 468.2l-2.5-2.3L48.1 303c-33.3-30.9-48.1-75.1-48.1-118 0-77.4 62.6-140 140-140 39.6 0 76.5 16.6 102.5 44.3l13.6 14.4 13.6-14.4c26-27.7 62.9-44.3 102.5-44.3 77.4 0 140 62.6 140 140 0 42.9-14.8 87.1-48.1 118l-175.2 162.9-2.5 2.3c-9.8 9.1-24.8 9.1-34.6 0z' },
   'medal':           { vb:'0 0 512 512', d:'M4.1 38.2C1.4 34.2 0 29.4 0 24.6 0 11 11 0 24.6 0L133 0c14 0 27.1 7 34.8 18.6l72 108-96.6 96.6-139-185zM443.5 0C457 0 468 11 468 24.6c0 4.8-1.4 9.6-4.1 13.6l-139 185-96.6-96.6 72-108C308 7 321.1 0 335.1 0L443.5 0zM256 224a144 144 0 1 1 0 288 144 144 0 1 1 0-288zm0 80c-7.6 0-14.5 4.3-17.9 11.2l-13.9 28.1-31 4.5c-7.6 1.1-13.9 6.4-16.2 13.7s-.4 15.3 5.1 20.7l22.4 21.9-5.3 30.9c-1.3 7.5 1.8 15.1 8 19.6s14.4 5 21.2 1.5l27.7-14.6 27.7 14.6c6.8 3.6 15 3 21.2-1.5s9.3-12.1 8-19.6l-5.3-30.9 22.4-21.9c5.5-5.4 7.4-13.4 5.1-20.7s-8.6-12.6-16.2-13.7l-31-4.5-13.9-28.1c-3.4-6.9-10.4-11.2-17.9-11.2z' },
   'trash':           { vb:'0 0 448 512', d:'M164.2 39.5L148.9 64 299.1 64 283.8 39.5C281.6 36 277.8 33.9 273.7 33.9l-99.4 0c-4.1 0-7.9 2.1-10.1 5.6zM313 5.5L349.6 64 384 64l64 0c8.8 0 16 7.2 16 16s-7.2 16-16 16L16 96C7.2 96 0 88.8 0 80s7.2-16 16-16l64 0 34.4 0L151 5.5C158.4-6.4 171.4-13.7 185.4-13.7l77.2 0c14 0 27 7.3 34.4 19.2zM32 128l384 0 0 320c0 35.3-28.7 64-64 64l-256 0c-35.3 0-64-28.7-64-64l0-320zm112 64c-8.8 0-16 7.2-16 16l0 208c0 8.8 7.2 16 16 16s16-7.2 16-16l0-208c0-8.8-7.2-16-16-16zm80 0c-8.8 0-16 7.2-16 16l0 208c0 8.8 7.2 16 16 16s16-7.2 16-16l0-208c0-8.8-7.2-16-16-16zm80 0c-8.8 0-16 7.2-16 16l0 208c0 8.8 7.2 16 16 16s16-7.2 16-16l0-208c0-8.8-7.2-16-16-16z' },
+  'chevron-up':      { vb:'0 0 512 512', d:'M233.4 105.4c12.5-12.5 32.8-12.5 45.3 0l192 192c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L256 173.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l192-192z' },
+  'chevron-down':    { vb:'0 0 512 512', d:'M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z' },
+  'community':       { vb:'0 0 512 512', d:'M234.2 8.6c12.3-11.4 31.3-11.4 43.5 0L368 92.3 368 80c0-17.7 14.3-32 32-32l32 0c17.7 0 32 14.3 32 32l0 101.5 37.8 35.1c9.6 9 12.8 22.9 8 35.1S493.2 272 480 272l-16 0 0 176c0 35.3-28.7 64-64 64l-288 0c-35.3 0-64-28.7-64-64l0-176-16 0c-13.2 0-25-8.1-29.8-20.3s-1.6-26.2 8-35.1l224-208zM240 320c-26.5 0-48 21.5-48 48l0 96 128 0 0-96c0-26.5-21.5-48-48-48l-32 0z' },
+  'upload':          { vb:'0 0 448 512', d:'M246.6 9.4c-12.5-12.5-32.8-12.5-45.3 0l-128 128c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 109.3 192 320c0 17.7 14.3 32 32 32s32-14.3 32-32l0-210.7 73.4 73.4c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-128-128zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64c0 17.7-14.3 32-32 32L96 448c-17.7 0-32-14.3-32-32l0-64z' },
+  'pen':             { vb:'0 0 512 512', d:'M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z' },
+  'rotate-right':    { vb:'0 0 512 512', d:'M463.5 224l8.5 0c13.3 0 24-10.7 24-24l0-128c0-9.7-5.8-18.5-14.8-22.2s-19.3-1.7-26.2 5.2L413.4 96.6c-87.6-86.5-228.7-86.2-315.8 1-87.5 87.5-87.5 229.3 0 316.8s229.3 87.5 316.8 0c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0c-62.5 62.5-163.8 62.5-226.3 0s-62.5-163.8 0-226.3c62.2-62.2 162.7-62.5 225.3-1l-41.1 41.1c-6.9 6.9-8.9 17.2-5.2 26.2s12.5 14.8 22.2 14.8l119.5 0z' },
+  'flip':            { vb:'0 0 512 512', d:'M406.6 374.6l96-96c12.5-12.5 12.5-32.8 0-45.3l-96-96c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224l-293.5 0 41.4-41.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-96 96c-12.5 12.5-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 288l293.5 0-41.4 41.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0z' },
+  'plus':            { vb:'0 0 448 512', d:'M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z' },
+  'minus':           { vb:'0 0 448 512', d:'M432 256c0 17.7-14.3 32-32 32L48 288c-17.7 0-32-14.3-32-32s14.3-32 32-32l352 0c17.7 0 32 14.3 32 32z' },
+  'reset':           { vb:'0 0 512 512', d:'M125.7 160l50.3 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L48 224c-17.7 0-32-14.3-32-32L16 64c0-17.7 14.3-32 32-32s32 14.3 32 32l0 51.2L97.6 97.6c87.5-87.5 229.3-87.5 316.8 0s87.5 229.3 0 316.8-229.3 87.5-316.8 0c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0c62.5 62.5 163.8 62.5 226.3 0s62.5-163.8 0-226.3-163.8-62.5-226.3 0L125.7 160z' },
+  'image':           { vb:'0 0 512 512', d:'M0 96C0 60.7 28.7 32 64 32l384 0c35.3 0 64 28.7 64 64l0 320c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 96zM323.8 202.5c-4.5-6.6-11.9-10.5-19.8-10.5s-15.4 3.9-19.8 10.5l-87 127.6L170.7 297c-4.6-5.7-11.5-9-18.7-9s-14.2 3.3-18.7 9l-64 80c-5.8 7.2-6.9 17.1-2.9 25.4s12.4 13.6 21.6 13.6l96 0 32 0 208 0c8.9 0 17.1-4.9 21.2-12.8s3.6-17.4-1.4-24.7l-120-176zM112 192a48 48 0 1 0 0-96 48 48 0 1 0 0 96z' },
+  'crop':            { vb:'0 0 512 512', d:'M448 384l32 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-32 0 0-256c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 32-160 0 0 64 160 0 0 224c0 17.7 14.3 32 32 32l32 0zM160 32c0-17.7-14.3-32-32-32S96 14.3 96 32l0 96-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 160c0 35.3 28.7 64 64 64l160 0 0-64-160 0 0-160 0-32 0-128z' },
+  'check':           { vb:'0 0 448 512', d:'M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z' },
+  'xmark':           { vb:'0 0 384 512', d:'M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z' },
+  'crown':           { vb:'0 0 576 512', d:'M309 106c11.4-7 19-19.7 19-34 0-22.1-17.9-40-40-40s-40 17.9-40 40c0 14.4 7.6 27 19 34L209.7 220.6c-9.1 18.2-32.7 23.4-48.6 10.7L72 160c5-6.7 8-15 8-24 0-22.1-17.9-40-40-40S0 113.9 0 136s17.9 40 40 40c.2 0 .5 0 .7 0L86.4 427.4c5.5 30.4 32 52.6 63 52.6l277.2 0c30.9 0 57.4-22.1 63-52.6L535.3 176c.2 0 .5 0 .7 0 22.1 0 40-17.9 40-40s-17.9-40-40-40-40 17.9-40 40c0 9 3 17.3 8 24l-89.1 71.3c-15.9 12.7-39.5 7.5-48.6-10.7L309 106z' },
+  'eye':             { vb:'0 0 576 512', d:'M288 80c-65.2 0-118.8 29.6-159.9 67.7C89.6 183.5 63 226 49.4 256c13.6 30 40.2 72.5 78.6 108.3C169.2 402.4 222.8 432 288 432s118.8-29.6 159.9-67.7C486.4 328.5 513 286 526.6 256c-13.6-30-40.2-72.5-78.6-108.3C406.8 109.6 353.2 80 288 80zM95.4 112.6C142.5 68.8 207.2 32 288 32s145.5 36.8 192.6 80.6c46.8 43.5 78.1 95.4 93 131.1 3.3 7.9 3.3 16.7 0 24.6-14.9 35.7-46.2 87.7-93 131.1C433.5 443.2 368.8 480 288 480s-145.5-36.8-192.6-80.6C48.6 355.9 17.3 304 2.5 268.3c-3.3-7.9-3.3-16.7 0-24.6C17.3 208 48.6 156.1 95.4 112.6zM288 336c44.2 0 80-35.8 80-80s-35.8-80-80-80c-.7 0-1.3 0-2 0 1.3 5.1 2 10.5 2 16 0 35.3-28.7 64-64 64-5.5 0-10.9-.7-16-2 0 .7 0 1.3 0 2 0 44.2 35.8 80 80 80zm0-208a128 128 0 1 1 0 256 128 128 0 1 1 0-256z' },
+  'calendar':        { vb:'0 0 448 512', d:'M128 0c17.7 0 32 14.3 32 32l0 32 128 0 0-32c0-17.7 14.3-32 32-32s32 14.3 32 32l0 32 48 0c26.5 0 48 21.5 48 48l0 48L0 160l0-48C0 85.5 21.5 64 48 64l48 0 0-32c0-17.7 14.3-32 32-32zM0 192l448 0 0 272c0 26.5-21.5 48-48 48L48 512c-26.5 0-48-21.5-48-48L0 192zm64 80l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm128 0l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm128 0l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zM64 400l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm128 0l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm128 0l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16z' },
+  'lock':            { vb:'0 0 448 512', d:'M144 144l0 48 160 0 0-48c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192l0-48C80 64.5 144.5 0 224 0s144 64.5 144 144l0 48 16 0c35.3 0 64 28.7 64 64l0 192c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 256c0-35.3 28.7-64 64-64l16 0z' },
   'bolt':            { vb:'0 0 448 512', d:'M349.4 44.6c5.6-13.1 1.3-28.3-10.3-36.6s-27.5-7.4-38.1 2L12.5 267.4C4.6 274.5 0 284.6 0 295.3 0 316.6 17.4 334 38.7 334l111.3 0-49.4 133.4c-5.6 13.1-1.3 28.3 10.3 36.6s27.5 7.4 38.1-2L438.5 244.6c7.9-7.1 12.5-17.2 12.5-27.9 0-21.3-17.4-38.7-38.7-38.7L301 178l48.4-133.4z' },
 };
 function _faIcon(name, size) {
@@ -27951,7 +28434,7 @@ function buildProfileNav(scroll, opts) {
       <div class="profile-nav-sep"></div>
     `).join('')}
     <div style="flex:1;"></div>
-    <div class="profile-nav-item" onclick="doLogout()" style="color:rgba(255, 0, 51,.6);">
+    <div class="profile-nav-item" onclick="doLogout()" style="color:rgba(251,3,53,.6);">
       <span class="pni-icon">${ICN['logout']}</span>
       <span>Log Out</span>
     </div>`;
@@ -28693,7 +29176,7 @@ function _buildProfileView(tab) {
       <div style="padding:20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:16px;">
         <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:8px;">Local Storage</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:16px;">Clear locally cached data. This will not affect your account data stored on our servers.</div>
-        <button style="padding:8px 16px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.15);border-radius:10px;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;" onclick="showCustomConfirm('Clear all local cache? You will need to re-login.',()=>{localStorage.clear();location.reload();})">Clear Local Cache</button>
+        <button style="padding:8px 16px;background:rgba(251,3,53,.06);border:1px solid rgba(251,3,53,.15);border-radius:10px;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;" onclick="showCustomConfirm('Clear all local cache? You will need to re-login.',()=>{localStorage.clear();location.reload();})">Clear Local Cache</button>
       </div>
     </div>`;
   }
@@ -29647,7 +30130,7 @@ function _showAvatarPickerModal() {
       ${recentAvatars.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;">
         ${recentAvatars.map(url => `<div class="ftz-recent-av" style="position:relative;width:48px;height:48px;" data-av-url="${escapeHTML(url)}">
           <div onclick="_pickRecentAvatar('${escapeHTML(url)}')" style="width:48px;height:48px;border-radius:50%;overflow:hidden;cursor:pointer;border:2px solid rgba(255,255,255,.08);transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'"><img src="${escapeHTML(url)}" style="width:100%;height:100%;object-fit:cover;" draggable="false"></div>
-          <button class="ftz-recent-av-rm" onclick="event.stopPropagation();_removeRecentAvatar('${escapeHTML(url)}')" data-tip="Remove" title="Remove" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#ff0033;border:2px solid var(--panel,#12141b);color:#fff;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.35);">
+          <button class="ftz-recent-av-rm" onclick="event.stopPropagation();_removeRecentAvatar('${escapeHTML(url)}')" data-tip="Remove" title="Remove" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#fb0335;border:2px solid var(--panel,#12141b);color:#fff;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.35);">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
           </button>
         </div>`).join('')}
@@ -29708,12 +30191,12 @@ function _openAvatarGifPicker() {
     // query that returned generic medieval results.
     {id:'fortized',label:'Fortized',emoji:'🏰',color:'#fff93e'},
     {id:'excited',label:'Excited',emoji:'🎉',color:'#c084fc'},
-    {id:'angry',label:'Angry',emoji:'😡',color:'#ff0033'},
+    {id:'angry',label:'Angry',emoji:'😡',color:'#fb0335'},
     {id:'dance',label:'Dance',emoji:'💃',color:'#f472b6'},
     {id:'thumbs up',label:'Approve',emoji:'👍',color:'#34d399'},
     {id:'hello',label:'Hello',emoji:'👋',color:'#a3e635'},
     {id:'yes',label:'Yes',emoji:'✅',color:'#22c55e'},
-    {id:'no',label:'No',emoji:'❌',color:'#ff0033'},
+    {id:'no',label:'No',emoji:'❌',color:'#fb0335'},
     {id:'please',label:'Please',emoji:'🥺',color:'#c4b5fd'},
     {id:'hug',label:'Hugs',emoji:'🤗',color:'#fda4af'},
     {id:'thank you',label:'Thanks',emoji:'🙏',color:'#fde68a'},
@@ -30117,7 +30600,7 @@ function _showBannerPickerMenu(event) {
       <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:8px;">Current</div>
       <div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.06);aspect-ratio:16/5;background:#0e1117;">
         <img src="${escapeHTML(CU.banner)}" style="width:100%;height:100%;object-fit:cover;display:block;">
-        <button onclick="this.closest('.ftz-confirm-overlay').remove();CU.banner='';saveUser(true,['banner']);markSettingsDirty();buildProfileView('myprofile');toast('Banner removed','success')" style="position:absolute;top:8px;right:8px;background:rgba(255, 0, 51,.18);border:1px solid rgba(255, 0, 51,.35);color:#ff0033;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">Remove</button>
+        <button onclick="this.closest('.ftz-confirm-overlay').remove();CU.banner='';saveUser(true,['banner']);markSettingsDirty();buildProfileView('myprofile');toast('Banner removed','success')" style="position:absolute;top:8px;right:8px;background:rgba(251,3,53,.18);border:1px solid rgba(251,3,53,.35);color:#fb0335;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">Remove</button>
       </div>
     </div>` : ''}
     <div style="padding:12px 24px 16px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);font-size:10.5px;color:rgba(255,255,255,.28);">Banners are ${FTZ_BANNER_W} x ${FTZ_BANNER_H}. Upload up to 8 MB or pick an animated GIF.</div>
@@ -30376,7 +30859,7 @@ async function buildNotifList() {
     friend_request:'#60a5fa', friend_accept:'#3ecf6e', dm:'#a78bfa',
     mention:'#ffd93e', bastion:'var(--accent)', call:'#3ecf6e', support_ticket:'#38bdf8',
     trade:'var(--accent)', trade_offer:'var(--accent)', trade_accepted:'#3ecf6e',
-    trade_declined:'#ff0033', trade_cancelled:'#ff0033',
+    trade_declined:'#fb0335', trade_cancelled:'#fb0335',
     onyx_received:'var(--accent)',
   };
   // Pre-fetch user pfps for notifications that have a 'from' user
@@ -30758,7 +31241,7 @@ async function _viewUserProfile(username) {
   // Inject the modal scaffold
   modalEl.innerHTML = `
     ${isBlocked ? `<div class="profile-blocked-overlay" id="profile-blocked-overlay">
-      <div class="pbo-icon" style="font-size:32px;color:rgba(255, 0, 51,.5);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+      <div class="pbo-icon" style="font-size:32px;color:rgba(251,3,53,.5);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
       <div class="pbo-text">You blocked ${escapeHTML(username)}</div>
       <div class="pbo-sub">Their profile is hidden</div>
       <button class="pbo-reveal" onclick="document.getElementById('profile-blocked-overlay').style.display='none'">Show Profile</button>
@@ -30834,7 +31317,7 @@ async function _viewUserProfile(username) {
                     <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);">${escapeHTML(it.name || id)}</div>
                     <div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--accent);"><img src="https://raw.githubusercontent.com/StawWasTaken/Swiftaw/refs/heads/main/SwiftawCDN/OnyxSVG.png" style="width:10px;height:10px;">${it.price || '-'}</div>
                     ${isOwn
-                      ? `<button onclick="toggleWishlist('${escapeHTML(id)}');closeModal('modal-user');setTimeout(()=>viewUserProfile('${escapeHTML(u.username)}','wishlist'),60);" style="background:rgba(255, 0, 51,.08);color:var(--red);border:1px solid rgba(255, 0, 51,.22);border-radius:6px;padding:5px 8px;font-size:10.5px;font-weight:700;cursor:pointer;">Remove</button>`
+                      ? `<button onclick="toggleWishlist('${escapeHTML(id)}');closeModal('modal-user');setTimeout(()=>viewUserProfile('${escapeHTML(u.username)}','wishlist'),60);" style="background:rgba(251,3,53,.08);color:var(--red);border:1px solid rgba(251,3,53,.22);border-radius:6px;padding:5px 8px;font-size:10.5px;font-weight:700;cursor:pointer;">Remove</button>`
                       : `<button onclick="openGiftModal('${escapeHTML(id)}','${escapeHTML(u.username)}')" style="background:rgba(255,249,62,.08);color:var(--accent);border:1px solid rgba(255,249,62,.22);border-radius:6px;padding:5px 8px;font-size:10.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;justify-content:center;">${_svgIcon('gift', 10)} Gift</button>`}
                   </div>`).join('')}
                 </div>`;
@@ -32081,7 +32564,7 @@ function renderNSFWGate(contentEl, channelName) {
   const tier = getAgeTier(CU?.dateOfBirth);
   if (tier === AGE_TIERS.CHILD) {
     contentEl.innerHTML = `
-      <div class="empty-state" style="background:rgba(255, 0, 51,.04);border:1px solid rgba(255, 0, 51,.15);border-radius:18px;padding:40px;margin:20px;">
+      <div class="empty-state" style="background:rgba(251,3,53,.04);border:1px solid rgba(251,3,53,.15);border-radius:18px;padding:40px;margin:20px;">
         <div class="ei" style="font-size:40px;">🔒</div>
         <h3 style="color:var(--red);">Age-Restricted Content</h3>
         <p>This channel contains content not suitable for your age group. Access is restricted for your protection.</p>
@@ -32096,7 +32579,7 @@ function renderNSFWGate(contentEl, channelName) {
         <p style="font-size:13.5px;color:var(--muted-light);max-width:320px;line-height:1.6;margin-bottom:20px;">
           This channel has been marked as containing sensitive content. By proceeding, you confirm that you understand the nature of this content.
         </p>
-        <div style="background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.2);border-radius:14px;padding:16px;max-width:320px;font-size:12.5px;color:var(--red);margin-bottom:20px;">
+        <div style="background:rgba(251,3,53,.08);border:1px solid rgba(251,3,53,.2);border-radius:14px;padding:16px;max-width:320px;font-size:12.5px;color:var(--red);margin-bottom:20px;">
           ⚠️ This action is logged for platform safety compliance.
         </div>
         <button class="btn-d" onclick="confirmNSFWView()" style="padding:12px 24px;">View Sensitive Content</button>
@@ -32853,7 +33336,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     const pending = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').length;
     const openTickets = Object.values(tickets).filter(t=>t.status==='open').length;
     const threatScore = pending * 3 + nsfwQueue.length * 2 + bans.length + openTickets;
-    const threat = threatScore > 20 ? {level:'CRITICAL',cls:'sc-threat--critical',icon:'<i class="fas fa-circle-exclamation" style="color:#ff0033;font-size:10px;"></i>'} : threatScore > 10 ? {level:'HIGH',cls:'sc-threat--high',icon:'<i class="fas fa-circle-exclamation" style="color:#fb923c;font-size:10px;"></i>'} : threatScore > 3 ? {level:'MODERATE',cls:'sc-threat--medium',icon:'<i class="fas fa-circle" style="color:#fbbf24;font-size:10px;"></i>'} : {level:'LOW',cls:'sc-threat--low',icon:'<i class="fas fa-circle-check" style="color:#3ecf6e;font-size:10px;"></i>'};
+    const threat = threatScore > 20 ? {level:'CRITICAL',cls:'sc-threat--critical',icon:'<i class="fas fa-circle-exclamation" style="color:#fb0335;font-size:10px;"></i>'} : threatScore > 10 ? {level:'HIGH',cls:'sc-threat--high',icon:'<i class="fas fa-circle-exclamation" style="color:#fb923c;font-size:10px;"></i>'} : threatScore > 3 ? {level:'MODERATE',cls:'sc-threat--medium',icon:'<i class="fas fa-circle" style="color:#fbbf24;font-size:10px;"></i>'} : {level:'LOW',cls:'sc-threat--low',icon:'<i class="fas fa-circle-check" style="color:#3ecf6e;font-size:10px;"></i>'};
     const activeNow = onlineCount + awayCount + dndCount;
     // Oldest still-pending report → the "aging" signal on the queue card.
     const _pendingReps = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned');
@@ -32943,7 +33426,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
           <div class="sc-feed">
             ${auditLog.slice(0,12).map(e=>{
               const a=(e.action||'');
-              const cfg = a.includes('ban')?{c:'#ff0033',bg:'rgba(255, 0, 51,.12)',i:'fa-gavel'}
+              const cfg = a.includes('ban')?{c:'#fb0335',bg:'rgba(251,3,53,.12)',i:'fa-gavel'}
                 : a.includes('warn')?{c:'#f5a524',bg:'rgba(245,165,36,.12)',i:'fa-triangle-exclamation'}
                 : (a.includes('give')||a.includes('grant'))?{c:'#ffd93e',bg:'rgba(255,217,62,.12)',i:'fa-gift'}
                 : a.includes('report')?{c:'#a78bfa',bg:'rgba(167,139,250,.12)',i:'fa-flag'}
@@ -33196,10 +33679,10 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-flag" style="color:#ff0033;"></i> Reports</div>
+          <div class="sc-head-title"><i class="fas fa-flag" style="color:#fb0335;"></i> Reports</div>
           <div class="sc-head-meta">
             <span class="sc-badge-sm" style="background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);">${reps.length} total</span>
-            <span class="sc-badge-sm" style="background:${pendingReps.length>0?'rgba(255, 0, 51,.1)':'rgba(62,207,110,.1)'};color:${pendingReps.length>0?'#ff0033':'#3ecf6e'};font-weight:600;">${pendingReps.length} pending</span>
+            <span class="sc-badge-sm" style="background:${pendingReps.length>0?'rgba(251,3,53,.1)':'rgba(62,207,110,.1)'};color:${pendingReps.length>0?'#fb0335':'#3ecf6e'};font-weight:600;">${pendingReps.length} pending</span>
             <span class="sc-badge-sm" style="background:rgba(62,207,110,.06);color:rgba(62,207,110,.6);">${resolvedReps.length} resolved</span>
           </div>
         </div>
@@ -33208,8 +33691,8 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         </div>
       </div>
       ${reps.length===0?'<div class="sc-empty"><i class="fas fa-circle-check" style="font-size:32px;color:rgba(62,207,110,.4);margin-bottom:8px;display:block;"></i>No reports — all clear!</div>':
-      `${pendingReps.length>0?`<div class="sc-row" style="background:rgba(255, 0, 51,.04);border:1px solid rgba(255, 0, 51,.08);border-radius:10px;margin-bottom:14px;cursor:default;">
-        <i class="fas fa-triangle-exclamation" style="color:#ff0033;font-size:16px;"></i>
+      `${pendingReps.length>0?`<div class="sc-row" style="background:rgba(251,3,53,.04);border:1px solid rgba(251,3,53,.08);border-radius:10px;margin-bottom:14px;cursor:default;">
+        <i class="fas fa-triangle-exclamation" style="color:#fb0335;font-size:16px;"></i>
         <span style="font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--red);">${pendingReps.length} report${pendingReps.length>1?'s':''} pending review</span>
       </div>`:''}
       <div class="sc-card">
@@ -33226,7 +33709,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div class="sc-page" style="padding:28px 32px;">
       <div class="sc-head">
         <div>
-          <div class="sc-head-title"><i class="fas fa-gavel" style="color:#ff0033;"></i> Bans</div>
+          <div class="sc-head-title"><i class="fas fa-gavel" style="color:#fb0335;"></i> Bans</div>
           <div class="sc-head-meta">Bans, suspensions, and warnings — unified view</div>
         </div>
         <div class="sc-head-actions">
@@ -33235,13 +33718,13 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;" id="ban-filter-bar">
         <button class="sc-btn sc-btn-primary" data-banf="all" onclick="_setBanFilter('all')">All</button>
-        <button class="sc-btn sc-btn-ghost" data-banf="ban" onclick="_setBanFilter('ban')" style="color:#ff0033;">Bans</button>
+        <button class="sc-btn sc-btn-ghost" data-banf="ban" onclick="_setBanFilter('ban')" style="color:#fb0335;">Bans</button>
         <button class="sc-btn sc-btn-ghost" data-banf="suspend" onclick="_setBanFilter('suspend')" style="color:#a855f7;">Suspensions</button>
         <button class="sc-btn sc-btn-ghost" data-banf="warn" onclick="_setBanFilter('warn')" style="color:#f59e0b;">Warnings</button>
       </div>
       <div id="ban-unified-list"><div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);"><div class="pl-spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto 12px;"></div>Loading...</div></div>
       <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
-        <div class="sc-stat" style="flex:1;min-width:140px;"><div class="sc-stat-val" style="color:#ff0033;" id="ban-count-bans">0</div><div class="sc-stat-lbl">Active Bans</div></div>
+        <div class="sc-stat" style="flex:1;min-width:140px;"><div class="sc-stat-val" style="color:#fb0335;" id="ban-count-bans">0</div><div class="sc-stat-lbl">Active Bans</div></div>
         <div class="sc-stat" style="flex:1;min-width:140px;"><div class="sc-stat-val" style="color:#a855f7;" id="ban-count-susp">0</div><div class="sc-stat-lbl">Active Suspensions</div></div>
         <div class="sc-stat" style="flex:1;min-width:140px;"><div class="sc-stat-val" style="color:#f59e0b;" id="ban-count-warn">0</div><div class="sc-stat-lbl">Active Warnings</div></div>
       </div>
@@ -33453,7 +33936,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
       `<div style="display:flex;flex-direction:column;gap:10px;">
         ${queue.map((item,i)=>{
           const typeIcon = item.type==='video'?'🎬':item.type==='gif'?'🎞️':'🖼️';
-          const labelColor = item.aiLabel==='EXPLICIT'||item.aiLabel==='BANNED_CONTENT'?'#ff0033':item.aiLabel==='SUGGESTIVE'?'#f59e0b':'#60a5fa';
+          const labelColor = item.aiLabel==='EXPLICIT'||item.aiLabel==='BANNED_CONTENT'?'#fb0335':item.aiLabel==='SUGGESTIVE'?'#f59e0b':'#60a5fa';
           const target = item.uploader || null;
           const mediaSrc = item.thumbnail||item.url||item.dataUrl||'';
           return `<div style="background:var(--panel,#1b1e25);border:1px solid rgba(245,158,11,.15);border-radius:14px;overflow:hidden;">
@@ -33469,7 +33952,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
               <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:10px 14px;">
                 <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Uploader</div>
-                <div style="font-size:13px;font-weight:600;color:${target?'#ff0033':'rgba(255,255,255,.3)'};">${target?escapeHTML(target):'Unknown'}</div>
+                <div style="font-size:13px;font-weight:600;color:${target?'#fb0335':'rgba(255,255,255,.3)'};">${target?escapeHTML(target):'Unknown'}</div>
               </div>
               <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:10px 14px;">
                 <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Details</div>
@@ -33488,25 +33971,25 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
             <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.04);">
               <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.25);align-self:center;margin-right:4px;">AI Verdict:</span>
               <button onclick="nsfwAIFeedback(${i},true)" class="ai-fb-correct"><i class="fas fa-check" style="font-size:12px;"></i> AI was Right (NSFW)</button>
-              <button onclick="nsfwAIFeedback(${i},false)" style="padding:6px 14px;background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;"><i class="fas fa-xmark" style="font-size:12px;"></i> AI was Wrong (NOT NSFW)</button>
+              <button onclick="nsfwAIFeedback(${i},false)" style="padding:6px 14px;background:rgba(251,3,53,.08);border:1px solid rgba(251,3,53,.2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;"><i class="fas fa-xmark" style="font-size:12px;"></i> AI was Wrong (NOT NSFW)</button>
             </div>
             <!-- Actions (same style as reports) -->
             ${(()=>{
               const uRole = target ? getStaffRole(target) : null;
               const canAct = uRole === 'superadmin' ? false : uRole === 'admin' ? isSuperAdmin() : uRole === 'moderator' ? isAdmin() : true;
               const protectedMsg = uRole === 'superadmin' ? '<div style="padding:10px 14px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:rgba(255,249,62,.7);font-size:12px;font-weight:600;">🛡️ This user is a Superadmin and cannot be actioned by anyone.</div>'
-                : (uRole === 'admin' && !isSuperAdmin()) ? '<div style="padding:10px 14px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.12);border-radius:8px;color:rgba(255, 0, 51,.7);font-size:12px;font-weight:600;">🔒 This user is an Admin — only Superadmins can take action.</div>'
+                : (uRole === 'admin' && !isSuperAdmin()) ? '<div style="padding:10px 14px;background:rgba(251,3,53,.06);border:1px solid rgba(251,3,53,.12);border-radius:8px;color:rgba(251,3,53,.7);font-size:12px;font-weight:600;">🔒 This user is an Admin — only Superadmins can take action.</div>'
                 : (uRole === 'moderator' && !isAdmin()) ? '<div style="padding:10px 14px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.12);border-radius:8px;color:rgba(96,165,250,.7);font-size:12px;font-weight:600;">🔒 This user is a Moderator — only Admins and Superadmins can take action.</div>'
                 : '';
-              if (!canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}</div>`;
+              if (!canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(251,3,53,.06);border:1px solid rgba(251,3,53,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}</div>`;
               return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
               <button onclick="reviewNSFW(${i},'approve')" style="padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">Dismiss</button>
               <button onclick="reviewNSFW(${i},'warn')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Warn</button>
               ${target?`<button onclick="reviewNSFW(${i},'suspend')" style="padding:7px 16px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;color:#a855f7;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">⏳ Suspend</button>`:''}
-              ${target?`<button onclick="reviewNSFW(${i},'ban')" style="padding:7px 16px;background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🔨 Ban</button>`:''}
+              ${target?`<button onclick="reviewNSFW(${i},'ban')" style="padding:7px 16px;background:rgba(251,3,53,.08);border:1px solid rgba(251,3,53,.2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🔨 Ban</button>`:''}
               <div style="flex:1;"></div>
               ${target?`<button onclick="adminInspectUser('${escapeHTML(target)}');" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:var(--blue);font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;">🔍 Inspect ${escapeHTML(target)}</button>`:''}
-              ${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
+              ${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(251,3,53,.06);border:1px solid rgba(251,3,53,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
             </div>`;
             })()}
           </div>
@@ -33566,12 +34049,12 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         </div>
         <!-- Column 3: Deployment -->
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255, 0, 51,.12);border-radius:10px;padding:12px 14px;">
-            <div style="font-weight:700;font-size:12px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;color:var(--red);display:flex;align-items:center;gap:6px;"><i class="fas fa-cloud-upload-alt" style="font-size:14px;color:#ff0033;"></i> Deployment</div>
+          <div style="background:var(--panel,#1b1e25);border:1px solid rgba(251,3,53,.12);border-radius:10px;padding:12px 14px;">
+            <div style="font-weight:700;font-size:12px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;color:var(--red);display:flex;align-items:center;gap:6px;"><i class="fas fa-cloud-upload-alt" style="font-size:14px;color:#fb0335;"></i> Deployment</div>
             <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;">Push updates and manage active sessions.</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <button onclick="_forceRefreshAllUsers()" style="padding:8px 14px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.15);border-radius:8px;color:var(--red);cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><i class="fas fa-arrow-right-arrow-left" style="font-size:14px;"></i> Migrate to Next Update</button>
-              <button onclick="_clearAllSessions()" style="padding:8px 14px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.15);border-radius:8px;color:var(--red);cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><i class="fas fa-right-from-bracket" style="font-size:14px;"></i> Reset All Sessions</button>
+              <button onclick="_forceRefreshAllUsers()" style="padding:8px 14px;background:rgba(251,3,53,.06);border:1px solid rgba(251,3,53,.15);border-radius:8px;color:var(--red);cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><i class="fas fa-arrow-right-arrow-left" style="font-size:14px;"></i> Migrate to Next Update</button>
+              <button onclick="_clearAllSessions()" style="padding:8px 14px;background:rgba(251,3,53,.06);border:1px solid rgba(251,3,53,.15);border-radius:8px;color:var(--red);cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><i class="fas fa-right-from-bracket" style="font-size:14px;"></i> Reset All Sessions</button>
             </div>
           </div>
           <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
@@ -33617,20 +34100,20 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
           </div>`).join('')}
         </div>
         <!-- Admins -->
-        <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255, 0, 51,.15);border-radius:12px;padding:18px;">
+        <div style="background:var(--panel,#1b1e25);border:1px solid rgba(251,3,53,.15);border-radius:12px;padding:18px;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
-            <i class="fas fa-shield" style="color:#ff0033;font-size:16px;"></i>
+            <i class="fas fa-shield" style="color:#fb0335;font-size:16px;"></i>
             <span style="font-weight:700;color:var(--red);">Admins</span>
             <span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;">${admins.length}</span>
           </div>
           <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;line-height:1.5;">Limited data access. Can moderate, manage economy, view age tiers (not precise ages).</div>
           ${admins.map((a,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
-            <i class="fas fa-shield" style="color:#ff0033;font-size:14px;"></i><span style="flex:1;font-weight:600;">${escapeHTML(a)}</span>
-            <button onclick="removeStaff('admin',${i})" style="padding:3px 10px;background:rgba(255, 0, 51,.1);border:1px solid rgba(255, 0, 51,.2);color:var(--red);border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
+            <i class="fas fa-shield" style="color:#fb0335;font-size:14px;"></i><span style="flex:1;font-weight:600;">${escapeHTML(a)}</span>
+            <button onclick="removeStaff('admin',${i})" style="padding:3px 10px;background:rgba(251,3,53,.1);border:1px solid rgba(251,3,53,.2);color:var(--red);border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
           </div>`).join('')||'<div style="color:rgba(255,255,255,.25);font-size:12px;padding:8px 0;">No admins yet</div>'}
           <div style="display:flex;gap:7px;margin-top:10px;">
             <input class="settings-input" id="new-admin-input" placeholder="Username" style="flex:1;">
-            <button onclick="addStaff('admin')" style="padding:7px 14px;background:rgba(255, 0, 51,.1);border:1px solid rgba(255, 0, 51,.2);color:var(--red);border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">Add</button>
+            <button onclick="addStaff('admin')" style="padding:7px 14px;background:rgba(251,3,53,.1);border:1px solid rgba(251,3,53,.2);color:var(--red);border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">Add</button>
           </div>
         </div>
         <!-- Moderators -->
@@ -33643,7 +34126,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
           <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;line-height:1.5;">Very limited power. Only moderation tools: NSFW detection, reports, restrained user lookup.</div>
           ${moderators.map((m,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
             <i class="fas fa-wrench" style="color:#60a5fa;font-size:14px;"></i><span style="flex:1;font-weight:600;">${escapeHTML(m)}</span>
-            <button onclick="removeStaff('moderator',${i})" style="padding:3px 10px;background:rgba(255, 0, 51,.1);border:1px solid rgba(255, 0, 51,.2);color:var(--red);border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
+            <button onclick="removeStaff('moderator',${i})" style="padding:3px 10px;background:rgba(251,3,53,.1);border:1px solid rgba(251,3,53,.2);color:var(--red);border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
           </div>`).join('')||'<div style="color:rgba(255,255,255,.25);font-size:12px;padding:8px 0;">No moderators yet</div>'}
           <div style="display:flex;gap:7px;margin-top:10px;">
             <input class="settings-input" id="new-mod-input" placeholder="Username" style="flex:1;">
@@ -33664,7 +34147,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;">
           ${_automationAccounts.map(a=>{
             const meta = a === FORTIZED_ACCOUNT ? { label:'System / news', tone:'rgba(255,217,62,.2)' }
-                       : a === FORTIZED_SAFETY_ACCOUNT ? { label:'Automod & safety notices', tone:'rgba(255, 0, 51,.2)' }
+                       : a === FORTIZED_SAFETY_ACCOUNT ? { label:'Automod & safety notices', tone:'rgba(251,3,53,.2)' }
                        : a === JOYSTER_ACCOUNT ? { label:'Joyster — fun & quests', tone:'rgba(96,165,250,.2)' }
                        : { label:'Bot', tone:'rgba(255,255,255,.1)' };
             return `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:linear-gradient(${meta.tone},${meta.tone}),var(--channel);border:1px solid rgba(255,255,255,.06);border-radius:10px;">
@@ -33724,7 +34207,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         <div class="sc-stat" style="--stat-accent:#60a5fa;"><div class="sc-stat-val" style="color:var(--blue);font-size:20px;">${feedbackData.length}</div><div class="sc-stat-lbl">Total</div></div>
         <div class="sc-stat" style="--stat-accent:#3ecf6e;"><div class="sc-stat-val" style="color:var(--green);font-size:20px;">${posCount}</div><div class="sc-stat-lbl">Positive</div></div>
         <div class="sc-stat" style="--stat-accent:#f59e0b;"><div class="sc-stat-val" style="color:#f59e0b;font-size:20px;">${neuCount}</div><div class="sc-stat-lbl">Neutral</div></div>
-        <div class="sc-stat" style="--stat-accent:#ff0033;"><div class="sc-stat-val" style="color:var(--red);font-size:20px;">${negCount}</div><div class="sc-stat-lbl">Negative</div></div>
+        <div class="sc-stat" style="--stat-accent:#fb0335;"><div class="sc-stat-val" style="color:var(--red);font-size:20px;">${negCount}</div><div class="sc-stat-lbl">Negative</div></div>
         <div class="sc-stat" style="--stat-accent:#a78bfa;"><div class="sc-stat-val" style="color:#a78bfa;font-size:20px;">${withComments}</div><div class="sc-stat-lbl">With Comments</div></div>
       </div>
       <!-- Satisfaction Bar -->
@@ -33746,7 +34229,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Recent Feedback</div>
         <div id="_fb-list" style="background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;max-height:320px;overflow-y:auto;">
           ${feedbackData.slice(0,50).map(f => {
-            const rColor = f.rating==='positive'?'#3ecf6e':f.rating==='negative'?'#ff0033':'#f59e0b';
+            const rColor = f.rating==='positive'?'#3ecf6e':f.rating==='negative'?'#fb0335':'#f59e0b';
             const rIcon = f.rating==='positive'?'👍':f.rating==='negative'?'👎':'😐';
             const typeBadge = f.type === 'quick' ? '<span style="font-size:9px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:var(--accent);padding:1px 5px;border-radius:4px;margin-left:4px;">Quick</span>' : '';
             return `<div class="fb-list-row" data-rating="${f.rating||''}" data-has-comment="${f.comment?'1':'0'}" style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);">
@@ -33947,7 +34430,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
           <div style="padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-sm);">
             <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);" onclick="_syncAdminData().then(()=>{toast('Full sync complete','success')})"><i class="fas fa-rotate" style="font-size:13px;"></i> Sync Data</button>
             <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);color:var(--yellow);border-color:rgba(245,158,11,.2);" onclick="showCustomConfirm('Force refresh all connected users?',()=>_forceRefreshAllUsers())">Force Refresh All Users</button>
-            <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);color:var(--red);border-color:rgba(255, 0, 51,.2);" onclick="showCustomConfirm('Reset ALL user sessions? Users will be logged out.',()=>_resetAllSessions())">Reset All Sessions</button>
+            <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);color:var(--red);border-color:rgba(251,3,53,.2);" onclick="showCustomConfirm('Reset ALL user sessions? Users will be logged out.',()=>_resetAllSessions())">Reset All Sessions</button>
             <button class="sc-btn sc-btn-ghost" style="justify-content:center;padding:var(--space-md);" onclick="showCustomConfirm('Purge soft-deleted messages from database?',()=>_purgeDeletedMessages())">Purge Deleted Messages</button>
           </div>
         </div>
@@ -33978,7 +34461,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
               <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;">Scheduled for: ${s.executeAt ? new Date(s.executeAt).toLocaleString() : 'Unknown'} · By: ${escapeHTML(s.createdBy||'?')}</div>
             </div>
             <div style="font-size:11px;font-weight:600;color:${new Date(s.executeAt)>new Date()?'var(--yellow)':'var(--green)'};">${new Date(s.executeAt)>new Date()?'Pending':'Executed'}</div>
-            <button class="sc-btn sc-btn-ghost" style="font-size:10px;padding:5px 10px;color:var(--red);border-color:rgba(255, 0, 51,.2);" onclick="_cancelScheduledAction('${s._key}')">Cancel</button>
+            <button class="sc-btn sc-btn-ghost" style="font-size:10px;padding:5px 10px;color:var(--red);border-color:rgba(251,3,53,.2);" onclick="_cancelScheduledAction('${s._key}')">Cancel</button>
           </div>`).join('') : '<div style="padding:var(--space-xl);text-align:center;color:rgba(255,255,255,.3);">No scheduled actions. Create one to automate timed moderation tasks.</div>'}
         </div>
       </div>
@@ -34690,9 +35173,9 @@ async function _loadAdminControlRoom(main) {
   if (!isSuperAdmin()) { main.innerHTML = '<div class="sc-page" style="padding:40px;color:var(--muted);text-align:center;">Control Room is available to superadmins only.</div>'; return; }
   const gs = (await FortizedSocial.adminGetGlobalSettings().catch(()=>({}))) || {};
   const aiMode = gs.aiModerationMode || 'off';
-  const sw = (key, on, label, desc, danger) => `<label class="sc-card" style="display:flex;align-items:center;gap:14px;padding:16px 18px;margin-bottom:12px;cursor:pointer;${danger&&on?'border-color:rgba(255, 0, 51,.4);':''}">
+  const sw = (key, on, label, desc, danger) => `<label class="sc-card" style="display:flex;align-items:center;gap:14px;padding:16px 18px;margin-bottom:12px;cursor:pointer;${danger&&on?'border-color:rgba(251,3,53,.4);':''}">
     <div style="flex:1;min-width:0;">
-      <div style="font-size:14px;font-weight:700;color:#fff;${danger&&on?'color:#ff0033;':''}">${label}</div>
+      <div style="font-size:14px;font-weight:700;color:#fff;${danger&&on?'color:#fb0335;':''}">${label}</div>
       <div style="font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.5;">${desc}</div>
     </div>
     <span class="ftz-switch" style="flex-shrink:0;"><input type="checkbox" ${on?'checked':''} onchange="_updateGlobalSetting('${key}',this.checked)"><span class="ftz-switch__slider"></span></span>
@@ -34732,19 +35215,19 @@ async function _loadAdminAppeals() {
   const q = (await FortizedSocial.adminGetAppealsQueue?.().catch(()=>[])) || [];
   const pending = q.filter(a => a.status !== 'accepted' && a.status !== 'declined').sort((a,b) => new Date(b.at) - new Date(a.at));
   const decided = q.filter(a => a.status === 'accepted' || a.status === 'declined').sort((a,b) => new Date(b.at) - new Date(a.at)).slice(0, 30);
-  const typeColor = t => t === 'ban' ? '#ff0033' : t === 'suspension' ? '#a855f7' : '#f5a524';
+  const typeColor = t => t === 'ban' ? '#fb0335' : t === 'suspension' ? '#a855f7' : '#f5a524';
   const card = (a, isPending) => `<div class="sc-card" style="padding:16px 18px;margin-bottom:12px;">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
       <span style="font-weight:700;color:#fff;">@${escapeHTML(a.username)}</span>
       <span style="font-size:11px;font-weight:700;color:${typeColor(a.type)};background:${typeColor(a.type)}1a;border:1px solid ${typeColor(a.type)}33;border-radius:100px;padding:2px 9px;text-transform:capitalize;">${escapeHTML(a.type || 'violation')}</span>
       <span style="font-size:12px;color:var(--muted);">Appeal ${a.attempt || 1} of 3 · ${_fmtDateEU(a.at)}</span>
-      ${!isPending ? `<span style="margin-left:auto;font-size:12px;font-weight:700;color:${a.status === 'accepted' ? '#3ecf6e' : '#ff0033'};">${a.status === 'accepted' ? 'Accepted' : 'Declined'}</span>` : ''}
+      ${!isPending ? `<span style="margin-left:auto;font-size:12px;font-weight:700;color:${a.status === 'accepted' ? '#3ecf6e' : '#fb0335'};">${a.status === 'accepted' ? 'Accepted' : 'Declined'}</span>` : ''}
     </div>
     <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px;">Original reason: ${escapeHTML(a.reason || '—')}</div>
     <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:11px 13px;font-size:13px;color:#c8d0dc;line-height:1.55;white-space:pre-wrap;word-break:break-word;">${escapeHTML(a.text || '(no text)')}</div>
     ${isPending ? `<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
       <button class="sc-btn" style="background:rgba(62,207,110,.12);border:1px solid rgba(62,207,110,.25);color:#3ecf6e;" onclick="_scDecideAppeal('${escapeHTML(a.username)}','${escapeHTML(a.vioId)}','${escapeHTML(a.appealId)}','accept')"><i class="fas fa-check"></i> Accept &amp; lift</button>
-      <button class="sc-btn" style="background:rgba(255, 0, 51,.12);border:1px solid rgba(255, 0, 51,.25);color:#ff0033;" onclick="_scDecideAppeal('${escapeHTML(a.username)}','${escapeHTML(a.vioId)}','${escapeHTML(a.appealId)}','decline')"><i class="fas fa-xmark"></i> Decline</button>
+      <button class="sc-btn" style="background:rgba(251,3,53,.12);border:1px solid rgba(251,3,53,.25);color:#fb0335;" onclick="_scDecideAppeal('${escapeHTML(a.username)}','${escapeHTML(a.vioId)}','${escapeHTML(a.appealId)}','decline')"><i class="fas fa-xmark"></i> Decline</button>
     </div>` : ''}
   </div>`;
   el.style.cssText = '';
@@ -34844,7 +35327,7 @@ function _renderUnifiedList(filter) {
     el.innerHTML = '<div class="sc-empty"><i class="fas fa-circle-check" style="font-size:32px;color:rgba(62,207,110,.4);margin-bottom:8px;display:block;"></i>No records</div>';
     return;
   }
-  const typeMeta = { ban:{icon:'fa-gavel',color:'#ff0033',label:'Ban'}, suspend:{icon:'fa-clock',color:'#a855f7',label:'Suspension'}, warn:{icon:'fa-triangle-exclamation',color:'#f59e0b',label:'Warning'} };
+  const typeMeta = { ban:{icon:'fa-gavel',color:'#fb0335',label:'Ban'}, suspend:{icon:'fa-clock',color:'#a855f7',label:'Suspension'}, warn:{icon:'fa-triangle-exclamation',color:'#f59e0b',label:'Warning'} };
   el.innerHTML = `<div class="sc-card"><div class="sc-card-body">${filtered.map(i => {
     const m = typeMeta[i.type] || typeMeta.ban;
     const avatarHtml = i.avatar ? `<img src="${escapeHTML(i.avatar)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : `<div style="width:28px;height:28px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:rgba(255,255,255,.4);flex-shrink:0;">${(i.username||'?')[0].toUpperCase()}</div>`;
@@ -34906,7 +35389,7 @@ function _openUnifiedActionPopup(prefillUser) {
       <div style="display:flex;gap:6px;" id="_ua-action-type">
         <button class="sc-btn sc-btn-ghost" data-uav="warn" onclick="_setUAAction('warn')" style="flex:1;justify-content:center;color:#f59e0b;border-color:rgba(245,158,11,.2);${!isMod?'':'opacity:.5;'}">⚠️ Warn</button>
         <button class="sc-btn sc-btn-primary" data-uav="suspend" onclick="_setUAAction('suspend')" style="flex:1;justify-content:center;color:#a855f7;">⏳ Suspend</button>
-        ${isMod?'':`<button class="sc-btn sc-btn-ghost" data-uav="ban" onclick="_setUAAction('ban')" style="flex:1;justify-content:center;color:#ff0033;border-color:rgba(255, 0, 51,.2);">🔨 Ban</button>`}
+        ${isMod?'':`<button class="sc-btn sc-btn-ghost" data-uav="ban" onclick="_setUAAction('ban')" style="flex:1;justify-content:center;color:#fb0335;border-color:rgba(251,3,53,.2);">🔨 Ban</button>`}
       </div>
     </div>
     <div id="_ua-duration-wrap" style="margin-bottom:14px;">
@@ -34934,7 +35417,7 @@ function _openUnifiedActionPopup(prefillUser) {
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;">
       <button id="_ua-cancel" style="padding:9px 20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit;">Cancel</button>
-      <button id="_ua-confirm" style="padding:9px 20px;background:rgba(255, 0, 51,.15);border:1px solid rgba(255, 0, 51,.3);border-radius:9px;color:#ff0033;cursor:pointer;font-weight:700;font-family:inherit;">Apply</button>
+      <button id="_ua-confirm" style="padding:9px 20px;background:rgba(251,3,53,.15);border:1px solid rgba(251,3,53,.3);border-radius:9px;color:#fb0335;cursor:pointer;font-weight:700;font-family:inherit;">Apply</button>
     </div>
   </div>`;
   document.body.appendChild(overlay);
@@ -35001,7 +35484,7 @@ async function _updateUserPreview(username) {
       name.textContent = (u.displayName && u.displayName !== u.username ? u.displayName + ' ' : '') + '@' + u.username;
       const badges = [];
       if (u.radiance) badges.push('<span style="color:#ffd93e;">✦ Radiance</span>');
-      if (u.banned) badges.push('<span style="color:#ff0033;">🔨 Banned</span>');
+      if (u.banned) badges.push('<span style="color:#fb0335;">🔨 Banned</span>');
       if (u.suspension) { const su = new Date(u.suspension.until); if (su > new Date()) badges.push('<span style="color:#a855f7;">⏳ Suspended</span>'); }
       status.innerHTML = badges.length ? badges.join(' · ') : 'No special status';
       const joined = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'unknown';
@@ -35082,7 +35565,7 @@ async function _loadPlatformStats() {
         <div class="sc-stat"><div class="sc-stat-val" style="color:#38bdf8;font-size:28px;">${totalChannels.toLocaleString()}</div><div class="sc-stat-lbl">Total Channels</div></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;">
-        <div class="sc-stat"><div class="sc-stat-val" style="color:#ff0033;font-size:28px;">${bans.length.toLocaleString()}</div><div class="sc-stat-lbl">Active Bans</div></div>
+        <div class="sc-stat"><div class="sc-stat-val" style="color:#fb0335;font-size:28px;">${bans.length.toLocaleString()}</div><div class="sc-stat-lbl">Active Bans</div></div>
         <div class="sc-stat"><div class="sc-stat-val" style="color:#a855f7;font-size:28px;">${suspendedUsers.toLocaleString()}</div><div class="sc-stat-lbl">Active Suspensions</div></div>
         <div class="sc-stat"><div class="sc-stat-val" style="color:#38bdf8;font-size:28px;">${adsCount.toLocaleString()}</div><div class="sc-stat-lbl">User Ads</div></div>
         <div class="sc-stat"><div class="sc-stat-val" style="color:#ffd93e;font-size:28px;">${totalOnyx.toLocaleString()}</div><div class="sc-stat-lbl">Total Onyx Supply</div></div>
@@ -35158,12 +35641,12 @@ function _renderTickets() {
   if (filter === 'open') tickets = tickets.filter(t => t.status !== 'closed');
   if (filter === 'closed') tickets = tickets.filter(t => t.status === 'closed');
   if (!tickets.length) { el.innerHTML = '<div class="ftz-empty" style="padding:30px 20px;"><div class="ftz-empty-text">No tickets found</div></div>'; return; }
-  const catColors = {'ban-appeal':'#ff0033','suspend-appeal':'#a855f7','report':'#fb923c','general':'#60a5fa','bug':'#3ecf6e','feedback':'#fbbf24','account-recovery':'#38bdf8'};
+  const catColors = {'ban-appeal':'#fb0335','suspend-appeal':'#a855f7','report':'#fb923c','general':'#60a5fa','bug':'#3ecf6e','feedback':'#fbbf24','account-recovery':'#38bdf8'};
   el.innerHTML = tickets.map(t => {
     const catCol = catColors[t.category] || '#60a5fa';
     const isClosed = t.status === 'closed';
     const isSensitive = _sensitiveCategories.includes(t.category);
-    return `<div style="background:var(--panel,#1b1e25);border:1px solid ${isSensitive?'rgba(255, 0, 51,.12)':'rgba(255,255,255,.06)'};border-radius:10px;padding:14px 18px;margin-bottom:8px;">
+    return `<div style="background:var(--panel,#1b1e25);border:1px solid ${isSensitive?'rgba(251,3,53,.12)':'rgba(255,255,255,.06)'};border-radius:10px;padding:14px 18px;margin-bottom:8px;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
         <div style="width:8px;height:8px;border-radius:50%;background:${isClosed?'rgba(255,255,255,.15)':'#3ecf6e'};${isClosed?'':'box-shadow:0 0 6px rgba(62,207,110,.5);'}flex-shrink:0;"></div>
         <div style="flex:1;font-weight:700;font-size:14px;">${escapeHTML(t.subject||'No Subject')}</div>
@@ -35177,7 +35660,7 @@ function _renderTickets() {
         <span>${_fmtDateEU(t.submittedAt)}</span>
         <div style="margin-left:auto;display:flex;gap:6px;">
           ${!isClosed?`<button onclick="_closeTicket('${t.id}')" style="padding:4px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.5);font-size:11px;cursor:pointer;">Close</button>`:`<button onclick="_reopenTicket('${t.id}')" style="padding:4px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:var(--blue);font-size:11px;cursor:pointer;">Reopen</button>`}
-          ${isSuperAdmin()?`<button onclick="_deleteTicket('${t.id}')" style="padding:4px 12px;background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.18);border-radius:7px;color:var(--red);font-size:11px;cursor:pointer;">Delete</button>`:''}
+          ${isSuperAdmin()?`<button onclick="_deleteTicket('${t.id}')" style="padding:4px 12px;background:rgba(251,3,53,.08);border:1px solid rgba(251,3,53,.18);border-radius:7px;color:var(--red);font-size:11px;cursor:pointer;">Delete</button>`:''}
         </div>
       </div>
     </div>`;
@@ -36542,7 +37025,7 @@ async function adminSearchUser(usernameArg, targetEl) {
   if (!raw) return;
   const result = targetEl || document.getElementById('admin-user-result');
   if (!result) return;
-  result.innerHTML = '<div style="color:rgba(255, 0, 51,.4);font-size:13px;display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;border:2px solid rgba(255, 0, 51,.3);border-top-color:var(--red);border-radius:50%;animation:spin .6s linear infinite;"></div>Scanning database…</div>';
+  result.innerHTML = '<div style="color:rgba(251,3,53,.4);font-size:13px;display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;border:2px solid rgba(251,3,53,.3);border-top-color:var(--red);border-radius:50%;animation:spin .6s linear infinite;"></div>Scanning database…</div>';
   let u = null;
   try { u = await FortizedSocial.getUserByName(raw); } catch(e){ console.error(e); }
   if (!u) { result.innerHTML = '<div style="color:var(--red);font-size:13px;">Target not found in database.</div>'; return; }
@@ -36563,21 +37046,21 @@ async function adminSearchUser(usernameArg, targetEl) {
     if (pr && pr[username]) { userStatus = pr[username].status || 'offline'; }
     else { try { userStatus = await FortizedSocial.getStatus(username); } catch (e) { _dbg('[Profile] status fallback failed', e); } }
   } catch (e) { try { userStatus = await FortizedSocial.getStatus(username); } catch (e) { _dbg('[Profile] status fallback failed', e); } }
-  const statusColors = {online:'#3ecf6e',away:'#f59e0b',dnd:'#ff0033',invisible:'#6b7280',offline:'#6b7280'};
+  const statusColors = {online:'#3ecf6e',away:'#f59e0b',dnd:'#fb0335',invisible:'#6b7280',offline:'#6b7280'};
 
   // Risk analysis
   const reportsAgainst = reps.filter(r => (r.username||r.msgFrom||'').toLowerCase() === username.toLowerCase());
   const reportsBy = reps.filter(r => (r.reporter||'').toLowerCase() === username.toLowerCase());
   const userAudit = auditLog.filter(e => (e.target||'').toLowerCase() === username.toLowerCase());
   const risk = _calcUserRisk(u);
-  const riskColor = risk >= 50 ? '#ff0033' : risk >= 20 ? '#f59e0b' : risk >= 5 ? '#60a5fa' : '#3ecf6e';
+  const riskColor = risk >= 50 ? '#fb0335' : risk >= 20 ? '#f59e0b' : risk >= 5 ? '#60a5fa' : '#3ecf6e';
   const riskLabel = risk >= 50 ? 'CRITICAL' : risk >= 20 ? 'HIGH' : risk >= 5 ? 'MODERATE' : 'LOW';
   const accountAge = u.createdAt || u.joinedAt ? Math.floor((Date.now() - new Date(u.createdAt||u.joinedAt)) / 86400000) : null;
 
   const myRole = getStaffRole(CU.username);
   const targetStaffRole = getStaffRole(username);
   const targetStaffBadge = targetStaffRole === 'superadmin' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(255,215,62,.15),rgba(255,215,62,.08));color:#ffd93e;padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(255,215,62,.2);">SUPER ADMIN</span>'
-    : targetStaffRole === 'admin' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(255, 0, 51,.15),rgba(255, 0, 51,.08));color:var(--red);padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(255, 0, 51,.2);">ADMIN</span>'
+    : targetStaffRole === 'admin' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(251,3,53,.15),rgba(251,3,53,.08));color:var(--red);padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(251,3,53,.2);">ADMIN</span>'
     : targetStaffRole === 'moderator' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(96,165,250,.15),rgba(96,165,250,.08));color:var(--blue);padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(96,165,250,.2);">MODERATOR</span>' : '';
   const canSeeEmail = isSuperAdmin() || isAdmin();
   const canSeePreciseAge = isSuperAdmin();
@@ -36602,7 +37085,7 @@ async function adminSearchUser(usernameArg, targetEl) {
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
               <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;">${escapeHTML(u.displayName||u.username)}</div>
               ${fortizedOfficialCapsuleIfOfficial(u.username)}
-              ${isBanned?'<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,#ff0033,#ff0033);color:#fff;padding:3px 10px;border-radius:var(--radius-pill);animation:adm-badge-pulse 2s infinite;">BANNED</span>':''}
+              ${isBanned?'<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,#fb0335,#fb0335);color:#fff;padding:3px 10px;border-radius:var(--radius-pill);animation:adm-badge-pulse 2s infinite;">BANNED</span>':''}
               ${_tgtStanding.id>0?`<span class="adm-standing-badge" style="background:${_tgtStanding.tint};color:${_tgtStanding.color};border:1px solid ${_tgtStanding.border};">${escapeHTML(_tgtStanding.label.toUpperCase())}</span>`:''}
               ${targetStaffBadge}
             </div>
@@ -36646,7 +37129,7 @@ async function adminSearchUser(usernameArg, targetEl) {
               ['fa-cake-candles', ageLabel, ageDisplay, '#a78bfa'],
               ['fa-calendar-day','Joined', u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Unknown', '#5b9dff'],
               ['__radiance','Radiance', (hasRadiancePlus||hasRadiance) ? 'Active' : 'None', (hasRadiancePlus||hasRadiance) ? '#ffd93e' : '#6b7280'],
-              ['fa-flag','Reports against', reportsAgainst.length, reportsAgainst.length > 0 ? '#ff0033' : '#3ecf6e'],
+              ['fa-flag','Reports against', reportsAgainst.length, reportsAgainst.length > 0 ? '#fb0335' : '#3ecf6e'],
               ...(canSeeEmail ? [['fa-envelope','Email', u.email || 'N/A', '#38bdf8']] : []),
               ...(canSeeFullData ? [
                 ['fa-comment-dots','Custom status', (u.customStatus?.text) || 'None', '#a78bfa'],
@@ -36676,7 +37159,7 @@ async function adminSearchUser(usernameArg, targetEl) {
             <div class="sc-feed" style="max-height:230px;padding:4px 6px;">
               ${userAudit.length ? userAudit.slice(0,12).map(e=>{
                 const a=(e.action||'');
-                const cfg = a.includes('ban')?{c:'#ff0033',i:'fa-gavel'}:a.includes('warn')?{c:'#f5a524',i:'fa-triangle-exclamation'}:a.includes('suspend')?{c:'#a78bfa',i:'fa-clock'}:{c:'#5b9dff',i:'fa-bolt'};
+                const cfg = a.includes('ban')?{c:'#fb0335',i:'fa-gavel'}:a.includes('warn')?{c:'#f5a524',i:'fa-triangle-exclamation'}:a.includes('suspend')?{c:'#a78bfa',i:'fa-clock'}:{c:'#5b9dff',i:'fa-bolt'};
                 return `<div class="sc-fe" style="padding:8px 10px;">
                   <div class="sc-fi" style="width:26px;height:26px;background:${cfg.c}1f;color:${cfg.c};"><i class="fas ${cfg.i}"></i></div>
                   <div class="sc-fx"><div class="sc-ft"><b style="color:${cfg.c};">${escapeHTML(e.action||'?')}</b>${e.note?' — '+escapeHTML(e.note):''}</div><div class="sc-fm">by ${escapeHTML(e.by||'?')} · ${e.at?formatTimeAgo(e.at):''}</div></div>
@@ -36786,7 +37269,7 @@ const _MOD_REASON_PRESETS = ['Harassment or bullying', 'Hate speech or slurs', '
 function adminActionUser(username, action) {
   if (action === 'ban') {
     _scActionCard({
-      icon:'fa-ban', accent:'#ff0033', danger:true,
+      icon:'fa-ban', accent:'#fb0335', danger:true,
       title:'Ban '+username, subtitle:'Blocks this account from signing in.',
       fields:[{type:'textarea',id:'reason',label:'Reason',placeholder:'Why is this account being banned? (recorded in the audit log)',presets:_MOD_REASON_PRESETS}],
       confirmLabel:'Ban account',
@@ -38409,7 +38892,7 @@ function _connIcon(key, size) {
 }
 // All connection platform definitions in one place
 const _CONN_PLATFORMS = [
-  {key:'youtube', label:'YouTube', pattern:'youtube.com', color:'#ff0033', placeholder:'https://youtube.com/@channel'},
+  {key:'youtube', label:'YouTube', pattern:'youtube.com', color:'#fb0335', placeholder:'https://youtube.com/@channel'},
   {key:'roblox',  label:'Roblox',  pattern:'roblox.com',  color:'#00B2FF', placeholder:'https://roblox.com/users/...'},
   {key:'twitter', label:'X / Twitter', pattern:'x.com', color:'#ffffff', placeholder:'https://x.com/username'},
   {key:'tiktok',  label:'TikTok',  pattern:'tiktok.com',  color:'#ff0050', placeholder:'https://tiktok.com/@username'},
@@ -38736,23 +39219,23 @@ function renderAllUsersList(users) {
     const staffRole = getStaffRole(u.username);
     const isBanned = bannedNames.includes((u.username||'').toLowerCase());
     const risk = _calcUserRisk(u);
-    const riskColor = risk >= 50 ? '#ff0033' : risk >= 20 ? '#f59e0b' : risk >= 5 ? '#60a5fa' : '#3ecf6e';
+    const riskColor = risk >= 50 ? '#fb0335' : risk >= 20 ? '#f59e0b' : risk >= 5 ? '#60a5fa' : '#3ecf6e';
     const statusVal = _hqUserStatuses[u.username] || 'offline';
-    const statusColor = statusVal === 'online' ? '#3ecf6e' : statusVal === 'away' ? '#f59e0b' : statusVal === 'dnd' ? '#ff0033' : '#4a4a5a';
+    const statusColor = statusVal === 'online' ? '#3ecf6e' : statusVal === 'away' ? '#f59e0b' : statusVal === 'dnd' ? '#fb0335' : '#4a4a5a';
     const roleBadge = staffRole === 'superadmin' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,215,62,.1);color:#ffd93e;">SA</span>'
-      : staffRole === 'admin' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255, 0, 51,.1);color:var(--red);">ADM</span>'
+      : staffRole === 'admin' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(251,3,53,.1);color:var(--red);">ADM</span>'
       : staffRole === 'moderator' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(96,165,250,.1);color:var(--blue);">MOD</span>' : '<span style="font-size:8px;color:rgba(255,255,255,.15);">—</span>';
     const ageDays = u.dateOfBirth ? Math.floor((Date.now() - new Date(u.dateOfBirth)) / 86400000 / 365.25) : null;
     const joinDate = u.createdAt || u.joinedAt;
 
-    return `<div class="sc-row" onclick="adminInspectUser('${escapeHTML(u.username)}')" ${isBanned?'style="background:rgba(255, 0, 51,.03);"':''}>
+    return `<div class="sc-row" onclick="adminInspectUser('${escapeHTML(u.username)}')" ${isBanned?'style="background:rgba(251,3,53,.03);"':''}>
       <div style="width:30px;text-align:center;font-size:10px;color:rgba(255,255,255,.2);font-weight:700;">${i+1}</div>
       <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;position:relative;">${buildAvatarHTML(u.pfp,u.displayName||u.username,32)}
         <div style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:${statusColor};border:2px solid #0a0e18;"></div>
       </div>
       <div style="flex:1;min-width:100px;overflow:hidden;">
         <div style="display:flex;align-items:center;gap:4px;">
-          <span style="font-size:12px;font-weight:700;color:${isBanned?'#ff0033':'rgba(255,255,255,.8)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(u.displayName||u.username)}</span>
+          <span style="font-size:12px;font-weight:700;color:${isBanned?'#fb0335':'rgba(255,255,255,.8)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(u.displayName||u.username)}</span>
           ${isBanned?'<span style="font-size:7px;font-weight:800;padding:1px 4px;border-radius:3px;background:var(--red);color:#fff;">BAN</span>':''}
         </div>
         <div style="font-size:9.5px;color:rgba(255,255,255,.2);">@${escapeHTML(u.username)}</div>
@@ -39042,14 +39525,14 @@ function renderAdminBastionsList(bastions) {
       <div style="width:100px;font-size:12px;color:rgba(255,255,255,.55);">${escapeHTML(b.owner||'?')}</div>
       <div style="width:70px;text-align:center;font-size:12px;">${memberCount}</div>
       <div style="width:70px;text-align:center;font-size:12px;">${channelCount}</div>
-      <div style="width:55px;text-align:center;font-size:12px;">${nsfwChannels?`<span style="color:#ff0033;">${nsfwChannels}</span>`:'0'}</div>
+      <div style="width:55px;text-align:center;font-size:12px;">${nsfwChannels?`<span style="color:#fb0335;">${nsfwChannels}</span>`:'0'}</div>
       <div style="width:60px;text-align:center;font-size:12px;">${boostLv?`<span style="color:#ffd93e;font-weight:700;">Lv${boostLv}</span>`:'–'}</div>
       <div style="width:70px;text-align:center;font-size:12px;">${b.verified?`<span style="color:var(--accent);">Yes</span>`:'<span style="color:rgba(255,255,255,.3);">No</span>'}</div>
       <div style="width:50px;text-align:center;font-size:11px;">${b.public===false?'<span style="color:rgba(255,255,255,.4);">Private</span>':'Public'}</div>
       <div style="width:80px;text-align:center;display:flex;gap:4px;justify-content:center;">
         <button onclick="adminInspectUser('${escapeHTML(b.owner||'')}')" class="sc-btn sc-btn-ghost" style="padding:3px 8px;font-size:10px;color:#60a5fa;" title="Inspect owner"><i class="fas fa-search"></i></button>
         <button onclick="_toggleVerifyBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}',${!!b.verified})" class="sc-btn sc-btn-ghost" style="padding:3px 8px;font-size:10px;color:${b.verified?'var(--green)':'var(--accent)'};" title="${b.verified?'Unverify':'Verify'}">${b.verified?'<i class="fas fa-check-circle"></i>':'<i class="fas fa-check"></i>'}</button>
-        ${isSuperAdmin()?`<button onclick="_deleteBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}')" class="sc-btn sc-btn-ghost" style="padding:3px 8px;font-size:10px;color:#ff0033;" title="Delete"><i class="fas fa-trash"></i></button>`:''}
+        ${isSuperAdmin()?`<button onclick="_deleteBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}')" class="sc-btn sc-btn-ghost" style="padding:3px 8px;font-size:10px;color:#fb0335;" title="Delete"><i class="fas fa-trash"></i></button>`:''}
       </div>
     </div>`;
   }).join('');
@@ -41758,7 +42241,7 @@ function _scrollToUserMsg(username) {
 // STATUS INDICATOR AS DOT
 // ════════════════════════════════════════════
 function getStatusDot(status, size=10) {
-  const colors = { online:'#3ecf6e', away:'#f59e0b', dnd:'#ff0033', invisible:'#6b7280', offline:'#6b7280' };
+  const colors = { online:'#3ecf6e', away:'#f59e0b', dnd:'#fb0335', invisible:'#6b7280', offline:'#6b7280' };
   const col = colors[status] || colors.offline;
   return `<span style="display:inline-block;width:${size}px;height:${size}px;border-radius:50%;background:${col};border:2px solid var(--bg);flex-shrink:0;" title="${status||'offline'}"></span>`;
 }
@@ -45161,7 +45644,7 @@ async function renderActivityDetectionTab(main) {
       + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(62,207,110,.6);margin-bottom:2px;">Currently showing</div>'
       + '<div style="font-size:14px;font-weight:700;color:#fff;">' + escapeHTML(currentGame.name||'') + '</div>'
       + '</div>'
-      + '<button onclick="setGameActivity(null);renderActivityDetectionTab(this.closest(\'.settings-main\'))" style="background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.15);color:var(--red);font-size:11px;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer;">Clear</button>'
+      + '<button onclick="setGameActivity(null);renderActivityDetectionTab(this.closest(\'.settings-main\'))" style="background:rgba(251,3,53,.08);border:1px solid rgba(251,3,53,.15);color:var(--red);font-size:11px;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer;">Clear</button>'
       + '</div>';
   } else {
     currentHtml = '<div style="text-align:center;padding:20px;background:rgba(255,255,255,.015);border:1px dashed rgba(255,255,255,.08);border-radius:14px;margin-bottom:16px;">'
@@ -45180,7 +45663,7 @@ async function renderActivityDetectionTab(main) {
       + '<div style="font-size:11px;color:var(--muted);margin-left:auto;">Scanning your apps automatically</div>'
       + '</div>';
   } else {
-    statusHtml = '<div style="padding:20px;background:linear-gradient(135deg,rgba(99,102,241,.04),rgba(255, 0, 51,.04));border:1px solid rgba(99,102,241,.12);border-radius:14px;margin-bottom:16px;text-align:center;">'
+    statusHtml = '<div style="padding:20px;background:linear-gradient(135deg,rgba(99,102,241,.04),rgba(251,3,53,.04));border:1px solid rgba(99,102,241,.12);border-radius:14px;margin-bottom:16px;text-align:center;">'
       + '<div style="font-size:32px;margin-bottom:10px;">🖥️</div>'
       + '<div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">Desktop App Required</div>'
       + '<div style="font-size:12px;color:var(--muted);line-height:1.5;">Activity detection needs the Fortized desktop app to scan running processes on your device.<br>Download it to automatically show what you\'re playing.</div>'
@@ -45759,7 +46242,7 @@ function openGiphyPicker(inputId) {
     // "Fortized" — search by the brand tag (Klipy uploads tagged fortized).
     {id:'fortized',label:'Fortized',icon:'fa-chess-rook',color:'#fff93e'},
     {id:'excited',label:'Excited',icon:'fa-face-grin-stars',color:'#c084fc'},
-    {id:'angry',label:'Angry',icon:'fa-face-angry',color:'#ff0033'},
+    {id:'angry',label:'Angry',icon:'fa-face-angry',color:'#fb0335'},
     {id:'dance',label:'Dance',icon:'fa-music',color:'#f472b6'},
     {id:'thumbs up',label:'Approve',icon:'fa-thumbs-up',color:'#34d399'},
     {id:'thinking',label:'Thinking',icon:'fa-brain',color:'#a78bfa'},
@@ -45772,7 +46255,7 @@ function openGiphyPicker(inputId) {
     {id:'celebrities',label:'Celebs',icon:'fa-star',color:'#fbbf24'},
     {id:'hello',label:'Hello',icon:'fa-hand',color:'#a3e635'},
     {id:'yes',label:'Yes',icon:'fa-check',color:'#22c55e'},
-    {id:'no',label:'No',icon:'fa-xmark',color:'#ff0033'},
+    {id:'no',label:'No',icon:'fa-xmark',color:'#fb0335'},
     {id:'please',label:'Please',icon:'fa-hands-praying',color:'#c4b5fd'},
     {id:'hug',label:'Hugs',icon:'fa-hands-holding-circle',color:'#fda4af'},
     {id:'facepalm',label:'Facepalm',icon:'fa-face-rolling-eyes',color:'#cbd5e1'},
@@ -46897,7 +47380,7 @@ const STATUS_PRESETS = [
   {emoji:'😴',text:'AFK',color:'#6b7280'},
   {emoji:'🍕',text:'Eating',color:'#f59e0b'},
   {emoji:'✈️',text:'Travelling',color:'#38bdf8'},
-  {emoji:'🏋️',text:'Working out',color:'#ff0033'},
+  {emoji:'🏋️',text:'Working out',color:'#fb0335'},
   {emoji:'🎨',text:'Creating',color:'#f472b6'},
   {emoji:'🔥',text:'On a roll',color:'#fb923c'},
   {emoji:'🤔',text:'Thinking...',color:'#c084fc'},
@@ -47387,7 +47870,7 @@ function openForumPost(chIdx, postIdx) {
   const manageHTML = canManage ? `
     <div style="display:flex;gap:6px;margin-left:auto;flex-shrink:0;">
       ${isAuthor ? `<button onclick="editForumPost(${chIdx},${postIdx})" style="background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:var(--accent);border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;">✏ Edit</button>` : ''}
-      <button onclick="showCustomConfirm('Delete this post permanently?',function(){deleteForumPost(${chIdx},${postIdx})})" style="background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.15);color:var(--red);border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;">🗑 Delete</button>
+      <button onclick="showCustomConfirm('Delete this post permanently?',function(){deleteForumPost(${chIdx},${postIdx})})" style="background:rgba(251,3,53,.08);border:1px solid rgba(251,3,53,.15);color:var(--red);border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;">🗑 Delete</button>
     </div>` : '';
   wrap.innerHTML = '<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">'
     +'<div class="forum-detail-header">'
@@ -47963,7 +48446,7 @@ async function showCallingScreen(partner) {
   const endWrap = document.createElement('div');
   endWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:10px;';
   const endBtn = document.createElement('button');
-  endBtn.style.cssText = 'width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#ff0033,#ff0033);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px rgba(255, 0, 51,.4);transition:transform .1s;';
+  endBtn.style.cssText = 'width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#fb0335,#fb0335);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px rgba(251,3,53,.4);transition:transform .1s;';
   endBtn.innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" transform="rotate(135 12 12)"/></svg>';
   endBtn.onmouseenter = ()=>endBtn.style.transform='scale(1.1)';
   endBtn.onmouseleave = ()=>endBtn.style.transform='scale(1)';
@@ -48318,7 +48801,7 @@ async function renderVoiceCallUI(partner, isCaller) {
     const mutedDot = document.createElement('div');
     mutedDot.id = isMe ? 'vc-my-muted' : 'vc-partner-muted';
     mutedDot.style.cssText = 'position:absolute;bottom:4px;right:4px;width:28px;height:28px;border-radius:50%;background:rgba(11,14,22,.95);border:2px solid rgba(255,255,255,.08);display:none;align-items:center;justify-content:center;';
-    mutedDot.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ff0033" stroke-width="2.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+    mutedDot.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fb0335" stroke-width="2.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
     avOuter.appendChild(ring); avOuter.appendChild(mutedDot);
     // Label
     const label = document.createElement('div');
@@ -48369,7 +48852,7 @@ async function renderVoiceCallUI(partner, isCaller) {
   const endWrap = document.createElement('div');
   endWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;';
   const endBtn = document.createElement('button');
-  endBtn.style.cssText = 'width:64px;height:64px;border-radius:50%;border:none;background:linear-gradient(135deg,#ff0033,#ff0033);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s;';
+  endBtn.style.cssText = 'width:64px;height:64px;border-radius:50%;border:none;background:linear-gradient(135deg,#fb0335,#fb0335);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s;';
   endBtn.innerHTML = svgEnd; endBtn.onclick = endVoiceCall;
   endBtn.onmouseenter = ()=>endBtn.style.transform='scale(1.08)';
   endBtn.onmouseleave = ()=>endBtn.style.transform='scale(1)';
@@ -48458,7 +48941,7 @@ function updateVCBar() {
   const mBtn = document.getElementById('vc-mute-btn');
   const dBtn = document.getElementById('vc-deaf-btn');
   const myMuted = document.getElementById('vc-my-muted');
-  if(mBtn) mBtn.style.background = _vc.muted?'rgba(255, 0, 51,.4)':'rgba(255,255,255,.08)';
+  if(mBtn) mBtn.style.background = _vc.muted?'rgba(251,3,53,.4)':'rgba(255,255,255,.08)';
   if(dBtn) dBtn.style.background = _vc.deafened?'rgba(245,158,11,.4)':'rgba(255,255,255,.08)';
   if(myMuted) myMuted.style.display = _vc.muted?'flex':'none';
 }
@@ -48485,7 +48968,7 @@ function _startVCQualityMonitor() {
         else if (rtt > 80) level = 3;
         else level = 4;
       }
-      const colors = { 4:'#3ecf6e', 3:'#3ecf6e', 2:'#f59e0b', 1:'#ff0033' };
+      const colors = { 4:'#3ecf6e', 3:'#3ecf6e', 2:'#f59e0b', 1:'#fb0335' };
       bars.forEach((bar, i) => {
         bar.style.background = i < level ? (colors[level]||'#3ecf6e') : 'rgba(255,255,255,.12)';
       });
@@ -48584,7 +49067,7 @@ async function showIncomingCall(caller, offerSdp) {
   const declineWrap = document.createElement('div');
   declineWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;';
   const declineBtn = document.createElement('button');
-  declineBtn.style.cssText = 'width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#ff0033,#ff0033);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s;';
+  declineBtn.style.cssText = 'width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#fb0335,#fb0335);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s;';
   declineBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" transform="rotate(135 12 12)"/></svg>';
   declineBtn.onmouseenter = ()=>declineBtn.style.transform='scale(1.08)';
   declineBtn.onmouseleave = ()=>declineBtn.style.transform='scale(1)';
@@ -48779,7 +49262,7 @@ function showPinnedMessages() {
             </div>
             <div class="asr-text">${escapeHTML(p.text)}</div>
           </div>
-          <button data-unpin-idx="${i}" data-unpin-id="${escapeHTML(p.id)}" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:6px;color:rgba(255,255,255,.3);cursor:pointer;width:26px;height:26px;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;" title="Unpin" onmouseover="this.style.color='var(--red)';this.style.background='rgba(255, 0, 51,.1)'" onmouseout="this.style.color='rgba(255,255,255,.3)';this.style.background='rgba(255,255,255,.04)'">✕</button>
+          <button data-unpin-idx="${i}" data-unpin-id="${escapeHTML(p.id)}" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:6px;color:rgba(255,255,255,.3);cursor:pointer;width:26px;height:26px;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;" title="Unpin" onmouseover="this.style.color='var(--red)';this.style.background='rgba(251,3,53,.1)'" onmouseout="this.style.color='rgba(255,255,255,.3)';this.style.background='rgba(255,255,255,.04)'">✕</button>
         </div>`;
         }).join('')
       : `<div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,.2);"><div style="opacity:.3;margin-bottom:12px;display:flex;justify-content:center;">${_faMsg('pin', 32)}</div><div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:4px;">No pinned messages</div><div style="font-size:12px;opacity:.6;">Right-click a message to pin it.</div></div>`
@@ -50574,7 +51057,7 @@ async function openGameActivityPicker() {
   const iconChoices = ['🎮','🕹️','🎯','🎲','🏆','⚔️','🛡️','🔫','🏎️','⚽','🏀','🎧','🎨','📺','📚','💻','🖥️','🧩','🪄','🎬','🎤','🪐'];
 
   const currentBanner = (activityState.primary?.type === 'playing')
-    ? '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:12px;margin-bottom:14px;flex-shrink:0;"><span>'+activityState.primary.icon+'</span><span style="font-size:13px;font-weight:700;">'+escapeHTML(activityState.primary.name)+'</span><button id="ga-stop-btn" style="margin-left:auto;background:rgba(255, 0, 51,.12);border:1px solid rgba(255, 0, 51,.25);color:var(--red);font-size:11px;padding:3px 8px;border-radius:7px;cursor:pointer;">Stop</button></div>'
+    ? '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:12px;margin-bottom:14px;flex-shrink:0;"><span>'+activityState.primary.icon+'</span><span style="font-size:13px;font-weight:700;">'+escapeHTML(activityState.primary.name)+'</span><button id="ga-stop-btn" style="margin-left:auto;background:rgba(251,3,53,.12);border:1px solid rgba(251,3,53,.25);color:var(--red);font-size:11px;padding:3px 8px;border-radius:7px;cursor:pointer;">Stop</button></div>'
     : '';
 
   const manualSection =
@@ -50817,7 +51300,7 @@ function _showWatchInRoom(vid) {
     +'<div style="display:flex;gap:8px;align-items:center;">'
     +'<button id="wt-sync-pause" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;">⏸ Pause</button>'
     +'<button id="wt-sync-play" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;">▶ Play</button>'
-    +'<button id="wt-close-btn" style="background:rgba(255, 0, 51,.15);border:1px solid rgba(255, 0, 51,.3);color:var(--red);padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;">✕ Close</button>'
+    +'<button id="wt-close-btn" style="background:rgba(251,3,53,.15);border:1px solid rgba(251,3,53,.3);color:var(--red);padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;">✕ Close</button>'
     +'</div>';
   // Video area
   const videoArea = document.createElement('div');
@@ -54681,7 +55164,7 @@ async function _hydrateMyAdsAndRender() {
     const isActive = _isAdLive(ad);
     const expired = !neverExpires && (ad.status==='expired' || (ad.expiresAt && new Date(ad.expiresAt) <= new Date()));
     const statusLabel = ad.status==='cancelled'?'Cancelled':ad.status==='taken_down'?'Taken down':neverExpires?'Permanent':expired?'Expired':isActive?'Active':'Inactive';
-    const statusColor = isActive?'#3ecf6e':(ad.status==='cancelled'||ad.status==='taken_down')?'#ff0033':'#6b7280';
+    const statusColor = isActive?'#3ecf6e':(ad.status==='cancelled'||ad.status==='taken_down')?'#fb0335':'#6b7280';
     const boostTier = Math.max(0, Math.min(3, Number(ad.userBoostTier) || 0));
     const boostChip = boostTier > 0
       ? `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:5px;background:linear-gradient(135deg,rgba(255,249,62,.18),rgba(255,249,62,.06));border:1px solid rgba(255,249,62,.25);color:var(--accent);font-weight:800;font-size:10px;letter-spacing:.02em;"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2 5 5 1-4 4 1 5-4-2-4 2 1-5-4-4 5-1 2-5z"/></svg>Boost T${boostTier}</span>`
@@ -54700,7 +55183,7 @@ async function _hydrateMyAdsAndRender() {
         <button onclick="_cmBoostAd(${i})" style="padding:5px 12px;font-size:11px;background:linear-gradient(135deg,rgba(255,249,62,.12),rgba(255,249,62,.04));border:1px solid rgba(255,249,62,.2);border-radius:8px;color:var(--accent);cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2 5 5 1-4 4 1 5-4-2-4 2 1-5-4-4 5-1 2-5z"/></svg>${boostTier>0?'Upgrade':'Boost'}</button>
         <button onclick="_cmEditAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:var(--muted-light);cursor:pointer;">Edit (5 Onyx)</button>
         <button onclick="_cmRenewAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:var(--accent);cursor:pointer;">Renew</button>
-        <button onclick="_cmCancelAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.12);border-radius:8px;color:#ff0033;cursor:pointer;">Cancel</button>
+        <button onclick="_cmCancelAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(251,3,53,.06);border:1px solid rgba(251,3,53,.12);border-radius:8px;color:#fb0335;cursor:pointer;">Cancel</button>
       `:''}
     </div>`;
   }).join('') : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">No ads created yet.</div>';
@@ -55196,11 +55679,11 @@ const _forumSvg = {
 };
 const FORUM_CATEGORIES = [
   // ── Announcements: official staff-only posts ──
-  { id: 'announcements', name: 'Announcements', icon: _forumSvg.megaphone, color: '#ff0033', desc: 'Official announcements from Fortized', group: 'announcements' },
+  { id: 'announcements', name: 'Announcements', icon: _forumSvg.megaphone, color: '#fb0335', desc: 'Official announcements from Fortized', group: 'announcements' },
   { id: 'event-records', name: 'Event Records', icon: _forumSvg.trophy, color: '#fbbf24', desc: 'Records of past Fortized events. Only admins & superadmins can post here.', group: 'announcements' },
   // ── Fortized: platform-related community discussion ──
   { id: 'general', name: 'Fortized General', icon: _forumSvg.chat, color: '#4ecdc4', desc: 'Talk about anything related to Fortized.', group: 'fortized' },
-  { id: 'bugs', name: 'Bugs & Troubleshooting', icon: _forumSvg.bug, color: '#ff0033', desc: 'Found a bug? Need help? Ask here — you may not be alone.', group: 'fortized' },
+  { id: 'bugs', name: 'Bugs & Troubleshooting', icon: _forumSvg.bug, color: '#fb0335', desc: 'Found a bug? Need help? Ask here — you may not be alone.', group: 'fortized' },
   { id: 'suggestions', name: 'Suggestions', icon: _forumSvg.lightbulb, color: '#ffd93e', desc: 'Have a suggestion for Fortized? Post it here!', group: 'fortized' },
   // ── Community: user-created content & casual talk ──
   { id: 'showcase', name: 'Showcase', icon: _forumSvg.media, color: '#a78bfa', desc: 'Made something cool? Show it off to the community!', group: 'community' },
@@ -59382,7 +59865,7 @@ function initCrossDeviceSync() {
     // Update UI for online status indicators
     const statusDot = document.querySelector(`.profile-status-dot[data-for="${data.username}"]`);
     if (statusDot) {
-      const color = data.status==='online'?'#3ecf6e':data.status==='away'?'#f59e0b':data.status==='dnd'?'#ff0033':'rgba(255,255,255,.15)';
+      const color = data.status==='online'?'#3ecf6e':data.status==='away'?'#f59e0b':data.status==='dnd'?'#fb0335':'rgba(255,255,255,.15)';
       statusDot.style.background = color;
       statusDot.setAttribute('data-dot-status', data.status);
     }
@@ -59761,7 +60244,7 @@ function buildGiftRadianceUI() {
       <div style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(f)}</div>
       ${hasGifted
         ? `<span style="font-size:11.5px;color:rgba(255,255,255,.4);">${daysLeft}d left</span>
-           <button onclick="cancelGiftRadiance('${escapeHTML(f)}')" style="background:rgba(255, 0, 51,.1);border:1px solid rgba(255, 0, 51,.18);color:var(--red);font-size:11px;padding:4px 10px;border-radius:7px;cursor:pointer;">Cancel</button>`
+           <button onclick="cancelGiftRadiance('${escapeHTML(f)}')" style="background:rgba(251,3,53,.1);border:1px solid rgba(251,3,53,.18);color:var(--red);font-size:11px;padding:4px 10px;border-radius:7px;cursor:pointer;">Cancel</button>`
         : `<button onclick="sendRadianceGiftToUser('${escapeHTML(f)}')" style="background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:var(--accent);font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:7px;cursor:pointer;">Send (600 Onyx)</button>`}
     </div>`;
   }).join('');
@@ -65865,7 +66348,7 @@ async function _loadEvents(bastionId) {
   try {
     const snap = await firebase.database().ref('events/' + bastionId).get();
     if (!snap.exists()) {
-      container.innerHTML = '<div class="ev-empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="opacity:.2;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><div>No events yet</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">Create one to get started!</div></div>';
+      container.innerHTML = _ftzNotFound('Nothing on the calendar', 'Put something on it and everybody here will see it.', { art: 'battle' });
       return;
     }
     const events = [];
@@ -65887,16 +66370,16 @@ async function _loadEvents(bastionId) {
       html += upcoming.map(ev => _renderEventCard(ev, bastionId, canManage, now)).join('');
     }
     if (past.length) {
-      html += '<div class="ev-section-label">Past & Cancelled</div>';
+      html += '<div class="ev-section-label">Past and cancelled</div>';
       html += past.map(ev => _renderEventCard(ev, bastionId, canManage, now, true)).join('');
     }
     if (!upcoming.length && !past.length) {
-      html += '<div class="ev-empty">No events</div>';
+      html += _ftzNotFound('Nothing on the calendar', 'Put something on it and everybody here will see it.', { art: 'battle' });
     }
     html += '</div>';
     container.innerHTML = html;
     _updateEventsBadge(bastionId);
-  } catch { container.innerHTML = '<div class="ev-empty">Failed to load events</div>'; }
+  } catch { container.innerHTML = _ftzNotFound('Could not load the calendar', 'Give it another go in a moment.', { art: 'search' }); }
 }
 
 function _renderEventCard(ev, bastionId, canManage, now, isPast) {
@@ -65911,32 +66394,46 @@ function _renderEventCard(ev, bastionId, canManage, now, isPast) {
   const days = Math.floor(diff / 86400000);
   const hours = Math.floor((diff % 86400000) / 3600000);
   const mins = Math.floor((diff % 3600000) / 60000);
-  const countdown = isCancelled ? 'Cancelled' : isLive ? '🔴 LIVE NOW' : isPast ? 'Ended' : days > 0 ? days+'d '+hours+'h' : hours > 0 ? hours+'h '+mins+'m' : mins > 0 ? mins+'m' : 'Starting soon!';
-  const bannerBg = ev.banner ? 'background-image:url('+escapeHTML(ev.banner)+');background-size:cover;background-position:center;' : 'background:linear-gradient(135deg,rgba(255,249,62,.08),rgba(96,165,250,.06));';
+  const countdown = isCancelled ? 'Cancelled' : isLive ? 'Live now' : isPast ? 'Ended' : days > 0 ? 'In '+days+'d '+hours+'h' : hours > 0 ? 'In '+hours+'h '+mins+'m' : mins > 0 ? 'In '+mins+'m' : 'Starting soon';
+  // ⚠️ Mixed from var(--panel), not a hardcoded tint. A fixed rgba placeholder
+  // is a different colour from the card it sits in under every other appearance.
+  const bannerBg = ev.banner ? 'background-image:url('+escapeHTML(ev.banner)+');background-size:cover;background-position:center;' : 'background:color-mix(in srgb,var(--text) 6%,var(--panel));';
   const liveClass = isLive ? ' ev-card-live' : '';
   const cancelClass = isCancelled ? ' ev-card-cancelled' : '';
   const pastClass = isPast ? ' ev-card-past' : '';
+  const freqLabel = { daily:'Repeats daily', weekly:'Repeats weekly', biweekly:'Every other week', monthly:'Repeats monthly' }[ev.frequency] || '';
 
+  // ⚠️ Every glyph here is an inline FA path. The card used OS emoji (📅 🔴 ↻ ✓ ⋯)
+  // which render as a different picture on every machine and read as a
+  // placeholder rather than an icon.
   return '<div class="event-card'+liveClass+cancelClass+pastClass+'">'
     + '<div class="ec-banner" style="'+bannerBg+'">'
-    + (ev.banner ? '' : '<span style="font-size:32px;">'+(ev.emoji||'📅')+'</span>')
+    + (ev.banner ? '' : '<span class="ec-bglyph">'+_faIcon('calendar', 30)+'</span>')
     + '<div class="ec-date-badge"><div class="edb-month">'+d.toLocaleString('en',{month:'short'})+'</div><div class="edb-day">'+d.getDate()+'</div></div>'
-    + (isLive ? '<div class="ec-live-badge">🔴 LIVE</div>' : '')
+    + (isLive ? '<div class="ec-live-badge"><span class="ec-livedot"></span>Live now</div>' : '')
     + '</div>'
     + '<div class="ec-body">'
     + '<div class="ec-title-row"><div class="ec-title">'+escapeHTML(ev.title||'')+'</div>'
-    + '<button class="ec-menu-btn" onclick="_showEventMenu(event,\''+escapeHTML(bastionId)+'\',\''+ev._key+'\','+(canManage||isCreator?'true':'false')+')">⋯</button></div>'
+    + '<button class="ec-menu-btn" aria-label="Event options" onclick="_showEventMenu(event,\''+escapeHTML(bastionId)+'\',\''+ev._key+'\','+(canManage||isCreator?'true':'false')+')">'
+    + '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 448 512" fill="currentColor" style="display:block;"><path d="M120 256a56 56 0 1 1 -112 0 56 56 0 1 1 112 0zm160 0a56 56 0 1 1 -112 0 56 56 0 1 1 112 0zm104 56a56 56 0 1 1 0-112 56 56 0 1 1 0 112z"/></svg>'
+    + '</button></div>'
     + (ev.description ? '<div class="ec-desc">'+escapeHTML(ev.description.slice(0,200))+'</div>' : '')
-    + (ev.location ? '<div class="ec-location"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;opacity:.5;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> <span>'+escapeHTML(ev.location)+'</span></div>' : '')
-    + (ev.frequency && ev.frequency !== 'once' ? '<div class="ec-frequency">↻ '+({daily:'Daily',weekly:'Weekly',biweekly:'Bi-weekly',monthly:'Monthly'}[ev.frequency]||'')+'</div>' : '')
+    + '<div class="ec-facts">'
+    + '<span class="ec-fact">'+_faIcon('clock', 11)+escapeHTML(d.toLocaleString('en',{weekday:'short',month:'short',day:'numeric'})+' at '+d.toLocaleString('en',{hour:'numeric',minute:'2-digit'}))+'</span>'
+    + (endD ? '<span class="ec-fact">'+_faIcon('calendar', 11)+'Ends '+escapeHTML(endD.toLocaleString('en',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+'</span>' : '')
+    + (ev.location ? '<span class="ec-fact">'+_faIcon('house', 11)+escapeHTML(ev.location)+'</span>' : '')
+    + (freqLabel ? '<span class="ec-fact">'+_faIcon('rotate-right', 11)+freqLabel+'</span>' : '')
+    + '</div>'
     + '<div class="ec-meta">'
-    + '<span>'+rsvps+' interested</span>'
-    + '<div class="event-countdown">'+countdown+'</div>'
-    + '<div class="ec-rsvp">'
-    + '<button class="rsvp-yes '+(userRsvp?'active':'')+'" onclick="_rsvpEvent(\''+escapeHTML(bastionId)+'\',\''+ev._key+'\')">'
-    + (userRsvp ? '✓ Going' : 'Interested')
-    + '</button></div></div>'
-    + (endD ? '<div style="font-size:10px;color:var(--muted);margin-top:4px;">Ends '+endD.toLocaleString('en',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</div>' : '')
+    + '<span class="ec-going">'+rsvps+' interested</span>'
+    // The banner badge already says "Live now". Saying it twice on one card
+    // reads as a rendering fault, not as emphasis.
+    + (isLive ? '' : '<div class="event-countdown">'+escapeHTML(countdown)+'</div>')
+    + '<span class="bstr-spacer"></span>'
+    + (isPast || isCancelled ? '' :
+        '<button class="fs-btn ec-rsvpb'+(userRsvp?' fs-btn--primary':'')+'" onclick="_rsvpEvent(\''+escapeHTML(bastionId)+'\',\''+ev._key+'\')">'
+        + (userRsvp ? _faIcon('check', 11)+'Going' : 'I am interested') + '</button>')
+    + '</div>'
     + '</div></div>';
 }
 
@@ -69349,7 +69846,7 @@ function _stawShowToolbar() {
     </span>
     <button id="staw-tb-pause" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#dde3ed;padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;font-family:inherit;">Pause</button>
     <button id="staw-tb-freeze" style="background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.35);color:#93c5fd;padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;font-family:inherit;">Freeze</button>
-    <button id="staw-tb-exit" style="background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.3);color:#ff0033;padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;font-family:inherit;">Exit</button>`;
+    <button id="staw-tb-exit" style="background:rgba(251,3,53,.08);border:1px solid rgba(251,3,53,.3);color:#fb0335;padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;font-family:inherit;">Exit</button>`;
   document.body.appendChild(tb);
   tb.querySelector('#staw-tb-pause').onclick = (e) => { e.stopPropagation(); _stawToggleInspectorPause(); };
   tb.querySelector('#staw-tb-freeze').onclick = (e) => { e.stopPropagation(); _stawToggleInspectorFreeze(); };
@@ -69484,7 +69981,7 @@ function _stawOnPick(e) {
       <button id="staw-copy-sel" style="background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.25);color:#3ecf6e;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Copy selector</button>
       <button id="staw-copy-path" style="background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.25);color:#60a5fa;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Copy path</button>
       <button id="staw-close" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#dde3ed;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Close</button>
-      <button id="staw-exit" style="background:rgba(255, 0, 51,.08);border:1px solid rgba(255, 0, 51,.25);color:#ff0033;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Exit</button>
+      <button id="staw-exit" style="background:rgba(251,3,53,.08);border:1px solid rgba(251,3,53,.25);color:#fb0335;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Exit</button>
     </div>`;
   document.body.appendChild(p);
   p.querySelector('#staw-copy-sel').onclick = () => { try { navigator.clipboard.writeText(fullSelector); toast?.('Selector copied', 'success'); } catch(_) {} };
@@ -70161,7 +70658,7 @@ function _kvHTML(rows) {
   return `<div class="staff-kv">${rows.map(([k, v]) => `<div class="staff-kv__row"><span>${escapeHTML(k)}</span><span class="staff-kv__v">${v == null ? '—' : (typeof v === 'string' ? escapeHTML(v) : v)}</span></div>`).join('')}</div>`;
 }
 function _scoreChipHTML(label, val) {
-  const c = val > 70 ? '#ff0033' : val > 40 ? '#f59e0b' : val > 20 ? '#fbbf24' : '#3ecf6e';
+  const c = val > 70 ? '#fb0335' : val > 40 ? '#f59e0b' : val > 20 ? '#fbbf24' : '#3ecf6e';
   return `<div class="staff-score" style="--c:${c};"><div class="staff-score__l">${escapeHTML(label)}</div><div class="staff-score__v">${val}</div></div>`;
 }
 
@@ -70298,7 +70795,7 @@ registerInspectorRenderer('report', (body, reportId) => {
   const target = r.username || r.msgFrom || null;
   body.innerHTML = `
     <div class="staff-dossier__head">
-      <div class="staff-dossier__av" style="background:rgba(255, 0, 51,.12);color:#ff0033;">⚠</div>
+      <div class="staff-dossier__av" style="background:rgba(251,3,53,.12);color:#fb0335;">⚠</div>
       <div class="staff-dossier__id">
         <div class="staff-dossier__name">${escapeHTML(r.reason || 'Report')}</div>
         <div class="staff-dossier__handle">${escapeHTML(r.id)} · ${escapeHTML(r.type || 'unknown')}</div>
@@ -70677,9 +71174,9 @@ async function _staffOpsRefresh() {
   const counters = [
     { l:'Online now',     v: onlineCount,        c:'#3ecf6e' },
     { l:'Users total',    v: list.length,        c:'#60a5fa' },
-    { l:'Pending reports',v: pendingReports,     c: pendingReports ? '#ff0033':'#3ecf6e' },
+    { l:'Pending reports',v: pendingReports,     c: pendingReports ? '#fb0335':'#3ecf6e' },
     { l:'Automod (1h)',   v: automodLastHour,    c: automodLastHour ? '#f59e0b':'#3ecf6e' },
-    { l:'Open incidents', v: openInc,            c: openInc ? '#ff0033':'#3ecf6e' },
+    { l:'Open incidents', v: openInc,            c: openInc ? '#fb0335':'#3ecf6e' },
     { l:'Watching',       v: watches.length,     c: watches.length ? '#a78bfa':'rgba(255,255,255,.3)' },
     { l:'Audit (24h)',    v: audit.filter(e => new Date(e.at).getTime() > Date.now()-86400000).length, c:'#60a5fa' },
     { l:'Countries',      v: new Set(list.map(u => u.countryCode).filter(Boolean)).size, c:'#fff93e' },
@@ -71426,8 +71923,8 @@ function _stfStep(id, value, o) {
       data-min="${opt.min == null ? '' : opt.min}" data-max="${opt.max == null ? '' : opt.max}" data-step="${opt.step || 1}"
       autocomplete="off" spellcheck="false" onkeydown="_stfStepKey(event,'${id}')">
     <span class="stf-step-btns">
-      <button type="button" class="stf-step-b" tabindex="-1" aria-label="Increase" onclick="_stfStepBy('${id}',1)"><i class="fas fa-chevron-up"></i></button>
-      <button type="button" class="stf-step-b" tabindex="-1" aria-label="Decrease" onclick="_stfStepBy('${id}',-1)"><i class="fas fa-chevron-down"></i></button>
+      <button type="button" class="stf-step-b" tabindex="-1" aria-label="Increase" onclick="_stfStepBy('${id}',1)">${_faIcon('chevron-up', 9)}</button>
+      <button type="button" class="stf-step-b" tabindex="-1" aria-label="Decrease" onclick="_stfStepBy('${id}',-1)">${_faIcon('chevron-down', 9)}</button>
     </span>
   </span>`;
 }
@@ -74220,7 +74717,7 @@ const _STF_MAINT_KEY = 'maintenanceMode';
 // The banner's five colours. Fixed set on purpose: an announcement bar people
 // learn to read at a glance only works if red always means the same thing.
 const _STF_ANN_COLOURS = [
-  { value: '#ff0033', label: 'Incident red' },
+  { value: '#fb0335', label: 'Incident red' },
   { value: '#3ecf6e', label: 'All good green' },
   { value: '#2caefc', label: 'Information blue' },
   { value: '#fff93e', label: 'Brand yellow' },
@@ -74260,7 +74757,7 @@ function _stfAnnWindowNote(s) {
 const _STF_ANN_PRESETS = [
   { label: 'Scheduled maintenance', lead: 'Maintenance', text: 'Fortized goes down for scheduled maintenance shortly. Finish what you are doing and we will be right back.', colour: '#fff93e', icon: 'fa-screwdriver-wrench' },
   { label: 'We are back', lead: '', text: 'Everything is back to normal. Thanks for waiting.', colour: '#3ecf6e', icon: 'fa-circle-info' },
-  { label: 'Investigating an issue', lead: 'Incident', flat: true, text: 'We are looking into a problem some of you are hitting. Updates on the status page.', colour: '#ff0033', icon: 'fa-triangle-exclamation' },
+  { label: 'Investigating an issue', lead: 'Incident', flat: true, text: 'We are looking into a problem some of you are hitting. Updates on the status page.', colour: '#fb0335', icon: 'fa-triangle-exclamation' },
   { label: 'New release', lead: 'Update', text: 'A new version of Fortized just landed. Reload to pick it up.', colour: '#2caefc', icon: 'fa-rocket' },
   { label: 'Event live', lead: 'Event', text: 'The event is live. Head to Quests to take part.', colour: '#ff77e4', icon: 'fa-champagne-glasses' },
 ];

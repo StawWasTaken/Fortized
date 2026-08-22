@@ -2675,7 +2675,7 @@ async function _syncBastionFromGlobal(bastionIdx) {
     const global = await FortizedSocial.getGlobalBastion(b.globalId);
     if (!global) return;
     // Merge global fields into local copy (owner-managed data)
-    const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','categories','roles','everyone','memberRoles','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
+    const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','categories','roles','everyone','memberRoles','public','joinMode','discoverable','applicationQuestions','applications','memberInvites','vanity','category','tags','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
     let changed = false;
     for (const key of syncFields) {
       if (global[key] !== undefined && JSON.stringify(b[key]) !== JSON.stringify(global[key])) {
@@ -17412,7 +17412,7 @@ async function promptJoinPublicBastion(bastionId){
     const localB={name:b.name,emblem:b.emblem||'🏰',icon:b.icon||null,banner:b.banner||null,tagline:b.tagline||'',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,public:b.public,memberRoles:b.memberRoles||{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[],moodDisabled:b.moodDisabled||false,moodLocked:b.moodLocked||false,lockedMood:b.lockedMood||'',customMood:b.customMood||null,memberCount:b.memberCount||1};
     CU.bastions=[...(CU.bastions||[]).filter(ub=>ub.globalId!==gid),localB];
     await saveUser(true);
-    await FortizedSocial.addBastionMember(gid,CU.username);
+    await FortizedSocial.addBastionMember(gid,CU.username,'discover');
     // Update member count in global
     try{
       const members=await FortizedSocial.getBastionMembers(gid)||[];
@@ -19298,7 +19298,7 @@ function initFortizedUXResilience() {
             FortizedSocial.getGlobalBastion(data.bastionId).then(fresh => {
               if (!fresh) return;
               // Sync ALL fields from global
-              const syncFields = ['roles','everyone','memberRoles','channels','name','icon','banner','emblem','desc','tagline','members','memberCount','invites','automod','boostLevel','customEmojis','public','categories','moodDisabled','moodLocked','lockedMood','customMood','overview','bans','verified'];
+              const syncFields = ['roles','everyone','memberRoles','channels','name','icon','banner','emblem','desc','tagline','members','memberCount','invites','automod','boostLevel','customEmojis','public','joinMode','discoverable','applicationQuestions','applications','memberInvites','vanity','category','tags','categories','moodDisabled','moodLocked','lockedMood','customMood','overview','bans','verified'];
               syncFields.forEach(f => { if (fresh[f] !== undefined) b[f] = fresh[f]; });
               saveLocal();
               renderRailBastions();
@@ -20342,7 +20342,7 @@ async function createBastion() {
     const globalB = {...bastion, owner: CU.username, id: globalId};
     await FortizedSocial.saveGlobalBastion(globalId, globalB);
     CU.bastions[CU.bastions.length-1].globalId = globalId;
-    await FortizedSocial.addBastionMember(globalId, CU.username);
+    await FortizedSocial.addBastionMember(globalId, CU.username, 'created');
     await saveUser();
   } catch (e) { console.warn('[Bastion] global save failed', e); }
 
@@ -20523,7 +20523,7 @@ async function joinBastionByCode() {
   try {
     const inviteData = await FortizedSocial.getInvite(code);
     if (inviteData && inviteData.bastionId) {
-      await joinBastionById(inviteData.bastionId, true);
+      await joinBastionById(inviteData.bastionId, true, code);
       closeModal('modal-join-bastion');
       return;
     }
@@ -20537,7 +20537,7 @@ async function joinBastionByCode() {
   }
   if (foundByInvite) {
     try {
-      await joinBastionById(foundByInvite.id, true);
+      await joinBastionById(foundByInvite.id, true, code);
       closeModal('modal-join-bastion');
     } catch(e) { if(err)err.textContent='Failed to join bastion'; }
     return;
@@ -20734,7 +20734,7 @@ function renderOverviewRoom() {
         ${_mhSvg('gear')} Management Hub
       </div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
-        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:5px;justify-content:center;" onclick="openBastionSettings('members');closeModal('modal-overview')">${_mhSvg('members')} Members</button>
+        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:5px;justify-content:center;" onclick="closeModal('modal-overview');openBastionMembersCard()">${_mhSvg('members')} Members</button>
         <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:5px;justify-content:center;" onclick="openBastionSettings('roles');closeModal('modal-overview')">${_mhSvg('roles')} Roles</button>
         <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:5px;justify-content:center;" onclick="openBastionSettings('invites');closeModal('modal-overview')">${_mhSvg('invite')} Invites</button>
         <button class="btn-a" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;grid-column:1/-1;" onclick="openBastionSettings('boost');closeModal('modal-overview')">${_boostSvg('13')} Boost Bastion</button>
@@ -21156,48 +21156,43 @@ function _renderEventsModalContent() {
 // header, ICN for the nav row) meant swapping an icon in one place changed
 // nothing where you were actually looking. Never split this.
 const _BSET_TABS = {
-  overview:      { icon:'house',      label:'Bastion Profile',   lead:'How your bastion introduces itself across Fortized.' },
-  channels:      { icon:'hashtag',    label:'Channels',          lead:'Your categories, your rooms, and who can reach them.' },
-  roles:         { icon:'shield',     label:'Roles',             lead:'What each role can do, and who wears it.' },
-  emojis:        { icon:'face-smile', label:'Emoji & Stickers',  lead:'Expressions your members can use here.' },
-  templates:     { icon:'clipboard',  label:'Templates',         lead:'Save this bastion as a starting point, or build from one.' },
-  members:       { icon:'users',      label:'Members',           lead:'Everyone who calls this bastion home.' },
-  invites:       { icon:'link',       label:'Invites',           lead:'The doors in, and who has been handed a key.' },
-  bans:          { icon:'ban',        label:'Bans',              lead:'People who can no longer come back.' },
-  automod:       { icon:'safety',     label:'AutoMod',           lead:'Rules that act before a moderator has to.' },
-  bots:          { icon:'robot',      label:'Bots',              lead:'Automations serving this bastion.' },
-  slowmode:      { icon:'clock',      label:'Slow Mode',         lead:'Give a busy channel room to breathe.' },
-  welcome_msg:   { icon:'user-plus',  label:'Welcome Message',   lead:'The first thing a new arrival reads.' },
-  rules:         { icon:'file-lines', label:'Bastion Rules',     lead:'What you expect of the people here.' },
-  announcements: { icon:'bullhorn',   label:'Announcements',     lead:'Say something to the whole bastion at once.' },
-  insights:      { icon:'chart-line', label:'Insights',          lead:'How your bastion is actually doing.' },
-  starboard:     { icon:'star',       label:'Starboard',         lead:'The messages your members thought were worth keeping.' },
-  boost:         { icon:'boost',      label:'Boosts',            lead:'What your members have unlocked for everyone.' },
-  mood:          { icon:'heart',      label:'Bastion Mood',      lead:'The tone your bastion carries.' },
-  reputation:    { icon:'medal',      label:'Reputation',        lead:'Standing earned inside this bastion.' },
-  danger:        { icon:'trash',      label:'Delete Bastion',    lead:'This one cannot be walked back.', danger:true },
+  overview:      { label:'Overview',         lead:'How your bastion introduces itself across Fortized.' },
+  roles:         { label:'Roles',            lead:'What each role can do, and who wears it.' },
+  channels:      { label:'Channels',         lead:'Your categories, your rooms, and who can reach them.' },
+  emojis:        { label:'Emotes',           lead:'Expressions your members can use here.' },
+  privacy:       { label:'Privacy',          lead:'Set who can find this bastion and how people get in.' },
+  automod:       { label:'AutoMod',          lead:'Rules that act before a moderator has to.' },
+  welcome_msg:   { label:'Welcome message',  lead:'The first thing a new arrival reads.' },
+  announcements: { label:'Announcements',    lead:'Say something to the whole bastion at once.' },
+  starboard:     { label:'Starboard',        lead:'The messages your members thought were worth keeping.' },
+  mood:          { label:'Mood',             lead:'The tone your bastion carries.' },
+  reputation:    { label:'Reputation',       lead:'Standing earned inside this bastion.' },
+  boost:         { label:'Boosts',           lead:'What your members have unlocked for everyone.' },
+  insights:      { label:'Insights',         lead:'How your bastion is actually doing.' },
+  bots:          { label:'Bots',             lead:'Automations serving this bastion.' },
+  templates:     { label:'Templates',        lead:'Save this bastion as a starting point, or build from one.' },
+  danger:        { label:'Danger zone',      lead:'Hand this bastion over, walk away from it, or end it.', danger:true },
+  members:       { label:'Members',          lead:'Everyone who calls this bastion home.', external:true },
+  invites:       { label:'Invites',          lead:'Manage all your invites here. Create new invite codes, or delete the ones you are done with.' },
+  bans:          { label:'Bans',             lead:'People who can no longer come back.' },
+  rules:         { label:'Bastion rules',    lead:'What you expect of the people here.' },
 };
 
-// Nav order. A string is a section head, an id is a row, '-' is a separator.
+// Nav order, Guilded's shape: two named groups, no icons on the rows.
+// A string that is not a tab id is a group label; '-' is a separator.
 const _BSET_NAV = [
-  'overview', 'channels',
-  'PEOPLE', 'members', 'roles', 'invites', 'bans',
-  'MODERATION', 'automod', 'bots', 'slowmode',
-  'COMMUNITY', 'welcome_msg', 'rules', 'announcements', 'starboard',
-  'EXPRESSION', 'emojis', 'templates',
-  'GROWTH', 'boost', 'insights', 'mood', 'reputation',
+  'Bastion settings',
+  'overview', 'roles', 'channels', 'emojis', 'privacy', 'automod',
+  'welcome_msg', 'rules', 'announcements', 'starboard',
+  'mood', 'reputation', 'boost', 'insights', 'bots', 'templates',
   '-', 'danger',
+  'User management',
+  'members', 'invites', 'bans',
 ];
 
-// Both the rail row (15px) and the page header (24px) draw from here, so a
-// glyph can never disagree with itself.
-function _bsetIcon(id, size) {
-  const m = _BSET_TABS[id];
-  if (!m) return '';
-  if (m.icon === 'safety') return _safetyIcon(size);
-  if (m.icon === 'boost')  return _boostSvg(String(size));
-  return _faIcon(m.icon, size);
-}
+// The one row that leaves settings. Members is its own card, opened from the
+// bastion the same way Overview is, so the settings row is a door, not a page.
+const _BSET_EXT_GLYPH = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>';
 
 function renderBSettingsNav(activeTab) {
   const nav = document.getElementById('bsettings-nav');
@@ -21223,8 +21218,9 @@ function renderBSettingsNav(activeTab) {
     const m = _BSET_TABS[key];
     if (!m) return `<div class="bset-railgrp">${escapeHTML(key)}</div>`;
     const cls = 'bset-navi' + (activeTab === key ? ' active' : '') + (m.danger ? ' danger' : '');
-    return `<button class="${cls}" type="button" onclick="renderBSettingsMain('${key}')">`
-         + `<span class="bset-navi-ic">${_bsetIcon(key, 15)}</span><span>${escapeHTML(m.label)}</span></button>`;
+    const click = m.external ? `_bsetOpenExternal('${key}')` : `renderBSettingsMain('${key}')`;
+    return `<button class="${cls}" type="button" onclick="${click}">`
+         + `<span>${escapeHTML(m.label)}</span>${m.external ? `<span class="bset-navi-ext">${_BSET_EXT_GLYPH}</span>` : ''}</button>`;
   }).join('');
 
   html += `</div>
@@ -21235,18 +21231,19 @@ function renderBSettingsNav(activeTab) {
   nav.innerHTML = html;
 }
 
-// The page header. Same meta map as the rail, one size up.
-function _renderBSettingsHead(tab) {
-  const head = document.getElementById('bsettings-head');
-  if (!head) return;
+// Rows that open something else instead of taking over the pane.
+function _bsetOpenExternal(key) {
+  if (key === 'members') { closeModal('modal-bsettings'); openBastionMembersCard(); }
+}
+
+// Guilded puts the page title at the top of the CONTENT column, not in a header
+// band with an icon tile. One call, prepended by renderBSettingsMain, so no tab
+// has to remember to draw its own.
+function _bsetPageHeadHTML(tab) {
   const m = _BSET_TABS[tab];
-  if (!m) { head.innerHTML = ''; head.style.display = 'none'; return; }
-  head.style.display = '';
-  head.innerHTML = `<span class="bset-head-ic${m.danger?' danger':''}">${_bsetIcon(tab, 22)}</span>
-    <div class="bset-head-tx">
-      <div class="bset-head-title">${escapeHTML(m.label)}</div>
-      <div class="bset-head-lead">${escapeHTML(m.lead||'')}</div>
-    </div>`;
+  if (!m) return '';
+  return `<div class="bset-ptitle${m.danger?' danger':''}">${escapeHTML(m.label)}</div>`
+       + (m.lead ? `<div class="bset-plead">${escapeHTML(m.lead)}</div>` : '');
 }
 
 // BRIDGE (phase 3a): every tab still opens with its own .bs-section-title, which
@@ -21270,31 +21267,236 @@ function _bsetStripLegacyHead(main) {
 // reads it (_FTZ_MARKS). Keep it here.
 let _bsetActiveTab = 'overview';
 
-function _updateBSettingsPreview() {
-  const preview = document.getElementById('bsettings-preview');
+// ════════════════════════════════════════════════════════════════════
+// THE MEMBERS CARD — Discord's members page, on our components.
+// It is NOT a settings tab: Members is a page of the bastion, opened from
+// the sidebar, and the settings row is just another door into it.
+// ════════════════════════════════════════════════════════════════════
+let _bmcTab = 'all', _bmcQuery = '', _bmcSort = 'joined', _bmcRows = [], _bmcSel = new Set(), _bmcPage = 0;
+const _BMC_PER = 25;
+
+function openBastionMembersCard(tab) {
   const b = CU.bastions?.[curBastion];
-  if (!preview || !b) return;
-  // Scoped to the profile tab on purpose: a bastion card is context while you
-  // edit the profile, and noise while you edit Bans or AutoMod.
-  if (_bsetActiveTab !== 'overview') { preview.innerHTML = ''; preview.style.display = 'none'; return; }
-  preview.style.display = '';
-  const memberCount = b.memberCount || 1;
-  // No "N Online" here. There is no per-bastion presence figure to read, and the
-  // old one was members * 0.3 rounded down: a number that was never measured.
-  preview.innerHTML = `
-    <div class="bset-prevlab">Preview</div>
-    <div class="bs-preview-card">
-      <div class="bs-preview-banner">${b.banner?`<img src="${escapeHTML(b.banner)}">`:'<div class="bs-preview-bannerph"></div>'}</div>
-      <div class="bs-preview-body">
-        <div class="bs-preview-icon">${b.icon?`<img src="${escapeHTML(b.icon)}">`:`<span style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--accent);">${escapeHTML((b.name||'B')[0].toUpperCase())}</span>`}</div>
-        <div class="bs-preview-name">${escapeHTML(b.name)}${b.verified?_verifiedBadge(14):''}${_boostBadge(b,14)}</div>
-        <div class="bs-preview-stats">
-          <span style="display:flex;align-items:center;gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--muted);"></span> ${memberCount} ${memberCount===1?'member':'members'}</span>
-        </div>
-        ${b.desc?`<div class="bs-preview-desc">${escapeHTML(b.desc)}</div>`:''}
-        ${b.tagline?`<div class="bs-preview-tag">${escapeHTML(b.tagline)}</div>`:''}
+  if (!b) return;
+  _bmcTab = tab || 'all'; _bmcQuery = ''; _bmcSort = 'joined'; _bmcRows = []; _bmcSel = new Set(); _bmcPage = 0;
+  document.getElementById('bmc-overlay')?.remove();
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay';
+  ov.id = 'bmc-overlay';
+  ov.innerHTML = `<div class="ftz-confirm-card ftz-ac-card bmc-card" role="dialog" aria-label="Members">
+      <button class="settings-close bmc-x" type="button" aria-label="Close" onclick="document.getElementById('bmc-overlay')?.remove()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="bmc-head">
+        <div class="bmc-title">Members</div>
+        <div class="bmc-tabs" id="bmc-tabs"></div>
       </div>
+      <div class="bmc-body" id="bmc-body"></div>
     </div>`;
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
+  document.addEventListener('keydown', function esc(e){ if(e.key==='Escape'){ document.getElementById('bmc-overlay')?.remove(); document.removeEventListener('keydown', esc);} });
+  _bmcPaint();
+  _bmcLoad();
+}
+
+function _bmcApps(b, status) {
+  return (b.applications || []).filter(a => (a.status || 'pending') === status);
+}
+
+async function _bmcLoad() {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  let names = [];
+  try { names = await FortizedSocial.getBastionMembers(b.globalId || b.name) || []; } catch (_) {}
+  if (!names.length) names = [b.owner].filter(Boolean);
+  // One batched, column-lean read, and it is cached per user. Never getUsers().
+  let profiles = [];
+  try { profiles = await FortizedSocial.getUsersByNames(names) || []; } catch (_) {}
+  const byName = {};
+  profiles.forEach(p => { if (p && p.username) byName[String(p.username).toLowerCase()] = p; });
+  const joins = b.memberJoins || {};
+  const vias  = b.memberInvites || {};
+  _bmcRows = names.map(u => {
+    const k = String(u).toLowerCase();
+    return { user: k, u: byName[k] || null, since: joins[k] || '', via: vias[k] || (k === String(b.owner||'').toLowerCase() ? 'created' : ''), roles: _bstRolesFor(b, k) || [] };
+  });
+  _bmcPaint();
+}
+
+function _bmcSetTab(t) { _bmcTab = t; _bmcPage = 0; _bmcSel = new Set(); _bmcPaint(); }
+function _bmcSetSort(v) { _bmcSort = v; _bmcPage = 0; _bmcPaintBody(); }
+function _bmcSearch(v) { _bmcQuery = (v||'').toLowerCase(); _bmcPage = 0; _bmcPaintBody(); }
+function _bmcGoPage(n) { _bmcPage = n; _bmcPaintBody(); const bd=document.getElementById('bmc-body'); if(bd) bd.scrollTop = 0; }
+
+function _bmcPaint() {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const tabsEl = document.getElementById('bmc-tabs');
+  if (tabsEl) {
+    const hasApps = (b.applicationQuestions || []).length > 0 || (b.applications || []).length > 0;
+    const tabs = [['all', 'All members', _bmcRows.length || (b.memberCount || 1)]];
+    if (hasApps) {
+      tabs.push(['pending', 'Pending', _bmcApps(b,'pending').length]);
+      tabs.push(['rejected', 'Rejected', _bmcApps(b,'rejected').length]);
+      tabs.push(['approved', 'Approved', _bmcApps(b,'approved').length]);
+    }
+    tabsEl.innerHTML = tabs.map(([id, label, n]) =>
+      `<button type="button" class="bmc-tab${_bmcTab === id ? ' on' : ''}" onclick="_bmcSetTab('${id}')">${label}${n ? ` <span class="bmc-tabn">${n}</span>` : ''}</button>`).join('');
+  }
+  _bmcPaintBody();
+}
+
+function _bmcFiltered() {
+  let rows = _bmcRows.slice();
+  if (_bmcQuery) rows = rows.filter(r => r.user.includes(_bmcQuery) || String((r.u && (r.u.displayName || r.u.display_name)) || '').toLowerCase().includes(_bmcQuery));
+  const b = CU.bastions?.[curBastion] || {};
+  const nameOf = r => String((r.u && (r.u.displayName || r.u.display_name)) || r.user).toLowerCase();
+  if (_bmcSort === 'name') rows.sort((a, c) => nameOf(a).localeCompare(nameOf(c)));
+  else if (_bmcSort === 'oldest') rows.sort((a, c) => (Date.parse(a.since) || 0) - (Date.parse(c.since) || 0));
+  else if (_bmcSort === 'roles') rows.sort((a, c) => c.roles.length - a.roles.length);
+  else rows.sort((a, c) => (Date.parse(c.since) || 0) - (Date.parse(a.since) || 0));
+  // The owner always reads first: they are the one row nobody can act on.
+  const own = String(b.owner || '').toLowerCase();
+  rows.sort((a, c) => (c.user === own ? 1 : 0) - (a.user === own ? 1 : 0));
+  return rows;
+}
+
+function _bmcDate(iso) {
+  if (!iso) return '<span class="bmc-dim">Not recorded</span>';
+  const d = new Date(iso); if (isNaN(d)) return '<span class="bmc-dim">Not recorded</span>';
+  return escapeHTML(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
+}
+
+function _bmcVia(via) {
+  if (!via) return '<span class="bmc-dim">Unknown</span>';
+  if (via === 'created') return '<span class="bmc-chip">Created this bastion</span>';
+  if (via === 'discover') return '<span class="bmc-chip">Found it in Discover</span>';
+  if (via === 'invite') return '<span class="bmc-chip">Invite link</span>';
+  if (via.startsWith('invite:')) return `<span class="bmc-chip bmc-chip--code">${_faIcon('link', 10)}${escapeHTML(via.slice(7))}</span>`;
+  return `<span class="bmc-chip">${escapeHTML(via)}</span>`;
+}
+
+function _bmcPaintBody() {
+  const el = document.getElementById('bmc-body');
+  const b = CU.bastions?.[curBastion];
+  if (!el || !b) return;
+  if (_bmcTab !== 'all') { el.innerHTML = _bmcAppsHTML(b, _bmcTab); return; }
+
+  const all = _bmcFiltered();
+  const pages = Math.max(1, Math.ceil(all.length / _BMC_PER));
+  if (_bmcPage > pages - 1) _bmcPage = pages - 1;
+  const rows = all.slice(_bmcPage * _BMC_PER, (_bmcPage + 1) * _BMC_PER);
+  const own = String(b.owner || '').toLowerCase();
+  const canManage = own === String(CU.username || '').toLowerCase() || hasPerm('manage_roles') || hasPerm('administrator');
+
+  const body = rows.map(r => {
+    const ident = _bmcIdent(r);
+    const isOwner = r.user === own;
+    const roleTags = r.roles.slice(0, 3).map(role =>
+      `<span class="bmc-role" style="--rc:${escapeHTML(role.color || '#b9bbbe')};">${_bstRoleIconHTML(role, 10, b)}${escapeHTML(role.name)}</span>`).join('')
+      + (r.roles.length > 3 ? `<span class="bmc-role bmc-role--more">+${r.roles.length - 3}</span>` : '')
+      || '<span class="bmc-dim">No roles</span>';
+    return `<div class="bmc-row">
+        <div class="bmc-c bmc-c--name">
+          ${ident.av}
+          <span class="bmc-nm">
+            <span class="bmc-nm-d">${ident.name}${isOwner ? '<span class="bmc-owner">Owner</span>' : ''}</span>
+            <span class="bmc-nm-u">@${escapeHTML(r.user)}</span>
+          </span>
+        </div>
+        <div class="bmc-c">${_bmcDate(r.since)}</div>
+        <div class="bmc-c">${_bmcDate(r.u && (r.u.createdAt || r.u.created_at))}</div>
+        <div class="bmc-c">${_bmcVia(r.via)}</div>
+        <div class="bmc-c bmc-c--roles">${roleTags}</div>
+        <div class="bmc-c bmc-c--act">
+          ${canManage ? `<button class="fs-btn bmc-mini" type="button" onclick="openAssignRoleUI('${escapeHTML(r.user)}')">Roles</button>` : ''}
+          ${canManage && !isOwner ? `<button class="fs-btn stf-btn--danger bmc-mini" type="button" onclick="kickMember('${escapeHTML(r.user)}')">Kick</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="bmc-tools">
+      <input class="settings-input bmc-search" placeholder="Search by display name or username" value="${escapeHTML(_bmcQuery)}" oninput="_bmcSearch(this.value)">
+      ${_ftzSelectHTML('bmc-sort', _bmcSort, [
+        { value: 'joined', label: 'Newest here' },
+        { value: 'oldest', label: 'Longest here' },
+        { value: 'name', label: 'Name A to Z' },
+        { value: 'roles', label: 'Most roles' },
+      ], '_bmcSetSort(__VALUE__)')}
+    </div>
+    <div class="bmc-table">
+      <div class="bmc-hrow">
+        <div class="bmc-c bmc-c--name">Name</div>
+        <div class="bmc-c">Member since</div>
+        <div class="bmc-c">Joined Fortized</div>
+        <div class="bmc-c">Join method</div>
+        <div class="bmc-c bmc-c--roles">Roles</div>
+        <div class="bmc-c bmc-c--act"></div>
+      </div>
+      ${body || (_bmcRows.length ? '' : '<div class="bmc-load">Loading the roster…</div>')}
+    </div>
+    ${(!body && _bmcRows.length) ? _ftzNotFound('Nobody by that name', 'Try a shorter search.', { compact: true }) : ''}
+    ${all.length > _BMC_PER ? `<div class="bmc-foot">
+        <span class="bmc-dim">Showing ${_bmcPage * _BMC_PER + 1} to ${Math.min(all.length, (_bmcPage + 1) * _BMC_PER)} of ${all.length}</span>
+        <span class="bmc-pages">
+          <button class="fs-btn bmc-mini" type="button" ${_bmcPage === 0 ? 'disabled' : ''} onclick="_bmcGoPage(${_bmcPage - 1})">Back</button>
+          <button class="fs-btn bmc-mini" type="button" ${_bmcPage >= pages - 1 ? 'disabled' : ''} onclick="_bmcGoPage(${_bmcPage + 1})">Next</button>
+        </span>
+      </div>` : ''}`;
+}
+
+// Identity without a second cache: one object in, avatar and styled name out.
+function _bmcIdent(r) {
+  const u = r.u;
+  const name = (u && (u.displayName || u.display_name)) || r.user;
+  let overlay = '';
+  if (u && u.activeDecoration) { try { overlay = buildDecorationOverlay(u.activeDecoration, 'profile-decoration-overlay-sm') || ''; } catch (_) {} }
+  return {
+    av: `<span class="bmc-av">${buildAvatarHTML(u ? u.pfp : null, name, 32, u ? u.pfpCrop : null)}${overlay}</span>`,
+    name: _ftzStyledNameHTML(u, name),
+  };
+}
+
+function _bmcAppsHTML(b, status) {
+  const apps = _bmcApps(b, status);
+  if (!apps.length) {
+    const t = status === 'pending' ? 'Nothing waiting' : status === 'rejected' ? 'Nobody turned away' : 'Nobody let in this way yet';
+    return _ftzNotFound(t, status === 'pending' ? 'Applications land here as they arrive.' : '', { art: status === 'pending' ? 'celebrate' : 'battle' });
+  }
+  const qs = b.applicationQuestions || [];
+  return `<div class="bmc-apps">${apps.map((a, i) => `
+    <div class="bmc-app">
+      <div class="bmc-app-h">
+        <span class="bmc-nm-d">${escapeHTML(a.displayName || a.applicant)}</span>
+        <span class="bmc-nm-u">@${escapeHTML(a.applicant)}</span>
+        <span class="bmc-dim bmc-app-t">${_bmcDate(a.timestamp)}</span>
+      </div>
+      <div class="bmc-app-qs">${(a.answers || []).map((ans, qi) => `
+        <div class="bmc-app-q"><div class="bmc-app-ql">${escapeHTML(qs[qi] || ('Question ' + (qi + 1)))}</div><div class="bmc-app-qa">${escapeHTML(ans)}</div></div>`).join('')}</div>
+      ${status === 'pending' ? `<div class="bmc-app-act">
+        <button class="fs-btn stf-btn--good bmc-mini" type="button" onclick="_bmcApp('${escapeHTML(a.applicant)}','approved')">Let them in</button>
+        <button class="fs-btn stf-btn--danger bmc-mini" type="button" onclick="_bmcApp('${escapeHTML(a.applicant)}','rejected')">Turn down</button>
+      </div>` : ''}
+    </div>`).join('')}</div>`;
+}
+
+async function _bmcApp(applicant, status) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const gid = b.globalId || b.name;
+  const list = (b.applications || []).map(a => a.applicant === applicant && (a.status || 'pending') === 'pending' ? { ...a, status } : a);
+  b.applications = list;
+  if (status === 'approved') { try { await FortizedSocial.addBastionMember(gid, applicant, 'application'); } catch (_) {} }
+  await saveUser();
+  _syncBastionToGlobal(curBastion);
+  try {
+    await FortizedSocial.sendNotification?.(applicant, {
+      type: 'bastion_application',
+      title: status === 'approved' ? 'You are in' : 'Application declined',
+      message: status === 'approved' ? `${b.name} accepted your application.` : `${b.name} turned down your application.`,
+    });
+  } catch (_) {}
+  toast(status === 'approved' ? 'Approved' : 'Declined', 'success');
+  _bmcLoad();
 }
 
 function renderBSettingsMain(tab) {
@@ -21303,80 +21505,124 @@ function renderBSettingsMain(tab) {
   if (!main||!b) return;
   _bsetActiveTab = tab;
   renderBSettingsNav(tab);
-  _renderBSettingsHead(tab);
-  _updateBSettingsPreview();
   const _bsetScroll = main.closest('.bset-scroll');
   if (_bsetScroll) _bsetScroll.scrollTop = 0;
 
   if (tab==='overview') {
+    const chs = (b.channels||[]).filter(c => !c.type || c.type==='text' || c.type==='announcement');
+    const defCh = b.defaultChannel || (chs[0]||{}).name || 'general';
     main.innerHTML = `
-      <div class="bs-section-title">Bastion Profile</div>
-      <div class="bs-section-desc">Customize how your bastion appears across Fortized.</div>
-      <div style="margin-bottom:18px;">
-        <div class="settings-title">Banner</div>
-        <div style="height:160px;border-radius:12px;overflow:hidden;border:2px solid var(--border);cursor:pointer;position:relative;transition:border-color .15s;" onclick="document.getElementById('bs-banner-upload').click()" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-          ${b.banner?`<img src="${b.banner}" style="width:100%;height:100%;object-fit:cover;">`:'<div style="height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f1830,#1a0f30);color:var(--muted);font-size:13px;">Click to upload a banner &middot; '+FTZ_BANNER_W+' x '+FTZ_BANNER_H+'</div>'}
-        </div>
-        <input id="bs-banner-upload" type="file" accept="image/*" style="display:none;" onchange="updateBastionBanner(event)">
-      </div>
-      <div style="display:flex;gap:14px;margin-bottom:20px;">
-        <div style="width:80px;height:80px;border-radius:18px;background:var(--panel2);border:1.5px solid rgba(255,249,62,.15);display:flex;align-items:center;justify-content:center;font-size:32px;cursor:pointer;overflow:hidden;transition:all .2s;" onclick="document.getElementById('bs-icon-upload').click()" id="bs-icon-prev" onmouseover="this.style.borderColor='rgba(255,249,62,.3)'" onmouseout="this.style.borderColor='rgba(255,249,62,.15)'">
-          ${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`:`<span style="font-family:var(--font-display);font-weight:800;font-size:28px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}
+      <div class="bset-fgroup">
+        <div class="bset-flabel">Emblem</div>
+        <div class="bset-uprow">
+          <div class="bset-upemb" onclick="document.getElementById('bs-icon-upload').click()">
+            ${b.icon?`<img src="${escapeHTML(b.icon)}" alt="">`:`<span>${escapeHTML((b.name||'B')[0].toUpperCase())}</span>`}
+          </div>
+          <div class="bset-upside">
+            <div class="bset-fhelp">We recommend a square image, at least 256x256px.</div>
+            <button class="fs-btn" type="button" onclick="document.getElementById('bs-icon-upload').click()">Upload image</button>
+          </div>
         </div>
         <input id="bs-icon-upload" type="file" accept="image/*" style="display:none;" onchange="updateBastionIcon(event)">
-        <div style="flex:1;">
-          <div class="settings-title">Bastion Name</div>
-          <input class="field-input" id="bs-name" value="${escapeHTML(b.name)}" style="margin-bottom:8px;">
-          <div class="settings-title">Tagline <span style="font-size:11px;color:var(--muted);font-weight:400;">— shown on Bastion Shell</span></div>
-          <input class="field-input" id="bs-tagline" value="${escapeHTML(b.tagline||'')}" placeholder="A short slogan for your bastion…" maxlength="60" style="margin-bottom:8px;">
-          <div class="settings-title">Description</div>
-          <input class="field-input" id="bs-desc" value="${escapeHTML(b.desc||'')}">
-          <div class="settings-title" style="margin-top:8px;">Vanity URL <span style="font-size:11px;color:var(--muted);font-weight:400;">— <code>/b/yourslug</code></span></div>
-          <div style="display:flex;gap:6px;align-items:center;">
-            <span style="color:var(--muted);font-size:12px;">fortized.com/b/</span>
-            <input class="field-input" id="bs-vanity" value="${escapeHTML(b.vanity||'')}" placeholder="coolname" maxlength="32" pattern="[a-zA-Z0-9_-]+" style="flex:1;">
-          </div>
-          <div style="font-size:10.5px;color:var(--muted);margin-top:4px;">Letters, numbers, dashes, underscores. Must be unique.</div>
+      </div>
+
+      <div class="bset-fgroup">
+        <div class="bset-flabel">Banner</div>
+        <div class="bset-upban" onclick="document.getElementById('bs-banner-upload').click()">
+          ${b.banner?`<img src="${escapeHTML(b.banner)}" alt="">`:'<span>No banner yet</span>'}
+        </div>
+        <div class="bset-fhelp">For best results, upload a ${FTZ_BANNER_W}x${FTZ_BANNER_H}px image.</div>
+        <button class="fs-btn" type="button" onclick="document.getElementById('bs-banner-upload').click()">Upload image</button>
+        <input id="bs-banner-upload" type="file" accept="image/*" style="display:none;" onchange="updateBastionBanner(event)">
+      </div>
+
+      <div class="bset-fgroup">
+        <label class="bset-flabel" for="bs-name">Bastion name</label>
+        <input class="bset-uline" id="bs-name" value="${escapeHTML(b.name)}" maxlength="60">
+      </div>
+
+      <div class="bset-fgroup">
+        <label class="bset-flabel" for="bs-tagline">Tagline</label>
+        <input class="bset-uline" id="bs-tagline" value="${escapeHTML(b.tagline||'')}" placeholder="A short line people read first" maxlength="60">
+        <div class="bset-fhelp">Sits under your name on the bastion shell.</div>
+      </div>
+
+      <div class="bset-fgroup">
+        <label class="bset-flabel" for="bs-desc">About</label>
+        <textarea class="bset-uline bset-uarea" id="bs-desc" rows="3" maxlength="300" placeholder="What is this bastion for?">${escapeHTML(b.desc||'')}</textarea>
+        <div class="bset-fhelp">Your bastion description will be seen by everyone.</div>
+      </div>
+
+      <div class="bset-fgroup">
+        <label class="bset-flabel" for="bs-vanity">URL</label>
+        <div class="bset-uprefix"><span>fortized.com/b/</span><input class="bset-uline" id="bs-vanity" value="${escapeHTML(b.vanity||'')}" placeholder="coolname" maxlength="32"></div>
+        <div class="bset-fhelp">Lets you reach your bastion at fortized.com/b/&lt;url&gt;. Bastion URLs are unique, so reserve yours while you can. Letters, numbers, dashes and underscores.</div>
+      </div>
+
+      <div class="bset-fgroup">
+        <label class="bset-flabel" for="bs-defch">Default channel</label>
+        ${_ftzSelectHTML('bs-defch', defCh, chs.length?chs.map(c=>({value:c.name,label:'#'+c.name})):[{value:'general',label:'#general'}], '_bsetSetDefaultChannel(__VALUE__)')}
+        <div class="bset-fhelp">System and welcome messages are sent to this channel. New members land here first.</div>
+      </div>
+
+      <div class="bset-ftwo">
+        <div class="bset-fgroup">
+          <div class="bset-flabel">Bastion type</div>
+          ${_ftzSelectHTML('bs-category', String(b.category||''), [{value:'',label:'None'}, ..._DISC_CATS.map(c=>({value:c.id,label:c.label}))], '_bsPickCategory(__VALUE__)')}
+          <div class="bset-fhelp">Which shelf you sit on in Discover.</div>
+        </div>
+        <div class="bset-fgroup">
+          <label class="bset-flabel" for="bs-tags">Tags</label>
+          <input class="bset-uline" id="bs-tags" value="${escapeHTML((b.tags||[]).join(', '))}" placeholder="speedrunning, modding, chill">
+          <div class="bset-fhelp">Up to 5, comma separated.</div>
         </div>
       </div>
-      <div class="settings-title">Category <span style="font-size:11px;color:var(--muted);font-weight:400;">— which Discover shelf it sits on</span></div>
-      <div class="bs-cats" id="bs-cats" style="margin-bottom:14px;">
-        ${[{id:'',label:'None'}, ..._DISC_CATS].map(c => `
-          <button type="button" class="disc-chip${String(b.category||'').toLowerCase()===c.id?' is-on':''}"
-                  onclick="_bsPickCategory('${c.id}')">
-            ${c.icon ? `<i class="fa-solid ${c.icon}"></i>` : ''}${escapeHTML(c.label)}
+
+      <div class="bset-save"><button class="fs-btn fs-btn--primary" onclick="saveBastionOverview()">Save changes</button></div>
+      `;
+  }
+  else if (tab==='privacy') {
+    const mode = _bstJoinMode(b);
+    const disc = b.discoverable !== undefined ? !!b.discoverable : (b.public !== false);
+    const opts = [
+      ['private','Private','People may only join this bastion with an invite, and nobody can preview it from Discover.'],
+      ['default','Default','People may only join this bastion with an invite.'],
+      ['open','Open entry','People can join this bastion without an invite.'],
+    ];
+    main.innerHTML = `
+      <div class="bset-radios">
+        ${opts.map(([id,title,desc]) => `
+          <button type="button" class="bset-radio${mode===id?' on':''}" onclick="_bstSetJoinMode('${id}')">
+            <span class="bset-radio-dot"></span>
+            <span class="bset-radio-tx"><span class="bset-radio-t">${title}</span><span class="bset-radio-d">${desc}</span></span>
           </button>`).join('')}
       </div>
-      <input type="hidden" id="bs-category" value="${escapeHTML(b.category||'')}">
-      <div class="settings-title">Tags <span style="font-size:11px;color:var(--muted);font-weight:400;">— up to 5, comma separated</span></div>
-      <input class="field-input" id="bs-tags" value="${escapeHTML((b.tags||[]).join(', '))}" placeholder="speedrunning, modding, chill" style="margin-bottom:20px;">
 
-      <div class="settings-title">Visibility</div>
-      <div class="vis-toggle" style="margin-bottom:20px;">
-        <div class="vis-opt ${b.public!==false?'active':''}" onclick="setBastionVis(true)">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          <div style="font-size:13px;font-weight:700;">Public</div>
-          <div style="font-size:11px;color:var(--muted-light);">Anyone can discover & join</div>
-        </div>
-        <div class="vis-opt ${b.public===false?'active':''}" onclick="setBastionVis(false)">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <div style="font-size:13px;font-weight:700;">Private</div>
-          <div style="font-size:11px;color:var(--muted-light);">Invite only</div>
+      <div class="bset-fgroup">
+        <div class="bset-switch${mode==='private'?' off':''}">
+          <div class="bset-switch-tx">
+            <div class="bset-switch-t">Discoverable</div>
+            <div class="bset-switch-d">Your bastion shows up in Discover and in search results. A private bastion cannot be discoverable.</div>
+          </div>
+          <div class="toggle${disc && mode!=='private'?' on':''}" onclick="${mode==='private'?'':'_bstToggleDiscoverable(this)'}"><div class="toggle-knob"></div></div>
         </div>
       </div>
-      <button class="btn-a" onclick="saveBastionOverview()">Save Changes</button>
-      ${b.public!==false ? `
-      <div id="app-form-section" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border);">
-        <div style="font-size:13px;font-weight:700;margin-bottom:4px;">Application Form <span style="font-size:10.5px;color:var(--muted);font-weight:400;">— optional</span></div>
-        <div style="font-size:12px;color:var(--muted-light);margin-bottom:12px;">Members must answer these before joining. Leave blank for instant-join.</div>
+
+      <div class="bs-divider"></div>
+
+      <div class="bset-fgroup" id="app-form-section"${mode==='private'?' style="display:none;"':''}>
+        <div class="bset-flabel">Application questions</div>
+        <div class="bset-fhelp" style="margin-bottom:10px;">Ask arrivals a few things before they get in. Leave this empty and anyone with an invite joins straight away. Answers land in Members, under Pending.</div>
         <div id="app-qs">
-          ${(b.applicationQuestions||[]).map((q,i) => `<div style="display:flex;gap:6px;margin-bottom:7px;"><input class="field-input app-q-input" value="${escapeHTML(q)}" placeholder="Question ${i+1}" onchange="updateAppQuestion(${i},this.value)" style="flex:1;"><button onclick="removeAppQuestion(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:17px;line-height:1;padding:4px;">×</button></div>`).join('')}
+          ${(b.applicationQuestions||[]).map((q,i) => `<div class="bset-qrow"><input class="bset-uline app-q-input" value="${escapeHTML(q)}" placeholder="Question ${i+1}" onchange="updateAppQuestion(${i},this.value)"><button class="bset-qx" type="button" title="Remove" onclick="removeAppQuestion(${i})">&times;</button></div>`).join('') || '<div class="bset-fhelp">No questions yet.</div>'}
         </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn-g" onclick="addAppQuestion()" style="font-size:12px;padding:6px 14px;">+ Question</button>
-          <button class="btn-a" onclick="saveAppQuestions()" style="font-size:12px;padding:6px 14px;">Save Form</button>
+        <div class="bset-save">
+          <button class="fs-btn" onclick="addAppQuestion()">+ Add a question</button>
+          <button class="fs-btn fs-btn--primary" onclick="saveAppQuestions()">Save questions</button>
         </div>
-      </div>` : '<div style="margin-top:14px;padding:12px;background:rgba(255, 0, 51,.07);border:1px solid rgba(255, 0, 51,.2);border-radius:10px;font-size:12.5px;color:var(--muted-light);">🔒 Private bastion — invite-only. Share invite links from the Invites tab.</div>'}
+      </div>
+
+      <div class="bset-note">These switches decide what Fortized draws and lets people do. They are not a security boundary: keep anything you would not want repeated out of a bastion, whichever setting is on.</div>
       `;
   }
   else if (tab==='channels') {
@@ -21542,12 +21788,11 @@ function renderBSettingsMain(tab) {
         : '<div style="color:var(--muted);font-size:13.5px;text-align:center;padding:20px;">No active invite links. Generate one above!</div>'}`;
   }
   else if (tab==='members') {
-    main.innerHTML = `
-      <div class="bs-section-title">Members</div>
-      <div style="font-size:12px;color:var(--muted-light);margin-bottom:16px;">${b.memberCount||1} member${(b.memberCount||1)!==1?'s':''}</div>
-      <input class="field-input" id="member-search" placeholder="Search members…" oninput="filterBSettingsMembers(this.value)" style="margin-bottom:14px;">
-      <div id="bsettings-members-list"><div style="display:flex;justify-content:center;align-items:center;padding:20px;"><div class="pl-spinner" style="width:20px;height:20px;border-width:2px;"></div></div></div>`;
-    loadBastionMembersList();
+    // Members is its own card now, not a page in here. Anything still routing
+    // to the old tab gets taken to the real thing instead of a second list
+    // that disagrees with it.
+    _bsetOpenExternal('members');
+    return;
   }
   else if (tab==='bans') {
     const bans = b.bans || [];
@@ -22352,9 +22597,10 @@ function renderBSettingsMain(tab) {
     main.innerHTML = `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('construction','48')}</div><h3>Coming Soon</h3><p>This section is in development.</p></div>`;
   }
 
-  // The page header above the pane is the heading now. Every tab still opens
-  // with its own, which would read as the same title printed twice.
+  // The title lives at the top of this column now, so a tab that still opens
+  // with its own .bs-section-title would print the same heading twice.
   _bsetStripLegacyHead(main);
+  main.insertAdjacentHTML('afterbegin', _bsetPageHeadHTML(tab));
 }
 
 // ── Create & Marketplace helpers ──
@@ -23394,6 +23640,48 @@ function _bsPickCategory(id) {
     const cid = i === 0 ? '' : (_DISC_CATS[i - 1] || {}).id;
     btn.classList.toggle('is-on', cid === (id || ''));
   });
+}
+
+// ── Privacy: the three join modes ──
+// b.public is the old boolean and half the app still reads it, so it stays
+// written. joinMode is the field that actually carries the three states.
+function _bstJoinMode(b) {
+  if (b.joinMode === 'private' || b.joinMode === 'default' || b.joinMode === 'open') return b.joinMode;
+  return b.public === false ? 'private' : 'open';
+}
+
+async function _bstSetJoinMode(mode) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  b.joinMode = mode;
+  if (mode === 'private') { b.discoverable = false; b.public = false; }
+  else { b.public = b.discoverable !== false; }
+  if (!b.globalId) {
+    b.globalId = await _nextFortizedId('bastion');
+    await FortizedSocial.addBastionMember(b.globalId, CU.username);
+  }
+  await saveUser();
+  _syncBastionToGlobal(curBastion);
+  renderBSettingsMain('privacy');
+  toast(mode === 'open' ? 'Anyone can join now' : mode === 'private' ? 'Invite only, and hidden from Discover' : 'Invite only', 'success');
+}
+
+async function _bstToggleDiscoverable(el) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  if (_bstJoinMode(b) === 'private') return;
+  const on = !el.classList.contains('on');
+  el.classList.toggle('on', on);
+  b.discoverable = on;
+  b.public = on;
+  await saveUser();
+  _syncBastionToGlobal(curBastion);
+  toast(on ? 'Listed in Discover' : 'Hidden from Discover', 'success');
+}
+
+async function _bsetSetDefaultChannel(name) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  b.defaultChannel = name;
+  await saveUser();
+  _syncBastionToGlobal(curBastion);
 }
 
 async function saveBastionOverview() {
@@ -35573,7 +35861,7 @@ function _listenBastionUpdates() {
       try {
         const fresh = await FortizedSocial.getGlobalBastion(gid);
         if (!fresh) continue;
-        const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','categories','roles','everyone','memberRoles','members','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
+        const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','categories','roles','everyone','memberRoles','members','public','joinMode','discoverable','applicationQuestions','applications','memberInvites','vanity','category','tags','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
         let changed = false;
         let membersChanged = false;
         syncFields.forEach(f => {
@@ -37449,7 +37737,7 @@ async function acceptBastionInvite(btn, bastionId, inviteCode) {
   btn.textContent = 'Joining…';
   try {
     // Use invite-aware join that bypasses the public-only check
-    await joinBastionById(bastionId, true);
+    await joinBastionById(bastionId, true, inviteCode);
     // Increment invite uses
     if (inviteCode) {
       try { await FortizedSocial.incrementInviteUses(inviteCode); } catch(e) { console.warn('[Invite] Uses increment failed:', e?.message); }
@@ -37469,7 +37757,7 @@ function handleInviteGuestContinue(btn, bastionId, inviteCode) {
   window.location.href = '/signup?invite=' + encodeURIComponent(inviteCode);
 }
 // Join a bastion by ID. If hasInvite=true, skip the public-only check.
-async function joinBastionById(bastionId, hasInvite) {
+async function joinBastionById(bastionId, hasInvite, viaCode) {
   const all=await FortizedSocial.getGlobalBastions()||{};
   const bid = (bastionId||'').trim();
   const bidLower = bid.toLowerCase();
@@ -37490,7 +37778,7 @@ async function joinBastionById(bastionId, hasInvite) {
   const localB={name:b.name,emblem:b.emblem||'🏰',icon:b.icon||null,banner:b.banner||null,tagline:b.tagline||'',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,public:b.public,memberRoles:b.memberRoles||{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[],moodDisabled:b.moodDisabled||false,moodLocked:b.moodLocked||false,lockedMood:b.lockedMood||'',customMood:b.customMood||null,memberCount:b.memberCount||1};
   CU.bastions=[...(CU.bastions||[]).filter(ub=>ub.globalId!==gid),localB];
   await saveUser(true);
-  await FortizedSocial.addBastionMember(gid,CU.username);
+  await FortizedSocial.addBastionMember(gid,CU.username, viaCode ? 'invite:'+viaCode : (hasInvite ? 'invite' : 'discover'));
   try{const members=await FortizedSocial.getBastionMembers(gid)||[];const _gb=await FortizedSocial.getGlobalBastion(gid);if(_gb){_gb.memberCount=members.length;await FortizedSocial.saveGlobalBastion(gid,_gb);}}catch{}
   renderRailBastions();
   toast('Joined '+b.name+'!','success');
@@ -42293,12 +42581,18 @@ async function submitBastionApp(btn, bastionId, qCount) {
   }
   btn.disabled = true; btn.textContent = 'Submitting\u2026';
   const app = { applicant: CU.username, displayName: CU.displayName||CU.username, answers, timestamp: new Date().toISOString(), status: 'pending' };
-  try { await FortizedSocial.submitBastionApplication?.(bastionId, app); } catch {
-    const key = 'ftz_apps_' + bastionId;
-    const arr = JSON.parse(localStorage.getItem(key)||'[]');
-    arr.push(app);
-    localStorage.setItem(key, JSON.stringify(arr));
-  }
+  // Applications live on the global bastion so the owner can actually SEE
+  // them. The old path wrote to the APPLICANT's localStorage, which nobody
+  // else could ever read.
+  try {
+    const gb = await FortizedSocial.getGlobalBastion(bastionId);
+    if (gb) {
+      const apps = (gb.applications || []).filter(a => a.applicant !== app.applicant || a.status !== 'pending');
+      apps.push(app);
+      gb.applications = apps.slice(-200);
+      await FortizedSocial.saveGlobalBastion(bastionId, gb);
+    }
+  } catch (e) { _wrn('[Bastion] application save failed', e?.message); }
   btn.closest('[style*=fixed]')?.remove();
   toast('Application submitted! The owner will review it.', 'success');
 }

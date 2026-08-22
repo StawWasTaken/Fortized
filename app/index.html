@@ -41,10 +41,10 @@ window._cdnReady = new Promise((resolve) => {
 });
 window._cdnReady.then(() => {
   const s3 = document.createElement('script');
-  s3.src = '/FortizedSocial-supabase.js?v=2026fix514';
+  s3.src = '/FortizedSocial-supabase.js?v=2026fix515';
   const loadShim = () => {
     const s4 = document.createElement('script');
-    s4.src = '/firebase-compat-shim.js?v=2026fix514';
+    s4.src = '/firebase-compat-shim.js?v=2026fix515';
     document.head.appendChild(s4);
   };
   s3.onload = loadShim;
@@ -53,14 +53,14 @@ window._cdnReady.then(() => {
 });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DynaPuff:wght@500;700&family=MedievalSharp&family=Pixelify+Sans:wght@500;700&family=Chicle&family=Croissant+One&family=Caprasimo&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="/app/styles.css?v=2026fix514">
+<link rel="stylesheet" href="/app/styles.css?v=2026fix515">
 <style id="radiance-font-style"></style>
 <script>
 // Register SW on every load for network-first HTML caching + auto-reload on update
 // ?v=... forces the browser to treat sw.js as a new file on each deploy, bypassing any
 // HTTP cache between the client and the server (CDN/proxy included).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=2026fix514', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js?v=2026fix515', { updateViaCache: 'none' }).catch(() => {});
   // When a new SW activates and signals an update, reload to get fresh content
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'FTZ_SW_UPDATED') window.location.reload();
@@ -102,7 +102,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   } catch(e){}
 })();
 </script>
-<script src="/app/utils.js?v=2026fix514"></script>
+<script src="/app/utils.js?v=2026fix515"></script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -677,10 +677,8 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
     <div class="modal-body bset-shell">
       <aside class="bsettings-nav bset-rail" id="bsettings-nav"></aside>
       <main class="bset-main">
-        <header class="bset-head" id="bsettings-head"></header>
         <div class="bset-body">
           <div class="bset-scroll"><div class="bsettings-main" id="bsettings-main"></div></div>
-          <aside class="bsettings-preview" id="bsettings-preview"></aside>
         </div>
       </main>
     </div>
@@ -1117,10 +1115,10 @@ window.addEventListener('pageshow', e => { if (e.persisted) window.location.relo
   </div>
 </div>
 
-<script src="/app/activities/mist-and-cards/game.js?v=2026fix514"></script>
-<script src="/app/app.js?v=2026fix514"></script>
-<script src="/app/joy-system.js?v=2026fix514"></script>
-<script src="/app/chronicle-games.js?v=2026fix514"></script>
+<script src="/app/activities/mist-and-cards/game.js?v=2026fix515"></script>
+<script src="/app/app.js?v=2026fix515"></script>
+<script src="/app/joy-system.js?v=2026fix515"></script>
+<script src="/app/chronicle-games.js?v=2026fix515"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

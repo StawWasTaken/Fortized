@@ -274,22 +274,140 @@ does not. Used on every locked bastion perk and on the Radiance page.
 
 ---
 
-### 3.7 Bastion settings — `.bst-set-*`
+### 3.7 Bastion settings — Guilded's shape, Discord's pages
 
-**Shell:** the settings-modal shell the staff console uses — sectioned left rail,
-sticky header with per-page title and lead, one scroll body. The 24 tabs grouped
-so the rail is legible:
+**⚠️ REVISED after the first attempt was rejected.** Phase 3a kept the legacy
+layout and polished it, and the answer was *"what i wanted is a NEW DESIGN, FROM
+SCRATCH, INSPIRED BY GUILDED"* — then, adding the second reference: *"and also
+from discord (but dont take EVERYTHING from discord, just take stuff that we have
+equivalents to)"*, and *"dont try to create new stuff too much either."*
 
-- **Bastion** — Overview · Emblem & banner · Mood · Vanity URL
-- **Structure** — Channels & categories · Roles · Members · Invites
-- **Expression** — Emoji · Stickers · Soundboard
-- **Moderation** — Automod · Bans · Slowmode · Rules · Audit
-- **Growth** — Insights · Boosting · Events · Announcements · Welcome · Starboard
-- **Advanced** — Bots · Templates · Danger zone
+So: the **components stay ours** (`.fs-btn`, `.ftz-select`, `.settings-input`,
+`.ftz-confirm-card`, the `.bstr-*`/`.bstc-*` families) — that rule has not
+changed and inventing a visual vocabulary is what sank staff-console round 1.
+What changes is the **information architecture**, and it is Guilded's:
 
-**Every tab rebuilt on `.fs-tb-panel` + `.fr-row` + `.ftz-select` +
-`.settings-input`** — which is what removes the 401 inline styles and makes the
-whole thing appearance-aware. **No feature is dropped.**
+**The shell.**
+- A **flat, icon-less nav** with **group labels**. No glyph on a nav row.
+  Guilded's settings rail carries none, and the icons were half the reason the
+  rebuilt shell still read as the old one.
+- **No icon header band.** The page title and its lead line live at the top of
+  the **content column**, not in a strip above it.
+- **No preview aside.** The content column is one wide column.
+- A big **✕ (ESC)** top-right — `.settings-close`, the big-card convention.
+- Rows are underline-style labelled fields, each with its own helper line
+  underneath, the way Guilded's Overview reads.
+
+**The two groups**, named as Guilded names them:
+
+- **Bastion settings** — Overview · Roles · Channels · Emoji · Privacy ·
+  Notifications · Automod · Boosting · Insights · Announcements · Welcome ·
+  Starboard · Mood · Reputation · Bots · Templates · Danger zone
+- **User management** — Members ↗ · Invites · Bans
+
+**Three tabs move or leave outright:**
+
+1. **Members leaves settings.** *"the member page is actually now moved to be an
+   openable card like the overview (not overview in settings) and clicking on it
+   in settings will open this card too."* So Members becomes a **standalone card**,
+   peer to the sidebar's Members entry, and the settings row carries an
+   **external-link glyph** and opens that card — exactly the `Members ↗ / Roles /
+   Invites` fragment in the reference.
+2. **Slow Mode leaves settings** and folds into the **per-channel editor**, where
+   Discord keeps it. A per-channel setting authored on a bastion-wide page was
+   always the wrong home; the channel editor already exists (phase 2c).
+3. **Rules stops being a settings page** and becomes **a channel** — see §3.7c.
+
+**`create_marketplace_legacy` is deleted.** It is a branch with no nav entry, so
+nothing can reach it.
+
+---
+
+### 3.7a The Members card — Discord's members page
+
+A standalone card, not a settings tab. Discord's management page is the
+reference and we have equivalents for most of it:
+
+- Tabs **All members · Pending · Rejected · Approved** — Pending/Rejected/
+  Approved are the **applications** join mode, which is the third mode the
+  Privacy page introduces. They only appear when applications are on.
+- Search by username, a **Sort** control, and a **Prune** action.
+- Columns: **Name** (display name in its own style, username underneath in grey,
+  role/badge chips), **Member since**, **Joined Fortized**, **Join method**
+  (the invite code chip, from `b.memberJoins`/invite data), **Roles** (coloured
+  pills with a `+N` overflow).
+- Per-row actions and a select-all checkbox; pagination footer.
+
+⚠️ **Signals is dropped.** Discord's Signals column is a trust-and-safety
+scoring product we do not have, and a column that shows nothing is a skeleton —
+which is the thing the user has asked twice not to ship.
+
+⚠️ This card is the settings-side members list, **not** `renderMemberList`. That
+one is virtualised off fixed row heights and phase 7 owns it.
+
+---
+
+### 3.7b Privacy — and the third join mode
+
+Guilded's Privacy page, verbatim in shape, three radios:
+
+- **Private** — people may only join with an invite, and the bastion cannot be
+  previewed.
+- **Default** — people may only join with an invite.
+- **Open entry** — people can join without an invite.
+
+Then a **Discoverable** toggle, **disabled while Private** with the reason said
+plainly. That is also the honest answer to the long-open *"where do people find
+applications? i dont know, find a way"* — an application is what an Open-entry
+bastion asks for when it wants to screen arrivals, and Discover is where people
+find it.
+
+⚠️ **No copy on this page may call a bastion or a channel private or secure.**
+The permission resolver runs on the client; until passwords are hashed and RLS
+is on for `users`, anything client-side can be bypassed by writing Supabase
+directly. Privacy here means *what the app draws and does*, and the page says so.
+
+---
+
+### 3.7c Rules is a channel
+
+*"when you create rules its a new channel that appears (like a text channel) and
+you can put it wherever you want by dragging it."* So the rules page in settings
+goes away, and creating rules **creates a channel** of type `rules` — which
+already exists in `_FTZ_CH_TYPES` with its own glyph. One per bastion, and it
+sits in the sidebar like any other channel, draggable into any category.
+
+---
+
+### 3.7d The channel editor gains Discord's page
+
+Phase 2c built the editor. Discord's channel-settings card adds the pages we
+have equivalents for: **Channel name**, **Channel topic** (`ch.desc` — ⚠️ it is
+`desc`, never `topic`) with a character counter, **Slowmode** (moved here),
+**Content visibility** (Default · Spoiler · Age-restricted), and an
+**Announcement channel** toggle. Left column: Overview · Permissions · Invites,
+a divider, then **Delete channel** in red. Integrations is **not** built — we
+have no webhooks yet, and an empty page is a skeleton.
+
+---
+
+### 3.7e The sidebar — drag, and edit in place
+
+*"each channels can be dragged (reordered) and edited directly into the
+sidebar."*
+
+- **Drag to reorder** a channel, including between categories. ⚠️ The order has
+  to be written somewhere real, the way phase 2b's role drag restamps
+  `priority` **and** rewrites the array — leaving one behind puts the list and
+  the resolver into disagreement.
+- **Hover controls on a channel row**: a gear that opens the channel editor
+  ("Edit Channel"), and invite.
+- A **top block above the categories**: Events · Browse Channels · Members ·
+  Bastion Boosts — the integrated pages of §3.2, reachable where Discord puts
+  them.
+- A **caret dropdown** on the bastion name, carrying only entries we have:
+  invite, settings, create channel, create category, notification settings,
+  privacy settings, leave.
 
 ---
 
@@ -340,7 +458,7 @@ Each phase ships and is verifiable alone. I would not do this in one push.
 |---|---|---|
 | 1 | Sidebar wired to real categories + channel rows + the 8 types | The daily surface, and it makes an existing feature visible for the first time |
 | 2 | Roles, permissions, per-channel overrides | Deepest work; unblocks locked channels |
-| 3 | Settings shell + all tabs rebuilt | Mechanical once 1–2 define the components |
+| 3 | Settings rebuilt Guilded-shaped (§3.7) + the Members card + Privacy + rules-as-a-channel + sidebar drag/edit | Re-scoped: 3a shipped a polish of the old layout and was rejected. This is a structural rebuild, so it ships in sub-phases — **3b** nav + shell + Overview + Privacy, **3c** the Members card, **3d** the remaining pages, **3e** sidebar drag + hover edit + rules-as-a-channel |
 | 4 | Boosting + the unlock button + the bastion pages | Self-contained; the button is shared with Radiance |
 | 5 | Creation flow + overview | Reuses `.gs-*` wholesale |
 | 6 | Invite card + invite management | Smallest; half already landed |

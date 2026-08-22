@@ -1817,7 +1817,7 @@ const FortizedSocial = (() => {
     _cacheSet(cacheKey, result, _CACHE_TTL.bastionMembers);
     return result;
   }
-  async function addBastionMember(bastionId, username) {
+  async function addBastionMember(bastionId, username, via) {
     _cacheDel('bMembers:' + bastionId);
     const members = await getBastionMembers(bastionId);
     const u = norm(username);
@@ -1830,11 +1830,13 @@ const FortizedSocial = (() => {
       const b = await getGlobalBastion(bastionId);
       if (b) {
         const joins = { ...(b.memberJoins || {}) };
-        if (!joins[u]) {
-          joins[u] = new Date().toISOString();
-          b.memberJoins = joins;
-          await saveGlobalBastion(bastionId, b);
-        }
+        // How they got in, recorded in the SAME write as the join date so it
+        // costs nothing extra. Only stamped once, like the date.
+        const vias = { ...(b.memberInvites || {}) };
+        let dirty = false;
+        if (!joins[u]) { joins[u] = new Date().toISOString(); b.memberJoins = joins; dirty = true; }
+        if (via && !vias[u]) { vias[u] = String(via); b.memberInvites = vias; dirty = true; }
+        if (dirty) await saveGlobalBastion(bastionId, b);
       }
     } catch (_) {}
   }

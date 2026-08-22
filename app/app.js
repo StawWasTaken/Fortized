@@ -21698,86 +21698,71 @@ function renderBSettingsMain(tab) {
   else if (tab==='automod') {
     const am = b.automod || {};
     const amRules = [
-      {key:'blockLinks',icon:'🔗',title:'Block Links',desc:'Prevent members from posting external links in text channels.'},
-      {key:'antiSpam',icon:'⚡',title:'Anti-Spam (Caps)',desc:'Block messages with excessive capitalization (>70% caps).'},
-      {key:'antiRaid',icon:'🛡️',title:'Anti-Raid',desc:'Automatically lock the bastion when mass joins are detected (10+ joins/min).'},
-      {key:'slowMode',icon:'🐌',title:'Slow Mode',desc:'Limit how fast members can send messages (1 msg every 5 seconds).'},
-      {key:'blockInvites',icon:'🔒',title:'Block Invite Links',desc:'Prevent members from posting invite links to other bastions.'},
-      {key:'imageOnly',icon:'🖼️',title:'Image-Only Channels',desc:'Allow only image/file attachments in designated channels.'},
-      {key:'newAccountFilter',icon:'👶',title:'New Account Filter',desc:'Flag messages from accounts younger than 7 days.'},
-      {key:'profanityFilter',icon:'🤬',title:'Profanity Filter',desc:'Automatically filter commonly offensive language.'},
+      {key:'blockLinks',       title:'Block links',        desc:'Members cannot post external links in text channels.'},
+      {key:'antiSpam',         title:'Shouting',           desc:'Blocks a message that is more than 70% capitals.'},
+      {key:'antiRaid',         title:'Anti-raid',          desc:'Locks the bastion by itself when ten or more people join inside a minute.'},
+      {key:'slowMode',         title:'Slow mode',          desc:'One message every five seconds, per member.'},
+      {key:'blockInvites',     title:'Block other invites',desc:'Members cannot post invite links to other bastions here.'},
+      {key:'imageOnly',        title:'Images only',        desc:'Only attachments get through in the channels you mark.'},
+      {key:'newAccountFilter', title:'New account filter', desc:'Flags messages from accounts younger than seven days.'},
+      {key:'profanityFilter',  title:'Profanity filter',   desc:'Filters commonly offensive language.'},
     ];
     main.innerHTML = `
-      <div class="bs-section-title">AutoMod</div>
-      <div class="bs-section-desc">Modular safety toggles. Enable or disable each rule independently.</div>
-      ${amRules.map(r=>`<div class="automod-rule">
-        <div class="amr-header"><span style="font-size:20px;">${r.icon}</span><div class="amr-title">${r.title}</div>
-          <div class="amr-enabled"><span>${am[r.key]?'Enabled':'Disabled'}</span><div class="toggle ${am[r.key]?'on':''}" onclick="toggleAM('${r.key}',this)"></div></div></div>
-        <div class="amr-desc">${r.desc}</div>
+      ${amRules.map(r=>`<div class="bam-rule${am[r.key]?' on':''}">
+        <div class="bam-tx"><div class="bam-t">${r.title}</div><div class="bam-d">${r.desc}</div></div>
+        <div class="toggle${am[r.key]?' on':''}" onclick="toggleAM('${r.key}',this)"><div class="toggle-knob"></div></div>
       </div>`).join('')}
-      <div class="automod-rule">
-        <div class="amr-header"><span style="font-size:20px;">📢</span><div class="amr-title">Mention Limit</div></div>
-        <div class="amr-desc">Max mentions per message: <strong>${am.mentionLimit||10}</strong></div>
-        <input class="field-input" type="number" id="mention-limit" value="${am.mentionLimit||10}" min="1" max="25" style="width:80px;margin-top:6px;">
+      <div class="bs-divider"></div>
+      <div class="bset-fgroup" style="max-width:220px;">
+        <label class="bset-flabel" for="mention-limit">Mentions per message</label>
+        <input class="bset-uline" type="number" id="mention-limit" value="${am.mentionLimit||10}" min="1" max="25">
+        <div class="bset-fhelp">Anything above this is held back.</div>
       </div>
-      <div class="automod-rule">
-        <div class="amr-header"><span style="font-size:20px;">🚫</span><div class="amr-title">Blocked Keywords</div></div>
-        <div class="amr-desc">Messages containing these words will be blocked.</div>
-        <div class="amr-keywords" id="kw-list">
-          ${(am.keywords||[]).map((k,i)=>`<div class="amr-kw">${escapeHTML(k)}<button onclick="removeKeyword(${i})">✕</button></div>`).join('')}
-        </div>
-        <div style="display:flex;gap:8px;margin-top:10px;">
-          <input class="field-input" id="new-kw" placeholder="Add keyword…" style="width:auto;flex:1;">
-          <button class="btn-g" style="padding:8px 14px;font-size:13px;" onclick="addKeyword()">Add</button>
+      <div class="bset-fgroup">
+        <div class="bset-flabel">Blocked words</div>
+        <div class="bset-fhelp" style="margin:0 0 10px;">A message containing one of these never posts.</div>
+        <div class="bam-kws" id="kw-list">${(am.keywords||[]).length
+          ? (am.keywords||[]).map((k,i)=>`<span class="bam-kw">${escapeHTML(k)}<button type="button" aria-label="Remove" onclick="removeKeyword(${i})">&times;</button></span>`).join('')
+          : '<span class="bmc-dim">Nothing blocked yet.</span>'}</div>
+        <div class="bam-add">
+          <input class="bset-uline" id="new-kw" placeholder="Add a word" onkeydown="if(event.key==='Enter')addKeyword()">
+          <button class="fs-btn" type="button" onclick="addKeyword()">Add</button>
         </div>
       </div>
-      <button class="btn-a" style="margin-top:16px;" onclick="saveAutoMod()">Save AutoMod</button>`;
+      <div class="bset-save"><button class="fs-btn fs-btn--primary" type="button" onclick="saveAutoMod()">Save changes</button></div>
+      <div class="bset-note">AutoMod acts on what Fortized can see as it is posted. It is a filter, not a guarantee: a determined person will always find a phrasing it does not catch, so keep a moderator on the room too.</div>`;
   }
   else if (tab==='invites') {
     const invites = b.invites || [];
+    const dead = inv => (inv.expires && new Date(inv.expires) < new Date()) || (inv.maxUses && (inv.uses||0) >= inv.maxUses);
     main.innerHTML = `
-      <div class="bs-section-title">Invites</div>
-      <div class="bs-section-desc">Create and manage invite links for your bastion.</div>
-      <div style="padding:14px;background:var(--panel);border:1px solid var(--border);border-radius:14px;margin-bottom:18px;">
-        <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Generate New Invite</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <select id="invite-expiry" class="field-input" style="width:auto;min-width:120px;">
-            <option value="">No expiry</option>
-            <option value="1">1 hour</option>
-            <option value="24">24 hours</option>
-            <option value="168">7 days</option>
-            <option value="720">30 days</option>
-          </select>
-          <select id="invite-max-uses" class="field-input" style="width:auto;min-width:120px;">
-            <option value="0">Unlimited uses</option>
-            <option value="1">1 use</option>
-            <option value="5">5 uses</option>
-            <option value="10">10 uses</option>
-            <option value="25">25 uses</option>
-            <option value="100">100 uses</option>
-          </select>
-          <button class="btn-a" style="font-size:13px;padding:8px 16px;" onclick="generateInvite()">Generate</button>
+      ${b.vanity ? `<div class="binv-vanity">
+        <div class="binv-vanity-tx"><div class="binv-vanity-t">Your custom link</div><code class="bset-copycode">invite.fortized.com/${escapeHTML(b.vanity)}</code></div>
+        <button class="fs-btn" type="button" onclick="_bsetCopyVanity()">Copy link</button>
+      </div>` : `<div class="bset-note" style="margin-top:0;">You have no custom link yet. Claim one on the Overview page and it never expires or runs out.</div>`}
+      <div class="binv-make">
+        <div class="binv-make-t">Create an invite</div>
+        <div class="binv-make-r">
+          <div class="binv-f"><div class="bset-flabel">Expires after</div>${_ftzSelectHTML('invite-expiry', '', [
+            {value:'',label:'Never'},{value:'1',label:'1 hour'},{value:'24',label:'24 hours'},{value:'168',label:'7 days'},{value:'720',label:'30 days'}])}</div>
+          <div class="binv-f"><div class="bset-flabel">Number of uses</div>${_ftzSelectHTML('invite-max-uses', '0', [
+            {value:'0',label:'Unlimited'},{value:'1',label:'1 use'},{value:'5',label:'5 uses'},{value:'10',label:'10 uses'},{value:'25',label:'25 uses'},{value:'100',label:'100 uses'}])}</div>
+          <button class="fs-btn fs-btn--primary" type="button" onclick="generateInvite()">Create invite</button>
         </div>
       </div>
-      <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--muted);">Active Invites (${invites.length})</div>
-      ${invites.length ? invites.map((inv,i)=>{
-        const expired=inv.expires&&new Date(inv.expires)<new Date();
-        const maxedOut=inv.maxUses&&inv.uses>=inv.maxUses;
-        return `<div style="padding:12px 16px;background:var(--panel);border:1px solid ${expired||maxedOut?'rgba(255, 0, 51,.2)':'var(--border)'};border-radius:14px;margin-bottom:8px;${expired||maxedOut?'opacity:.6;':''}">
-          <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;">
-            <span style="flex:1;font-size:12px;font-family:monospace;color:rgba(255,255,255,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(_ftzInviteURL(inv.code))}</span>
-            <button class="btn-g" style="padding:4px 10px;font-size:12px;flex-shrink:0;" onclick="copyInvite('${inv.code}')">Copy</button>
+      ${invites.length ? `<div class="bxp-table binv-table">
+        <div class="bxp-hrow"><div class="bxp-c">Link</div><div class="bxp-c">Uses</div><div class="bxp-c">Created by</div><div class="bxp-c">Expires</div><div class="bxp-c bxp-c--a"></div></div>
+        ${invites.map((inv,i)=>`<div class="bxp-row${dead(inv)?' is-dead':''}">
+          <div class="bxp-c binv-code"><code>${escapeHTML(_ftzInviteURL(inv.code))}</code></div>
+          <div class="bxp-c">${inv.uses||0}${inv.maxUses?' of '+inv.maxUses:''}</div>
+          <div class="bxp-c">${escapeHTML(inv.createdBy||'Unknown')}</div>
+          <div class="bxp-c">${inv.expires ? (dead(inv)?'<span class="binv-dead">Expired</span>':_bmcDate(inv.expires)) : (dead(inv)?'<span class="binv-dead">Used up</span>':'Never')}</div>
+          <div class="bxp-c bxp-c--a">
+            <button class="fs-btn bmc-mini" type="button" onclick="copyInvite('${inv.code}')">Copy</button>
+            <button class="fs-btn stf-btn--danger bmc-mini" type="button" onclick="revokeInvite(${i})">Revoke</button>
           </div>
-          <div style="display:flex;align-items:center;gap:12px;margin-top:6px;font-size:12px;color:var(--muted);">
-            <span>Uses: ${inv.uses||0}${inv.maxUses?'/'+inv.maxUses:''}</span>
-            <span>By: ${escapeHTML(inv.createdBy||'Unknown')}</span>
-            <span>${inv.expires?(expired?'⛔ Expired':'Expires: '+new Date(inv.expires).toLocaleDateString()):'No expiry'}</span>
-            ${expired||maxedOut?'<span style="color:var(--red);font-weight:700;">Inactive</span>':''}
-          </div>
-          <button class="btn-d" style="padding:4px 10px;font-size:12px;margin-top:6px;" onclick="revokeInvite(${i})">Revoke</button>
-        </div>`;
-      }).join('')
-        : '<div style="color:var(--muted);font-size:13.5px;text-align:center;padding:20px;">No active invite links. Generate one above!</div>'}`;
+        </div>`).join('')}
+      </div>` : _ftzNotFound('No invites yet', 'Create one above and share it wherever your people are.', {art:'battle'})}`;
   }
   else if (tab==='members') {
     // Members is its own card now, not a page in here. Anything still routing
@@ -21788,22 +21773,25 @@ function renderBSettingsMain(tab) {
   }
   else if (tab==='bans') {
     const bans = b.bans || [];
-    const isOwner=b.owner===CU.username;
+    const isOwner = b.owner === CU.username;
     main.innerHTML = `
-      <div class="bs-section-title">Bans</div>
-      <div style="font-size:12px;color:var(--muted-light);margin-bottom:16px;">${bans.length} banned member${bans.length!==1?'s':''}</div>
-      ${isOwner?`<div style="display:flex;gap:8px;margin-bottom:18px;">
-        <input class="field-input" id="ban-username-input" placeholder="Username to ban" style="flex:1;" onkeydown="if(event.key==='Enter')banMemberByName()">
-        <input class="field-input" id="ban-reason-input" placeholder="Reason (optional)" style="flex:1;" onkeydown="if(event.key==='Enter')banMemberByName()">
-        <button class="btn-d" style="font-size:13px;padding:8px 14px;flex-shrink:0;" onclick="banMemberByName()">Ban</button>
-      </div>`:''}
-      ${bans.length ? bans.map((ban,i)=>`
-        <div style="padding:12px 16px;background:var(--panel);border:1px solid rgba(255, 0, 51,.2);border-radius:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
-          <span style="font-size:18px;">🚫</span>
-          <div style="flex:1;"><div style="font-weight:600;">${escapeHTML(ban.username)}</div><div style="font-size:12px;color:var(--muted);">Reason: ${escapeHTML(ban.reason||'N/A')}</div><div style="font-size:11px;color:var(--muted);">${ban.date?new Date(ban.date).toLocaleDateString():''}</div></div>
-          <button class="btn-g" style="font-size:12px;padding:5px 10px;" onclick="unbanMember(${i})">Unban</button>
-        </div>`).join('')
-        : '<div style="color:var(--muted);font-size:13.5px;text-align:center;padding:20px;">No banned members.</div>'}`;
+      ${isOwner ? `<div class="binv-make">
+        <div class="binv-make-t">Ban somebody</div>
+        <div class="binv-make-r">
+          <div class="binv-f"><div class="bset-flabel">Username</div><input class="bset-uline" id="ban-username-input" placeholder="username" onkeydown="if(event.key==='Enter')banMemberByName()"></div>
+          <div class="binv-f binv-f--wide"><div class="bset-flabel">Reason</div><input class="bset-uline" id="ban-reason-input" placeholder="Optional, but it helps the next moderator" onkeydown="if(event.key==='Enter')banMemberByName()"></div>
+          <button class="fs-btn stf-btn--danger" type="button" onclick="banMemberByName()">Ban</button>
+        </div>
+      </div>` : ''}
+      ${bans.length ? `<div class="bxp-table">
+        <div class="bxp-hrow"><div class="bxp-c bxp-c--n">Name</div><div class="bxp-c">Reason</div><div class="bxp-c">Banned on</div><div class="bxp-c bxp-c--a"></div></div>
+        ${bans.map((ban,i)=>`<div class="bxp-row">
+          <div class="bxp-c bxp-c--n"><span class="bxp-nm-t">${escapeHTML(ban.username)}</span></div>
+          <div class="bxp-c">${ban.reason ? escapeHTML(ban.reason) : '<span class="bmc-dim">No reason given</span>'}</div>
+          <div class="bxp-c">${_bmcDate(ban.date)}</div>
+          <div class="bxp-c bxp-c--a"><button class="fs-btn bmc-mini" type="button" onclick="unbanMember(${i})">Lift the ban</button></div>
+        </div>`).join('')}
+      </div>` : _ftzNotFound('Nobody is banned', 'A clean record. Long may it last.', {art:'celebrate'})}`;
   }
   else if (tab==='boost') {
     const level = b.boostLevel || 0;
@@ -21855,273 +21843,232 @@ function renderBSettingsMain(tab) {
     const curMood = calculateBastionMood(b);
     const moodInfo = curMood ? BASTION_MOODS[curMood] : null;
     main.innerHTML = `
-      <div class="bs-section-title">Bastion Mood</div>
-      <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Your Bastion has a live Mood State based on activity, time, and engagement. It changes the sidebar atmosphere.</div>
-      <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
-        <div style="font-weight:700;margin-bottom:8px;">Current Mood</div>
-        ${curMood ? `<div style="display:flex;align-items:center;gap:10px;font-size:18px;"><span>${moodInfo.emoji}</span><span style="font-family:var(--font-display);font-weight:800;">${moodInfo.label}</span></div>` : '<div style="color:var(--muted);">Mood is disabled</div>'}
+      <div class="bmd-now">
+        <div class="bmd-now-l">Right now</div>
+        ${curMood
+          ? `<div class="bmd-now-v"><span class="bmd-face">${moodInfo.emoji}</span><span>${escapeHTML(moodInfo.label)}</span></div>`
+          : '<div class="bmd-now-v bmd-off">Mood is switched off</div>'}
+        <div class="bmd-now-d">Read from how busy the rooms are, the hour, and how people are answering each other. It tints the sidebar.</div>
       </div>
-      <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
-        <div style="font-weight:700;margin-bottom:12px;">Settings</div>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
-          <input type="checkbox" id="mood-disable-toggle" ${b.moodDisabled?'checked':''} onchange="toggleMoodDisabled(this.checked)">
-          <span style="font-size:13px;">Disable automatic mood</span>
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:14px;">
-          <input type="checkbox" id="mood-lock-toggle" ${b.moodLocked?'checked':''} onchange="toggleMoodLocked(this.checked)">
-          <span style="font-size:13px;">Lock mood manually</span>
-        </label>
-        <div id="mood-lock-options" style="${b.moodLocked?'':'display:none;'}">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Select locked mood:</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;">
-            ${Object.entries(BASTION_MOODS).map(([k,m]) => `<button class="btn-g ${b.lockedMood===k?'active':''}" style="font-size:12px;padding:6px 12px;${b.lockedMood===k?'background:var(--accent-dim);color:var(--accent);border-color:var(--accent-mid);':''}" onclick="setLockedMood('${k}')">${m.emoji} ${m.label}</button>`).join('')}
-          </div>
+      <div class="bset-fgroup">
+        <div class="bset-switch">
+          <div class="bset-switch-tx"><div class="bset-switch-t">Read the mood automatically</div><div class="bset-switch-d">Turn this off and the bastion keeps one neutral atmosphere.</div></div>
+          <div class="toggle${b.moodDisabled?'':' on'}" onclick="toggleMoodDisabled(!this.classList.contains('on'))"><div class="toggle-knob"></div></div>
         </div>
       </div>
-      ${b.boostLevel>=2?`
-      <div style="padding:16px;background:rgba(255,249,62,.03);border:1px solid rgba(255,249,62,.1);border-radius:16px;">
-        <div style="font-weight:700;margin-bottom:8px;">Custom Mood <span style="font-size:10px;color:var(--accent);font-weight:600;">Boost Lv2+</span></div>
-        <div style="display:flex;gap:8px;margin-bottom:8px;">
-          <input class="field-input" id="custom-mood-emoji" placeholder="Emoji" value="${escapeHTML(b.customMood?.emoji||'')}" style="width:60px;text-align:center;">
-          <input class="field-input" id="custom-mood-label" placeholder="Mood name" value="${escapeHTML(b.customMood?.label||'')}" style="flex:1;">
+      <div class="bset-fgroup">
+        <div class="bset-switch">
+          <div class="bset-switch-tx"><div class="bset-switch-t">Hold one mood</div><div class="bset-switch-d">Pick the atmosphere yourself and keep it there.</div></div>
+          <div class="toggle${b.moodLocked?' on':''}" onclick="toggleMoodLocked(!this.classList.contains('on'))"><div class="toggle-knob"></div></div>
         </div>
-        <button class="btn-a" onclick="saveCustomMood()" style="font-size:12px;">Save Custom Mood</button>
-      </div>`:('<div style="padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:12px;font-size:12px;color:var(--muted);">'+_boostSvg('13')+' Custom Moods require Boost Level 2+</div>')}`;
+      </div>
+      <div id="mood-lock-options" class="bmd-picks"${b.moodLocked?'':' style="display:none;"'}>
+        ${Object.entries(BASTION_MOODS).map(([k,m]) => `<button class="bmd-pick${b.lockedMood===k?' on':''}" type="button" onclick="setLockedMood('${k}')"><span class="bmd-face">${m.emoji}</span><span>${escapeHTML(m.label)}</span></button>`).join('')}
+      </div>
+      <div class="bs-divider"></div>
+      ${b.boostLevel>=2 ? `
+      <div class="bset-fgroup">
+        <div class="bset-flabel">Your own mood</div>
+        <div class="bset-fhelp" style="margin:0 0 10px;">A mark and a word of your own, in place of the eight above.</div>
+        <div class="bmd-custom">
+          <input class="bset-uline bmd-emoji" id="custom-mood-emoji" placeholder="🔥" value="${escapeHTML(b.customMood?.emoji||'')}" maxlength="4">
+          <input class="bset-uline" id="custom-mood-label" placeholder="What is the room like?" value="${escapeHTML(b.customMood?.label||'')}" maxlength="24">
+          <button class="fs-btn fs-btn--primary" type="button" onclick="saveCustomMood()">Save</button>
+        </div>
+      </div>`
+      : `<div class="bset-note" style="margin-top:0;">Writing your own mood opens at boost level 2. <button class="bxp-link" type="button" onclick="renderBSettingsMain('boost')">See what boosting unlocks</button></div>`}`;
   }
   else if (tab==='reputation') {
     const bastionId = b.globalId||b.name;
     const repData = JSON.parse(localStorage.getItem('ftz_rep_'+bastionId)||'{}');
     const sorted = Object.entries(repData).sort((a,b_)=>b_[1]-a[1]).slice(0,10);
+    const earn = [
+      ['Sending a message', '+1, up to 30 a day'],
+      ['A reaction on something you posted', '+2'],
+      ['Voting in a poll', '+5'],
+      ['Boosting the bastion', '+25'],
+      ['Being mentioned warmly', '+3'],
+    ];
     main.innerHTML = `
-      <div class="bs-section-title">Reputation</div>
-      <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Members earn Reputation through reactions, polls, events, boosting, and engagement. It's Bastion-specific — not global clout farming.</div>
-      <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
-        <div style="font-weight:700;margin-bottom:12px;">Top Contributors</div>
-        ${sorted.length ? sorted.map(([user,score],i) => {
+      ${sorted.length ? `<div class="brp-board">
+        ${sorted.map(([user,score],i) => {
           const tier = getRepTier(score);
-          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;margin-bottom:4px;background:${i<3?'rgba(255,249,62,.03)':'transparent'};">
-            <span style="font-size:14px;font-weight:800;color:${i<3?'var(--accent)':'var(--muted)'};width:24px;text-align:center;">#${i+1}</span>
-            <span style="flex:1;font-size:13px;font-weight:600;">${escapeHTML(user)}</span>
-            <span class="rep-shield" style="color:${tier.color};border-color:${tier.color}33;background:${tier.color}12;">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              ${score}
-            </span>
-            <span style="font-size:10px;color:var(--muted);">${tier.label}</span>
+          return `<div class="brp-row${i<3?' brp-row--top':''}">
+            <span class="brp-rank">${i+1}</span>
+            <span class="brp-name">${escapeHTML(user)}</span>
+            <span class="brp-tier" style="--tc:${tier.color};">${escapeHTML(tier.label)}</span>
+            <span class="brp-score">${score}</span>
           </div>`;
-        }).join('') : '<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;">No reputation data yet. Engagement builds reputation!</div>'}
-      </div>
-      <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
-        <div style="font-weight:700;margin-bottom:8px;">How Reputation is Earned</div>
-        <div style="font-size:12.5px;color:var(--muted-light);line-height:1.7;">
-          📝 Messages: +1 per message (capped at 30/day)<br>
-          ❤️ Reactions received: +2 per reaction<br>
-          🗳 Poll participation: +5 per vote<br>
-          ${_boostSvg('12')} Boosting: +25 per boost<br>
-          📣 Mentions: +3 per positive mention
-        </div>
+        }).join('')}
+      </div>` : _ftzNotFound('No standing yet', 'It builds as people talk, react and turn up.', {art:'battle'})}
+      <div class="bset-fgroup" style="margin-top:22px;">
+        <div class="bset-flabel">How it is earned</div>
+        <div class="brp-earn">${earn.map(([k,v])=>`<div class="brp-earn-r"><span>${k}</span><b>${v}</b></div>`).join('')}</div>
+        <div class="bset-fhelp">Standing is counted inside this bastion only. It does not follow anyone out of here.</div>
       </div>
       ${b.owner===CU.username?`
-      <div style="padding:16px;background:rgba(255, 0, 51,.04);border:1px solid rgba(255, 0, 51,.15);border-radius:16px;">
-        <div style="font-weight:700;margin-bottom:8px;">Season Reset</div>
-        <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:12px;">Reset all reputation scores for a fresh season. This cannot be undone.</div>
-        <button class="btn-d" onclick="showCustomConfirm('Reset all reputation for this Bastion?',()=>resetBastionReputation('${escapeHTML(bastionId)}'))">Reset Reputation</button>
+      <div class="bs-divider"></div>
+      <div class="bset-fgroup">
+        <div class="bset-flabel">Start a new season</div>
+        <div class="bset-fhelp" style="margin:0 0 12px;">Every score goes back to zero. There is no undo.</div>
+        <button class="fs-btn stf-btn--danger" type="button" onclick="showCustomConfirm('Reset all reputation for this bastion?',()=>resetBastionReputation('${escapeHTML(bastionId)}'))">Reset standing</button>
       </div>`:''}`;
   }
   else if (tab==='welcome_msg') {
-    const bastionId = b.globalId||b.name;
     const welcomeEnabled = b.welcomeEnabled !== false;
     const welcomeMsg = b.welcomeMessage || '**{user}** joined the bastion. Welcome!';
-    const welcomeChannel = b.welcomeChannel || (b.channels||[]).find(ch=>ch.type==='text')?.name || 'general';
+    const chs = (b.channels||[]).filter(ch=>ch.type==='text'||ch.type==='announcement');
+    const welcomeChannel = b.welcomeChannel || (chs[0]||{}).name || 'general';
     main.innerHTML = `
-      <div class="bs-section-title">Welcome Message</div>
-      <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">Customize the greeting shown when new members join your bastion.</div>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-        <span style="font-size:13px;font-weight:600;">Enable Welcome Messages</span>
-        <div class="toggle ${welcomeEnabled?'on':''}" onclick="this.classList.toggle('on')" id="welcome-toggle"></div>
-      </div>
-      <div class="settings-title">Welcome Message Template</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Use <code style="background:var(--accent-dim);padding:1px 6px;border-radius:4px;font-size:10px;">{user}</code> for the member name, <code style="background:var(--accent-dim);padding:1px 6px;border-radius:4px;font-size:10px;">{bastion}</code> for server name, <code style="background:var(--accent-dim);padding:1px 6px;border-radius:4px;font-size:10px;">{count}</code> for member count.</div>
-      <textarea class="field-input" id="welcome-msg-input" rows="3" style="resize:vertical;margin-bottom:14px;">${escapeHTML(welcomeMsg)}</textarea>
-      <div class="settings-title">Welcome Channel</div>
-      <select class="field-input" id="welcome-channel-select" style="margin-bottom:20px;">
-        ${(b.channels||[]).filter(ch=>ch.type==='text'||ch.type==='announcement').map(ch=>`<option value="${escapeHTML(ch.name)}" ${ch.name===welcomeChannel?'selected':''}># ${escapeHTML(ch.name)}</option>`).join('')}
-      </select>
-      <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;">
-        <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Preview</div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(255,255,255,.35);font-weight:500;">
-          <span style="font-size:14px;opacity:.6;">→</span>
-          <span id="welcome-preview-text">${parseMD(escapeHTML(welcomeMsg.replace('{user}','**NewMember**').replace('{bastion}','**'+escapeHTML(b.name)+'**').replace('{count}','42')))}</span>
+      <div class="bset-fgroup">
+        <div class="bset-switch">
+          <div class="bset-switch-tx"><div class="bset-switch-t">Greet new arrivals</div><div class="bset-switch-d">Off, and nothing is posted when somebody joins.</div></div>
+          <div class="toggle${welcomeEnabled?' on':''}" id="welcome-toggle" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
         </div>
       </div>
-      <button class="btn-a" onclick="saveBastionWelcome()">Save Welcome Settings</button>`;
+      <div class="bset-fgroup">
+        <label class="bset-flabel" for="welcome-msg-input">What it says</label>
+        <textarea class="bset-uline bset-uarea" id="welcome-msg-input" rows="3" oninput="_bsetWelcomePreview()">${escapeHTML(welcomeMsg)}</textarea>
+        <div class="bset-fhelp">Three things fill themselves in: <code class="bset-tok">{user}</code> the person, <code class="bset-tok">{bastion}</code> this bastion, <code class="bset-tok">{count}</code> how many of you there are.</div>
+      </div>
+      <div class="bset-fgroup">
+        <div class="bset-flabel">Where it lands</div>
+        ${_ftzSelectHTML('welcome-channel-select', welcomeChannel, chs.map(ch=>({value:ch.name,label:'# '+ch.name})), '_bsetNoop(__VALUE__)')}
+      </div>
+      <div class="bset-fgroup">
+        <div class="bset-flabel">Preview</div>
+        <div class="bwl-prev"><span class="bwl-arrow">&rsaquo;</span><span id="welcome-preview-text">${parseMD(escapeHTML(welcomeMsg.replace('{user}','**NewMember**').replace('{bastion}','**'+escapeHTML(b.name)+'**').replace('{count}','42')))}</span></div>
+      </div>
+      <div class="bset-save"><button class="fs-btn fs-btn--primary" type="button" onclick="saveBastionWelcome()">Save changes</button></div>`;
   }
   else if (tab==='rules') {
     const rules = b.rules || [];
     main.innerHTML = `
-      <div class="bs-section-title">Server Rules</div>
-      <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">Define rules for your bastion. These will be shown to new members when they join.</div>
-      <div id="rules-list">
-        ${rules.map((r,i) => `<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">
-          <div style="width:28px;height:28px;border-radius:8px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:11px;font-weight:800;color:var(--accent);flex-shrink:0;">${i+1}</div>
-          <input class="field-input bastion-rule-input" value="${escapeHTML(r)}" style="flex:1;">
-          <button onclick="removeBastionRule(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:17px;padding:6px;">×</button>
-        </div>`).join('')}
+      ${rules.length ? `<div class="brl-list" id="rules-list">${rules.map((r,i) => `
+        <div class="brl-row">
+          <span class="bqb-n">${i+1}</span>
+          <input class="bset-uline bastion-rule-input" value="${escapeHTML(r)}" placeholder="What is the rule?">
+          <button class="bset-qx" type="button" aria-label="Remove" onclick="removeBastionRule(${i})">&times;</button>
+        </div>`).join('')}</div>`
+      : `<div class="bqb-empty" id="rules-list">No rules written yet. Add the first one and it shows up in your rules channel.</div>`}
+      <div class="bset-save">
+        <button class="fs-btn" type="button" onclick="addBastionRule()">+ Add a rule</button>
+        <button class="fs-btn fs-btn--primary" type="button" onclick="saveBastionRules()">Save rules</button>
       </div>
-      <div style="display:flex;gap:8px;margin-top:12px;">
-        <button class="btn-g" onclick="addBastionRule()">+ Add Rule</button>
-        <button class="btn-a" onclick="saveBastionRules()">Save Rules</button>
-      </div>
-      ${rules.length ? `<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);">
-        <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Preview</div>
-        <div style="background:rgba(255,255,255,.015);border:1.5px solid rgba(255,255,255,.05);border-radius:14px;padding:18px;">
-          <div style="font-family:var(--font-display);font-size:14px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;">📜 ${escapeHTML(b.name)} Rules</div>
-          ${rules.map((r,i) => `<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;">
-            <span style="font-family:var(--font-display);font-size:11px;font-weight:800;color:var(--accent);min-width:20px;">${i+1}.</span>
-            <span style="font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.5;">${escapeHTML(r)}</span>
-          </div>`).join('')}
+      ${rules.length ? `<div class="bset-fgroup" style="margin-top:26px;">
+        <div class="bset-flabel">How it reads</div>
+        <div class="brl-prev">
+          <div class="brl-prev-t">${escapeHTML(b.name)}</div>
+          ${rules.map((r,i) => `<div class="brl-prev-r"><span>${i+1}.</span><span>${escapeHTML(r)}</span></div>`).join('')}
         </div>
       </div>` : ''}`;
   }
   else if (tab==='announcements') {
-    const bastionId = b.globalId||b.name;
+    const chs = (b.channels||[]).filter(ch=>ch.type==='text'||ch.type==='announcement');
     main.innerHTML = `
-      <div class="bs-section-title">Announcements</div>
-      <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">Broadcast an announcement to a channel. Only owners and admins can send announcements.</div>
-      <div class="settings-title">Announcement Channel</div>
-      <select class="field-input" id="announce-channel" style="margin-bottom:14px;">
-        ${(b.channels||[]).filter(ch=>ch.type==='text'||ch.type==='announcement').map(ch=>`<option value="${escapeHTML(ch.name)}">
-          ${ch.type==='announcement'?'📢':'#'} ${escapeHTML(ch.name)}
-        </option>`).join('')}
-      </select>
-      <div class="settings-title">Message</div>
-      <textarea class="field-input" id="announce-msg" rows="4" placeholder="Write your announcement…" style="resize:vertical;margin-bottom:14px;"></textarea>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted-light);cursor:pointer;">
-          <input type="checkbox" id="announce-mention-all" style="accent-color:var(--accent);">
-          <span>Mention @everyone</span>
-        </label>
+      <div class="bset-fgroup">
+        <div class="bset-flabel">Which channel</div>
+        ${_ftzSelectHTML('announce-channel', (chs.find(c=>c.type==='announcement')||chs[0]||{}).name || '', chs.map(ch=>({value:ch.name,label:(ch.type==='announcement'?'# ':'# ')+ch.name})), '_bsetNoop(__VALUE__)')}
       </div>
-      <button class="btn-a" onclick="sendBastionAnnouncement()">📣 Send Announcement</button>
-      <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);">
-        <div style="display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> Announcements appear as highlighted messages in the selected channel.</div>
-      </div>`;
+      <div class="bset-fgroup">
+        <label class="bset-flabel" for="announce-msg">What you want to say</label>
+        <textarea class="bset-uline bset-uarea" id="announce-msg" rows="5" placeholder="Write it the way you would say it."></textarea>
+      </div>
+      <div class="bset-fgroup">
+        <div class="bset-switch">
+          <div class="bset-switch-tx"><div class="bset-switch-t">Ping everyone</div><div class="bset-switch-d">Everybody here gets a notification. Worth saving for something that genuinely cannot wait.</div></div>
+          <div class="toggle" id="announce-mention-all" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+        </div>
+      </div>
+      <div class="bset-save"><button class="fs-btn fs-btn--primary" type="button" onclick="sendBastionAnnouncement()">Send it</button></div>
+      <div class="bset-note">An announcement posts as a highlighted message in the channel you picked. Only owners and admins can send one.</div>`;
   }
   else if (tab==='insights') {
-    const bastionId = b.globalId||b.name;
     const memberCount = Object.keys(b.memberRoles||{}).length || 1;
     const channelCount = (b.channels||[]).length;
     const roleCount = (b.roles||[]).length;
-    const boostLevel = b.boostLevel||0;
-    const emojiCount = (b.customEmojis||[]).length;
-    const createdAt = b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : 'Unknown';
+    const stats = [
+      {label:'Members',       val:memberCount},
+      {label:'Channels',      val:channelCount},
+      {label:'Roles',         val:roleCount},
+      {label:'Boost level',   val:b.boostLevel||0},
+      {label:'Emojis',        val:(b.customEmojis||[]).length},
+      {label:'Stickers',      val:(b.stickers||[]).length},
+    ];
+    const checks = [
+      {ok:channelCount>0,            text:'At least one channel',   fix:'Add one from the sidebar'},
+      {ok:roleCount>0,               text:'Roles set up',           fix:'Build them on the Roles page'},
+      {ok:(b.rules||[]).length>0,    text:'Rules written',          fix:'Write them on Bastion rules'},
+      {ok:!!b.banner,                text:'A banner',               fix:'Upload one on Overview'},
+      {ok:!!b.icon,                  text:'An emblem',              fix:'Upload one on Overview'},
+      {ok:!!b.vanity,                text:'A custom invite link',   fix:'Claim one on Overview'},
+    ];
     main.innerHTML = `
-      <div class="bs-section-title">Insights</div>
-      <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">A quick overview of your bastion's stats and health.</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;">
-        ${[
-          {label:'Members',val:memberCount,icon:'👥',color:'#60a5fa'},
-          {label:'Channels',val:channelCount,icon:'#️⃣',color:'#3ecf6e'},
-          {label:'Roles',val:roleCount,icon:'🛡️',color:'#a78bfa'},
-          {label:'Boost Level',val:boostLevel,icon:_boostSvg('14'),color:'#ffd93e'},
-          {label:'Custom Emojis',val:emojiCount,icon:'😊',color:'#fb923c'},
-          {label:'Created',val:createdAt,icon:'📅',color:'#f472b6'},
-        ].map(s=>`<div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:18px;text-align:center;position:relative;overflow:hidden;">
-          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${s.color};opacity:.3;"></div>
-          <div style="font-size:24px;margin-bottom:8px;">${s.icon}</div>
-          <div style="font-family:var(--font-display);font-size:${typeof s.val==='number'?'22':'12'}px;font-weight:800;color:#fff;margin-bottom:4px;">${s.val}</div>
-          <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;">${s.label}</div>
-        </div>`).join('')}
+      <div class="bin-grid">${stats.map(s=>`<div class="bin-tile"><div class="bin-v">${s.val}</div><div class="bin-l">${s.label}</div></div>`).join('')}</div>
+      <div class="bset-fgroup">
+        <div class="bset-flabel">Made on</div>
+        <div class="bin-made">${b.createdAt ? _bmcDate(b.createdAt) : 'Unknown'}</div>
       </div>
-      <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:20px;">
-        <div style="font-family:var(--font-display);font-size:14px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;">🏥 Health Check</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          ${[
-            {ok:channelCount>0,text:'Has at least one channel',fix:'Add a channel in Channels Management'},
-            {ok:roleCount>0,text:'Has roles configured',fix:'Create roles in the Roles tab'},
-            {ok:(b.rules||[]).length>0,text:'Has server rules set',fix:'Add rules in the Server Rules tab'},
-            {ok:!!b.banner,text:'Has a banner image',fix:'Upload a banner in Overview'},
-            {ok:!!b.icon,text:'Has a custom icon',fix:'Upload an icon in Overview'},
-          ].map(h=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:${h.ok?'rgba(62,207,110,.04)':'rgba(255, 0, 51,.04)'};border:1px solid ${h.ok?'rgba(62,207,110,.08)':'rgba(255, 0, 51,.08)'};border-radius:10px;">
-            <span style="font-size:14px;">${h.ok?'✅':'⚠️'}</span>
-            <span style="font-size:12.5px;color:rgba(255,255,255,.6);flex:1;">${h.text}</span>
-            ${!h.ok?`<span style="font-size:10.5px;color:var(--muted);">${h.fix}</span>`:''}
-          </div>`).join('')}
-        </div>
-      </div>`;
+      <div class="bset-fgroup">
+        <div class="bset-flabel">What is still missing</div>
+        <div class="bin-checks">${checks.map(h=>`<div class="bin-chk${h.ok?' ok':''}">
+          <span class="bin-mark">${h.ok?'&#10003;':'!'}</span>
+          <span class="bin-tx">${h.text}</span>
+          ${h.ok?'':`<span class="bin-fix">${h.fix}</span>`}
+        </div>`).join('')}</div>
+      </div>
+      <div class="bset-note">These are counts of what you have built, not a measure of anyone here. Nothing on this page is shared outside the bastion.</div>`;
   }
   else if (tab==='starboard') {
     const starEnabled = b.starboardEnabled || false;
     const starThreshold = b.starboardThreshold || 3;
     const starChannel = b.starboardChannel || '';
     const starEmoji = b.starboardEmoji || '⭐';
+    const chs = (b.channels||[]).filter(ch=>ch.type==='text');
     main.innerHTML = `
-      <div class="bs-section-title">Starboard</div>
-      <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">When a message gets enough reactions, it gets pinned to a special starboard channel for everyone to see.</div>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-        <span style="font-size:13px;font-weight:600;">Enable Starboard</span>
-        <div class="toggle ${starEnabled?'on':''}" onclick="this.classList.toggle('on')" id="star-toggle"></div>
+      <div class="bset-fgroup">
+        <div class="bset-switch">
+          <div class="bset-switch-tx"><div class="bset-switch-t">Keep a starboard</div><div class="bset-switch-d">A message that collects enough of one reaction gets copied somewhere everyone can find it.</div></div>
+          <div class="toggle${starEnabled?' on':''}" id="star-toggle" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+        </div>
       </div>
-      <div class="settings-title">Reaction Threshold</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Number of reactions needed to pin a message to the starboard.</div>
-      <div style="display:flex;gap:6px;margin-bottom:18px;">
-        ${[2,3,5,8,10].map(n=>`<button class="${starThreshold===n?'btn-a':'btn-g'}" style="padding:6px 14px;font-size:12px;" onclick="document.querySelectorAll('#star-threshold-btns button').forEach(b=>b.className='btn-g');this.className='btn-a'" id="star-threshold-btns">${n}</button>`).join('')}
-        <input type="number" class="field-input" id="star-threshold-input" value="${starThreshold}" min="1" max="50" style="width:70px;">
+      <div class="bset-fgroup">
+        <div class="bset-flabel">How many reactions it takes</div>
+        <div class="bst-row" id="star-threshold-btns">
+          ${[2,3,5,8,10].map(n=>`<button class="bmd-pick bst-n${starThreshold===n?' on':''}" type="button" onclick="_bsetStarN(${n})">${n}</button>`).join('')}
+          <input type="number" class="bset-uline bst-num" id="star-threshold-input" value="${starThreshold}" min="1" max="50" oninput="_bsetStarSync()">
+        </div>
       </div>
-      <div class="settings-title">Starboard Emoji</div>
-      <div style="display:flex;gap:6px;margin-bottom:18px;">
-        ${['⭐','🌟','✨','🔥','💎','❤️'].map(e=>`<button style="font-size:20px;padding:6px 10px;background:${starEmoji===e?'rgba(255,249,62,.1)':'rgba(255,255,255,.03)'};border:1.5px solid ${starEmoji===e?'rgba(255,249,62,.2)':'rgba(255,255,255,.05)'};border-radius:10px;cursor:pointer;" onclick="document.getElementById('star-emoji-val').value='${e}';document.querySelectorAll('#star-emoji-row button').forEach(b=>{b.style.background='rgba(255,255,255,.03)';b.style.borderColor='rgba(255,255,255,.05)'});this.style.background='rgba(255,249,62,.1)';this.style.borderColor='rgba(255,249,62,.2)'" id="star-emoji-row">${e}</button>`).join('')}
-        <input type="hidden" id="star-emoji-val" value="${starEmoji}">
+      <div class="bset-fgroup">
+        <div class="bset-flabel">Which reaction</div>
+        <div class="bst-row" id="star-emoji-row">
+          ${['⭐','🌟','✨','🔥','💎','❤️'].map(em=>`<button class="bst-em${starEmoji===em?' on':''}" type="button" onclick="_bsetStarEm('${em}')">${em}</button>`).join('')}
+          <input type="hidden" id="star-emoji-val" value="${escapeHTML(starEmoji)}">
+        </div>
       </div>
-      <div class="settings-title">Starboard Channel</div>
-      <select class="field-input" id="star-channel-select" style="margin-bottom:20px;">
-        <option value="">Select a channel…</option>
-        ${(b.channels||[]).filter(ch=>ch.type==='text').map(ch=>`<option value="${escapeHTML(ch.name)}" ${ch.name===starChannel?'selected':''}># ${escapeHTML(ch.name)}</option>`).join('')}
-      </select>
-      <button class="btn-a" onclick="saveBastionStarboard()">Save Starboard Settings</button>`;
-  }
-  else if (tab==='events') {
-    // Events now open in their own modal
-    openEventsModal();
-  }
-  else if (tab==='slowmode') {
-    const bastionId = b.globalId||b.name;
-    const channels = b.channels||[];
-    main.innerHTML = `
-      <div class="bs-section-title">Slow Mode</div>
-      <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Rate-limit messages per channel. Only bastion admins and owners can configure.</div>
-      ${channels.map((ch,i) => {
-        const sm = _getSlowMode(bastionId, ch.name||'general');
-        const smLabel = sm===0?'Off':sm<60?sm+'s':sm<300?(sm/60)+'m':'5m';
-        return `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">
-          <span style="font-size:14px;">#</span>
-          <span style="flex:1;font-size:13px;font-weight:600;">${escapeHTML(ch.name||'general')}</span>
-          <div style="display:flex;gap:4px;">
-            ${[0,30,60,300].map((s,si)=>{
-              const l = ['Off','30s','1m','5m'][si];
-              return `<button class="${sm===s?'btn-a':'btn-g'}" style="padding:4px 10px;font-size:10px;" onclick="_setSlowMode('${escapeHTML(bastionId)}','${escapeHTML(ch.name||'general')}',${s});renderBSettingsMain('slowmode');">${l}</button>`;
-            }).join('')}
-          </div>
-        </div>`;
-      }).join('')||'<div style="color:var(--muted);font-size:12px;">No channels configured</div>'}`;
+      <div class="bset-fgroup">
+        <div class="bset-flabel">Where it collects</div>
+        ${_ftzSelectHTML('star-channel-select', starChannel, [{value:'',label:'Pick a channel'}].concat(chs.map(ch=>({value:ch.name,label:'# '+ch.name}))), '_bsetNoop(__VALUE__)')}
+      </div>
+      <div class="bset-save"><button class="fs-btn fs-btn--primary" type="button" onclick="saveBastionStarboard()">Save changes</button></div>`;
   }
   else if (tab==='danger') {
+    const isOwner = b.owner === CU.username;
     main.innerHTML = `
-      <div class="bs-section-title" style="color:var(--red);">Delete Bastion</div>
-      <div class="bs-section-desc">Irreversible actions. Proceed with caution.</div>
-      ${b.owner===CU.username?`<div style="padding:16px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:16px;margin-bottom:14px;">
-        <div style="font-weight:700;margin-bottom:6px;">Transfer Ownership</div>
-        <div style="font-size:13px;color:var(--muted-light);margin-bottom:12px;">Transfer this bastion to another member. You will lose owner privileges.</div>
-        <div style="display:flex;gap:8px;"><input class="field-input" id="transfer-owner-input" placeholder="Username" style="flex:1;"><button class="btn-g" onclick="transferBastionOwnership()">Transfer</button></div>
+      ${isOwner?`<div class="bdz">
+        <div class="bdz-t">Hand it over</div>
+        <div class="bdz-d">Another member becomes the owner and you become an ordinary one. There is no taking it back without them handing it to you.</div>
+        <div class="bdz-r"><input class="bset-uline" id="transfer-owner-input" placeholder="Their username"><button class="fs-btn" type="button" onclick="transferBastionOwnership()">Transfer</button></div>
       </div>`:''}
-      <div style="padding:16px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.2);border-radius:16px;margin-bottom:14px;">
-        <div style="font-weight:700;margin-bottom:6px;">Leave Bastion</div>
-        <div style="font-size:13px;color:var(--muted-light);margin-bottom:12px;">You'll need an invite to rejoin.</div>
-        <button class="btn-d" onclick="confirmLeaveBastion()">Leave Bastion</button>
+      <div class="bdz">
+        <div class="bdz-t">Walk away</div>
+        <div class="bdz-d">You leave the bastion. You will need an invite to come back.</div>
+        <button class="fs-btn stf-btn--danger" type="button" onclick="confirmLeaveBastion()">Leave this bastion</button>
       </div>
-      ${b.owner===CU.username?`<div style="padding:16px;background:rgba(255, 0, 51,.06);border:1px solid rgba(255, 0, 51,.2);border-radius:16px;">
-        <div style="font-weight:700;margin-bottom:6px;">Delete Bastion</div>
-        <div style="font-size:13px;color:var(--muted-light);margin-bottom:12px;">Permanently deletes all channels, messages, and settings. Cannot be undone.</div>
-        <button class="btn-d" onclick="deleteBastion()">Delete Bastion</button>
+      ${isOwner?`<div class="bdz bdz--worst">
+        <div class="bdz-t">End it</div>
+        <div class="bdz-d">Every channel, every message, every setting goes. Nobody can undo this, including us.</div>
+        <button class="fs-btn stf-btn--danger" type="button" onclick="deleteBastion()">Delete this bastion</button>
       </div>`:''}`;
   }
   else if (tab==='bots') {
@@ -22134,15 +22081,15 @@ function renderBSettingsMain(tab) {
 
       <!-- Sub-tabs: Deployed / My Bots / Marketplace -->
       <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:3px;width:fit-content;">
-        <button id="bots-tab-deployed" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:700;background:var(--accent);color:var(--rail);border:none;" onclick="_switchBotsSubTab('deployed')">Deployed</button>
-        <button id="bots-tab-mybots" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchBotsSubTab('mybots')">My Bots</button>
-        <button id="bots-tab-marketplace" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchBotsSubTab('marketplace')">Marketplace</button>
+        <button id="bots-tab-deployed" class="fs-btn" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:700;background:var(--accent);color:var(--rail);border:none;" onclick="_switchBotsSubTab('deployed')">Deployed</button>
+        <button id="bots-tab-mybots" class="fs-btn" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchBotsSubTab('mybots')">My Bots</button>
+        <button id="bots-tab-marketplace" class="fs-btn" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchBotsSubTab('marketplace')">Marketplace</button>
       </div>
 
       <!-- Deployed Bots Section -->
       <div id="bots-section-deployed">
         <div style="display:flex;gap:8px;margin-bottom:16px;">
-          <button class="btn-a" onclick="openDeployBotPicker()" style="font-size:12.5px;">+ Deploy Bot</button>
+          <button class="fs-btn fs-btn--primary" onclick="openDeployBotPicker()" style="font-size:12.5px;">+ Deploy Bot</button>
         </div>
         <div id="bastion-bots-list">
           ${bots.length ? bots.map(bot => `
@@ -22154,10 +22101,10 @@ function renderBSettingsMain(tab) {
                 <div class="bot-stats"><span>Owner: @${escapeHTML(bot.owner||CU.username)}</span><span>•</span><span>${(bot.commands||[]).length} commands</span></div>
               </div>
               <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
-                <button class="btn-g" style="font-size:11px;padding:4px 10px;" onclick="toggleBastionBot('${escapeHTML(bot.id)}')">
+                <button class="fs-btn" style="font-size:11px;padding:4px 10px;" onclick="toggleBastionBot('${escapeHTML(bot.id)}')">
                   ${bot.enabled!==false?'Disable':'Enable'}
                 </button>
-                <button class="btn-g" style="font-size:11px;padding:4px 10px;color:var(--red);" onclick="removeBastionBot('${escapeHTML(bot.id)}')">Remove</button>
+                <button class="fs-btn" style="font-size:11px;padding:4px 10px;color:var(--red);" onclick="removeBastionBot('${escapeHTML(bot.id)}')">Remove</button>
               </div>
             </div>
           `).join('') : '<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">No bots deployed yet. Click "Deploy Bot" to add one.</div>'}
@@ -22167,14 +22114,14 @@ function renderBSettingsMain(tab) {
       <!-- My Bots Section (moved from user settings) -->
       <div id="bots-section-mybots" style="display:none;">
         <div style="display:flex;gap:8px;margin-bottom:16px;">
-          <button class="btn-a" onclick="openCreateBotModal()" style="font-size:12.5px;">+ Create Bot</button>
+          <button class="fs-btn fs-btn--primary" onclick="openCreateBotModal()" style="font-size:12.5px;">+ Create Bot</button>
         </div>
         ${myBots.length ? myBots.map((bot,i) => `
           <div class="bot-card" style="margin-bottom:8px;cursor:pointer;" onclick="openBotEditor(${i})">
             <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
             <div class="bot-meta">
               <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/badges/bot.png" alt="bot"><span class="badge-tooltip">Bot</span></span>
-                ${bot.visibility==='public'?'<span style="font-size:9px;color:var(--green);">● Public</span>':bot.visibility==='unlisted'?'<span style="font-size:9px;color:var(--muted);">○ Unlisted</span>':'<span style="font-size:9px;color:var(--muted);">🔒 Private</span>'}
+                ${bot.visibility==='public'?'<span style="font-size:9px;color:var(--green);">● Public</span>':bot.visibility==='unlisted'?'<span style="font-size:9px;color:var(--muted);">○ Unlisted</span>':'<span style="font-size:9px;color:var(--muted);">Private</span>'}
               </div>
               <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
               <div class="bot-stats">
@@ -22184,7 +22131,7 @@ function renderBSettingsMain(tab) {
               </div>
             </div>
             <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
-              ${!bots.find(db=>db.id===bot.id)?`<button class="btn-a" style="font-size:11px;padding:4px 10px;" onclick="event.stopPropagation();deployBotToBastion('${escapeHTML(bot.id)}')">Deploy Here</button>`:`<span style="font-size:10px;color:var(--green);font-weight:600;">Deployed</span>`}
+              ${!bots.find(db=>db.id===bot.id)?`<button class="fs-btn fs-btn--primary" style="font-size:11px;padding:4px 10px;" onclick="event.stopPropagation();deployBotToBastion('${escapeHTML(bot.id)}')">Deploy Here</button>`:`<span style="font-size:10px;color:var(--green);font-weight:600;">Deployed</span>`}
             </div>
           </div>
         `).join('') : `
@@ -22192,7 +22139,7 @@ function renderBSettingsMain(tab) {
             <div style="font-size:36px;margin-bottom:12px;"><img src="/Fortized Bot.png" style="width:36px;height:36px;"></div>
             <div style="font-family:var(--font-display);font-size:16px;font-weight:800;margin-bottom:8px;">No Bots Yet</div>
             <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:16px;">Create your first bot to start automating your Bastions.</div>
-            <button class="btn-a" onclick="openCreateBotModal()">Create Bot</button>
+            <button class="fs-btn fs-btn--primary" onclick="openCreateBotModal()">Create Bot</button>
           </div>
         `}
       </div>
@@ -22212,8 +22159,8 @@ function renderBSettingsMain(tab) {
               </div>
               <div class="bot-desc" style="white-space:normal;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;">${escapeHTML(bot.bio||'')}</div>
               <div style="display:flex;gap:6px;align-items:center;justify-content:space-between;">
-                <div class="bot-stats"><span>⭐ ${bot.rating||'—'}</span><span>•</span><span>${(bot.commands||[]).length} cmds</span></div>
-                <button class="btn-a" style="font-size:11px;padding:5px 12px;" onclick="installArsenalBot('${escapeHTML(bot.id)}')">
+                <div class="bot-stats"><span>${bot.rating||'—'}</span><span>•</span><span>${(bot.commands||[]).length} cmds</span></div>
+                <button class="fs-btn fs-btn--primary" style="font-size:11px;padding:5px 12px;" onclick="installArsenalBot('${escapeHTML(bot.id)}')">
                   ${bots.find(db=>db.id===bot.id)?'Installed':'Install'}
                 </button>
               </div>
@@ -22232,7 +22179,7 @@ function renderBSettingsMain(tab) {
       <div class="bs-section-title">Templates</div>
       <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Save your bastion as a template that others can use to create bastions with the same layout, channels, roles, and design.</div>
       ${isOwner ? `
-      <div style="padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:16px;margin-bottom:18px;">
+      <div style="padding:18px;background:var(--panel);border:2px solid var(--border);border-radius:var(--radius-lg);margin-bottom:18px;">
         <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Template Link</div>
         <div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Anyone with this link can create a new bastion using your layout as a starting point. Your messages, members, and private data are <strong>never</strong> shared.</div>
         ${hasLink ? `
@@ -22241,18 +22188,18 @@ function renderBSettingsMain(tab) {
             <button class="btl-copy" onclick="copyBastionTemplateLink('${escapeHTML(b.templateLink)}')">Copy</button>
           </div>
           <div style="display:flex;gap:8px;margin-top:12px;">
-            <button class="btn-g" style="font-size:12px;padding:7px 14px;" onclick="regenerateBastionTemplateLink(curBastion)">Regenerate Link</button>
-            <button class="btn-d" style="font-size:12px;padding:7px 14px;" onclick="deleteBastionTemplateLink(curBastion)">Delete Link</button>
+            <button class="fs-btn" style="font-size:12px;padding:7px 14px;" onclick="regenerateBastionTemplateLink(curBastion)">Regenerate Link</button>
+            <button class="fs-btn stf-btn--danger" style="font-size:12px;padding:7px 14px;" onclick="deleteBastionTemplateLink(curBastion)">Delete Link</button>
           </div>
         ` : `
-          <button class="btn-a" style="font-size:13px;padding:9px 18px;" onclick="generateBastionTemplateLink(curBastion).then(link=>{if(link)renderBSettingsMain('templates');})">Generate Template Link</button>
+          <button class="fs-btn fs-btn--primary" style="font-size:13px;padding:9px 18px;" onclick="generateBastionTemplateLink(curBastion).then(link=>{if(link)renderBSettingsMain('templates');})">Generate Template Link</button>
         `}
       </div>
       ` : `
       <div style="padding:16px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.1);border-radius:14px;margin-bottom:18px;font-size:12.5px;color:var(--muted-light);">
         Only the bastion owner can generate and manage template links.
       </div>`}
-      <div style="padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:16px;">
+      <div style="padding:18px;background:var(--panel);border:2px solid var(--border);border-radius:var(--radius-lg);">
         <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Template Preview</div>
         <div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">This is what others will see when they import your bastion template.</div>
         <div class="tmpl-preview" style="margin-bottom:0;">
@@ -22277,311 +22224,6 @@ function renderBSettingsMain(tab) {
             <div class="tp-section-label">Roles</div>
             <div class="tp-role-pills" style="display:flex;flex-wrap:wrap;gap:4px;">${previewRoles}${(b.roles||[]).length>5?`<span style="font-size:9.5px;color:var(--muted);padding:2px 4px;">+${(b.roles||[]).length-5}</span>`:''}</div>
           </div>
-        </div>
-      </div>`;
-  }
-  else if (tab==='create_marketplace_legacy') {
-    main.innerHTML = `
-      <div class="bs-section-title">Creator Hub</div>
-      <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Create bots and templates, browse the marketplace, or advertise your bastion.</div>
-
-      <!-- Sub-tabs -->
-      <div style="display:flex;gap:4px;margin-bottom:22px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:3px;width:fit-content;">
-        <button id="cm-tab-owned" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:700;background:var(--accent);color:var(--rail);border:none;" onclick="_switchCMSubTab('owned')">What You Own</button>
-        <button id="cm-tab-marketplace" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchCMSubTab('marketplace')">Marketplace</button>
-        <button id="cm-tab-advertise" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchCMSubTab('advertise')">Advertise</button>
-      </div>
-
-      <!-- ═══ WHAT YOU OWN ═══ -->
-      <div id="cm-section-owned">
-        <!-- Sub-sub tabs -->
-        <div style="display:flex;gap:8px;margin-bottom:18px;">
-          <button id="cm-own-bots-btn" class="btn-g" style="padding:6px 14px;font-size:11.5px;border-radius:7px;font-weight:700;background:rgba(255,249,62,.1);color:var(--accent);border:1px solid rgba(255,249,62,.2);" onclick="_switchCMOwnedSub('bots')">Bots</button>
-          <button id="cm-own-templates-btn" class="btn-g" style="padding:6px 14px;font-size:11.5px;border-radius:7px;font-weight:600;background:transparent;color:var(--muted-light);border:1px solid var(--border);cursor:pointer;" onclick="_switchCMOwnedSub('templates')">Bastion Templates</button>
-        </div>
-
-        <!-- My Bots -->
-        <div id="cm-own-bots">
-          <div style="display:flex;gap:8px;margin-bottom:14px;">
-            <button class="btn-a" onclick="openCreateBotModal()" style="font-size:12px;">+ Create Bot</button>
-            <button class="btn-g" onclick="_cmListBotForSale()" style="font-size:12px;">List Bot for Sale</button>
-          </div>
-          ${myBots.length ? myBots.map((bot,i) => `
-            <div class="bot-card" style="margin-bottom:8px;cursor:pointer;" onclick="openBotEditor(${i})">
-              <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">'}</div>
-              <div class="bot-meta">
-                <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/badges/bot.png" alt="bot"></span>
-                  ${bot.visibility==='public'?'<span style="font-size:9px;color:var(--green);">Public</span>':bot.visibility==='unlisted'?'<span style="font-size:9px;color:var(--muted);">Unlisted</span>':'<span style="font-size:9px;color:var(--muted);">Private</span>'}
-                  ${bot.listedForSale?`<span style="font-size:9px;color:#fbbf24;background:rgba(251,191,36,.1);padding:2px 6px;border-radius:4px;">On Sale · ${bot.salePrice||0} Onyx</span>`:''}
-                </div>
-                <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
-                <div class="bot-stats"><span>${(bot.commands||[]).length} commands</span><span>·</span><span>Created ${new Date(bot.createdAt||Date.now()).toLocaleDateString()}</span></div>
-              </div>
-            </div>
-          `).join('') : `
-            <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">
-              <div style="font-size:28px;margin-bottom:10px;"><img src="/Fortized Bot.png" style="width:28px;height:28px;"></div>
-              No bots yet. Create your first bot above!
-            </div>`}
-        </div>
-
-        <!-- My Templates -->
-        <div id="cm-own-templates" style="display:none;">
-          <div style="display:flex;gap:8px;margin-bottom:14px;">
-            <button class="btn-a" onclick="_cmCreateTemplate()" style="font-size:12px;">+ Create Template</button>
-            <button class="btn-g" onclick="_cmListTemplateForSale()" style="font-size:12px;">List Template for Sale</button>
-          </div>
-          ${myTemplates.length ? myTemplates.map((bst,i) => {
-            const tmplIdx = (CU.bastions||[]).indexOf(bst);
-            const chCount = (bst.channels||[]).length;
-            const roleCount = (bst.roles||[]).length;
-            return `
-            <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">
-              <div style="width:44px;height:44px;border-radius:12px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,249,62,.1);">
-                ${bst.icon?`<img src="${escapeHTML(bst.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:11px;">`:`<span style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--accent);">${(bst.name||'B')[0].toUpperCase()}</span>`}
-              </div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:13.5px;font-weight:700;margin-bottom:2px;">${escapeHTML(bst.name)}</div>
-                <div style="font-size:11px;color:var(--muted);">${chCount} channels · ${roleCount} roles</div>
-              </div>
-              <div style="display:flex;gap:6px;">
-                <button class="btn-g" style="font-size:11px;padding:5px 12px;" onclick="_cmExportTemplate(${tmplIdx})">Export</button>
-                ${bst.templateLink?`<span style="font-size:10px;color:var(--green);padding:5px 10px;display:flex;align-items:center;">Shared</span>`:`<button class="btn-a" style="font-size:11px;padding:5px 12px;" onclick="generateBastionTemplateLink(${tmplIdx}).then(()=>renderBSettingsMain('create_marketplace'))">Share</button>`}
-              </div>
-            </div>`;
-          }).join('') : `
-            <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">
-              You don't own any bastions to create templates from.
-            </div>`}
-        </div>
-      </div>
-
-      <!-- ═══ MARKETPLACE ═══ -->
-      <div id="cm-section-marketplace" style="display:none;">
-        <div style="display:flex;gap:8px;margin-bottom:18px;">
-          <button id="cm-mkt-bots-btn" class="btn-g" style="padding:6px 14px;font-size:11.5px;border-radius:7px;font-weight:700;background:rgba(255,249,62,.1);color:var(--accent);border:1px solid rgba(255,249,62,.2);" onclick="_switchCMMktSub('bots')">Bots</button>
-          <button id="cm-mkt-templates-btn" class="btn-g" style="padding:6px 14px;font-size:11.5px;border-radius:7px;font-weight:600;background:transparent;color:var(--muted-light);border:1px solid var(--border);cursor:pointer;" onclick="_switchCMMktSub('templates')">Bastion Templates</button>
-        </div>
-
-        <!-- Marketplace Bots -->
-        <div id="cm-mkt-bots">
-          <div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Browse community-made bots. Free or up to 2,500 Onyx.</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="cm-mkt-bots-grid">
-            ${marketBots.length ? marketBots.map(bot => `
-              <div class="bot-card" style="flex-direction:column;gap:10px;cursor:default;">
-                <div style="display:flex;gap:12px;align-items:center;">
-                  <div class="bot-av" style="width:44px;height:44px;">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">'}</div>
-                  <div style="flex:1;min-width:0;">
-                    <div class="bot-name">${escapeHTML(bot.name)}</div>
-                    <div style="font-size:10.5px;color:var(--muted);">by @${escapeHTML(bot.owner||'unknown')} · ${(bot.commands||[]).length} cmds</div>
-                  </div>
-                </div>
-                <div class="bot-desc" style="white-space:normal;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;">${escapeHTML(bot.bio||'No description')}</div>
-                <div style="display:flex;gap:6px;align-items:center;justify-content:space-between;">
-                  <span style="font-size:12px;font-weight:700;color:${bot.price?'#fbbf24':'var(--green)'};">${bot.price?bot.price+' Onyx':'Free'}</span>
-                  <button class="btn-a" style="font-size:11px;padding:5px 12px;" onclick="_cmBuyBot('${escapeHTML(bot.id)}')">
-                    ${bot.price?'Buy':'Get'}
-                  </button>
-                </div>
-              </div>
-            `).join('') : `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted);font-size:13px;">No bots listed yet. Be the first to list one!</div>`}
-          </div>
-        </div>
-
-        <!-- Marketplace Templates -->
-        <div id="cm-mkt-templates" style="display:none;">
-          <div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Browse community bastion templates. Free or up to 2,500 Onyx.</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="cm-mkt-templates-grid">
-            ${marketTemplates.length ? marketTemplates.map(tmpl => `
-              <div style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:default;">
-                <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px;">
-                  <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
-                    ${tmpl.icon?`<img src="${escapeHTML(tmpl.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">`:`<span style="font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--accent);">${(tmpl.name||'T')[0].toUpperCase()}</span>`}
-                  </div>
-                  <div style="flex:1;min-width:0;">
-                    <div style="font-size:13px;font-weight:700;">${escapeHTML(tmpl.name)}</div>
-                    <div style="font-size:10.5px;color:var(--muted);">by @${escapeHTML(tmpl.owner||'unknown')} · ${tmpl.channelCount||0} ch · ${tmpl.roleCount||0} roles</div>
-                  </div>
-                </div>
-                <div style="font-size:11.5px;color:var(--muted-light);margin-bottom:10px;line-height:1.4;">${escapeHTML((tmpl.desc||'No description').slice(0,100))}</div>
-                <div style="display:flex;gap:6px;align-items:center;justify-content:space-between;">
-                  <span style="font-size:12px;font-weight:700;color:${tmpl.price?'#fbbf24':'var(--green)'};">${tmpl.price?tmpl.price+' Onyx':'Free'}</span>
-                  <button class="btn-a" style="font-size:11px;padding:5px 12px;" onclick="_cmBuyTemplate('${escapeHTML(tmpl.id)}')">
-                    ${tmpl.price?'Buy':'Get'}
-                  </button>
-                </div>
-              </div>
-            `).join('') : `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted);font-size:13px;">No templates listed yet. Share yours from the "What You Own" tab!</div>`}
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══ ADVERTISE ═══ -->
-      <div id="cm-section-advertise" style="display:none;">
-        <div style="padding:18px;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));border:1.5px solid rgba(255,249,62,.15);border-radius:16px;margin-bottom:20px;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;">Advertise Your Bastion</div>
-          </div>
-          <div style="font-size:12.5px;color:var(--muted-light);line-height:1.6;margin-bottom:14px;">
-            Promote your bastion on the Discover page and Homepage. Ads cost <strong style="color:#fbbf24;">15 Onyx</strong> for <strong>4 days</strong> of broadcasting.
-            Clicking your ad sends users a bastion invite. You can cancel anytime for 5 Onyx.
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;font-size:12px;color:var(--muted);">
-            <span>Your balance: <strong style="color:#fbbf24;">${onyxBal} Onyx</strong></span>
-            ${onyxBal<15?'<span style="color:var(--red);font-size:11px;">You need at least 15 Onyx to create an ad.</span>':''}
-          </div>
-        </div>
-
-        <!-- Create New Ad -->
-        <div style="padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:16px;margin-bottom:20px;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <div style="font-size:14px;font-weight:700;">Create New Ad</div>
-          </div>
-
-          <!-- Ad Title -->
-          <div style="margin-bottom:14px;">
-            <div class="settings-title">Ad Title</div>
-            <input class="field-input" id="cm-ad-title" placeholder="e.g. Join our gaming community!" maxlength="60" oninput="_cmUpdateAdPreview()">
-          </div>
-
-          <!-- Ad Image Upload -->
-          <div style="margin-bottom:14px;">
-            <input id="cm-ad-image-upload" type="file" accept="image/*" style="display:none;" onchange="_cmAdImagePreview(event)">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <button class="btn-g" onclick="document.getElementById('cm-ad-image-upload').click()" style="font-size:12px;padding:8px 16px;">Choose file</button>
-              <span id="cm-ad-file-label" style="font-size:12px;color:var(--muted);">No file selected.</span>
-            </div>
-          </div>
-
-          <!-- Ad Ratio Selector -->
-          <div style="margin-bottom:14px;">
-            <div class="settings-title">Ad Format</div>
-            <div style="display:flex;gap:8px;margin-bottom:8px;">
-              <label id="cm-ratio-banner" style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 14px;background:rgba(255,249,62,.06);border:1.5px solid rgba(255,249,62,.2);border-radius:10px;cursor:pointer;transition:all .15s;" onclick="_cmSelectAdRatio('banner')">
-                <input type="radio" name="cm-ad-ratio" value="banner" checked style="accent-color:var(--accent);">
-                <div>
-                  <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.85);">Banner</div>
-                  <div style="font-size:10px;color:var(--muted);">728 x 90 px — Wide horizontal strip</div>
-                </div>
-              </label>
-              <label id="cm-ratio-rectangle" style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 14px;background:rgba(255,255,255,.02);border:1.5px solid rgba(255,255,255,.06);border-radius:10px;cursor:pointer;transition:all .15s;" onclick="_cmSelectAdRatio('rectangle')">
-                <input type="radio" name="cm-ad-ratio" value="rectangle" style="accent-color:var(--accent);">
-                <div>
-                  <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.65);">Rectangle</div>
-                  <div style="font-size:10px;color:var(--muted);">300 x 250 px — Compact rectangle</div>
-                </div>
-              </label>
-            </div>
-            <div style="font-size:10.5px;color:rgba(255,255,255,.25);margin-bottom:2px;">Images that don't match the selected ratio will be stretched to fit.</div>
-          </div>
-
-          <!-- Ad Templates Download -->
-          <div style="margin-bottom:14px;">
-            <div style="font-size:12px;font-weight:700;margin-bottom:6px;">Ad Templates</div>
-            <div style="display:flex;align-items:center;gap:14px;">
-              <a href="https://github.com/StawWasTaken/Fortized/releases/download/AdTemplates/RectangleAdTemplate.png" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--accent);text-decoration:none;transition:opacity .15s;" onmouseenter="this.style.opacity='.7'" onmouseleave="this.style.opacity='1'">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                Rectangle
-              </a>
-              <a href="https://github.com/StawWasTaken/Fortized/releases/download/AdTemplates/BannerAdTemplate.png" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--accent);text-decoration:none;transition:opacity .15s;" onmouseenter="this.style.opacity='.7'" onmouseleave="this.style.opacity='1'">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                Banner
-              </a>
-            </div>
-          </div>
-
-          <!-- Link target -->
-          <div style="margin-bottom:14px;">
-            <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Link ${isSuperAdmin() ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span>' : ''}</div>
-            <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="_cmOnAdLinkTypeChange()">
-              <option value="bastion">Default - Join Bastion</option>
-              <optgroup label="In-app pages">
-                <option value="/app">Home</option>
-                <option value="/app/messages">Direct Messages</option>
-                <option value="/app/messages?friends=1">Friends</option>
-                <option value="/app/discover">Discover</option>
-                <option value="/app/forum">Forum</option>
-                <option value="/app/atelier?tab=radiance">Radiance Dwelling</option>
-                <option value="/app/atelier?tab=quests">Quests</option>
-                <option value="/app/atelier?tab=shop">Fortshop</option>
-                <option value="/app/atelier?tab=creator">Creator</option>
-              </optgroup>
-              ${isSuperAdmin() ? '<option value="custom">Custom URL (opens in browser)</option>' : ''}
-            </select>
-            ${isSuperAdmin() ? '<input class="field-input" id="cm-ad-custom-link" placeholder="https://..." maxlength="500" style="display:none;">' : ''}
-            <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">${isSuperAdmin() ? 'Fortized pages open in-app. External URLs open in the user\'s browser.' : 'In-app pages only. External URLs are reserved for Fortized staff.'}</div>
-          </div>
-
-          <!-- Target Bastion -->
-          <div style="margin-bottom:14px;" id="cm-ad-bastion-wrap">
-            <div class="settings-title" id="cm-ad-bastion-label">Target Bastion</div>
-            <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;" onchange="_cmUpdateAdPreview()">
-              <option value="">- None -</option>
-              ${(CU.bastions||[]).map((bst,i)=>{
-                const idx=i;
-                return `<option value="${idx}" ${idx===curBastion?'selected':''}>${escapeHTML(bst.name)}</option>`;
-              }).join('')}
-            </select>
-            <div id="cm-ad-bastion-hint" style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Required - the ad links to this bastion's invite.</div>
-          </div>
-
-          <div style="margin-bottom:16px;">
-            <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted-light);cursor:pointer;">
-              <input type="checkbox" id="cm-ad-autorefund" style="accent-color:var(--accent);">
-              Auto-renew — automatically deduct 15 Onyx every 4 days to keep broadcasting
-            </label>
-          </div>
-
-          <!-- Live preview -->
-          <div style="margin-bottom:16px;">
-            <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.2);margin-bottom:8px;">Live Preview</div>
-            <div id="cm-ad-preview-wrap" style="max-width:728px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:14px;padding:12px;">
-              <div id="cm-ad-live-preview" style="text-align:center;">
-                <div style="width:100%;height:90px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));display:flex;align-items:center;justify-content:center;">
-                  <span style="font-size:11px;color:var(--muted);">Upload an image to preview</span>
-                </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px 0;">
-                  <span style="font-size:10px;color:rgba(255,255,255,.3);" id="cm-ad-preview-label">${escapeHTML(b.name)} · Sponsored</span>
-                  <span style="display:inline-flex;align-items:center;gap:2px;color:rgba(255,255,255,.2);"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <button class="btn-a" onclick="_cmCreateAd()" ${onyxBal<15?'disabled style="opacity:.5;cursor:not-allowed;font-size:13px;padding:9px 22px;"':'style="font-size:13px;padding:9px 22px;"'}>+ Create Ad — 15 Onyx</button>
-        </div>
-
-        <!-- Active Ads -->
-        <div style="font-size:14px;font-weight:700;margin-bottom:12px;">Your Ads</div>
-        <div id="cm-ads-list">
-          ${myAds.length ? myAds.map((ad,i) => {
-            const neverExpires = _isAdOwnerSuperadmin(ad);
-            const isActive = _isAdLive(ad);
-            const expired = !neverExpires && (ad.status==='expired' || (ad.expiresAt && new Date(ad.expiresAt) <= new Date()));
-            const status = expired ? 'expired' : (ad.status||'pending');
-            const daysLeft = neverExpires ? Infinity : (isActive ? Math.max(0, Math.ceil((new Date(ad.expiresAt) - new Date()) / 86400000)) : 0);
-            const targetBst = (CU.bastions||[])[ad.bastionIdx];
-            return `
-            <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--panel);border:1px solid ${isActive?'rgba(62,207,110,.2)':expired?'rgba(255, 0, 51,.15)':'var(--border)'};border-radius:12px;margin-bottom:8px;">
-              <div style="width:80px;height:50px;border-radius:8px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,.03);">
-                ${ad.image?`<img src="${escapeHTML(ad.image)}" style="width:100%;height:100%;object-fit:cover;">`:'<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);">No img</div>'}
-              </div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:13px;font-weight:700;margin-bottom:2px;">${escapeHTML(ad.title||'Untitled Ad')}</div>
-                <div style="font-size:11px;color:var(--muted);">
-                  Target: ${targetBst?escapeHTML(targetBst.name):'Unknown'}
-                  · ${ad.clicks||0} clicks · ${ad.impressions||0} views
-                  ${ad.autoRefund?'· Auto-renew':''}
-                </div>
-              </div>
-              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;${isActive?'color:var(--green);background:rgba(62,207,110,.1);':'color:var(--red);background:rgba(255, 0, 51,.1);'}">${neverExpires?'Never expires':isActive?daysLeft+'d left':'Expired'}</span>
-                ${isActive?`<div style="display:flex;gap:4px;"><button class="btn-g" style="font-size:10px;padding:3px 8px;" onclick="_cmEditAd(${i})">Edit (5 Onyx)</button><button class="btn-g" style="font-size:10px;padding:3px 8px;color:var(--red);" onclick="_cmCancelAd(${i})">Cancel (5 Onyx)</button></div>`:`<button class="btn-g" style="font-size:10px;padding:3px 8px;" onclick="_cmRenewAd(${i})">Renew (15 Onyx)</button>`}
-              </div>
-            </div>`;
-          }).join('') : `<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">No ads yet. Create your first ad above!</div>`}
         </div>
       </div>`;
   }
@@ -23669,6 +23311,35 @@ async function _bstToggleDiscoverable(el) {
   toast(on ? 'Listed in Discover' : 'Hidden from Discover', 'success');
 }
 
+// _ftzSelectHTML wants a change expression; some of ours only need the hidden
+// input it writes for itself, which the saver reads at save time.
+function _bsetNoop() {}
+
+// 🐞 The old threshold chips emitted id="star-threshold-btns" inside a .map(),
+// so five elements shared one id and the handler's querySelectorAll found
+// nothing to clear. The control could not be used. One id on the ROW now.
+function _bsetStarN(n) {
+  const inp = document.getElementById('star-threshold-input');
+  if (inp) inp.value = n;
+  document.querySelectorAll('#star-threshold-btns .bst-n').forEach(el => el.classList.toggle('on', +el.textContent.trim() === n));
+}
+function _bsetStarSync() {
+  const n = parseInt(document.getElementById('star-threshold-input')?.value) || 0;
+  document.querySelectorAll('#star-threshold-btns .bst-n').forEach(el => el.classList.toggle('on', +el.textContent.trim() === n));
+}
+function _bsetStarEm(em) {
+  const h = document.getElementById('star-emoji-val');
+  if (h) h.value = em;
+  document.querySelectorAll('#star-emoji-row .bst-em').forEach(el => el.classList.toggle('on', el.textContent.trim() === em));
+}
+
+function _bsetWelcomePreview() {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const el = document.getElementById('welcome-preview-text');
+  const v = document.getElementById('welcome-msg-input')?.value || '';
+  if (el) el.innerHTML = parseMD(escapeHTML(v.replace('{user}', '**NewMember**').replace('{bastion}', '**' + escapeHTML(b.name) + '**').replace('{count}', '42')));
+}
+
 function _bsetCopyVanity() {
   const b = CU.bastions?.[curBastion]; if (!b || !b.vanity) return;
   try { navigator.clipboard.writeText('https://invite.fortized.com/' + b.vanity); toast('Invite link copied', 'success'); }
@@ -23755,9 +23426,10 @@ async function sendBastionAnnouncement() {
   const bastionId = b.globalId || b.name;
   const channel = document.getElementById('announce-channel')?.value || 'general';
   const msg = document.getElementById('announce-msg')?.value?.trim();
-  const mentionAll = document.getElementById('announce-mention-all')?.checked;
+  // It is a .toggle now, not a checkbox — a checkbox has no .checked here.
+  const mentionAll = document.getElementById('announce-mention-all')?.classList.contains('on');
   if (!msg) { toast('Write a message first', 'error'); return; }
-  const prefix = mentionAll ? '📣 **@everyone** — ' : '📣 **Announcement** — ';
+  const prefix = mentionAll ? '**@everyone** · ' : '**Announcement** · ';
   try {
     await FortizedSocial.sendBastionChannelMessage(bastionId, channel, '__system__', prefix + msg);
     document.getElementById('announce-msg').value = '';
@@ -63889,6 +63561,7 @@ function setLockedMood(key) {
   const b = CU?.bastions?.[curBastion]; if (!b) return;
   b.lockedMood = key;
   b.moodLocked = true;
+  document.querySelectorAll('.bmd-pick').forEach(el => el.classList.remove('on'));
   saveUser();
   _syncBastionToGlobal(curBastion);
   renderBSettingsMain('mood');

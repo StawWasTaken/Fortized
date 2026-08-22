@@ -2675,7 +2675,7 @@ async function _syncBastionFromGlobal(bastionIdx) {
     const global = await FortizedSocial.getGlobalBastion(b.globalId);
     if (!global) return;
     // Merge global fields into local copy (owner-managed data)
-    const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','categories','roles','everyone','memberRoles','public','joinMode','discoverable','applicationQuestions','applications','memberInvites','vanity','category','tags','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
+    const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','categories','roles','everyone','memberRoles','public','joinMode','discoverable','applicationQuestions','applications','memberInvites','vanity','category','tags','automod','boostLevel','customEmojis','stickers','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
     let changed = false;
     for (const key of syncFields) {
       if (global[key] !== undefined && JSON.stringify(b[key]) !== JSON.stringify(global[key])) {
@@ -19298,7 +19298,7 @@ function initFortizedUXResilience() {
             FortizedSocial.getGlobalBastion(data.bastionId).then(fresh => {
               if (!fresh) return;
               // Sync ALL fields from global
-              const syncFields = ['roles','everyone','memberRoles','channels','name','icon','banner','emblem','desc','tagline','members','memberCount','invites','automod','boostLevel','customEmojis','public','joinMode','discoverable','applicationQuestions','applications','memberInvites','vanity','category','tags','categories','moodDisabled','moodLocked','lockedMood','customMood','overview','bans','verified'];
+              const syncFields = ['roles','everyone','memberRoles','channels','name','icon','banner','emblem','desc','tagline','members','memberCount','invites','automod','boostLevel','customEmojis','stickers','public','joinMode','discoverable','applicationQuestions','applications','memberInvites','vanity','category','tags','categories','moodDisabled','moodLocked','lockedMood','customMood','overview','bans','verified'];
               syncFields.forEach(f => { if (fresh[f] !== undefined) b[f] = fresh[f]; });
               saveLocal();
               renderRailBastions();
@@ -21158,8 +21158,8 @@ function _renderEventsModalContent() {
 const _BSET_TABS = {
   overview:      { label:'Overview',         lead:'How your bastion introduces itself across Fortized.' },
   roles:         { label:'Roles',            lead:'What each role can do, and who wears it.' },
-  channels:      { label:'Channels',         lead:'Your categories, your rooms, and who can reach them.' },
-  emojis:        { label:'Emotes',           lead:'Expressions your members can use here.' },
+  emojis:        { label:'Emojis',           lead:'Small marks your members drop into a sentence, and react with.' },
+  stickers:      { label:'Stickers',         lead:'Big expressions your members send on their own.' },
   privacy:       { label:'Privacy',          lead:'Set who can find this bastion and how people get in.' },
   automod:       { label:'AutoMod',          lead:'Rules that act before a moderator has to.' },
   welcome_msg:   { label:'Welcome message',  lead:'The first thing a new arrival reads.' },
@@ -21182,7 +21182,7 @@ const _BSET_TABS = {
 // A string that is not a tab id is a group label; '-' is a separator.
 const _BSET_NAV = [
   'Bastion settings',
-  'overview', 'roles', 'channels', 'emojis', 'privacy', 'automod',
+  'overview', 'roles', 'emojis', 'stickers', 'privacy', 'automod',
   'welcome_msg', 'rules', 'announcements', 'starboard',
   'mood', 'reputation', 'boost', 'insights', 'bots', 'templates',
   '-', 'danger',
@@ -21457,33 +21457,97 @@ function _bmcIdent(r) {
   };
 }
 
+function _bmcAppQText(a, qi) {
+  // The application carries the questions it was ANSWERED against, so an owner
+  // editing the form later never relabels somebody's old answers.
+  const q = (a.questions || [])[qi];
+  if (typeof q === 'string') return q;
+  if (q && q.q) return q.q;
+  return 'Question ' + (qi + 1);
+}
+
 function _bmcAppsHTML(b, status) {
-  const apps = _bmcApps(b, status);
+  const apps = _bmcApps(b, status).map((a, i) => ({ a, i }));
   if (!apps.length) {
     const t = status === 'pending' ? 'Nothing waiting' : status === 'rejected' ? 'Nobody turned away' : 'Nobody let in this way yet';
     return _ftzNotFound(t, status === 'pending' ? 'Applications land here as they arrive.' : '', { art: status === 'pending' ? 'celebrate' : 'battle' });
   }
-  const qs = b.applicationQuestions || [];
-  return `<div class="bmc-apps">${apps.map((a, i) => `
-    <div class="bmc-app">
-      <div class="bmc-app-h">
-        <span class="bmc-nm-d">${escapeHTML(a.displayName || a.applicant)}</span>
-        <span class="bmc-nm-u">@${escapeHTML(a.applicant)}</span>
-        <span class="bmc-dim bmc-app-t">${_bmcDate(a.timestamp)}</span>
+  const dateCol = status === 'pending' ? 'Applied' : 'Reviewed';
+  const rows = apps.map(({ a }) => {
+    const k = String(a.applicant || '').toLowerCase();
+    const prof = _bmcRows.find(r => r.user === k);
+    const id = _bmcIdent(prof || { user: k, u: null });
+    const when = status === 'pending' ? a.timestamp : (a.reviewedAt || a.timestamp);
+    return `
+      <div class="bmc-row bmc-row--app" role="button" tabindex="0" onclick="_bmcAppOpen('${escapeHTML(a.applicant)}','${status}')" onkeydown="if(event.key==='Enter')_bmcAppOpen('${escapeHTML(a.applicant)}','${status}')">
+        <div class="bmc-c bmc-c--name">${id.av}<span class="bmc-nm"><span class="bmc-nm-d">${id.name}</span><span class="bmc-nm-u">@${escapeHTML(a.applicant)}</span></span></div>
+        <div class="bmc-c">${_bmcDate(when)}${status !== 'pending' && a.reviewedBy ? `<span class="bmc-dim"> by ${escapeHTML(a.reviewedBy)}</span>` : ''}</div>
+        <div class="bmc-c bmc-c--a"><button class="fs-btn bmc-mini" type="button" onclick="event.stopPropagation();_bmcAppOpen('${escapeHTML(a.applicant)}','${status}')">Read it</button></div>
+      </div>`;
+  }).join('');
+  return `<div class="bmc-table bmc-table--app">
+    <div class="bmc-hrow"><div class="bmc-c bmc-c--name">Name</div><div class="bmc-c">${dateCol}</div><div class="bmc-c bmc-c--a"></div></div>
+    ${rows}
+  </div>`;
+}
+
+// The application itself, read the way a person reads it: who, what they said,
+// and only then what you can do about it.
+function _bmcAppOpen(applicant, status) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const a = (b.applications || []).find(x => x.applicant === applicant && (x.status || 'pending') === status);
+  if (!a) return;
+  const k = String(applicant || '').toLowerCase();
+  const prof = _bmcRows.find(r => r.user === k) || { user: k, u: null };
+  const id = _bmcIdent(prof);
+  const st = a.status || 'pending';
+  const banner = st === 'pending'
+    ? `<div class="bap-band bap-band--wait"><span class="bap-band-t">Waiting on you</span><span class="bap-band-s">Applied ${_bmcDate(a.timestamp)}</span></div>`
+    : `<div class="bap-band bap-band--${st === 'approved' ? 'ok' : 'no'}"><span class="bap-band-t">${st === 'approved' ? 'Approved' : 'Turned down'}</span><span class="bap-band-s">${a.reviewedBy ? 'By ' + escapeHTML(a.reviewedBy) + ' · ' : ''}${_bmcDate(a.reviewedAt || a.timestamp)}</span></div>`;
+  const qs = (a.answers || []).map((ans, qi) => `
+    <div class="bap-q">
+      <div class="bap-ql">${escapeHTML(_bmcAppQText(a, qi))}</div>
+      <div class="bap-qa">${ans ? escapeHTML(ans) : '<span class="bmc-dim">Left blank</span>'}</div>
+    </div>`).join('') || '<div class="bmc-dim">No answers were recorded.</div>';
+  const joined = prof.u && (prof.u.createdAt || prof.u.created_at);
+
+  document.getElementById('bap-overlay')?.remove();
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay';
+  ov.id = 'bap-overlay';
+  ov.innerHTML = `<div class="ftz-confirm-card ftz-ac-card bap-card" role="dialog" aria-label="Application">
+      <button class="settings-close bmc-x" type="button" aria-label="Close" onclick="document.getElementById('bap-overlay')?.remove()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="bap-head">
+        ${id.av}
+        <div class="bap-who"><div class="bap-d">${id.name}</div><div class="bap-u">@${escapeHTML(applicant)}</div></div>
       </div>
-      <div class="bmc-app-qs">${(a.answers || []).map((ans, qi) => `
-        <div class="bmc-app-q"><div class="bmc-app-ql">${escapeHTML(qs[qi] || ('Question ' + (qi + 1)))}</div><div class="bmc-app-qa">${escapeHTML(ans)}</div></div>`).join('')}</div>
-      ${status === 'pending' ? `<div class="bmc-app-act">
-        <button class="fs-btn stf-btn--good bmc-mini" type="button" onclick="_bmcApp('${escapeHTML(a.applicant)}','approved')">Let them in</button>
-        <button class="fs-btn stf-btn--danger bmc-mini" type="button" onclick="_bmcApp('${escapeHTML(a.applicant)}','rejected')">Turn down</button>
-      </div>` : ''}
-    </div>`).join('')}</div>`;
+      ${banner}
+      <div class="bap-scroll">
+        <div class="bap-qs">${qs}</div>
+        <div class="bap-acct">
+          <div class="bap-acct-t">Account</div>
+          <div class="bap-acct-r"><span>Joined Fortized</span><b>${joined ? _bmcDate(joined) : 'Unknown'}</b></div>
+          <div class="bap-acct-r"><span>Application date</span><b>${_bmcDate(a.timestamp)}</b></div>
+        </div>
+      </div>
+      ${st === 'pending' ? `<div class="ftz-modal-foot">
+        <button class="fs-btn stf-btn--danger" type="button" onclick="document.getElementById('bap-overlay')?.remove();_bmcApp('${escapeHTML(applicant)}','rejected')">Turn down</button>
+        <button class="fs-btn stf-btn--good" type="button" onclick="document.getElementById('bap-overlay')?.remove();_bmcApp('${escapeHTML(applicant)}','approved')">Let them in</button>
+      </div>` : `<div class="ftz-modal-foot"><button class="fs-btn" type="button" onclick="document.getElementById('bap-overlay')?.remove()">Close</button></div>`}
+    </div>`;
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
 }
 
 async function _bmcApp(applicant, status) {
   const b = CU.bastions?.[curBastion]; if (!b) return;
   const gid = b.globalId || b.name;
-  const list = (b.applications || []).map(a => a.applicant === applicant && (a.status || 'pending') === 'pending' ? { ...a, status } : a);
+  // Who decided, and when — the detail card shows it back, so it has to be real.
+  const list = (b.applications || []).map(a => a.applicant === applicant && (a.status || 'pending') === 'pending'
+    ? { ...a, status, reviewedBy: CU.displayName || CU.username, reviewedAt: new Date().toISOString() }
+    : a);
   b.applications = list;
   if (status === 'approved') { try { await FortizedSocial.addBastionMember(gid, applicant, 'application'); } catch (_) {} }
   await saveUser();
@@ -21542,21 +21606,16 @@ function renderBSettingsMain(tab) {
       </div>
 
       <div class="bset-fgroup">
-        <label class="bset-flabel" for="bs-tagline">Tagline</label>
-        <input class="bset-uline" id="bs-tagline" value="${escapeHTML(b.tagline||'')}" placeholder="A short line people read first" maxlength="60">
-        <div class="bset-fhelp">Sits under your name on the bastion shell.</div>
-      </div>
-
-      <div class="bset-fgroup">
         <label class="bset-flabel" for="bs-desc">About</label>
         <textarea class="bset-uline bset-uarea" id="bs-desc" rows="3" maxlength="300" placeholder="What is this bastion for?">${escapeHTML(b.desc||'')}</textarea>
         <div class="bset-fhelp">Your bastion description will be seen by everyone.</div>
       </div>
 
       <div class="bset-fgroup">
-        <label class="bset-flabel" for="bs-vanity">URL</label>
-        <div class="bset-uprefix"><span>fortized.com/b/</span><input class="bset-uline" id="bs-vanity" value="${escapeHTML(b.vanity||'')}" placeholder="coolname" maxlength="32"></div>
-        <div class="bset-fhelp">Lets you reach your bastion at fortized.com/b/&lt;url&gt;. Bastion URLs are unique, so reserve yours while you can. Letters, numbers, dashes and underscores.</div>
+        <label class="bset-flabel" for="bs-vanity">Custom invite link</label>
+        <div class="bset-uprefix"><span>invite.fortized.com/</span><input class="bset-uline" id="bs-vanity" value="${escapeHTML(b.vanity||'')}" placeholder="yourname" maxlength="32"></div>
+        <div class="bset-fhelp">One link that never expires and never runs out of uses. It is unique across Fortized, so claim yours while it is free. Letters, numbers, dashes and underscores.</div>
+        ${b.vanity?`<div class="bset-copyrow"><code class="bset-copycode">invite.fortized.com/${escapeHTML(b.vanity)}</code><button class="fs-btn" type="button" onclick="_bsetCopyVanity()">Copy link</button></div>`:''}
       </div>
 
       <div class="bset-fgroup">
@@ -21611,15 +21670,9 @@ function renderBSettingsMain(tab) {
       <div class="bs-divider"></div>
 
       <div class="bset-fgroup" id="app-form-section"${mode==='private'?' style="display:none;"':''}>
-        <div class="bset-flabel">Application questions</div>
-        <div class="bset-fhelp" style="margin-bottom:10px;">Ask arrivals a few things before they get in. Leave this empty and anyone with an invite joins straight away. Answers land in Members, under Pending.</div>
-        <div id="app-qs">
-          ${(b.applicationQuestions||[]).map((q,i) => `<div class="bset-qrow"><input class="bset-uline app-q-input" value="${escapeHTML(q)}" placeholder="Question ${i+1}" onchange="updateAppQuestion(${i},this.value)"><button class="bset-qx" type="button" title="Remove" onclick="removeAppQuestion(${i})">&times;</button></div>`).join('') || '<div class="bset-fhelp">No questions yet.</div>'}
-        </div>
-        <div class="bset-save">
-          <button class="fs-btn" onclick="addAppQuestion()">+ Add a question</button>
-          <button class="fs-btn fs-btn--primary" onclick="saveAppQuestions()">Save questions</button>
-        </div>
+        <div class="bset-flabel">Application form</div>
+        <div class="bset-fhelp" style="margin-bottom:12px;">Ask arrivals a few things before they get in. Leave this empty and anyone with an invite joins straight away. Answers land in Members, under Pending.</div>
+        ${_bstAppBuilderHTML(b)}
       </div>
 
       <div class="bset-note">These switches decide what Fortized draws and lets people do. They are not a security boundary: keep anything you would not want repeated out of a bastion, whichever setting is on.</div>
@@ -21639,69 +21692,8 @@ function renderBSettingsMain(tab) {
     if (_bstRoleDraft) { _bstRoleRender(); return; }
     main.innerHTML = _bstRolesListHTML(b);
   }
-  else if (tab==='emojis') {
-    const slotsByLevel = [15,25,35,50];
-    const limit = slotsByLevel[b.boostLevel||0] || 15;
-    const emojis = b.customEmojis || [];
-    const stickers = b.stickers || b.customStickers || [];
-    const stickerLimit = slotsByLevel[b.boostLevel||0] || 15;
-    const emojiSlots = Array.from({length:limit}).map((_,i)=>{
-      const e = emojis[i];
-      return e ? `<div class="emoji-slot filled"><img src="${e.data}" alt="${escapeHTML(e.name)}"><div class="es-name">:${escapeHTML(e.name)}:</div><div class="es-del" onclick="event.stopPropagation();deleteCustomEmoji(${i})">✕</div></div>`
-        : `<div class="emoji-slot" onclick="uploadCustomEmoji()">+</div>`;
-    }).join('');
-    const stickerSlots = Array.from({length:stickerLimit}).map((_,i)=>{
-      const s = stickers[i];
-      return s ? `<div class="emoji-slot filled" style="width:72px;height:72px;"><img src="${escapeHTML(s.url||s.data||'')}" alt="${escapeHTML(s.name||'')}" style="width:64px;height:64px;object-fit:contain;"><div class="es-name">${escapeHTML(s.name||'sticker')}</div><div class="es-del" onclick="event.stopPropagation();deleteCustomSticker(${i})">✕</div></div>`
-        : `<div class="emoji-slot" style="width:72px;height:72px;" onclick="uploadCustomSticker()">+</div>`;
-    }).join('');
-    const nextLimit = slotsByLevel[Math.min((b.boostLevel||0)+1,3)];
-    main.innerHTML = `
-      <div class="bs-section-title">Emoji & Stickers</div>
-      <div class="bs-section-desc">Manage your bastion's custom emojis and stickers. These are available to all members.</div>
-
-      <!-- Sub-tabs for Emoji vs Stickers -->
-      <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:3px;width:fit-content;">
-        <button id="bi-tab-emojis" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:700;background:var(--accent);color:var(--rail);border:none;" onclick="_switchBITab('emojis')">Custom Emojis</button>
-        <button id="bi-tab-stickers" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchBITab('stickers')">Stickers</button>
-      </div>
-
-      <!-- Emoji Section -->
-      <div id="bi-section-emojis">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-          <div style="font-size:13px;font-weight:700;">Custom Emojis</div>
-          <div style="font-size:11px;color:var(--muted);">${emojis.length}/${limit} slots</div>
-        </div>
-        <div style="width:100%;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;margin-bottom:6px;">
-          <div style="height:100%;width:${Math.min(100,(emojis.length/limit)*100)}%;background:linear-gradient(90deg,var(--accent),var(--accent-mid));border-radius:3px;transition:width .3s;"></div>
-        </div>
-        ${(b.boostLevel||0)<3?`<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Boost to Level ${(b.boostLevel||0)+1} for ${nextLimit} slots · <span style="color:var(--accent);cursor:pointer;" onclick="renderBSettingsMain('boost')">Boost →</span></div>`
-        :`<div style="font-size:11px;color:var(--green);margin-bottom:14px;">Maximum slots unlocked!</div>`}
-        <div style="display:flex;gap:8px;margin-bottom:14px;">
-          <button class="btn-a" style="font-size:13px;" onclick="uploadCustomEmoji()">Upload Emoji</button>
-          <input id="emoji-file-input" type="file" accept="image/*,image/gif" style="display:none;" onchange="processEmojiUpload(event)">
-        </div>
-        <div class="emoji-upload-grid">${emojiSlots}</div>
-        ${emojis.length?`<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;">Quick Reference</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${emojis.map(e=>`<div style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:var(--panel);border:1px solid var(--border);border-radius:8px;font-size:11px;"><img src="${e.data}" style="width:16px;height:16px;border-radius:3px;"><code style="color:var(--muted-light);">:${escapeHTML(e.name)}:</code></div>`).join('')}</div></div>`:''}
-      </div>
-
-      <!-- Sticker Section -->
-      <div id="bi-section-stickers" style="display:none;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-          <div style="font-size:13px;font-weight:700;">Custom Stickers</div>
-          <div style="font-size:11px;color:var(--muted);">${stickers.length}/${stickerLimit} slots</div>
-        </div>
-        <div style="width:100%;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;margin-bottom:6px;">
-          <div style="height:100%;width:${Math.min(100,(stickers.length/stickerLimit)*100)}%;background:linear-gradient(90deg,#a78bfa,rgba(167,139,250,.3));border-radius:3px;transition:width .3s;"></div>
-        </div>
-        <div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Stickers are larger expressions your members can send in chat. Supported formats: PNG, GIF, WebP (max 512KB, recommended 128x128).</div>
-        <div style="display:flex;gap:8px;margin-bottom:14px;">
-          <button class="btn-a" style="font-size:13px;background:linear-gradient(135deg,#a78bfa,#7c3aed);" onclick="uploadCustomSticker()">Upload Sticker</button>
-          <input id="sticker-file-input" type="file" accept="image/png,image/gif,image/webp" style="display:none;" onchange="processCustomStickerUpload(event)">
-        </div>
-        <div class="emoji-upload-grid" style="grid-template-columns:repeat(auto-fill,minmax(72px,1fr));">${stickerSlots}</div>
-        ${stickers.length?`<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;">Sticker Preview</div><div style="display:flex;flex-wrap:wrap;gap:10px;">${stickers.map(s=>`<div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;background:var(--panel);border:1px solid var(--border);border-radius:10px;"><img src="${escapeHTML(s.url||s.data||'')}" style="width:48px;height:48px;object-fit:contain;"><div style="font-size:10px;color:var(--muted-light);">${escapeHTML(s.name||'sticker')}</div></div>`).join('')}</div></div>`:''}
-      </div>`;
+  else if (tab==='emojis' || tab==='stickers') {
+    main.innerHTML = _bsetExprHTML(b, tab === 'stickers' ? 'sticker' : 'emoji');
   }
   else if (tab==='automod') {
     const am = b.automod || {};
@@ -23677,6 +23669,12 @@ async function _bstToggleDiscoverable(el) {
   toast(on ? 'Listed in Discover' : 'Hidden from Discover', 'success');
 }
 
+function _bsetCopyVanity() {
+  const b = CU.bastions?.[curBastion]; if (!b || !b.vanity) return;
+  try { navigator.clipboard.writeText('https://invite.fortized.com/' + b.vanity); toast('Invite link copied', 'success'); }
+  catch (_) { toast('Could not copy', 'error'); }
+}
+
 async function _bsetSetDefaultChannel(name) {
   const b = CU.bastions?.[curBastion]; if (!b) return;
   b.defaultChannel = name;
@@ -23687,7 +23685,8 @@ async function _bsetSetDefaultChannel(name) {
 async function saveBastionOverview() {
   const b = CU.bastions[curBastion];
   b.name = document.getElementById('bs-name')?.value?.trim() || b.name;
-  b.tagline = document.getElementById('bs-tagline')?.value?.trim() || '';
+  const _tagEl = document.getElementById('bs-tagline');
+  if (_tagEl) b.tagline = _tagEl.value.trim();
   b.desc = document.getElementById('bs-desc')?.value?.trim() || '';
   // Category + tags are what make Discover's filters work at all. Before this
   // existed nothing could set them, so six of the seven category tabs on
@@ -23793,38 +23792,107 @@ async function setBastionVis(isPublic) {
   _syncBastionToGlobal(curBastion);
   toast(isPublic ? 'Bastion is now Public 🌍' : 'Bastion is now Private 🔒', 'success');
 }
+// ════════════════════════════════════════════════════════════════════
+// APPLICATION FORM — a real form builder, not a list of strings.
+// A question used to be a bare string, so every one of them was a
+// mandatory one-line box. They are objects now; a plain string still
+// reads correctly, so nothing anyone already wrote is lost.
+// ════════════════════════════════════════════════════════════════════
+const _BST_APP_TYPES = [
+  { value: 'short',  label: 'Short answer' },
+  { value: 'long',   label: 'Paragraph' },
+  { value: 'choice', label: 'Pick one' },
+  { value: 'yesno',  label: 'Yes or no' },
+];
+
+function _bstAppQ(q) {
+  if (typeof q === 'string') return { q, type: 'short', required: true, options: [] };
+  return { q: q.q || '', type: q.type || 'short', required: q.required !== false, options: q.options || [] };
+}
+function _bstAppQs(b) { return (b.applicationQuestions || []).map(_bstAppQ); }
+
+function _bstAppBuilderHTML(b) {
+  const qs = _bstAppQs(b);
+  if (!qs.length) {
+    return `<div class="bqb-empty">No questions yet. Anyone with an invite walks straight in.</div>
+      <div class="bset-save"><button class="fs-btn fs-btn--primary" type="button" onclick="addAppQuestion()">+ Add a question</button></div>`;
+  }
+  return `<div class="bqb">${qs.map((q, i) => `
+    <div class="bqb-q">
+      <div class="bqb-q-h">
+        <span class="bqb-n">${i + 1}</span>
+        <input class="bset-uline bqb-t app-q-input" value="${escapeHTML(q.q)}" placeholder="What do you want to ask?" oninput="updateAppQuestion(${i},this.value)">
+        <span class="bqb-move">
+          <button class="bqb-mv" type="button" title="Move up" ${i === 0 ? 'disabled' : ''} onclick="_bstAppMove(${i},-1)">&#9650;</button>
+          <button class="bqb-mv" type="button" title="Move down" ${i === qs.length - 1 ? 'disabled' : ''} onclick="_bstAppMove(${i},1)">&#9660;</button>
+          <button class="bset-qx" type="button" title="Remove" onclick="removeAppQuestion(${i})">&times;</button>
+        </span>
+      </div>
+      <div class="bqb-q-b">
+        <div class="bqb-f">
+          <div class="bset-flabel">Answer type</div>
+          ${_ftzSelectHTML('appq-t-' + i, q.type, _BST_APP_TYPES, `_bstAppType(${i},__VALUE__)`)}
+        </div>
+        <div class="bqb-f bqb-f--req">
+          <div class="bset-flabel">Required</div>
+          <div class="toggle${q.required ? ' on' : ''}" onclick="_bstAppReq(${i},this)"><div class="toggle-knob"></div></div>
+        </div>
+      </div>
+      ${q.type === 'choice' ? `<div class="bqb-f bqb-f--opt">
+        <div class="bset-flabel">Choices</div>
+        <input class="bset-uline" value="${escapeHTML((q.options || []).join(', '))}" placeholder="Yes, No, Maybe" oninput="_bstAppOpts(${i},this.value)">
+        <div class="bset-fhelp">Comma separated. They pick exactly one.</div>
+      </div>` : ''}
+    </div>`).join('')}</div>
+    <div class="bset-save">
+      <button class="fs-btn" type="button" onclick="addAppQuestion()">+ Add a question</button>
+      <button class="fs-btn fs-btn--primary" type="button" onclick="saveAppQuestions()">Save form</button>
+    </div>`;
+}
+
+function _bstAppWrite(b, fn) {
+  b.applicationQuestions = _bstAppQs(b);
+  fn(b.applicationQuestions);
+}
+function _bstAppType(i, v) { const b = CU.bastions?.[curBastion]; if (!b) return; _bstAppWrite(b, a => { a[i].type = v; if (v === 'choice' && !a[i].options.length) a[i].options = []; }); renderBSettingsMain('privacy'); }
+function _bstAppReq(i, el) { const b = CU.bastions?.[curBastion]; if (!b) return; const on = !el.classList.contains('on'); el.classList.toggle('on', on); _bstAppWrite(b, a => { a[i].required = on; }); }
+function _bstAppOpts(i, v) { const b = CU.bastions?.[curBastion]; if (!b) return; _bstAppWrite(b, a => { a[i].options = v.split(',').map(x => x.trim()).filter(Boolean).slice(0, 12); }); }
+function _bstAppMove(i, d) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  _bstAppWrite(b, a => { const j = i + d; if (j < 0 || j >= a.length) return; const t = a[i]; a[i] = a[j]; a[j] = t; });
+  renderBSettingsMain('privacy');
+}
+
 function addAppQuestion() {
   const b = CU.bastions?.[curBastion]; if (!b) return;
-  b.applicationQuestions = b.applicationQuestions || [];
-  b.applicationQuestions.push('');
-  renderBSettingsMain('overview');
-  setTimeout(() => {
-    const inputs = document.querySelectorAll('.app-q-input');
-    if (inputs.length) inputs[inputs.length-1].focus();
-  }, 50);
+  _bstAppWrite(b, a => a.push({ q: '', type: 'short', required: true, options: [] }));
+  renderBSettingsMain('privacy');
+  setTimeout(() => { const i = document.querySelectorAll('.app-q-input'); if (i.length) i[i.length - 1].focus(); }, 50);
 }
 function removeAppQuestion(i) {
-  showCustomConfirm('Remove this application question?', () => {
+  showCustomConfirm('Remove this question?', () => {
     const b = CU.bastions?.[curBastion]; if (!b) return;
-    (b.applicationQuestions||[]).splice(i, 1);
-    renderBSettingsMain('overview');
+    _bstAppWrite(b, a => a.splice(i, 1));
+    renderBSettingsMain('privacy');
     toast('Question removed', 'info');
   });
 }
 function updateAppQuestion(i, val) {
   const b = CU.bastions?.[curBastion]; if (!b) return;
-  b.applicationQuestions = b.applicationQuestions || [];
-  b.applicationQuestions[i] = val;
+  _bstAppWrite(b, a => { a[i].q = val; });
 }
 async function saveAppQuestions() {
   const b = CU.bastions?.[curBastion]; if (!b) return;
-  // Read current input values before saving
-  document.querySelectorAll('.app-q-input').forEach((el,i) => {
-    if (b.applicationQuestions) b.applicationQuestions[i] = el.value.trim();
+  _bstAppWrite(b, a => {
+    document.querySelectorAll('.app-q-input').forEach((el, i) => { if (a[i]) a[i].q = el.value.trim(); });
+    // A question with no text asks nothing, and would render as an unlabelled
+    // box on the applicant's side.
+    b.applicationQuestions = a.filter(x => x.q);
   });
   await saveUser();
-  try { if (b.globalId) await FortizedSocial.updateBastionSettings?.(b.globalId, {applicationQuestions: b.applicationQuestions}); } catch(e) { _wrn('[Bastion] App questions sync:', e?.message); }
-  toast('Application form saved!', 'success');
+  _syncBastionToGlobal(curBastion);
+  renderBSettingsMain('privacy');
+  toast('Application form saved', 'success');
 }
 async function updateBastionIcon(e) {
   const file = e.target.files[0]; if (!file) return;
@@ -24815,19 +24883,43 @@ function _bstChOpen(idx) {
 }
 function _bstChBack() {
   _bstChDraft = null; _bstChIdx = -1;
+  if (document.getElementById('bch-overlay')) { document.getElementById('bch-overlay').remove(); return; }
   renderBSettingsMain('channels');
+}
+
+// A channel is edited from the sidebar, in its own card. Nothing about a
+// single room belongs on a bastion-wide settings page.
+function openBastionChannelCard(idx) {
+  const b = CU.bastions?.[curBastion];
+  if (!b || !(b.channels || [])[idx]) return;
+  document.getElementById('bch-overlay')?.remove();
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay';
+  ov.id = 'bch-overlay';
+  ov.innerHTML = `<div class="ftz-confirm-card ftz-ac-card bch-card" role="dialog" aria-label="Channel settings">
+      <button class="settings-close bmc-x" type="button" aria-label="Close" onclick="_bstChBack()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="bch-body bsettings-main" id="bch-body"></div>
+    </div>`;
+  ov.addEventListener('click', e => { if (e.target === ov) _bstChBack(); });
+  document.body.appendChild(ov);
+  _bstChOpen(idx);
 }
 function _bstChSetTab(t) { _bstChTab = t; _bstChRender(); }
 
 function _bstChRender() {
   const b = CU && CU.bastions && CU.bastions[curBastion];
   const d = _bstChDraft;
-  const main = document.getElementById('bs-settings-main');
+  // 🐞 This read 'bs-settings-main', an id that does not exist anywhere, so
+  // the channel editor silently rendered NOWHERE. It lives in its own card
+  // now — opened from the sidebar, which is where a channel is edited.
+  const main = document.getElementById('bch-body') || document.getElementById('bsettings-main');
   if (!b || !d || !main) return;
   const t = _chType(d.type);
   const body = _bstChTab === 'permissions' ? _bstChPermsHTML(b, d) : _bstChOverviewHTML(b, d);
   main.innerHTML = `
-    <button class="bstr-back" onclick="_bstChBack()">${_BSTR_CHEVL}<span>Channels</span></button>
+    ${document.getElementById('bch-overlay') ? '' : `<button class="bstr-back" onclick="_bstChBack()">${_BSTR_CHEVL}<span>Channels</span></button>`}
     <div class="bstr-edithead">
       <span class="bstr-mark bstr-mark--lg bstc-headglyph">${_chTypeGlyph(d.type, 22)}</span>
       <div class="bs-section-title bstr-title" id="bstc-preview-name">${escapeHTML(d.name || '')}</div>
@@ -25120,6 +25212,225 @@ function applyRoleTemplate(templateId) {
 // ════════════════════════════════════════════
 // CUSTOM EMOJIS
 // ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════
+// EXPRESSIONS — Emojis and Stickers, two pages off one implementation.
+// Guilded's shape (slot meter, upload, a real table), our components.
+// ════════════════════════════════════════════════════════════════════
+const _BSET_EXPR = {
+  emoji: {
+    label: 'Emoji', plural: 'emojis', field: 'customEmojis', tile: 34,
+    accept: 'image/png,image/gif,image/webp,image/jpeg',
+    help: 'PNG, GIF or WebP, up to 512KB. 128x128 reads best. Names take letters, numbers and underscores only.',
+    use: 'Type :name: in any channel here, or pick it from the emoji panel. Reactions work too.',
+  },
+  sticker: {
+    label: 'Sticker', plural: 'stickers', field: 'stickers', tile: 60,
+    accept: 'image/png,image/gif,image/webp',
+    help: 'PNG, GIF or WebP, up to 512KB. 320x320 reads best. Names take letters, numbers and underscores only.',
+    use: 'Send one on its own from the sticker panel. Stickers are a whole message, not part of one.',
+  },
+};
+let _bsetExprQ = '';
+
+function _bsetExprItems(b, kind) {
+  if (kind === 'sticker') return b.stickers || b.customStickers || [];
+  return b.customEmojis || [];
+}
+function _bsetExprSrc(it) { return it.data || it.url || ''; }
+function _bsetExprLimit(b) { return [15, 25, 35, 50][b.boostLevel || 0] || 15; }
+
+function _bsetExprHTML(b, kind) {
+  const M = _BSET_EXPR[kind];
+  const items = _bsetExprItems(b, kind);
+  const limit = _bsetExprLimit(b);
+  const lvl = b.boostLevel || 0;
+  const next = [15, 25, 35, 50][Math.min(lvl + 1, 3)];
+  const pct = Math.min(100, (items.length / limit) * 100);
+  const q = _bsetExprQ.toLowerCase();
+  const shown = items.map((it, i) => ({ it, i })).filter(({ it }) => !q || String(it.name || '').toLowerCase().includes(q));
+
+  const rows = shown.map(({ it, i }) => `
+    <div class="bxp-row">
+      <div class="bxp-c bxp-c--n">
+        <span class="bxp-tile" style="--t:${M.tile}px;"><img src="${escapeHTML(_bsetExprSrc(it))}" alt=""></span>
+        <span class="bxp-nm">
+          <span class="bxp-nm-t">${kind === 'emoji' ? ':' + escapeHTML(it.name || '') + ':' : escapeHTML(it.name || '')}</span>
+          ${it.animated || /^data:image\/gif/.test(_bsetExprSrc(it)) ? '<span class="bxp-anim">Animated</span>' : ''}
+        </span>
+      </div>
+      <div class="bxp-c">${it.by ? escapeHTML(it.by) : '<span class="bmc-dim">Unknown</span>'}</div>
+      <div class="bxp-c">${_bmcDate(it.at)}</div>
+      <div class="bxp-c bxp-c--a">
+        <button class="fs-btn bmc-mini" type="button" onclick="_bsetExprRename('${kind}',${i})">Rename</button>
+        <button class="fs-btn stf-btn--danger bmc-mini" type="button" onclick="_bsetExprDelete('${kind}',${i})">Delete</button>
+      </div>
+    </div>`).join('');
+
+  return `
+    <div class="bxp-top">
+      <div class="bxp-meter">
+        <div class="bxp-meter-h"><span>${items.length} of ${limit} slots used</span>${lvl < 3
+          ? `<button class="bxp-link" type="button" onclick="renderBSettingsMain('boost')">Boost to ${next} slots</button>`
+          : '<span class="bxp-max">Every slot unlocked</span>'}</div>
+        <div class="bxp-bar"><div class="bxp-fill" style="width:${pct}%;"></div></div>
+      </div>
+      <button class="fs-btn fs-btn--primary" type="button" ${items.length >= limit ? 'disabled' : ''} onclick="_bsetExprUpload('${kind}')">Upload ${M.label.toLowerCase()}</button>
+    </div>
+    <div class="bxp-use">${M.use}</div>
+    ${items.length ? `<div class="bxp-tools">
+      <input class="settings-input bxp-search" placeholder="Search ${M.plural}" value="${escapeHTML(_bsetExprQ)}" oninput="_bsetExprSearch(this.value)">
+      <span class="bmc-dim bxp-count">${items.length} ${items.length === 1 ? M.label.toLowerCase() : M.plural}</span>
+    </div>` : ''}
+    ${items.length ? `<div class="bxp-table">
+      <div class="bxp-hrow">
+        <div class="bxp-c bxp-c--n">Name</div>
+        <div class="bxp-c">Added by</div>
+        <div class="bxp-c">Added at</div>
+        <div class="bxp-c bxp-c--a"></div>
+      </div>
+      ${rows || `<div class="bxp-none">Nothing matches "${escapeHTML(_bsetExprQ)}".</div>`}
+    </div>` : _ftzNotFound(`No ${M.plural} yet`, `Upload the first one and everyone here can use it.`, { art: 'battle' })}`;
+}
+
+function _bsetExprSearch(v) {
+  _bsetExprQ = v || '';
+  renderBSettingsMain(_bsetActiveTab);
+  const f = document.querySelector('.bxp-search');
+  if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
+}
+
+// One upload card: drop it, browse for it, or paste it. Named before it lands.
+function _bsetExprUpload(kind) {
+  const M = _BSET_EXPR[kind];
+  document.getElementById('bxp-up')?.remove();
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay';
+  ov.id = 'bxp-up';
+  ov.innerHTML = `<div class="ftz-confirm-card ftz-ac-card bxp-card">
+      <button class="ftz-close-btn ftz-ac-x" type="button" aria-label="Close" onclick="document.getElementById('bxp-up')?.remove()">
+        <svg viewBox="0 0 384 512" width="1em" height="1em" fill="currentColor"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg>
+      </button>
+      <div class="bxp-card-h">Upload ${escapeHTML(M.label.toLowerCase())}</div>
+      <div class="bxp-drop" id="bxp-drop" tabindex="0">
+        <div class="bxp-drop-in" id="bxp-drop-in">
+          <div class="bxp-drop-t">Drop an image, or browse your files</div>
+          <div class="bxp-drop-s">You can paste one straight from your clipboard too.</div>
+        </div>
+        <input id="bxp-file" type="file" accept="${M.accept}" hidden>
+      </div>
+      <div class="bset-fgroup">
+        <label class="bset-flabel" for="bxp-name">${escapeHTML(M.label)} name</label>
+        <input class="bset-uline" id="bxp-name" placeholder="a_good_name" maxlength="32" oninput="_bsetExprNameIn(this)">
+        <div class="bset-fhelp">${escapeHTML(M.help)}</div>
+        <div class="bxp-err" id="bxp-err"></div>
+      </div>
+      <div class="ftz-modal-foot">
+        <button class="fs-btn" type="button" onclick="document.getElementById('bxp-up')?.remove()">Cancel</button>
+        <button class="fs-btn fs-btn--primary" type="button" id="bxp-go" disabled onclick="_bsetExprCommit('${kind}')">Upload</button>
+      </div>
+    </div>`;
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
+
+  const drop = ov.querySelector('#bxp-drop');
+  const file = ov.querySelector('#bxp-file');
+  drop.addEventListener('click', () => file.click());
+  drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); } });
+  file.addEventListener('change', () => _bsetExprTake(kind, file.files[0]));
+  ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => _bsetExprTake(kind, e.dataTransfer?.files?.[0]));
+  const onPaste = e => {
+    if (!document.getElementById('bxp-up')) { document.removeEventListener('paste', onPaste); return; }
+    const it = [...(e.clipboardData?.items || [])].find(x => x.type.startsWith('image/'));
+    if (it) _bsetExprTake(kind, it.getAsFile());
+  };
+  document.addEventListener('paste', onPaste);
+}
+
+let _bsetExprPending = null;
+
+function _bsetExprTake(kind, f) {
+  const M = _BSET_EXPR[kind];
+  const err = document.getElementById('bxp-err');
+  const set = m => { if (err) err.textContent = m; };
+  if (!f) return;
+  if (!/^image\//.test(f.type)) return set('That is not an image.');
+  if (!M.accept.split(',').includes(f.type)) return set('That format is not supported. Use ' + (kind === 'emoji' ? 'PNG, GIF, WebP or JPEG' : 'PNG, GIF or WebP') + '.');
+  if (f.size > 512 * 1024) return set('That file is ' + Math.round(f.size / 1024) + 'KB. The limit is 512KB.');
+  set('');
+  const r = new FileReader();
+  r.onload = ev => {
+    _bsetExprPending = { data: ev.target.result, animated: f.type === 'image/gif' };
+    const inn = document.getElementById('bxp-drop-in');
+    if (inn) inn.innerHTML = `<img class="bxp-prev" src="${_bsetExprPending.data}" alt=""><div class="bxp-drop-s">Click to pick a different one.</div>`;
+    const nm = document.getElementById('bxp-name');
+    if (nm && !nm.value) { nm.value = _bsetExprClean((f.name || '').replace(/\.[^.]+$/, '')); _bsetExprNameIn(nm); }
+    _bsetExprSync();
+  };
+  r.readAsDataURL(f);
+}
+
+function _bsetExprClean(v) { return String(v || '').trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '').slice(0, 32); }
+function _bsetExprNameIn(el) { const c = el.selectionStart, was = el.value; el.value = _bsetExprClean(was); el.setSelectionRange(Math.max(0, c - (was.length - el.value.length)), Math.max(0, c - (was.length - el.value.length))); _bsetExprSync(); }
+function _bsetExprSync() {
+  const go = document.getElementById('bxp-go');
+  const nm = document.getElementById('bxp-name');
+  if (go) go.disabled = !(_bsetExprPending && nm && nm.value.length >= 2);
+}
+
+async function _bsetExprCommit(kind) {
+  const M = _BSET_EXPR[kind];
+  const b = CU.bastions?.[curBastion]; if (!b || !_bsetExprPending) return;
+  const name = _bsetExprClean(document.getElementById('bxp-name')?.value);
+  const err = document.getElementById('bxp-err');
+  if (name.length < 2) { if (err) err.textContent = 'Give it a name of at least two characters.'; return; }
+  const items = _bsetExprItems(b, kind);
+  if (items.some(x => String(x.name || '').toLowerCase() === name)) { if (err) err.textContent = 'You already have one called that.'; return; }
+  if (items.length >= _bsetExprLimit(b)) { if (err) err.textContent = 'Every slot is used. Boost the bastion for more.'; return; }
+  const entry = kind === 'sticker'
+    ? { name, url: _bsetExprPending.data, data: _bsetExprPending.data, type: 'sticker', by: CU.username, at: new Date().toISOString() }
+    : { name, data: _bsetExprPending.data, type: 'img', animated: _bsetExprPending.animated, by: CU.username, at: new Date().toISOString() };
+  b[M.field] = [...items, entry];
+  _bsetExprPending = null;
+  document.getElementById('bxp-up')?.remove();
+  await saveUser();
+  _syncBastionToGlobal(curBastion);
+  renderBSettingsMain(kind === 'sticker' ? 'stickers' : 'emojis');
+  toast(kind === 'emoji' ? ':' + name + ': added' : name + ' added', 'success');
+}
+
+function _bsetExprRename(kind, i) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const items = _bsetExprItems(b, kind);
+  const it = items[i]; if (!it) return;
+  showCustomInput('Rename', 'Letters, numbers and underscores.', async (v) => {
+    const name = _bsetExprClean(v);
+    if (name.length < 2) { toast('That name is too short', 'error'); return; }
+    if (items.some((x, xi) => xi !== i && String(x.name || '').toLowerCase() === name)) { toast('You already have one called that', 'error'); return; }
+    it.name = name;
+    b[_BSET_EXPR[kind].field] = items;
+    await saveUser();
+    _syncBastionToGlobal(curBastion);
+    renderBSettingsMain(kind === 'sticker' ? 'stickers' : 'emojis');
+    toast('Renamed', 'success');
+  }, it.name);
+}
+
+function _bsetExprDelete(kind, i) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const items = _bsetExprItems(b, kind);
+  const it = items[i]; if (!it) return;
+  showCustomConfirm(`Delete ${kind === 'emoji' ? ':' + (it.name || '') + ':' : (it.name || 'this sticker')}? Anyone who used it will see a broken mark.`, async () => {
+    items.splice(i, 1);
+    b[_BSET_EXPR[kind].field] = items;
+    await saveUser();
+    _syncBastionToGlobal(curBastion);
+    renderBSettingsMain(kind === 'sticker' ? 'stickers' : 'emojis');
+    toast('Removed', 'info');
+  });
+}
+
 function uploadCustomEmoji() {
   const inp=document.getElementById('emoji-file-input');
   if(inp) inp.click();
@@ -35861,7 +36172,7 @@ function _listenBastionUpdates() {
       try {
         const fresh = await FortizedSocial.getGlobalBastion(gid);
         if (!fresh) continue;
-        const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','categories','roles','everyone','memberRoles','members','public','joinMode','discoverable','applicationQuestions','applications','memberInvites','vanity','category','tags','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
+        const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','categories','roles','everyone','memberRoles','members','public','joinMode','discoverable','applicationQuestions','applications','memberInvites','vanity','category','tags','automod','boostLevel','customEmojis','stickers','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
         let changed = false;
         let membersChanged = false;
         syncFields.forEach(f => {
@@ -37546,8 +37857,7 @@ function showChannelCtxMenu(e, chIdx) {
 function _bstChEditFromRail(chIdx) {
   const b = CU.bastions?.[curBastion]; if (!b) return;
   if (!b.channels?.[chIdx]) return;
-  openBastionSettings('channels');
-  _bstChOpen(chIdx);
+  openBastionChannelCard(chIdx);
 }
 // ⚠️ THIS MENU USED TO ACT ON A CHANNEL TYPE, NOT A CATEGORY, AND "DELETE
 // CATEGORY" WAS DESTRUCTIVE.  Under the old type-grouping there was no such
@@ -42549,52 +42859,84 @@ function radianceBadgeHTML(user) {
 // BASTION APPLICATION FORM (join flow)
 // ════════════════════════════════════════════
 function showBastionApplicationForm(b) {
-  const questions = b.applicationQuestions || [];
-  if (!questions.length) { promptJoinPublicBastion(b.id || b.name); return; }
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.92);backdrop-filter:none;z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
-  let qHtml = '';
-  questions.forEach((q, i) => {
-    qHtml += '<div style="margin-bottom:14px;">'
-      + '<div style="font-size:13px;font-weight:600;margin-bottom:5px;">' + (i+1) + '. ' + escapeHTML(q) + '</div>'
-      + '<textarea id="appq-' + i + '" class="field-input" rows="2" placeholder="Your answer\u2026" style="resize:vertical;width:100%;"></textarea>'
-      + '</div>';
-  });
-  overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;">'
-    + '<div style="padding:24px 26px;">'
-    + '<div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:4px;">Apply to Join</div>'
-    + '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;">' + escapeHTML(b.name) + '</div>'
-    + qHtml
-    + '<div style="display:flex;gap:8px;margin-top:4px;">'
-    + '<button class="btn-a" style="flex:1;" onclick="submitBastionApp(this,\'' + escapeHTML(b.id||b.name) + '\',' + questions.length + ')">Submit Application</button>'
-    + '<button class="btn-g" style="flex:1;" onclick="this.closest(\'[style*=fixed]\').remove()">Cancel</button>'
-    + '</div></div></div>';
-  document.body.appendChild(overlay);
+  const qs = _bstAppQs(b);
+  if (!qs.length) { promptJoinPublicBastion(b.id || b.name); return; }
+  document.getElementById('bapp-overlay')?.remove();
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay';
+  ov.id = 'bapp-overlay';
+  const field = (q, i) => {
+    if (q.type === 'long')  return `<textarea class="settings-input bapp-in" id="appq-${i}" rows="4" placeholder="Your answer"></textarea>`;
+    if (q.type === 'yesno') return `<div class="bapp-choices">${['Yes', 'No'].map(o => `<button type="button" class="bapp-choice" data-q="${i}" onclick="_bappPick(${i},this)">${o}</button>`).join('')}<input type="hidden" id="appq-${i}"></div>`;
+    if (q.type === 'choice') return `<div class="bapp-choices">${(q.options || []).map(o => `<button type="button" class="bapp-choice" data-q="${i}" onclick="_bappPick(${i},this)">${escapeHTML(o)}</button>`).join('')}<input type="hidden" id="appq-${i}"></div>`;
+    return `<input class="settings-input bapp-in" id="appq-${i}" placeholder="Your answer" maxlength="200">`;
+  };
+  ov.innerHTML = `<div class="ftz-confirm-card ftz-ac-card bapp-card" role="dialog" aria-label="Apply to join">
+      <button class="ftz-close-btn ftz-ac-x" type="button" aria-label="Close" onclick="document.getElementById('bapp-overlay')?.remove()">
+        <svg viewBox="0 0 384 512" width="1em" height="1em" fill="currentColor"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg>
+      </button>
+      <div class="bapp-h">
+        <div class="bapp-emb">${b.icon ? `<img src="${escapeHTML(b.icon)}" alt="">` : `<span>${escapeHTML((b.name || 'B')[0].toUpperCase())}</span>`}</div>
+        <div>
+          <div class="bapp-t">Apply to ${escapeHTML(b.name)}</div>
+          <div class="bapp-s">${qs.length} question${qs.length === 1 ? '' : 's'}. Whoever runs this bastion reads your answers before deciding.</div>
+        </div>
+      </div>
+      <div class="bapp-body">
+        ${qs.map((q, i) => `<div class="bapp-q">
+          <div class="bapp-ql">${escapeHTML(q.q)}${q.required ? '<span class="bapp-req">Required</span>' : '<span class="bapp-opt">Optional</span>'}</div>
+          ${field(q, i)}
+        </div>`).join('')}
+      </div>
+      <div class="bapp-err" id="bapp-err"></div>
+      <div class="ftz-modal-foot">
+        <button class="fs-btn" type="button" onclick="document.getElementById('bapp-overlay')?.remove()">Not now</button>
+        <button class="fs-btn fs-btn--primary" type="button" onclick="submitBastionApp(this,'${escapeHTML(b.id || b.name)}',${qs.length})">Send application</button>
+      </div>
+    </div>`;
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
 }
+
+function _bappPick(i, el) {
+  document.querySelectorAll(`.bapp-choice[data-q="${i}"]`).forEach(x => x.classList.remove('on'));
+  el.classList.add('on');
+  const h = document.getElementById('appq-' + i);
+  if (h) h.value = el.textContent;
+}
+
 async function submitBastionApp(btn, bastionId, qCount) {
+  const b = (await FortizedSocial.getGlobalBastion(bastionId).catch(() => null)) || {};
+  const qs = _bstAppQs(b).length ? _bstAppQs(b) : Array.from({ length: qCount }, () => ({ q: '', required: true }));
+  const err = document.getElementById('bapp-err');
   const answers = [];
-  for (let i = 0; i < qCount; i++) {
+  for (let i = 0; i < qs.length; i++) {
     const el = document.getElementById('appq-' + i);
-    const v = el ? el.value.trim() : '';
-    if (!v) { toast('Please answer all questions', 'error'); return; }
+    const v = el ? String(el.value || '').trim() : '';
+    if (!v && qs[i].required !== false) { if (err) err.textContent = 'Question ' + (i + 1) + ' still needs an answer.'; return; }
     answers.push(v);
   }
-  btn.disabled = true; btn.textContent = 'Submitting\u2026';
-  const app = { applicant: CU.username, displayName: CU.displayName||CU.username, answers, timestamp: new Date().toISOString(), status: 'pending' };
+  if (err) err.textContent = '';
+  btn.disabled = true; btn.textContent = 'Sending\u2026';
+  const app = {
+    applicant: CU.username, displayName: CU.displayName || CU.username,
+    questions: qs.map(q => q.q), answers,
+    timestamp: new Date().toISOString(), status: 'pending',
+  };
   // Applications live on the global bastion so the owner can actually SEE
   // them. The old path wrote to the APPLICANT's localStorage, which nobody
   // else could ever read.
   try {
     const gb = await FortizedSocial.getGlobalBastion(bastionId);
     if (gb) {
-      const apps = (gb.applications || []).filter(a => a.applicant !== app.applicant || a.status !== 'pending');
+      const apps = (gb.applications || []).filter(a => a.applicant !== app.applicant || (a.status || 'pending') !== 'pending');
       apps.push(app);
       gb.applications = apps.slice(-200);
       await FortizedSocial.saveGlobalBastion(bastionId, gb);
     }
   } catch (e) { _wrn('[Bastion] application save failed', e?.message); }
-  btn.closest('[style*=fixed]')?.remove();
-  toast('Application submitted! The owner will review it.', 'success');
+  document.getElementById('bapp-overlay')?.remove();
+  toast('Application sent. You will hear back here.', 'success');
 }
 
 // ════════════════════════════════════════════
@@ -57552,6 +57894,15 @@ async function joinByInvite(code) {
     // for a full-table read (every user's pfp) on any invite-link resolution.
     // Strategy 2 (global bastions) is the authoritative resolver. Dead scan
     // deleted.
+
+    // Strategy 3: a custom invite link is just the bastion's own vanity.
+    if (!foundBastion) {
+      const allB = await FortizedSocial.getGlobalBastions() || {};
+      const want = String(code).toLowerCase();
+      for (const [key, bb] of Object.entries(allB)) {
+        if (String(bb.vanity || '').toLowerCase() === want) { foundBastion = bb; if (!foundBastion.id) foundBastion.id = key; inviterName = bb.owner; break; }
+      }
+    }
 
     if (!foundBastion) { toast('Invite link is invalid or expired', 'error'); return; }
     const gid = foundBastion.id || foundBastion.globalId;

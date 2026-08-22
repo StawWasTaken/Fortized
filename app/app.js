@@ -219,7 +219,11 @@ function _radianceExpiry(u) {
 }
 // Legacy alias — kept so any old caller keeps rendering the right glyph.
 function _radiancePlusImg(size){return _radianceImg(size);}
-function _boostSvg(size){return ftzIcon('boost',size||'18','currentColor');}
+// ⚠️ THE SPACESHIP IS GONE. Every boost mark in the app resolves here, and it
+// resolves to the boost LOGO — one call site to change, so the rail, the
+// dropdown, the overview and the hub can never show three different marks for
+// one thing. Declared before _boostLogoHTML but only ever CALLED after it.
+function _boostSvg(size){return _boostLogoHTML(parseInt(size,10)||18);}
 
 // ⚠️ ONE BANNER SHAPE, for people AND for bastions.  Both were cropped at 16:5
 // and exported at 960x300 — a number that appeared in the crop modal and
@@ -2213,7 +2217,7 @@ const EMOTICON_MAP = {
 // Firefox's OpaqueResponseBlocking blocks those cross-origin image fetches,
 // breaking every Fortized emoji on Firefox. Express.static serves the local
 // directory directly, with proper Content-Type headers.
-const FTZ_EMOJI_BASE = '/fortized%20emojis/';
+const FTZ_EMOJI_BASE = '/Fortized%20Emojis/';
 // Exact filenames from the Fortized emojis GitHub folder
 // Format: [name, extension] — .gif for animated, .png for static
 // Character-style emojis (mascots with expressions)
@@ -2274,8 +2278,25 @@ Object.entries(FORTIZED_EXTERNAL_EMOJIS).forEach(([name, url]) => {
   FORTIZED_EMOJIS.push(name);
 });
 
+// ════════════════════════════════════════════
+// FORTIZED GUIDE STICKERS
+// ════════════════════════════════════════════
+// The sticker half of the Fortized Guide set, and the same shape as the emoji
+// registry above so the two can never drift: a name, an extension, and a
+// same-origin folder.  These belong to the platform, every bastion has them, and
+// nothing a bastion owner does can remove one.
+const FTZ_STICKER_BASE = '/Fortized%20Stickers/';
+const FORTIZED_GUIDE_STICKERS = [
+  ['knight_wave', 'gif', 'Knight wave'],
+];
+const FORTIZED_STICKER_MAP = {};
+FORTIZED_GUIDE_STICKERS.forEach(([name, ext]) => {
+  FORTIZED_STICKER_MAP[name] = FTZ_STICKER_BASE + name + '.' + ext;
+});
+function _ftzGuideStickerSrc(name) { return FORTIZED_STICKER_MAP[name] || ''; }
+
 // Custom money emoji overrides — live in a SEPARATE repo folder so the
-// "fortized emojis" folder stays reserved for Fortized Guide content.
+// "Fortized Emojis" folder stays reserved for Fortized Guide content.
 // Same-origin custom-emoji path (see FTZ_EMOJI_BASE rationale).
 const FTZ_CUSTOM_EMOJI_BASE = '/custom-emojis/';
 const EMOJI_URL_OVERRIDES = {
@@ -2667,7 +2688,7 @@ async function _syncBastionToGlobal(bastionIdx) {
     try { await new Promise(r => setTimeout(r, 1000)); const b2 = CU?.bastions?.[bastionIdx]; if (b2?.globalId) await FortizedSocial.saveGlobalBastion(b2.globalId, {...b2, id: b2.globalId, owner: b2.owner || CU.username}); } catch(e2) { console.warn('[Bastion] Retry sync also failed:', e2?.message); }
   }
 }
-// Pull fresh bastion data from global for non-owners so banner/emblem/roles/moods stay current
+// Pull fresh bastion data from global for non-owners so banner/emblem/roles stay current
 async function _syncBastionFromGlobal(bastionIdx) {
   try {
     const b = CU?.bastions?.[bastionIdx];
@@ -2675,7 +2696,7 @@ async function _syncBastionFromGlobal(bastionIdx) {
     const global = await FortizedSocial.getGlobalBastion(b.globalId);
     if (!global) return;
     // Merge global fields into local copy (owner-managed data)
-    const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','categories','roles','everyone','memberRoles','public','joinMode','discoverable','applicationQuestions','applications','memberInvites','vanity','category','tags','automod','boostLevel','customEmojis','stickers','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
+    const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','categories','roles','everyone','memberRoles','public','joinMode','discoverable','applicationQuestions','applications','memberInvites','vanity','category','tags','automod','boostLevel','boosts','welcome','welcomeSticker','community','auditLog','customEmojis','stickers','invites','memberCount','owner','overview','verified'];
     let changed = false;
     for (const key of syncFields) {
       if (global[key] !== undefined && JSON.stringify(b[key]) !== JSON.stringify(global[key])) {
@@ -2726,6 +2747,7 @@ async function refreshCU() {
         'profileWidgets','displayFont','displayEffect','displayColor','displayColor2','wantToPlay','gameCollection',
         'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
         'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount',
+        'boostsGiven','boostsBought','boostsSpent',
         'questsWeekly','questOnyxEarned',
         'createdAt','customStatus','verified','appearance','wishlist','wishlistPrivate',
         // Cross-device cosmetics — same protection pattern as
@@ -6900,7 +6922,7 @@ function toggleBastionDropdown(e, idx) {
       <div class="bd-action" onclick="openBastion(${idx});document.querySelector('.bastion-dropdown')?.remove();setTimeout(()=>showBastionInviteUI(${idx}),150)">
         <span class="bd-icon">🔗</span> Invite Friends
       </div>
-      <div class="bd-action" onclick="openBastion(${idx});openBastionSettings('boost');document.querySelector('.bastion-dropdown')?.remove()">
+      <div class="bd-action" onclick="openBastion(${idx});openBastionBoostsCard();document.querySelector('.bastion-dropdown')?.remove()">
         <span class="bd-icon">${_boostSvg('16')}</span> Boost
       </div>
       ${b.owner===CU.username?`<div class="bd-action" onclick="openBastion(${idx});openBastionSettings();document.querySelector('.bastion-dropdown')?.remove()">
@@ -10946,7 +10968,7 @@ function openBastion(idx) {
   const isOwner = CU.bastions[idx]?.owner === CU.username;
   // Owner: sync local data up to global
   if (isOwner) setTimeout(() => _syncBastionToGlobal(idx), 100);
-  // Non-owner: pull fresh data from global so banner/emblem/roles/moods stay current
+  // Non-owner: pull fresh data from global so banner/emblem/roles stay current
   if (!isOwner) setTimeout(() => _syncBastionFromGlobal(idx), 100);
   document.querySelectorAll('.rail-btn').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.rail-bastion').forEach(el=>el.classList.remove('active'));
@@ -11056,25 +11078,39 @@ function _openChannel(i){
 // that bought level 2, which is the least it can possibly have.  No migration,
 // and the bar is never wider than the truth.
 // ════════════════════════════════════════════
-// THE BOOST LADDER — five rungs, named in Elder Futhark
+// THE BOOST LADDER — three tiers, and that is all they are called
 // ════════════════════════════════════════════
-// The mirror of the Radiance ladder up at the top of the file.  Both climb five
-// rungs and both are named in the language of the ᚱᛖᛚᛗ ᛟᚠ ᚠᛟᚱᛏᛁᛉᛖᛞ; the rune is
-// the OFFICIAL name — it is what the app shows — and the English sits in the
-// tooltip as the gloss, because a name nobody can read is atmosphere, not
-// information.  Same power, two directions: Radiance is it held by a person, a
-// Boost is it spent on a place.
+// ⚠️ THIS REPLACED FIVE ELDER FUTHARK RUNGS.  Radiance keeps its runes because
+// Radiance is a thing you wear and the name is part of the wearing.  A boost is
+// not: it is a number of boosts a bastion has and a set of perks that number
+// unlocks, and a member asking "what do I get, and how many do I need" was being
+// answered with ᛞᛟᚱᛗᚨᚾᛏ.  Tier 1, Tier 2, Tier 3, at 2, 4 and 6 boosts.
 //
-// Tints warm the same way Radiance's do, from asleep to mastery.  Solid fills,
-// no halos.
+// Every perk listed here is a perk that WORKS today. Nothing on this ladder is
+// a promise: an unlock a member pays for and does not receive is worse than an
+// unlock we never advertised.
 const _FTZ_BOOST_NAMES = [
-  { level:1, rune:'ᛞᛟᚱᛗᚨᚾᛏ',    name:'Dormant',   blurb:'Sleeping power',        tint:'#8a93a6' },
-  { level:2, rune:'ᛊᛏᛁᚱᚱᛁᚾᚷ',   name:'Stirring',  blurb:'Beginning to awaken',   tint:'#b06fd6' },
-  { level:3, rune:'ᚨᚹᚨᚴᛖᚾᛖᛞ',   name:'Awakened',  blurb:'Active and glowing',    tint:'#ef5fb0' },
-  { level:4, rune:'ᛖᛗᛈᛟᚹᛖᚱᛖᛞ',  name:'Empowered', blurb:'Strong arcane force',   tint:'#ff9d4d' },
-  { level:5, rune:'ᛋᛟᚡᛖᚱᛖᛁᚷᚾ',  name:'Sovereign', blurb:'Full mastery',          tint:'#fff93e' },
+  { level:1, need:2, name:'Tier 1', blurb:'The first unlocks', tint:'#b06fd6',
+    perks:['25 emoji slots and 25 sticker slots', 'A Tier 1 badge beside the bastion name'] },
+  { level:2, need:4, name:'Tier 2', blurb:'More room, more voice', tint:'#ef5fb0',
+    perks:['35 emoji slots and 35 sticker slots', 'Pick the welcome sticker from this bastion’s own stickers', 'A Tier 2 badge beside the bastion name'] },
+  { level:3, need:6, name:'Tier 3', blurb:'Everything a bastion can hold', tint:'#fff93e',
+    perks:['50 emoji slots and 50 sticker slots', 'A custom invite link, invite.fortized.com/yourname', 'A Tier 3 badge beside the bastion name'] },
 ];
-function _boostTierName(lv){ return _FTZ_BOOST_NAMES[Math.max(0,Math.min(4,(lv|0)-1))] || null; }
+function _boostTierName(lv){ return _FTZ_BOOST_NAMES[Math.max(0,Math.min(2,(lv|0)-1))] || null; }
+
+// ── Your boosts, and where they are ──
+// A boost is HELD by a person and SPENT on a place, the way Discord's are.
+// Radiance includes two, which is exactly Tier 1: one member with Radiance can
+// lift a bastion off the ground on their own. Anything past that is bought.
+const _FTZ_BOOST_PRICE = 200;            // Onyx, per boost, per month
+const _FTZ_BOOST_RADIANCE_GRANT = 2;
+function _boostsFromRadiance(u){ u=u||CU; return _hasRadiance(u) ? _FTZ_BOOST_RADIANCE_GRANT : 0; }
+function _myBoostsTotal(u){ u=u||CU; return _boostsFromRadiance(u) + Math.max(0, +u?.boostsBought || 0); }
+function _myBoostsSpentMap(u){ u=u||CU; const m=u&&u.boostsSpent; return (m&&typeof m==='object')?m:{}; }
+function _myBoostsSpent(u){ return Object.values(_myBoostsSpentMap(u)).reduce((a,n)=>a+(Math.max(0,+n)||0),0); }
+function _myBoostsAvailable(u){ return Math.max(0, _myBoostsTotal(u) - _myBoostsSpent(u)); }
+function _myBoostsOn(b, u){ const k=b&&(b.globalId||b.name); return k ? Math.max(0, +_myBoostsSpentMap(u)[k] || 0) : 0; }
 
 // The boost logo, tinted to whatever colour it sits in — the same mask trick the
 // Radiance and security marks use, so it reads correctly under every appearance
@@ -11092,10 +11128,10 @@ function _boostBadge(b, size) {
   const lv = _levelForBoosts(_bastionBoosts(b));
   if (!lv) return '';
   const t = _boostTierName(lv);
-  return `<span class="ftz-boost-badge" data-tip="${t.rune} · ${t.name} — ${t.blurb}">${_boostLogoHTML(size || 15, '', t.tint)}</span>`;
+  return `<span class="ftz-boost-badge" data-tip="${t.name} · ${t.blurb}">${_boostLogoHTML(size || 15, '', t.tint)}</span>`;
 }
 
-const _FTZ_BOOST_TIERS = [2, 7, 14, 24, 40];
+const _FTZ_BOOST_TIERS = _FTZ_BOOST_NAMES.map(t => t.need);   // [2, 4, 6]
 function _boostsForLevel(lv){ lv=Math.max(0,Math.min(_FTZ_BOOST_TIERS.length, parseInt(lv,10)||0)); return lv?_FTZ_BOOST_TIERS[lv-1]:0; }
 function _levelForBoosts(n){ let lv=0; for(let i=0;i<_FTZ_BOOST_TIERS.length;i++) if(n>=_FTZ_BOOST_TIERS[i]) lv=i+1; return lv; }
 function _bastionBoosts(b){ const n=Number(b&&b.boosts); return Number.isFinite(n)&&n>=0?Math.floor(n):_boostsForLevel(b&&b.boostLevel); }
@@ -11107,8 +11143,7 @@ function _boostPillHTML(b){
   const p=_boostProgress(b);
   if (!p.level) return `<span class="bm-boost bm-boost--none">${_boostLogoHTML(11)}Boost</span>`;
   const t = _boostTierName(p.level);
-  // The rune is the name; the English and the count are what the tooltip is for.
-  return `<span class="bm-boost" style="color:${t.tint}" data-tip="${t.name} · ${t.blurb} · ${p.boosts} boost${p.boosts!==1?'s':''}">${_boostLogoHTML(11)}${t.rune}</span>`;
+  return `<span class="bm-boost" style="color:${t.tint}" data-tip="${t.blurb} · ${p.boosts} boost${p.boosts!==1?'s':''}">${_boostLogoHTML(11)}${t.name}</span>`;
 }
 function _boostProgress(b){
   const boosts=_bastionBoosts(b);
@@ -11388,8 +11423,6 @@ function renderBastionSidebar(scroll) {
     <div id="bastion-name-dd-anchor"></div>
   </div>`;
 
-  // ── Mood Bar ──
-  html+=renderMoodBar(b);
 
   // ── Boost progress ──
   const bp=_boostProgress(b);
@@ -11433,8 +11466,8 @@ function renderBastionSidebar(scroll) {
   </div>`;
   // Update events badge after sidebar renders
   setTimeout(()=>_updateEventsBadge(),100);
-  html+=`<div class="ch-sidebar-action" onclick="openBastionSettings('boost')">
-    <span class="sa-icon">${_boostSvg('16')}</span>
+  html+=`<div class="ch-sidebar-action" onclick="openBastionBoostsCard()">
+    <span class="sa-icon">${_boostLogoHTML(16)}</span>
     <span>Bastion Boosts</span>
   </div>`;
 
@@ -11603,7 +11636,7 @@ function toggleBastionNameDropdown(e) {
     <div class="bnd-actions">
       <div class="bnd-action" onclick="closeBastionNameDD();openOverviewRoom()"><span class="bnd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span> Overview</div>
       <div class="bnd-action" onclick="closeBastionNameDD();showBastionInviteUI()"><span class="bnd-icon">🔗</span> Invite Friends</div>
-      <div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings('boost')"><span class="bnd-icon">${_boostSvg('14')}</span> Boost</div>
+      <div class="bnd-action" onclick="closeBastionNameDD();openBastionBoostsCard()"><span class="bnd-icon">${_boostSvg('14')}</span> Boost</div>
       ${(isOwner||hasPerm('manage_channels'))?`<div class="bnd-action" onclick="closeBastionNameDD();showCreateRoomModal(curBastion)"><span class="bnd-icon">➕</span> Create Channel</div>`:''}
       ${isOwner?`<div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings('templates')"><span class="bnd-icon">📋</span> Save as Template</div>`:''}
       ${isOwner?`<div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings()"><span class="bnd-icon">⚙️</span> Settings</div>`:''}
@@ -12125,11 +12158,43 @@ async function _sendAnnouncement(idx) {
   } catch(e) { console.error('[Announce] Publish failed:', e); toast('Failed to publish announcement. Please try again.', 'error'); }
 }
 
+// Domains AutoMod's "block links" must never touch, plus whatever the bastion
+// has allowed. Matching is on the host, and a leading "www." is ignored, so an
+// allow-list entry of "example.com" also covers "www.example.com" and any
+// subdomain of it — nobody writing a domain into a settings field means "this
+// exact hostname and no other".
+const _FTZ_LINK_ALWAYS_OK = ['fortized.com', 'swiftaw.com'];
+function _ftzLinkHost(u) {
+  try { return new URL(u).hostname.toLowerCase().replace(/^www\./, ''); }
+  catch (_) { return ''; }
+}
+function _ftzLinkAllowed(host, extra) {
+  if (!host) return true;
+  const list = _FTZ_LINK_ALWAYS_OK.concat((extra || []).map(d => String(d).toLowerCase().replace(/^www\./, '').trim()).filter(Boolean));
+  return list.some(d => host === d || host.endsWith('.' + d));
+}
+// Returns the links in a message that are NOT allowed. Empty means nothing to
+// block, which is also the answer when the message has no links at all.
+function _ftzExternalLinks(text, extra) {
+  const out = [];
+  const rx = /https?:\/\/[^\s<>"']+/gi;
+  let m;
+  while ((m = rx.exec(String(text || ''))) !== null) {
+    const host = _ftzLinkHost(m[0]);
+    if (!_ftzLinkAllowed(host, extra)) out.push(m[0]);
+  }
+  return out;
+}
 function autoModCheck(text, bastion) {
   if (!bastion || !bastion.automod) return false;
   const am = bastion.automod;
-  if (am.blockLinks && /https?:\/\//.test(text)) {
-    toast('Links are disabled in this bastion','error'); return true;
+  if (am.blockLinks) {
+    // ⚠️ OUR OWN LINKS ARE NEVER BLOCKED. An invite to another bastion, a
+    // Fortshop item, a Swiftaw page — blocking those turns "no advertising" into
+    // "you cannot share anything from the app you are using". Blocked other
+    // bastions' invites is its own toggle and stays a separate decision.
+    const blocked = _ftzExternalLinks(text, am.allowedLinks);
+    if (blocked.length) { toast('Links are disabled in this bastion','error'); return true; }
   }
   // Caps-spam check removed — was firing on totally normal messages
   // (any 6+-letter ALL-CAPS word triggered it) and added no real
@@ -12184,7 +12249,6 @@ async function sendChannelMsg(idx) {
     const _optimRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
     _registerPendingSend('bastion:'+(b.globalId||b.name)+':'+ch.name, CU.username, text, _optimRow, msg.id);
   }
-  awardMessageRep(b.globalId||b.name, CU.username);
   _trackSendMsgQuest();
   // Offline path: queue for later drain instead of emitting to a dead
   // socket / hitting a failing Supabase request.
@@ -14253,7 +14317,7 @@ function appendMessage(container, msg, context, prevAuthor, skipSep) {
       // reply snapshots are capped in length, so a big sticker/image data URL
       // can be cut mid-token; without the "|$" alternative that leftover would
       // leak into the preview as raw "[FTZSTICKER:data:image/gif;base64,…" text.
-      const rAttachRe = /\[FTZ(?:IMG|VID|AUD|FILE|GIF|STICKER):[^\]]*(?:\]|$)/g;
+      const rAttachRe = /\[FTZ(?:IMG|VID|AUD|FILE|GIF|STICKER|WELCOME):[^\]]*(?:\]|$)/g;
       const rHasAttach = rAttachRe.test(rRaw);
       const rStripped = rRaw.replace(rAttachRe, '').trim();
       const rText = escapeHTML(rStripped.slice(0,80));
@@ -15404,16 +15468,6 @@ async function toggleReaction(msgId, emoji, context, isSuper) {
       return;
     }
     const { users } = reactionResult;
-
-    // Award reputation for reactions in bastions
-    if (context === 'ch' && users.includes(me) && curBastion !== null) {
-      const b = CU.bastions?.[curBastion];
-      if (b) {
-        const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-        const msgAuthor = row?.dataset?.from;
-        if (msgAuthor && msgAuthor !== me) awardReactionRep(b.globalId||b.name, msgAuthor);
-      }
-    }
 
     // Update the UI locally
     updateReactionUI(msgId, emoji, users, context);
@@ -17662,7 +17716,7 @@ async function promptJoinPublicBastion(bastionId){
     if(already){toast('Already joined!','info');openBastion((CU.bastions||[]).findIndex(ub=> (gid && ub.globalId===gid)));return;}
     if(b.public===false){toast('This bastion is invite-only. Ask the owner for an invite link.','error');return;}
     if((b.applicationQuestions||[]).length){showBastionApplicationForm(b);return;}
-    const localB={name:b.name,emblem:b.emblem||'🏰',icon:b.icon||null,banner:b.banner||null,tagline:b.tagline||'',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,public:b.public,memberRoles:b.memberRoles||{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[],moodDisabled:b.moodDisabled||false,moodLocked:b.moodLocked||false,lockedMood:b.lockedMood||'',customMood:b.customMood||null,memberCount:b.memberCount||1};
+    const localB={name:b.name,emblem:b.emblem||'🏰',icon:b.icon||null,banner:b.banner||null,tagline:b.tagline||'',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,public:b.public,memberRoles:b.memberRoles||{},automod:b.automod||{},boostLevel:b.boostLevel||0,boosts:b.boosts||0,categories:b.categories||[],everyone:b.everyone||null,welcome:b.welcome||null,welcomeSticker:b.welcomeSticker||null,customEmojis:b.customEmojis||[],stickers:b.stickers||[],invites:b.invites||[],memberCount:b.memberCount||1};
     CU.bastions=[...(CU.bastions||[]).filter(ub=>ub.globalId!==gid),localB];
     await saveUser(true);
     await FortizedSocial.addBastionMember(gid,CU.username,'discover');
@@ -17675,18 +17729,11 @@ async function promptJoinPublicBastion(bastionId){
     renderRailBastions();
     toast('Joined '+b.name+'!','success');
     openBastion(CU.bastions.length-1);
-    // Welcome system message in first text channel (uses custom welcome if configured)
-    if (localB.welcomeEnabled !== false) {
-      const wName = CU.displayName||CU.username;
-      const wTemplate = localB.welcomeMessage || '**{user}** joined the bastion. Welcome!';
+    // Welcome message — one of the configured set, at random, with the Say
+    // hello button attached.
+    {
       const membersList = await FortizedSocial.getBastionMembers(gid).catch(()=>[]) || [];
-      // Template already wraps {user}/{bastion} in ** if it wants bold —
-      // wrapping the replacement value in ** too produced ****Onyx**** and
-      // broke the system-message mention promotion (the <strong> regex
-      // couldn't match a nested-bold blob).
-      const wMsg = wTemplate.replace(/\{user\}/g, wName).replace(/\{bastion\}/g, b.name||'').replace(/\{count\}/g, String(membersList.length||1));
-      const wChName = localB.welcomeChannel || (b.channels||[]).find(ch=>ch.type==='text')?.name || 'general';
-      try { await FortizedSocial.sendBastionChannelMessage(gid, wChName, '__system__', wMsg); } catch(e) { console.warn('[Bastion] Welcome msg failed:', e?.message); }
+      await _bstPostWelcome(localB, gid, membersList.length || 1);
     }
   }catch(e){toast('Failed to join bastion. Please try again.','error');console.error('[Bastion] Join failed:', e);}
 }
@@ -18507,7 +18554,7 @@ function initFortizedUXResilience() {
               'connections','email','radianceUntil','radiancePlus','radianceDaysBought','unlockedAppearances','ownedDecorations',
               'profileWidgets','displayFont','displayEffect','displayColor','displayColor2','wantToPlay','gameCollection',
               'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
-              'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount','boostsGiven',
+              'onyxBadge','onyxBadgeSpent','onyxBadgeLastUpgrade','streakBest','creatorItemCount','boostsGiven','boostsBought','boostsSpent',
               'createdAt','customStatus','verified','appearance','badges',
               'completedQuests','questsRewarded','questsDailyLog','dailyStreak','streakDate',
               'questsWeekly','questOnyxEarned','questsAccepted','questsClaimedCount',
@@ -19551,7 +19598,7 @@ function initFortizedUXResilience() {
             FortizedSocial.getGlobalBastion(data.bastionId).then(fresh => {
               if (!fresh) return;
               // Sync ALL fields from global
-              const syncFields = ['roles','everyone','memberRoles','channels','name','icon','banner','emblem','desc','tagline','members','memberCount','invites','automod','boostLevel','customEmojis','stickers','public','joinMode','discoverable','applicationQuestions','applications','memberInvites','vanity','category','tags','categories','moodDisabled','moodLocked','lockedMood','customMood','overview','bans','verified'];
+              const syncFields = ['roles','everyone','memberRoles','channels','name','icon','banner','emblem','desc','tagline','members','memberCount','invites','automod','boostLevel','boosts','welcome','welcomeSticker','community','auditLog','customEmojis','stickers','public','joinMode','discoverable','applicationQuestions','applications','memberInvites','vanity','category','tags','categories','overview','bans','verified'];
               syncFields.forEach(f => { if (fresh[f] !== undefined) b[f] = fresh[f]; });
               saveLocal();
               renderRailBastions();
@@ -20727,6 +20774,7 @@ function showCreateRoomModal(bastionIdx, preselectedType, catId) {
     // settings to put it where they had just asked for it.
     if (catId) ch.categoryId = catId;
     b.channels = [...(b.channels||[]), ch];
+    _bstAudit(b, 'channel_create', '#' + (ch.name || ''), _chType(ch.type).label || ch.type || 'text');
     await saveUser();
     _syncBastionToGlobal(bastionIdx);
     renderBastionSidebar(document.getElementById('sidebar-scroll'));
@@ -20833,8 +20881,11 @@ function renderBastionHub() {
   const emblemHTML = b.icon ? `<img src="${escapeHTML(b.icon)}" style="width:56px;height:56px;border-radius:16px;object-fit:cover;">` : `<span style="font-size:32px;">${b.emblem||'🏰'}</span>`;
 
   // Boost tier info
-  const tierNames = ['None','Reinforced','Fortified','Sovereign'];
-  const tierColors = ['var(--muted)','#60a5fa','#a78bfa','#fbbf24'];
+  // Read from the ladder, never a second copy of it: these arrays said
+  // Reinforced/Fortified/Sovereign long after the ladder stopped using those
+  // names, so the overview and the ladder disagreed on screen.
+  const tierNames  = ['None', ..._FTZ_BOOST_NAMES.map(t => t.name)];
+  const tierColors = ['var(--muted)', ..._FTZ_BOOST_NAMES.map(t => t.tint)];
 
   main.innerHTML = `
     ${bannerSafe ? `<div style="width:100%;height:140px;position:relative;border-radius:0 0 18px 18px;overflow:hidden;margin-bottom:16px;flex-shrink:0;">
@@ -20876,7 +20927,7 @@ function renderBastionHub() {
         <span style="font-size:13px;font-weight:700;color:${tierColors[boostLv]};">Level ${boostLv} — ${tierNames[boostLv]}</span>
       </div>
       <div class="bhub-action-row">
-        <button class="btn-a" style="font-size:12.5px;padding:8px 16px;" onclick="openBastionSettings('boost')" style="font-size:12.5px;padding:8px 16px;display:inline-flex;align-items:center;gap:6px;">${_boostSvg('14')} Boost Bastion</button>
+        <button class="btn-a" style="font-size:12.5px;padding:8px 16px;" onclick="openBastionBoostsCard()" style="font-size:12.5px;padding:8px 16px;display:inline-flex;align-items:center;gap:6px;">${_boostSvg('14')} Boost Bastion</button>
       </div>
     </div>
 
@@ -20930,7 +20981,7 @@ function renderOverviewRoom() {
   const memberCount = Object.keys(b.memberRoles||{}).length || (b.members||[]).length || 1;
   const channelCount = (b.channels||[]).length;
   const boostLv = b.boostLevel || 0;
-  const tierNames = ['None','Reinforced','Fortified','Sovereign'];
+  const tierNames = ['None', ..._FTZ_BOOST_NAMES.map(t => t.name)];
   const chs = b.channels || [];
   const roles = b.roles || [];
 
@@ -20990,7 +21041,7 @@ function renderOverviewRoom() {
         <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:5px;justify-content:center;" onclick="closeModal('modal-overview');openBastionMembersCard()">${_mhSvg('members')} Members</button>
         <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:5px;justify-content:center;" onclick="openBastionSettings('roles');closeModal('modal-overview')">${_mhSvg('roles')} Roles</button>
         <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:5px;justify-content:center;" onclick="openBastionSettings('invites');closeModal('modal-overview')">${_mhSvg('invite')} Invites</button>
-        <button class="btn-a" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;grid-column:1/-1;" onclick="openBastionSettings('boost');closeModal('modal-overview')">${_boostSvg('13')} Boost Bastion</button>
+        <button class="btn-a" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;grid-column:1/-1;" onclick="closeModal('modal-overview');openBastionBoostsCard()">${_boostSvg('13')} Boost Bastion</button>
       </div>
     </div>`;
   }
@@ -21279,83 +21330,162 @@ function openBastionSettings(tab='overview') {
   renderBSettingsMain(tab);
 }
 
-function openBoostModal() {
-  if (curBastion === null) return;
-  const b = CU.bastions[curBastion];
+// ════════════════════════════════════════════
+// BASTION BOOSTS — its own card, opened from the rail like Overview
+// ════════════════════════════════════════════
+// It was a settings tab, which put a thing every MEMBER can do behind a card
+// only an owner can open. It is one of the bastion's pages now: Overview,
+// Browse Channels, Members, Events, Boosts. The mark is the boost logo, not a
+// spaceship.
+function openBastionBoostsCard() {
+  const b = CU.bastions?.[curBastion];
   if (!b) return;
-  const body = document.getElementById('boost-modal-body');
-  if (!body) return;
-  const level = b.boostLevel || 0;
-  const boostCost = 90;
-  const tiers = [
-    {name:'Reinforced',emoji:'🟦',tagline:'Your Bastion Awakens',perks:[{icon:'🎨',title:'Custom Emojis',desc:'25 custom emoji slots for member expression'},{icon:'✨',title:'Animated Icon',desc:'Make your bastion emblem come to life'},{icon:'🎯',title:'Identity',desc:'Stand out in discovery'}],color:'#60a5fa'},
-    {name:'Fortified',emoji:'🟪',tagline:'Full Potential Unlocked',perks:[{icon:'🎨',title:'35 Emoji Slots',desc:'Create a rich expression palette'},{icon:'🖼️',title:'HD Banners',desc:'1920×480 beautiful banners'},{icon:'👥',title:'Custom Role Icons',desc:'Unique icons for each role'},{icon:'🔊',title:'256kbps Voice',desc:'Crystal clear audio quality'}],color:'#a78bfa'},
-    {name:'Sovereign',emoji:'👑',tagline:'The Ultimate Experience',perks:[{icon:'🎨',title:'50 Emoji Slots',desc:'Maximum expression & identity'},{icon:'💎',title:'Premium Features',desc:'All systems fully unlocked'},{icon:'🏆',title:'Priority Support',desc:'Direct support channel'},{icon:'🔊',title:'384kbps Voice',desc:'Studio-quality audio'}],color:'#fbbf24'},
-  ];
+  document.getElementById('bbo-overlay')?.remove();
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay';
+  ov.id = 'bbo-overlay';
+  ov.innerHTML = `<div class="ftz-confirm-card ftz-ac-card bbo-card" role="dialog" aria-label="Bastion Boosts">
+    <button class="settings-close bbo-x" type="button" aria-label="Close" onclick="document.getElementById('bbo-overlay')?.remove()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="bbo-body" id="bbo-body"></div>
+  </div>`;
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
+  document.addEventListener('keydown', function esc(e){ if(e.key==='Escape'){ document.getElementById('bbo-overlay')?.remove(); document.removeEventListener('keydown', esc);} });
+  _bboPaint();
+}
+// Kept so the old entry points (the rail row, legacy calls) land on the card.
+function openBoostModal() { openBastionBoostsCard(); }
 
-  const tierCards = tiers.map((t,i)=>{
-    const lv=i+1;
-    const isActive=level>=lv;
-    const isNext=level===lv-1;
-    const monthlyCost=boostCost*lv;
-    const perksHTML = t.perks.map(p=>`
-      <div style="padding:10px;background:${isActive?t.color+'08':'rgba(255,255,255,.02)'};border-radius:8px;border:1px solid ${isActive?t.color+'20':'var(--border)'};display:flex;gap:8px;align-items:flex-start;">
-        <span style="font-size:16px;flex-shrink:0;">${p.icon}</span>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:12px;font-weight:700;color:${isActive?'#fff':'var(--muted-light)'};">${p.title}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${p.desc}</div>
-        </div>
-      </div>
-    `).join('');
+function _bboPaint() {
+  const host = document.getElementById('bbo-body');
+  const b = CU.bastions?.[curBastion];
+  if (!host || !b) return;
+  const p = _boostProgress(b);
+  const avail = _myBoostsAvailable();
+  const mine  = _myBoostsOn(b);
+  const total = _myBoostsTotal();
 
-    return `<div style="padding:20px;border-radius:16px;border:1.5px solid ${isActive?t.color+'55':isNext?t.color+'33':'var(--border)'};background:${isActive?'linear-gradient(135deg,'+t.color+'08,'+t.color+'02)':isNext?'linear-gradient(135deg,'+t.color+'04,transparent)':'var(--panel)'};position:relative;${isNext?'box-shadow:0 0 30px '+t.color+'15;':''}transition:all .3s cubic-bezier(.22,1,.36,1);">
-      ${isActive?`<div style="position:absolute;top:12px;right:14px;font-size:11px;font-weight:800;padding:4px 10px;border-radius:var(--radius-pill);background:linear-gradient(135deg,${t.color},${t.color}dd);color:#fff;letter-spacing:.04em;text-transform:uppercase;">✓ ACTIVE</div>`:''}
-      <div style="margin-bottom:14px;">
-        <div style="font-size:28px;margin-bottom:6px;">${t.emoji}</div>
-        <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:${t.color};">TIER ${lv} — ${t.name}</div>
-        <div style="font-size:12px;color:var(--muted-light);margin-top:3px;font-style:italic;">"${t.tagline}"</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:6px;font-weight:700;">${monthlyCost} ${_onyxImg('13')}/month</div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
-        ${perksHTML}
-      </div>
-      ${!isActive&&isNext?`<button class="btn-a" onclick="boostBastion(${lv},${monthlyCost})" style="width:100%;font-size:13px;padding:12px;display:flex;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,${t.color},${t.color}dd);border:none;border-radius:10px;font-weight:700;transition:all .2s;">${_boostSvg('14')} Unlock Tier ${lv}</button>`:''}
-      ${!isActive&&!isNext?`<div style="font-size:11px;color:var(--muted);text-align:center;padding:10px;background:rgba(255,255,255,.02);border-radius:8px;font-weight:600;">Unlock Tier ${lv-1} first to access this</div>`:''}
-    </div>`;
-  }).join('');
-
-  body.innerHTML = `
-    <div style="margin-bottom:20px;">
-      <div style="font-family:var(--font-display);font-size:22px;font-weight:900;margin-bottom:6px;">⬆️ Boost ${escapeHTML(b.name)}</div>
-      <div style="font-size:13px;color:var(--muted-light);">Invest in your community. Unlock features that transform your bastion into a thriving ecosystem.</div>
+  const hero = `<div class="bbo-hero">
+    <div class="bbo-mark">${_boostLogoHTML(46, '', p.level ? _boostTierName(p.level).tint : 'var(--muted)')}</div>
+    <div class="bbo-htx">
+      <div class="bbo-eyebrow">Bastion Boosts</div>
+      <div class="bbo-title">${p.level ? escapeHTML(b.name) + ' is ' + _boostTierName(p.level).name : escapeHTML(b.name) + ' is not boosted yet'}</div>
+      <div class="bbo-lead">${p.next === null
+        ? 'Every tier is unlocked. Extra boosts keep them there.'
+        : `${p.boosts} boost${p.boosts !== 1 ? 's' : ''} of the ${p.next} it takes to reach ${_FTZ_BOOST_NAMES[p.level].name}.`}</div>
+      <div class="bbo-track"><div class="bbo-fill" style="width:${p.pct}%"></div></div>
     </div>
+  </div>`;
 
-    <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));border:1px solid rgba(255,249,62,.15);border-radius:12px;margin-bottom:18px;">
-      ${_onyxImg('18')}
-      <div style="flex:1;">
-        <div style="font-size:12px;font-weight:700;">Your Onyx Balance</div>
-        <div style="font-size:11px;color:var(--muted);">Available to invest</div>
-      </div>
-      <div style="font-family:var(--font-display);font-size:20px;font-weight:900;color:var(--accent);">${CU.onyx||0}</div>
+  // Your wallet. Available is Total minus everything you have spent ANYWHERE,
+  // not just here, so the number cannot promise a boost you already gave away.
+  const wallet = `<div class="bbo-wallet">
+    <div class="bbo-w3">
+      ${[['Available', avail], ['On this bastion', mine], ['Yours in total', total]].map(([l, v]) =>
+        `<div class="bbo-wt"><div class="bbo-wv">${_boostLogoHTML(15)}${v}</div><div class="bbo-wl">${l}</div></div>`).join('')}
     </div>
+    <div class="bbo-wacts">
+      ${avail > 0
+        ? `<button class="fs-btn fs-btn--primary" type="button" onclick="_bboGive()">Boost this bastion</button>`
+        : `<button class="fs-btn fs-btn--primary" type="button" onclick="_bboBuy()">Get a boost · ${_FTZ_BOOST_PRICE} Onyx a month</button>`}
+      ${mine > 0 ? `<button class="fs-btn" type="button" onclick="_bboTake()">Take one back</button>` : ''}
+    </div>
+    <div class="bbo-wnote">${_hasRadiance(CU)
+      ? `Radiance includes ${_FTZ_BOOST_RADIANCE_GRANT} boosts. Extra ones are ${_FTZ_BOOST_PRICE} Onyx a month each.`
+      : `You have no boosts from Radiance. One costs ${_FTZ_BOOST_PRICE} Onyx a month, or Radiance includes ${_FTZ_BOOST_RADIANCE_GRANT}.`}</div>
+  </div>`;
 
-    <div style="display:grid;gap:12px;margin-bottom:20px;">${tierCards}</div>
+  const tiers = `<div class="bbo-sec">Tiers</div>
+    <div class="bbo-tiers">${_FTZ_BOOST_NAMES.map(t => {
+      const on = p.boosts >= t.need;
+      const short = Math.max(0, t.need - p.boosts);
+      return `<div class="bbo-tier${on ? ' is-on' : ''}" style="--tint:${t.tint}">
+        <div class="bbo-th"><span class="bbo-tmark">${_boostLogoHTML(17, '', t.tint)}</span><span class="bbo-tn">${t.name}</span>${on ? '<span class="bbo-tok">Unlocked</span>' : ''}</div>
+        <div class="bbo-tb">${t.blurb}</div>
+        <ul class="bbo-tp">${t.perks.map(x => `<li>${escapeHTML(x)}</li>`).join('')}</ul>
+        <div class="bbo-tf">${on ? `${t.need} boosts` : `${short} more boost${short !== 1 ? 's' : ''} to go`}</div>
+      </div>`;
+    }).join('')}</div>
+    <div class="bbo-more">More perks are coming to these tiers. Nothing is listed above that a boost does not already buy you.</div>`;
 
-    ${level===0?`<div style="padding:14px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;margin-bottom:14px;">
-      <div style="font-size:11px;font-weight:700;color:rgba(62,207,110,.9);margin-bottom:4px;">💡 Getting Started</div>
-      <div style="font-size:11px;color:rgba(62,207,110,.7);">Start with Tier 1 to unlock custom emojis and watch your bastion come alive. Members will notice the difference instantly.</div>
-    </div>`:''}
+  host.innerHTML = hero + wallet + tiers;
+}
 
-    ${level>=3?`<div style="text-align:center;padding:20px;background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(251,191,36,.04));border:1px solid rgba(251,191,36,.2);border-radius:14px;margin-bottom:14px;">
-      <span style="font-size:36px;">👑</span>
-      <div style="font-family:var(--font-display);font-size:16px;font-weight:900;color:var(--gold);margin-top:8px;">SOVEREIGN — Maximum Tier</div>
-      <div style="font-size:11px;color:var(--gold);margin-top:4px;opacity:.8;">Your bastion has reached its full potential</div>
-    </div>`:''}
+// Spend one of yours on this bastion.
+async function _bboGive() {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  if (_myBoostsAvailable() < 1) return _bboBuy();
+  const key = b.globalId || b.name;
+  const before = _bastionBoosts(b);
+  const after  = before + 1;
+  b.boosts = after;
+  b.boostLevel = _levelForBoosts(after);
+  const map = { ..._myBoostsSpentMap() };
+  map[key] = (+map[key] || 0) + 1;
+  CU.boostsSpent = map;
+  CU.boostsGiven = (+CU.boostsGiven || 0) + 1;
+  await _bboWrite(b, after, 1);
+  const t = _boostTierName(b.boostLevel);
+  toast(_levelForBoosts(after) > _levelForBoosts(before) && t ? `${b.name} reached ${t.name}` : 'Boost given', 'success');
+}
 
-    <div class="modal-actions">
-      <button class="btn-g" onclick="closeModal('modal-boost')">Close</button>
-    </div>`;
-  openModal('modal-boost');
+// And take it back. Only ever YOUR OWN: the map records what you gave, so this
+// can never pull a boost somebody else paid for.
+async function _bboTake() {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const key = b.globalId || b.name;
+  const mine = _myBoostsOn(b);
+  if (mine < 1) return;
+  const after = Math.max(0, _bastionBoosts(b) - 1);
+  b.boosts = after;
+  b.boostLevel = _levelForBoosts(after);
+  const map = { ..._myBoostsSpentMap() };
+  map[key] = mine - 1;
+  if (!map[key]) delete map[key];
+  CU.boostsSpent = map;
+  CU.boostsGiven = Math.max(0, (+CU.boostsGiven || 0) - 1);
+  await _bboWrite(b, after, -1);
+  toast('Boost taken back', 'info');
+}
+
+// Buy one with Onyx.
+async function _bboBuy() {
+  const cost = _FTZ_BOOST_PRICE;
+  if ((CU.onyx || 0) < cost) { if (typeof _fsNotEnoughOnyx === 'function') _fsNotEnoughOnyx(cost, CU.onyx || 0); else toast('Not enough Onyx', 'error'); return; }
+  showCustomConfirm(`Buy one boost for ${cost} Onyx a month?`, async () => {
+    CU.onyx = (CU.onyx || 0) - cost;
+    CU.boostsBought = (+CU.boostsBought || 0) + 1;
+    _fsLogTx('boost', -cost, 'Bastion boost');
+    await saveUser();
+    updateOnyxDisplay();
+    if (typeof distributeOnyxRevenue === 'function') distributeOnyxRevenue(cost);
+    _bboPaint();
+    toast('Boost added to your wallet. Spend it wherever you like.', 'success');
+  });
+}
+
+// ⚠️ Read-modify-write the GLOBAL row rather than calling
+// _syncBastionToGlobal: that copies the caller's whole local bastion object over
+// the shared one, and a booster is very often NOT the owner — their copy is a
+// member's stale snapshot, so syncing it would clobber the real bastion with old
+// channels and settings. Only the two boost fields move. A boost is a rare,
+// deliberate act, so one small read plus one small write is affordable here in a
+// way a per-message write never would be.
+async function _bboWrite(b, boosts, delta) {
+  if (delta) _bstAudit(b, delta > 0 ? 'boost_add' : 'boost_remove', '', Math.abs(delta) + (Math.abs(delta) === 1 ? ' boost' : ' boosts'));
+  await saveUser();
+  try {
+    const bid = b.globalId;
+    if (bid) {
+      const g = await FortizedSocial.getGlobalBastion(bid);
+      if (g) { g.boosts = boosts; g.boostLevel = b.boostLevel; await FortizedSocial.saveGlobalBastion(bid, g); }
+    }
+  } catch (e) { console.warn('[Boost] global sync failed:', e?.message); }
+  _bboPaint();
+  const scroll = document.getElementById('sidebar-scroll');
+  if (scroll) renderBastionSidebar(scroll);
 }
 
 // ── Events modal: tabbed (Events / Calendar) ──
@@ -21416,14 +21546,12 @@ const _BSET_TABS = {
   privacy:       { label:'Privacy',          lead:'Set who can find this bastion and how people get in.' },
   automod:       { label:'AutoMod',          lead:'Rules that act before a moderator has to.' },
   welcome_msg:   { label:'Welcome message',  lead:'The first thing a new arrival reads.' },
-  announcements: { label:'Announcements',    lead:'Say something to the whole bastion at once.' },
-  starboard:     { label:'Starboard',        lead:'The messages your members thought were worth keeping.' },
-  mood:          { label:'Mood',             lead:'The tone your bastion carries.' },
-  reputation:    { label:'Reputation',       lead:'Standing earned inside this bastion.' },
-  boost:         { label:'Boosts',           lead:'What your members have unlocked for everyone.' },
+  community:     { label:'Community mode',   lead:'Open this bastion up, with the duties that come with it.' },
+  boost:         { label:'Boosts',           lead:'What your members have unlocked for everyone.', external:true },
   insights:      { label:'Insights',         lead:'How your bastion is actually doing.' },
   bots:          { label:'Bots',             lead:'Automations serving this bastion.' },
-  templates:     { label:'Templates',        lead:'Save this bastion as a starting point, or build from one.' },
+  templates:     { label:'Template',         lead:'Share this bastion as a starting point anyone can build from.' },
+  audit:         { label:'Audit log',        lead:'Every change anyone made here, and who made it.' },
   danger:        { label:'Danger zone',      lead:'Hand this bastion over, walk away from it, or end it.', danger:true },
   members:       { label:'Members',          lead:'Everyone who calls this bastion home.', external:true },
   invites:       { label:'Invites',          lead:'Manage all your invites here. Create new invite codes, or delete the ones you are done with.' },
@@ -21431,16 +21559,27 @@ const _BSET_TABS = {
   rules:         { label:'Bastion rules',    lead:'What you expect of the people here.' },
 };
 
-// Nav order, Guilded's shape: two named groups, no icons on the rows.
+// ⚠️ FOUR FEATURES WERE REMOVED FROM HERE, not hidden: Announcements,
+// Starboard, Mood and Reputation.  Their settings pages are gone, and so are
+// their writers and readers — a setting nobody can reach that still rides along
+// in every bastion sync is exactly the debris the empty-override rule warned
+// about in phase 2c.
+//
+// Nav order, Guilded's shape: named groups, no icons on the rows.
 // A string that is not a tab id is a group label; '-' is a separator.
 const _BSET_NAV = [
   'Bastion settings',
-  'overview', 'roles', 'emojis', 'stickers', 'privacy', 'automod',
-  'welcome_msg', 'rules', 'announcements', 'starboard',
-  'mood', 'reputation', 'boost', 'insights', 'bots', 'templates',
-  '-', 'danger',
+  'overview', 'roles', 'privacy', 'rules', 'community',
+  'Expression',
+  'emojis', 'stickers',
+  'Engagement',
+  'welcome_msg', 'boost', 'insights',
+  'Moderation',
+  'automod', 'bans', 'audit',
+  'Advanced',
+  'bots', 'templates', '-', 'danger',
   'User management',
-  'members', 'invites', 'bans',
+  'members', 'invites',
 ];
 
 // The one row that leaves settings. Members is its own card, opened from the
@@ -21476,17 +21615,17 @@ function renderBSettingsNav(activeTab) {
          + `<span>${escapeHTML(m.label)}</span>${m.external ? `<span class="bset-navi-ext">${_BSET_EXT_GLYPH}</span>` : ''}</button>`;
   }).join('');
 
-  html += `</div>
-    <button class="bset-railback" type="button" onclick="closeModal('modal-bsettings')">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      Back to bastion
-    </button>`;
+  // The "Back to bastion" row is gone. Every card in the app closes with the
+  // close button in its corner and with Escape; a second, differently-shaped
+  // way out at the bottom of one rail was the odd one.
+  html += `</div>`;
   nav.innerHTML = html;
 }
 
 // Rows that open something else instead of taking over the pane.
 function _bsetOpenExternal(key) {
   if (key === 'members') { closeModal('modal-bsettings'); openBastionMembersCard(); }
+  if (key === 'boost')   { closeModal('modal-bsettings'); openBastionBoostsCard(); }
 }
 
 // Guilded puts the page title at the top of the CONTENT column, not in a header
@@ -21951,10 +22090,10 @@ function renderBSettingsMain(tab) {
   else if (tab==='automod') {
     const am = b.automod || {};
     const amRules = [
-      {key:'blockLinks',       title:'Block links',        desc:'Members cannot post external links in text channels.'},
+      {key:'blockLinks',       title:'Block links',        desc:'Members cannot post external links. Fortized and Swiftaw links always get through, and you can allow more below.'},
       {key:'antiSpam',         title:'Shouting',           desc:'Blocks a message that is more than 70% capitals.'},
       {key:'antiRaid',         title:'Anti-raid',          desc:'Locks the bastion by itself when ten or more people join inside a minute.'},
-      {key:'slowMode',         title:'Slow mode',          desc:'One message every five seconds, per member.'},
+      {key:'slowMode',         title:'Slow mode',          desc:'One message every five seconds, per member. The owner, admins and anyone who can manage messages or channels is exempt.'},
       {key:'blockInvites',     title:'Block other invites',desc:'Members cannot post invite links to other bastions here.'},
       {key:'imageOnly',        title:'Images only',        desc:'Only attachments get through in the channels you mark.'},
       {key:'newAccountFilter', title:'New account filter', desc:'Flags messages from accounts younger than seven days.'},
@@ -21971,6 +22110,17 @@ function renderBSettingsMain(tab) {
         <input class="bset-uline" type="number" id="mention-limit" value="${am.mentionLimit||10}" min="1" max="25">
         <div class="bset-fhelp">Anything above this is held back.</div>
       </div>
+      ${am.blockLinks ? `<div class="bset-fgroup">
+        <div class="bset-flabel">Links that always get through</div>
+        <div class="bset-fhelp" style="margin:0 0 10px;">Fortized and Swiftaw links are never blocked. Add any other domain you want to let past.</div>
+        <div class="bam-kws" id="allow-list">${(am.allowedLinks||[]).length
+          ? (am.allowedLinks||[]).map((d,i)=>`<span class="bam-kw">${escapeHTML(d)}<button type="button" aria-label="Remove" onclick="removeAllowedLink(${i})">&times;</button></span>`).join('')
+          : '<span class="bmc-dim">Only ours, for now.</span>'}</div>
+        <div class="bam-add">
+          <input class="bset-uline" id="new-allow" placeholder="example.com" onkeydown="if(event.key==='Enter')addAllowedLink()">
+          <button class="fs-btn" type="button" onclick="addAllowedLink()">Allow</button>
+        </div>
+      </div>` : ''}
       <div class="bset-fgroup">
         <div class="bset-flabel">Blocked words</div>
         <div class="bset-fhelp" style="margin:0 0 10px;">A message containing one of these never posts.</div>
@@ -22046,153 +22196,68 @@ function renderBSettingsMain(tab) {
         </div>`).join('')}
       </div>` : _ftzNotFound('Nobody is banned', 'A clean record. Long may it last.', {art:'celebrate'})}`;
   }
-  else if (tab==='boost') {
-    const level = b.boostLevel || 0;
-    const boostCost = 90; // 90 Onyx/month per boost level
-    const tiers = [
-      {name:'Reinforced',perks:['25 custom emoji slots','Animated bastion icon','Custom invite background','128kbps voice quality'],color:'#60a5fa'},
-      {name:'Fortified',perks:['35 custom emoji slots','HD banner (1920×480)','256kbps HD voice quality','15 minute voice message limit','Custom role icons'],color:'#a78bfa'},
-      {name:'Sovereign',perks:['50 custom emoji slots','384kbps voice quality','Custom bastion splash screen','Priority support badge'],color:'#fbbf24'},
-    ];
-    // A perk is either unlocked or it is not, and that is the whole message. A
-    // filled green dot says it without a text glyph, and it keeps full strength
-    // while the label beside it stays muted: dim the label, never the mark.
-    const _perkDot = on => `<span style="flex:0 0 auto;width:9px;height:9px;border-radius:50%;${on?'background:#3ecf6e;':'border:2px solid var(--border);'}"></span>`;
-    const tierCards = tiers.map((t,i)=>{
-      const lv=i+1;
-      const isActive=level>=lv;
-      const isNext=level===lv-1;
-      const monthlyCost=boostCost*lv;
-      return `<div style="padding:16px;border-radius:var(--radius-lg);border:2px solid ${isActive?t.color+'66':'var(--border)'};background:${isActive?t.color+'12':'var(--panel)'};position:relative;">
-        ${isActive?`<div style="position:absolute;top:12px;right:14px;font-size:10px;font-weight:700;letter-spacing:.06em;padding:3px 9px;border-radius:var(--radius-pill);background:${t.color}22;color:${t.color};border:2px solid ${t.color}44;">ACTIVE</div>`:''}
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px;">
-          <span style="color:${isActive?t.color:'var(--muted-light)'};display:flex;">${_boostSvg('20')}</span>
-          <div><div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:${t.color};">Level ${lv} · ${t.name}</div>
-            <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;">${monthlyCost} ${_onyxImg('13')} per month</div></div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;">
-          ${t.perks.map(p=>`<div style="font-size:12.5px;color:${isActive?'var(--text)':'var(--muted-light)'};display:flex;align-items:center;gap:9px;">${_perkDot(isActive)}${p}</div>`).join('')}
-        </div>
-        ${!isActive&&isNext?`<button class="fs-btn fs-btn--primary" onclick="boostBastion(${lv},${monthlyCost})" style="width:100%;font-size:13px;display:flex;align-items:center;justify-content:center;gap:7px;">${_boostSvg('15')} Boost for ${monthlyCost} ${_onyxImg('14')}</button>`:''}
-        ${!isActive&&!isNext?`<div style="font-size:11.5px;color:var(--muted);text-align:center;">Reach Level ${lv-1} first</div>`:''}
-      </div>`;
-    }).join('');
-    main.innerHTML = `
-      <div style="display:flex;align-items:center;gap:11px;padding:13px 16px;background:var(--panel);border:2px solid var(--border);border-radius:var(--radius-lg);margin-bottom:18px;">
-        ${_onyxImg('22')}
-        <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;">Your Onyx balance</div><div style="font-size:11.5px;color:var(--muted);">90 Onyx per level, per month.</div></div>
-        <div style="font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--accent);">${_ftzCompactNum(CU.onyx||0)}</div>
-      </div>
-      <div style="display:grid;gap:12px;">${tierCards}</div>
-      ${level>=3?`<div style="margin-top:16px;padding:16px;background:var(--panel);border:2px solid rgba(251,191,36,.28);border-radius:var(--radius-lg);display:flex;align-items:center;gap:12px;">
-        <span style="color:var(--gold);display:flex;">${_boostSvg('26')}</span>
-        <div style="flex:1;min-width:0;">
-          <div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--gold);">Sovereign, the highest tier</div>
-          <div style="font-size:12.5px;color:var(--muted-light);margin-top:3px;">Uploads here go up to 50 MB per file, from 8 MB.</div>
-        </div>
-      </div>`:''}`;
-  }
-  else if (tab==='mood') {
-    const curMood = calculateBastionMood(b);
-    const moodInfo = curMood ? BASTION_MOODS[curMood] : null;
-    main.innerHTML = `
-      <div class="bmd-now">
-        <div class="bmd-now-l">Right now</div>
-        ${curMood
-          ? `<div class="bmd-now-v"><span class="bmd-face">${moodInfo.emoji}</span><span>${escapeHTML(moodInfo.label)}</span></div>`
-          : '<div class="bmd-now-v bmd-off">Mood is switched off</div>'}
-        <div class="bmd-now-d">Read from how busy the rooms are, the hour, and how people are answering each other. It tints the sidebar.</div>
-      </div>
-      <div class="bset-fgroup">
-        <div class="bset-switch">
-          <div class="bset-switch-tx"><div class="bset-switch-t">Read the mood automatically</div><div class="bset-switch-d">Turn this off and the bastion keeps one neutral atmosphere.</div></div>
-          <div class="toggle${b.moodDisabled?'':' on'}" onclick="toggleMoodDisabled(!this.classList.contains('on'))"><div class="toggle-knob"></div></div>
-        </div>
-      </div>
-      <div class="bset-fgroup">
-        <div class="bset-switch">
-          <div class="bset-switch-tx"><div class="bset-switch-t">Hold one mood</div><div class="bset-switch-d">Pick the atmosphere yourself and keep it there.</div></div>
-          <div class="toggle${b.moodLocked?' on':''}" onclick="toggleMoodLocked(!this.classList.contains('on'))"><div class="toggle-knob"></div></div>
-        </div>
-      </div>
-      <div id="mood-lock-options" class="bmd-picks"${b.moodLocked?'':' style="display:none;"'}>
-        ${Object.entries(BASTION_MOODS).map(([k,m]) => `<button class="bmd-pick${b.lockedMood===k?' on':''}" type="button" onclick="setLockedMood('${k}')"><span class="bmd-face">${m.emoji}</span><span>${escapeHTML(m.label)}</span></button>`).join('')}
-      </div>
-      <div class="bs-divider"></div>
-      ${b.boostLevel>=2 ? `
-      <div class="bset-fgroup">
-        <div class="bset-flabel">Your own mood</div>
-        <div class="bset-fhelp" style="margin:0 0 10px;">A mark and a word of your own, in place of the eight above.</div>
-        <div class="bmd-custom">
-          <input class="bset-uline bmd-emoji" id="custom-mood-emoji" placeholder="🔥" value="${escapeHTML(b.customMood?.emoji||'')}" maxlength="4">
-          <input class="bset-uline" id="custom-mood-label" placeholder="What is the room like?" value="${escapeHTML(b.customMood?.label||'')}" maxlength="24">
-          <button class="fs-btn fs-btn--primary" type="button" onclick="saveCustomMood()">Save</button>
-        </div>
-      </div>`
-      : `<div class="bset-note" style="margin-top:0;">Writing your own mood opens at boost level 2. <button class="bxp-link" type="button" onclick="renderBSettingsMain('boost')">See what boosting unlocks</button></div>`}`;
-  }
-  else if (tab==='reputation') {
-    const bastionId = b.globalId||b.name;
-    const repData = JSON.parse(localStorage.getItem('ftz_rep_'+bastionId)||'{}');
-    const sorted = Object.entries(repData).sort((a,b_)=>b_[1]-a[1]).slice(0,10);
-    const earn = [
-      ['Sending a message', '+1, up to 30 a day'],
-      ['A reaction on something you posted', '+2'],
-      ['Voting in a poll', '+5'],
-      ['Boosting the bastion', '+25'],
-      ['Being mentioned warmly', '+3'],
-    ];
-    main.innerHTML = `
-      ${sorted.length ? `<div class="brp-board">
-        ${sorted.map(([user,score],i) => {
-          const tier = getRepTier(score);
-          return `<div class="brp-row${i<3?' brp-row--top':''}">
-            <span class="brp-rank">${i+1}</span>
-            <span class="brp-name">${escapeHTML(user)}</span>
-            <span class="brp-tier" style="--tc:${tier.color};">${escapeHTML(tier.label)}</span>
-            <span class="brp-score">${score}</span>
-          </div>`;
-        }).join('')}
-      </div>` : _ftzNotFound('No standing yet', 'It builds as people talk, react and turn up.', {art:'battle'})}
-      <div class="bset-fgroup" style="margin-top:22px;">
-        <div class="bset-flabel">How it is earned</div>
-        <div class="brp-earn">${earn.map(([k,v])=>`<div class="brp-earn-r"><span>${k}</span><b>${v}</b></div>`).join('')}</div>
-        <div class="bset-fhelp">Standing is counted inside this bastion only. It does not follow anyone out of here.</div>
-      </div>
-      ${b.owner===CU.username?`
-      <div class="bs-divider"></div>
-      <div class="bset-fgroup">
-        <div class="bset-flabel">Start a new season</div>
-        <div class="bset-fhelp" style="margin:0 0 12px;">Every score goes back to zero. There is no undo.</div>
-        <button class="fs-btn stf-btn--danger" type="button" onclick="showCustomConfirm('Reset all reputation for this bastion?',()=>resetBastionReputation('${escapeHTML(bastionId)}'))">Reset standing</button>
-      </div>`:''}`;
-  }
   else if (tab==='welcome_msg') {
-    const welcomeEnabled = b.welcomeEnabled !== false;
-    const welcomeMsg = b.welcomeMessage || '**{user}** joined the bastion. Welcome!';
-    const chs = (b.channels||[]).filter(ch=>ch.type==='text'||ch.type==='announcement');
-    const welcomeChannel = b.welcomeChannel || (chs[0]||{}).name || 'general';
+    // ⚠️ TWO DEFAULTS AND UP TO THREE OF YOUR OWN, picked at random each time.
+    // A welcome that says the same sentence to the two-hundredth arrival stops
+    // being a welcome and becomes furniture. The defaults are the platform's and
+    // cannot be edited; turning custom on replaces them entirely.
+    const wl = _bstWelcome(b);
+    const stick = _bstWelcomeSticker(b);
+    const lv = _levelForBoosts(_bastionBoosts(b));
+    const chs = (b.channels||[]).filter(c => !c.type || c.type==='text' || c.type==='announcement');
+    const lines = wl.custom ? (wl.lines.length ? wl.lines : ['']) : _BST_WELCOME_DEFAULTS;
     main.innerHTML = `
-      <div class="bset-fgroup">
-        <div class="bset-switch">
-          <div class="bset-switch-tx"><div class="bset-switch-t">Greet new arrivals</div><div class="bset-switch-d">Off, and nothing is posted when somebody joins.</div></div>
-          <div class="toggle${welcomeEnabled?' on':''}" id="welcome-toggle" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
-        </div>
-      </div>
-      <div class="bset-fgroup">
-        <label class="bset-flabel" for="welcome-msg-input">What it says</label>
-        <textarea class="bset-uline bset-uarea" id="welcome-msg-input" rows="3" oninput="_bsetWelcomePreview()">${escapeHTML(welcomeMsg)}</textarea>
-        <div class="bset-fhelp">Three things fill themselves in: <code class="bset-tok">{user}</code> the person, <code class="bset-tok">{bastion}</code> this bastion, <code class="bset-tok">{count}</code> how many of you there are.</div>
+      <div class="bset-switch">
+        <div class="bset-swtx"><div class="bset-swt">Greet new arrivals</div><div class="bset-swd">A short message in a channel of your choosing, the moment somebody joins.</div></div>
+        <div class="toggle${wl.on?' on':''}" id="welcome-toggle" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
       </div>
       <div class="bset-fgroup">
         <div class="bset-flabel">Where it lands</div>
-        ${_ftzSelectHTML('welcome-channel-select', welcomeChannel, chs.map(ch=>({value:ch.name,label:'# '+ch.name})), '_bsetNoop(__VALUE__)')}
+        ${_ftzSelectHTML('welcome-channel-select', wl.channel || (chs[0]||{}).name || 'general', chs.map(c=>({value:c.name,label:'# '+c.name})), '_bsetNoop(__VALUE__)')}
       </div>
       <div class="bset-fgroup">
-        <div class="bset-flabel">Preview</div>
-        <div class="bwl-prev"><span class="bwl-arrow">&rsaquo;</span><span id="welcome-preview-text">${parseMD(escapeHTML(welcomeMsg.replace('{user}','**NewMember**').replace('{bastion}','**'+escapeHTML(b.name)+'**').replace('{count}','42')))}</span></div>
+        <div class="bset-flabel">What it says</div>
+        <div class="bwl-mode">
+          <button class="bwl-m${wl.custom?'':' on'}" type="button" onclick="_bstWelcomeMode(false)">Use ours</button>
+          <button class="bwl-m${wl.custom?' on':''}" type="button" onclick="_bstWelcomeMode(true)">Write my own</button>
+        </div>
+        <div class="bset-fhelp">${wl.custom
+          ? 'Up to three. Whichever one an arrival gets is picked at random, so write them to stand alone.'
+          : 'Two of ours, picked at random. Nothing to set up.'}</div>
+        <div class="bwl-lines" id="welcome-lines">${lines.slice(0,3).map((t,i)=>`
+          <div class="bwl-line">
+            <span class="bqb-n">${i+1}</span>
+            <input class="bset-uline bwl-in" value="${escapeHTML(t)}" ${wl.custom?'':'disabled'} maxlength="180" oninput="_bstWelcomePreview()" placeholder="Say hello to {user}">
+            ${wl.custom && lines.length>1 ? `<button class="bqb-mv" type="button" data-tip="Remove" onclick="_bstWelcomeDrop(${i})">&times;</button>` : ''}
+          </div>`).join('')}</div>
+        ${wl.custom && lines.length<3 ? `<button class="fs-btn bqb-add" type="button" onclick="_bstWelcomeAdd()">Add another</button>` : ''}
+        <div class="bset-fhelp">{user} is their name, {bastion} is this bastion, {count} is how many of you there are.</div>
+      </div>
+      <div class="bset-fgroup">
+        <div class="bset-flabel">The sticker on the Say hello button</div>
+        <div class="bwl-stk">
+          <div class="bwl-stkart"><img src="${escapeHTML(stick.src)}" alt="" onerror="this.style.display='none'"></div>
+          <div class="bwl-stktx">
+            <div class="bwl-stkn">${escapeHTML(stick.label)}</div>
+            <div class="bset-fhelp">${lv>=2
+              ? 'Tier 2 is unlocked, so this bastion’s own stickers can go here too.'
+              : 'Fortized Guide stickers only for now. Reach Tier 2 and you can use this bastion’s own.'}</div>
+            <button class="fs-btn" type="button" onclick="_bstWelcomePickSticker()">Change it</button>
+          </div>
+        </div>
+      </div>
+      <div class="bset-fgroup">
+        <div class="bset-flabel">What they will see</div>
+        <div class="bwl-prev">
+          <span class="bwl-arrow">&rarr;</span>
+          <div class="bwl-pv">
+            <div id="welcome-preview-text"></div>
+            <button class="bwl-say" type="button" disabled><img src="${escapeHTML(stick.src)}" alt="" onerror="this.style.display='none'">Say hello!</button>
+          </div>
+        </div>
       </div>
       <div class="bset-save"><button class="fs-btn fs-btn--primary" type="button" onclick="saveBastionWelcome()">Save changes</button></div>`;
+    _bstWelcomePreview();
   }
   else if (tab==='rules') {
     const rules = b.rules || [];
@@ -22215,26 +22280,6 @@ function renderBSettingsMain(tab) {
           ${rules.map((r,i) => `<div class="brl-prev-r"><span>${i+1}.</span><span>${escapeHTML(r)}</span></div>`).join('')}
         </div>
       </div>` : ''}`;
-  }
-  else if (tab==='announcements') {
-    const chs = (b.channels||[]).filter(ch=>ch.type==='text'||ch.type==='announcement');
-    main.innerHTML = `
-      <div class="bset-fgroup">
-        <div class="bset-flabel">Which channel</div>
-        ${_ftzSelectHTML('announce-channel', (chs.find(c=>c.type==='announcement')||chs[0]||{}).name || '', chs.map(ch=>({value:ch.name,label:(ch.type==='announcement'?'# ':'# ')+ch.name})), '_bsetNoop(__VALUE__)')}
-      </div>
-      <div class="bset-fgroup">
-        <label class="bset-flabel" for="announce-msg">What you want to say</label>
-        <textarea class="bset-uline bset-uarea" id="announce-msg" rows="5" placeholder="Write it the way you would say it."></textarea>
-      </div>
-      <div class="bset-fgroup">
-        <div class="bset-switch">
-          <div class="bset-switch-tx"><div class="bset-switch-t">Ping everyone</div><div class="bset-switch-d">Everybody here gets a notification. Worth saving for something that genuinely cannot wait.</div></div>
-          <div class="toggle" id="announce-mention-all" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
-        </div>
-      </div>
-      <div class="bset-save"><button class="fs-btn fs-btn--primary" type="button" onclick="sendBastionAnnouncement()">Send it</button></div>
-      <div class="bset-note">An announcement posts as a highlighted message in the channel you picked. Only owners and admins can send one.</div>`;
   }
   else if (tab==='insights') {
     const memberCount = Object.keys(b.memberRoles||{}).length || 1;
@@ -22272,38 +22317,73 @@ function renderBSettingsMain(tab) {
       </div>
       <div class="bset-note">These are counts of what you have built, not a measure of anyone here. Nothing on this page is shared outside the bastion.</div>`;
   }
-  else if (tab==='starboard') {
-    const starEnabled = b.starboardEnabled || false;
-    const starThreshold = b.starboardThreshold || 3;
-    const starChannel = b.starboardChannel || '';
-    const starEmoji = b.starboardEmoji || '⭐';
-    const chs = (b.channels||[]).filter(ch=>ch.type==='text');
+  else if (tab==='community') {
+    const c = _bstCommunity(b);
+    const gate = _bstCommunityGate(b);
+    const isOwner = b.owner === CU.username;
     main.innerHTML = `
-      <div class="bset-fgroup">
-        <div class="bset-switch">
-          <div class="bset-switch-tx"><div class="bset-switch-t">Keep a starboard</div><div class="bset-switch-d">A message that collects enough of one reaction gets copied somewhere everyone can find it.</div></div>
-          <div class="toggle${starEnabled?' on':''}" id="star-toggle" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+      <div class="bcm-state${c.on?' is-on':''}">
+        <div class="bcm-mark">${_boostLogoHTML(30)}</div>
+        <div class="bcm-stx">
+          <div class="bcm-st">${c.on ? 'This is a Community Bastion' : 'Not a Community Bastion yet'}</div>
+          <div class="bcm-sl">${c.on
+            ? 'Rules and Docs are available, and the bastion carries the community badge beside its name.'
+            : 'Turning this on opens up the pages a public bastion needs, and puts your name against how it is run.'}</div>
         </div>
+        ${isOwner ? `<button class="fs-btn ${c.on?'stf-btn--danger':'fs-btn--primary'}" type="button"
+          ${gate.can?'':'disabled'} onclick="${c.on?'_bstCommunityOff()':'_bstCommunityOn()'}">${c.on?'Turn it off':'Turn it on'}</button>` : ''}
       </div>
-      <div class="bset-fgroup">
-        <div class="bset-flabel">How many reactions it takes</div>
-        <div class="bst-row" id="star-threshold-btns">
-          ${[2,3,5,8,10].map(n=>`<button class="bmd-pick bst-n${starThreshold===n?' on':''}" type="button" onclick="_bsetStarN(${n})">${n}</button>`).join('')}
-          <input type="number" class="bset-uline bst-num" id="star-threshold-input" value="${starThreshold}" min="1" max="50" oninput="_bsetStarSync()">
+      ${gate.can ? '' : `<div class="bset-note" style="margin-top:14px;">${escapeHTML(gate.why)}</div>`}
+      ${!isOwner ? '<div class="bset-note" style="margin-top:14px;">Only the owner can change this.</div>' : ''}
+      <div class="bs-divider"></div>
+      <div class="bset-flabel">What it unlocks</div>
+      <div class="bcm-perks">
+        <div class="bcm-perk"><div class="bcm-pt">A Rules page</div><div class="bcm-pd">Your rules get their own page members can open any time, not a message that scrolls away.</div></div>
+        <div class="bcm-perk"><div class="bcm-pt">A Docs page</div><div class="bcm-pd">Longer writing that outlives a channel: guides, decisions, anything worth keeping.</div></div>
+        <div class="bcm-perk"><div class="bcm-pt">The community badge</div><div class="bcm-pd">Shown beside the bastion's name here and on Discover.</div></div>
+        <div class="bcm-perk"><div class="bcm-pt">Custom invite links</div><div class="bcm-pd">At Tier 3, and only while entry stays open.</div></div>
+      </div>
+      <div class="bs-divider"></div>
+      <div class="bset-flabel">What it asks of you</div>
+      <div class="bcm-perks">
+        <div class="bcm-perk"><div class="bcm-pt">You accept the Terms</div><div class="bcm-pd">The Terms of Service and the Terms of Use, in your name, as the person running this bastion.</div></div>
+        <div class="bcm-perk"><div class="bcm-pt">You confirm you are a person</div><div class="bcm-pd">One Lifecheck, once, when you turn it on.</div></div>
+        <div class="bcm-perk"><div class="bcm-pt">It is not a switch you flick</div><div class="bcm-pd">Once on, it stays on for 30 days. Turn it off and it cannot come back for 3 days. Members should not find the shape of the place changing week to week.</div></div>
+      </div>
+      ${c.on && c.acceptedBy ? `<div class="bset-note">Accepted by <strong>${escapeHTML(c.acceptedBy)}</strong> on ${_bmcDate(c.acceptedAt)}.</div>` : ''}`;
+  }
+  else if (tab==='audit') {
+    const log = _bstAuditLog(b);
+    const who = window._bauWho || '';
+    const what = window._bauWhat || '';
+    const people = Array.from(new Set(log.map(e => e.by).filter(Boolean))).sort();
+    const kinds = Array.from(new Set(log.map(e => e.action).filter(Boolean))).sort();
+    const rows = log.filter(e => (!who || e.by === who) && (!what || e.action === what));
+    main.innerHTML = `
+      <div class="bau-filters">
+        <div class="bau-f">
+          <div class="bset-flabel">Filter by member</div>
+          ${_ftzSelectHTML('bau-who', who, [{value:'',label:'Everyone'}].concat(people.map(p=>({value:p,label:p}))), '_bstAuditFilter("who",__VALUE__)')}
         </div>
-      </div>
-      <div class="bset-fgroup">
-        <div class="bset-flabel">Which reaction</div>
-        <div class="bst-row" id="star-emoji-row">
-          ${['⭐','🌟','✨','🔥','💎','❤️'].map(em=>`<button class="bst-em${starEmoji===em?' on':''}" type="button" onclick="_bsetStarEm('${em}')">${em}</button>`).join('')}
-          <input type="hidden" id="star-emoji-val" value="${escapeHTML(starEmoji)}">
+        <div class="bau-f">
+          <div class="bset-flabel">Filter by action</div>
+          ${_ftzSelectHTML('bau-what', what, [{value:'',label:'All actions'}].concat(kinds.map(k=>({value:k,label:_BST_AUDIT_LABELS[k]||k}))), '_bstAuditFilter("what",__VALUE__)')}
         </div>
+        ${(who||what) ? '<button class="fs-btn bau-clear" type="button" onclick="_bstAuditFilter(\'clear\',\'\')">Clear</button>' : ''}
       </div>
-      <div class="bset-fgroup">
-        <div class="bset-flabel">Where it collects</div>
-        ${_ftzSelectHTML('star-channel-select', starChannel, [{value:'',label:'Pick a channel'}].concat(chs.map(ch=>({value:ch.name,label:'# '+ch.name}))), '_bsetNoop(__VALUE__)')}
-      </div>
-      <div class="bset-save"><button class="fs-btn fs-btn--primary" type="button" onclick="saveBastionStarboard()">Save changes</button></div>`;
+      ${rows.length ? `<div class="bau-list">${rows.map(e => `
+        <div class="bau-row">
+          <div class="bau-av">${buildAvatarHTML(_pfpCache[e.by] || null, e.by || '?', 32)}</div>
+          <div class="bau-tx">
+            <div class="bau-l"><strong>${escapeHTML(e.by || 'Someone')}</strong> ${escapeHTML(_BST_AUDIT_LABELS[e.action] || e.action || 'made a change')}${e.target ? ' <em>' + escapeHTML(e.target) + '</em>' : ''}</div>
+            ${e.detail ? `<div class="bau-d">${escapeHTML(e.detail)}</div>` : ''}
+          </div>
+          <div class="bau-t">${_bmcDate(e.at)}</div>
+        </div>`).join('')}</div>`
+        : (log.length
+          ? _ftzNotFound('Nothing matches', 'No entry fits those two filters. Clear one and try again.', {art:'search'})
+          : _ftzNotFound('Nothing logged yet', 'Every change anyone makes here shows up on this page.', {art:'celebrate'}))}
+      <div class="bset-note">The log keeps the last ${_BST_AUDIT_CAP} changes made to this bastion's settings, channels, roles and members. Messages are not logged here.</div>`;
   }
   else if (tab==='danger') {
     const isOwner = b.owner === CU.username;
@@ -22423,59 +22503,70 @@ function renderBSettingsMain(tab) {
       </div>`;
   }
   else if (tab==='templates') {
-    const isOwner = b.owner===CU.username;
-    const hasLink = !!b.templateLink;
-    const chIcon = {text:'#',voice:ftzIcon('mic','12'),forum:ftzIcon('chat','12'),announcement:ftzIcon('megaphone','12'),poll:ftzIcon('ballot','12')};
-    const previewChs = (b.channels||[]).slice(0,6).map(c=>`<div style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:rgba(255,255,255,.5);padding:2px 0;"><span style="font-size:11px;opacity:.6;">${chIcon[c.type]||'#'}</span>${escapeHTML(c.name)}</div>`).join('');
-    const previewRoles = (b.roles||[]).slice(0,5).map(r=>`<span style="font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:var(--radius-pill);color:${r.color};background:${r.color}15;border:1px solid ${r.color}33;">${escapeHTML(r.name)}</span>`).join(' ');
+    // ⚠️ A TEMPLATE IS A SHAPE, NOT A COPY. Channels, categories, roles and the
+    // look travel; messages, members, invites, bans and the audit log never do.
+    // The page says so plainly, because "share your bastion" reads like it might
+    // mean the conversations too.
+    const isOwner = b.owner === CU.username;
+    const link = b.templateLink || '';
+    const chs = b.channels || [];
+    const cats = b.categories || [];
+    const roles = b.roles || [];
+    const loose = chs.filter(c => !c.categoryId);
+    const groups = cats.map(cat => ({ name: cat.name, items: chs.filter(c => c.categoryId === cat.id) }));
+    const chLine = c => `<div class="btp-ch">${_chTypeGlyph(c.type, 12)}<span>${escapeHTML(c.name)}</span></div>`;
     main.innerHTML = `
-      <div class="bs-section-title">Templates</div>
-      <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Save your bastion as a template that others can use to create bastions with the same layout, channels, roles, and design.</div>
-      ${isOwner ? `
-      <div style="padding:18px;background:var(--panel);border:2px solid var(--border);border-radius:var(--radius-lg);margin-bottom:18px;">
-        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Template Link</div>
-        <div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Anyone with this link can create a new bastion using your layout as a starting point. Your messages, members, and private data are <strong>never</strong> shared.</div>
-        ${hasLink ? `
-          <div class="bastion-tmpl-link">
-            <code>${escapeHTML(b.templateLink)}</code>
-            <button class="btl-copy" onclick="copyBastionTemplateLink('${escapeHTML(b.templateLink)}')">Copy</button>
+      <div class="btp-hero">
+        <div class="btp-crest">${b.icon ? `<img src="${escapeHTML(b.icon)}" alt="">` : escapeHTML(b.emblem || '🏰')}</div>
+        <div class="btp-htx">
+          <div class="btp-eyebrow">Bastion template</div>
+          <div class="btp-title">${escapeHTML(b.name)}</div>
+          <div class="btp-lead">${escapeHTML(b.desc || 'No description yet. Write one on the Overview page and it shows up here.')}</div>
+          <div class="btp-stats">
+            <span class="btp-stat"><b>${chs.length}</b> ${chs.length === 1 ? 'channel' : 'channels'}</span>
+            <span class="btp-stat"><b>${cats.length}</b> ${cats.length === 1 ? 'category' : 'categories'}</span>
+            <span class="btp-stat"><b>${roles.length}</b> ${roles.length === 1 ? 'role' : 'roles'}</span>
           </div>
-          <div style="display:flex;gap:8px;margin-top:12px;">
-            <button class="fs-btn" style="font-size:12px;padding:7px 14px;" onclick="regenerateBastionTemplateLink(curBastion)">Regenerate Link</button>
-            <button class="fs-btn stf-btn--danger" style="font-size:12px;padding:7px 14px;" onclick="deleteBastionTemplateLink(curBastion)">Delete Link</button>
-          </div>
-        ` : `
-          <button class="fs-btn fs-btn--primary" style="font-size:13px;padding:9px 18px;" onclick="generateBastionTemplateLink(curBastion).then(link=>{if(link)renderBSettingsMain('templates');})">Generate Template Link</button>
-        `}
+        </div>
       </div>
-      ` : `
-      <div style="padding:16px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.1);border-radius:14px;margin-bottom:18px;font-size:12.5px;color:var(--muted-light);">
-        Only the bastion owner can generate and manage template links.
-      </div>`}
-      <div style="padding:18px;background:var(--panel);border:2px solid var(--border);border-radius:var(--radius-lg);">
-        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Template Preview</div>
-        <div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">This is what others will see when they import your bastion template.</div>
-        <div class="tmpl-preview" style="margin-bottom:0;">
-          <div class="tp-header">
-            <div class="tp-icon">${b.icon?`<img src="${b.icon}">`:((b.emblem)||'🏰')}</div>
-            <div>
-              <div class="tp-name">${escapeHTML(b.name)}</div>
-              <div class="tp-desc">${escapeHTML(b.desc||'No description')}</div>
-            </div>
+      ${isOwner ? `<div class="btp-share">
+        <div class="btp-shead">
+          <div class="btp-st">${link ? 'Your template link' : 'Share this bastion as a template'}</div>
+          <div class="btp-sl">${link
+            ? 'Anyone opening this builds a new bastion with the same channels, categories, roles and look. Nothing else travels with it.'
+            : 'Create a link and anyone can start a bastion from this one. They get the shape, never the contents.'}</div>
+        </div>
+        ${link ? `
+          <div class="btp-link"><code>${escapeHTML(link)}</code><button class="fs-btn btp-copy" type="button" onclick="copyBastionTemplateLink('${escapeHTML(link)}')">Copy</button></div>
+          <div class="btp-sacts">
+            <button class="fs-btn" type="button" onclick="regenerateBastionTemplateLink(curBastion)">New link</button>
+            <button class="fs-btn stf-btn--danger" type="button" onclick="deleteBastionTemplateLink(curBastion)">Delete link</button>
           </div>
-          <div class="tp-stats">
-            <div class="tp-stat">#️ ${(b.channels||[]).length} channels</div>
-            <div class="tp-stat">🛡️ ${(b.roles||[]).length} roles</div>
-            ${(b.categories||[]).length?`<div class="tp-stat">📁 ${(b.categories||[]).length} categories</div>`:''}
-          </div>
-          <div class="tp-channels">
-            <div class="tp-section-label">Channels</div>
-            ${previewChs}
-            ${(b.channels||[]).length>6?`<div style="font-size:10.5px;color:var(--muted);padding:2px 0;">+${(b.channels||[]).length-6} more</div>`:''}
-          </div>
-          <div class="tp-roles">
-            <div class="tp-section-label">Roles</div>
-            <div class="tp-role-pills" style="display:flex;flex-wrap:wrap;gap:4px;">${previewRoles}${(b.roles||[]).length>5?`<span style="font-size:9.5px;color:var(--muted);padding:2px 4px;">+${(b.roles||[]).length-5}</span>`:''}</div>
+          <div class="btp-note">A new link retires the old one straight away. Anyone still holding it gets nothing.</div>`
+        : `<button class="fs-btn fs-btn--primary" type="button" onclick="generateBastionTemplateLink(curBastion).then(l=>{if(l)renderBSettingsMain('templates');})">Create the link</button>`}
+      </div>` : `<div class="bset-note" style="margin-top:0;">Only the owner can share this bastion as a template.</div>`}
+      <div class="bs-divider"></div>
+      <div class="bset-flabel">What travels</div>
+      <div class="btp-preview">
+        <div class="btp-pcol">
+          <div class="btp-pl">Channels</div>
+          ${loose.length ? `<div class="btp-cgroup">${loose.map(chLine).join('')}</div>` : ''}
+          ${groups.map(g => `<div class="btp-cgroup">
+            <div class="btp-cat">${escapeHTML(g.name)}</div>
+            ${g.items.length ? g.items.map(chLine).join('') : '<div class="btp-empty">Empty</div>'}
+          </div>`).join('')}
+          ${!chs.length ? '<div class="btp-empty">No channels yet.</div>' : ''}
+        </div>
+        <div class="btp-pcol">
+          <div class="btp-pl">Roles</div>
+          ${roles.length ? `<div class="btp-roles">${roles.map(r => `<span class="btp-role" style="--rc:${escapeHTML(r.color || 'var(--muted)')}">${escapeHTML(r.name)}</span>`).join('')}</div>`
+            : '<div class="btp-empty">No roles yet. Everyone gets the base permissions.</div>'}
+          <div class="btp-pl" style="margin-top:20px;">What stays behind</div>
+          <div class="btp-keeps">
+            <div class="btp-keep">Every message ever posted</div>
+            <div class="btp-keep">Your members, and who holds which role</div>
+            <div class="btp-keep">Invites, bans and the audit log</div>
+            <div class="btp-keep">Emojis, stickers and boosts</div>
           </div>
         </div>
       </div>`;
@@ -23568,29 +23659,331 @@ async function _bstToggleDiscoverable(el) {
 // input it writes for itself, which the saver reads at save time.
 function _bsetNoop() {}
 
-// 🐞 The old threshold chips emitted id="star-threshold-btns" inside a .map(),
-// so five elements shared one id and the handler's querySelectorAll found
-// nothing to clear. The control could not be used. One id on the ROW now.
-function _bsetStarN(n) {
-  const inp = document.getElementById('star-threshold-input');
-  if (inp) inp.value = n;
-  document.querySelectorAll('#star-threshold-btns .bst-n').forEach(el => el.classList.toggle('on', +el.textContent.trim() === n));
+// ── AUDIT LOG ───────────────────────────────────────────────────────
+// ⚠️ CAPPED, AND ON PURPOSE. `b.auditLog` rides along in every bastion sync, so
+// an uncapped list would grow without limit and be re-sent to every member on
+// every save — on this egress budget that is not hypothetical. 150 entries is
+// enough to answer "who did that, and when", which is the whole job.
+const _BST_AUDIT_CAP = 150;
+const _BST_AUDIT_LABELS = {
+  channel_create: 'created the channel', channel_delete: 'deleted the channel',
+  channel_edit: 'edited the channel', channel_move: 'moved the channel',
+  category_create: 'created the category', category_delete: 'deleted the category',
+  category_edit: 'renamed the category', category_move: 'moved the category',
+  role_create: 'created the role', role_delete: 'deleted the role',
+  role_edit: 'edited the role', role_assign: 'changed roles for',
+  member_kick: 'removed', member_ban: 'banned', member_unban: 'lifted the ban on',
+  invite_create: 'created an invite', invite_revoke: 'revoked an invite',
+  settings_edit: 'changed', boost_add: 'boosted the bastion', boost_remove: 'took a boost back',
+  emoji_add: 'added the emoji', emoji_delete: 'removed the emoji',
+  sticker_add: 'added the sticker', sticker_delete: 'removed the sticker',
+  community_on: 'turned on Community mode', community_off: 'turned off Community mode',
+};
+function _bstAuditLog(b) {
+  const l = b && b.auditLog;
+  return Array.isArray(l) ? l.slice().sort((a, z) => (z.at || 0) - (a.at || 0)) : [];
 }
-function _bsetStarSync() {
-  const n = parseInt(document.getElementById('star-threshold-input')?.value) || 0;
-  document.querySelectorAll('#star-threshold-btns .bst-n').forEach(el => el.classList.toggle('on', +el.textContent.trim() === n));
+// Records and returns; the CALLER saves. Every mutation this sits inside is
+// already writing, so logging must not add a second round-trip of its own.
+function _bstAudit(b, action, target, detail) {
+  if (!b) return;
+  if (!Array.isArray(b.auditLog)) b.auditLog = [];
+  b.auditLog.push({ at: Date.now(), by: CU?.username || '', action, target: target || '', detail: detail || '' });
+  if (b.auditLog.length > _BST_AUDIT_CAP) b.auditLog = b.auditLog.slice(-_BST_AUDIT_CAP);
 }
-function _bsetStarEm(em) {
-  const h = document.getElementById('star-emoji-val');
-  if (h) h.value = em;
-  document.querySelectorAll('#star-emoji-row .bst-em').forEach(el => el.classList.toggle('on', el.textContent.trim() === em));
+function _bstAuditFilter(which, v) {
+  if (which === 'clear') { window._bauWho = ''; window._bauWhat = ''; }
+  else if (which === 'who') window._bauWho = v || '';
+  else window._bauWhat = v || '';
+  renderBSettingsMain('audit');
 }
 
-function _bsetWelcomePreview() {
+// ── COMMUNITY MODE ──────────────────────────────────────────────────
+// ⚠️ THE WAITING PERIODS ARE THE POINT. A bastion that flips in and out of
+// Community mode changes what pages exist, what badge it wears and who can find
+// it — members should not have to re-learn the place every week. 30 days on
+// before it can come off, 3 days off before it can come back.
+const _BST_COMMUNITY_MIN_ON = 30 * 24 * 3600 * 1000;
+const _BST_COMMUNITY_COOLDOWN = 3 * 24 * 3600 * 1000;
+function _bstCommunity(b) {
+  const c = (b && b.community && typeof b.community === 'object') ? b.community : {};
+  return { on: !!c.on, enabledAt: c.enabledAt || 0, disabledAt: c.disabledAt || 0, acceptedBy: c.acceptedBy || '', acceptedAt: c.acceptedAt || 0 };
+}
+function _bstCommunityGate(b) {
+  const c = _bstCommunity(b);
+  const now = Date.now();
+  if (c.on) {
+    const left = c.enabledAt ? (c.enabledAt + _BST_COMMUNITY_MIN_ON) - now : 0;
+    if (left > 0) return { can: false, why: 'Community mode has to stay on for 30 days. ' + _ftzDaysLeft(left) + ' to go.' };
+    return { can: true, why: '' };
+  }
+  const left = c.disabledAt ? (c.disabledAt + _BST_COMMUNITY_COOLDOWN) - now : 0;
+  if (left > 0) return { can: false, why: 'You turned Community mode off recently. It can come back in ' + _ftzDaysLeft(left) + '.' };
+  return { can: true, why: '' };
+}
+function _ftzDaysLeft(ms) {
+  const d = Math.ceil(ms / (24 * 3600 * 1000));
+  if (d > 1) return d + ' days';
+  const h = Math.ceil(ms / (3600 * 1000));
+  return h > 1 ? h + ' hours' : 'under an hour';
+}
+async function _bstCommunityOn() {
   const b = CU.bastions?.[curBastion]; if (!b) return;
-  const el = document.getElementById('welcome-preview-text');
-  const v = document.getElementById('welcome-msg-input')?.value || '';
-  if (el) el.innerHTML = parseMD(escapeHTML(v.replace('{user}', '**NewMember**').replace('{bastion}', '**' + escapeHTML(b.name) + '**').replace('{count}', '42')));
+  if (b.owner !== CU.username) { toast('Only the owner can do this', 'error'); return; }
+  if (!_bstCommunityGate(b).can) return;
+  const ok = await _bstCommunityTerms();
+  if (!ok) return;
+  if (!(await swiftawLifecheck({ title: 'Confirm it is you', reason: 'Community bastions are run by people, so we check once before turning it on.' }))) {
+    toast('Verification cancelled', 'info'); return;
+  }
+  b.community = { on: true, enabledAt: Date.now(), disabledAt: _bstCommunity(b).disabledAt, acceptedBy: CU.username, acceptedAt: Date.now() };
+  _bstAudit(b, 'community_on', b.name || '');
+  await saveUser();
+  _syncBastionToGlobal(curBastion);
+  renderBSettingsMain('community');
+  renderBastionSidebar(document.getElementById('sidebar-scroll'));
+  toast('This is a Community Bastion now', 'success');
+}
+async function _bstCommunityOff() {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  if (b.owner !== CU.username) { toast('Only the owner can do this', 'error'); return; }
+  if (!_bstCommunityGate(b).can) return;
+  showCustomConfirm('Turn off Community mode? The Rules and Docs pages go away, the badge comes off, and you cannot turn it back on for 3 days.', async () => {
+    const c = _bstCommunity(b);
+    b.community = { on: false, enabledAt: c.enabledAt, disabledAt: Date.now(), acceptedBy: c.acceptedBy, acceptedAt: c.acceptedAt };
+    _bstAudit(b, 'community_off', b.name || '');
+    await saveUser();
+    _syncBastionToGlobal(curBastion);
+    renderBSettingsMain('community');
+    renderBastionSidebar(document.getElementById('sidebar-scroll'));
+    toast('Community mode is off', 'info');
+  });
+}
+// A promise, so the caller can await the answer before spending a Lifecheck on
+// somebody who is going to back out at the terms.
+function _bstCommunityTerms() {
+  return new Promise(resolve => {
+    const ov = document.createElement('div');
+    ov.className = 'ftz-confirm-overlay';
+    ov.id = 'bcm-terms';
+    const done = v => { ov.remove(); resolve(v); };
+    ov.innerHTML = `
+      <div class="ftz-confirm-card ftz-ac-card bcm-terms">
+        <div class="bcm-th">
+          <div class="bcm-tt">Running a Community Bastion</div>
+          <div class="bcm-tl">You are agreeing to this as the person who runs it, not on behalf of your members.</div>
+        </div>
+        <div class="bcm-tb">
+          <label class="bcm-check"><input type="checkbox" id="bcm-tos"><span></span>
+            <div>I accept the <a href="/terms" target="_blank" rel="noopener">Terms of Service</a> as they apply to a community I run.</div></label>
+          <label class="bcm-check"><input type="checkbox" id="bcm-tou"><span></span>
+            <div>I accept the <a href="/guidelines" target="_blank" rel="noopener">Terms of Use</a>, and I will moderate this bastion against them.</div></label>
+        </div>
+        <div class="ftz-modal-foot">
+          <button class="fs-btn" type="button" id="bcm-no">Not now</button>
+          <button class="fs-btn fs-btn--primary" type="button" id="bcm-yes" disabled>I accept</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    const yes = ov.querySelector('#bcm-yes');
+    const sync = () => { yes.disabled = !(ov.querySelector('#bcm-tos').checked && ov.querySelector('#bcm-tou').checked); };
+    ov.querySelector('#bcm-tos').addEventListener('change', sync);
+    ov.querySelector('#bcm-tou').addEventListener('change', sync);
+    yes.addEventListener('click', () => done(true));
+    ov.querySelector('#bcm-no').addEventListener('click', () => done(false));
+    ov.addEventListener('mousedown', e => { if (e.target === ov) done(false); });
+  });
+}
+
+// ── WELCOME MESSAGES ────────────────────────────────────────────────
+// ⚠️ TWO PLATFORM DEFAULTS, OR UP TO THREE OF YOUR OWN — never both. One of
+// the set is picked at random per arrival, which is the whole point: a greeting
+// that says the identical sentence to the two-hundredth member stops reading as
+// a greeting. The defaults are the platform's and are NOT editable; switching to
+// custom replaces them wholesale rather than seeding from them.
+const _BST_WELCOME_DEFAULTS = [
+  '{user} just entered {bastion}! That makes {count} of us, say hi!',
+  'Hey {user}, welcome to {bastion}! Make yourself at home.',
+];
+// ⚠️ `b.welcome` is the ONE shape from here on. The three legacy flat fields
+// (welcomeEnabled / welcomeMessage / welcomeChannel) are still read once, so a
+// bastion configured before this shipped keeps its channel and its sentence,
+// but nothing writes them again.
+function _bstWelcome(b) {
+  const w = (b && b.welcome && typeof b.welcome === 'object') ? b.welcome : null;
+  if (w) return {
+    on: w.on !== false,
+    channel: w.channel || '',
+    custom: !!w.custom,
+    lines: (Array.isArray(w.lines) ? w.lines : []).filter(t => typeof t === 'string').slice(0, 3),
+  };
+  const legacy = (b && b.welcomeMessage) || '';
+  const wasDefault = !legacy || legacy === '**{user}** joined the bastion. Welcome!';
+  return {
+    on: !b || b.welcomeEnabled !== false,
+    channel: (b && b.welcomeChannel) || '',
+    custom: !wasDefault,
+    lines: wasDefault ? [] : [legacy],
+  };
+}
+// The picked sticker, or the platform one. `src` is what renders; `name` +
+// `bastionId` ride along so a viewer who is not in the source bastion still gets
+// the sticker's info card, exactly like a sticker sent by hand.
+function _bstWelcomeSticker(b) {
+  const s = b && b.welcomeSticker;
+  if (s && s.src) return { src: s.src, label: s.label || s.name || 'Sticker', name: s.name || '', bastionId: s.bastionId || '' };
+  return { src: _ftzGuideStickerSrc('knight_wave'), label: 'Knight wave', name: 'knight_wave', bastionId: '' };
+}
+// Every editor control writes straight onto the in-memory bastion and repaints,
+// the way the rules editor does. Nothing reaches the database until Save.
+function _bstWelcomeStash() {
+  const b = CU.bastions?.[curBastion]; if (!b) return null;
+  const cur = _bstWelcome(b);
+  const chSel = document.getElementById('welcome-channel-select');
+  const lines = Array.from(document.querySelectorAll('#welcome-lines .bwl-in')).map(i => i.value);
+  b.welcome = {
+    on: document.getElementById('welcome-toggle')?.classList.contains('on') ?? cur.on,
+    channel: (chSel && chSel.value) || cur.channel,
+    custom: cur.custom,
+    lines: cur.custom ? lines.slice(0, 3) : cur.lines,
+  };
+  return b.welcome;
+}
+function _bstWelcomeMode(custom) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const w = _bstWelcomeStash(); if (!w) return;
+  if (w.custom === !!custom) return;
+  w.custom = !!custom;
+  if (w.custom && !w.lines.length) w.lines = [''];
+  renderBSettingsMain('welcome_msg');
+}
+function _bstWelcomeAdd() {
+  const w = _bstWelcomeStash(); if (!w || w.lines.length >= 3) return;
+  w.lines.push('');
+  renderBSettingsMain('welcome_msg');
+  setTimeout(() => { const ins = document.querySelectorAll('#welcome-lines .bwl-in'); ins[ins.length-1]?.focus(); }, 40);
+}
+function _bstWelcomeDrop(i) {
+  const w = _bstWelcomeStash(); if (!w) return;
+  w.lines.splice(i, 1);
+  if (!w.lines.length) w.lines = [''];
+  renderBSettingsMain('welcome_msg');
+}
+// ⚠️ TIER 2 IS THE GATE, and only for this bastion's OWN stickers. Below it the
+// Fortized Guide set is the whole menu — which is why the card says so rather
+// than showing a locked row somebody can click at.
+function _bstWelcomePickSticker() {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  _bstWelcomeStash();
+  const lv = _levelForBoosts(_bastionBoosts(b));
+  const guide = FORTIZED_GUIDE_STICKERS.map(([name, ext, label]) => ({
+    src: _ftzGuideStickerSrc(name), name, label: label || name, bastionId: '', group: 'Fortized Guide',
+  }));
+  const mine = lv >= 2
+    ? (b.stickers || b.customStickers || []).filter(s => s && (s.url || s.data)).map(s => ({
+        src: s.url || s.data, name: s.name || 'sticker', label: s.name || 'sticker',
+        bastionId: b.globalId || '', group: b.name || 'This bastion',
+      }))
+    : [];
+  const all = guide.concat(mine);
+  const cur = _bstWelcomeSticker(b);
+  const groups = [];
+  all.forEach(s => {
+    let g = groups.find(x => x.name === s.group);
+    if (!g) { g = { name: s.group, items: [] }; groups.push(g); }
+    g.items.push(s);
+  });
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay';
+  ov.id = 'bwlstk-overlay';
+  ov.innerHTML = `
+    <div class="ftz-confirm-card ftz-ac-card bwl-pick">
+      <button class="ftz-close-btn ftz-ac-x" type="button" aria-label="Close" onclick="document.getElementById('bwlstk-overlay')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
+      <div class="bwl-pickh">
+        <div class="bwl-pickt">The Say hello sticker</div>
+        <div class="bwl-pickl">${lv >= 2
+          ? 'Tier 2 is unlocked, so this bastion’s own stickers are here too.'
+          : 'Fortized Guide stickers for now. Reach Tier 2 and this bastion’s own stickers join the list.'}</div>
+      </div>
+      <div class="bwl-pickb">${groups.map(g => `
+        <div class="bwl-pickg">${escapeHTML(g.name)}</div>
+        <div class="bwl-pickgrid">${g.items.map(s => `
+          <button class="bwl-pickc${s.src === cur.src ? ' on' : ''}" type="button"
+            onclick="_bstWelcomeSetSticker(${JSON.stringify(JSON.stringify(s)).replace(/"/g, '&quot;')})">
+            <img src="${escapeHTML(s.src)}" alt="" onerror="this.style.display='none'">
+            <span>${escapeHTML(s.label)}</span>
+          </button>`).join('')}</div>`).join('')}</div>
+    </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('mousedown', e => { if (e.target === ov) ov.remove(); });
+}
+function _bstWelcomeSetSticker(json) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  let s = null; try { s = JSON.parse(json); } catch (_) { return; }
+  if (!s || !s.src) return;
+  b.welcomeSticker = { src: s.src, name: s.name || '', label: s.label || s.name || 'Sticker', bastionId: s.bastionId || '' };
+  document.getElementById('bwlstk-overlay')?.remove();
+  renderBSettingsMain('welcome_msg');
+}
+// The preview shows the FIRST line the way an arrival would read it, with the
+// tokens already filled in — a greeting still holding {user} tells you nothing
+// about whether it reads well.
+function _bstWelcomePreview() {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const el = document.getElementById('welcome-preview-text'); if (!el) return;
+  const w = _bstWelcome(b);
+  const lines = (w.custom ? Array.from(document.querySelectorAll('#welcome-lines .bwl-in')).map(i => i.value) : _BST_WELCOME_DEFAULTS)
+    .map(t => (t || '').trim()).filter(Boolean);
+  const raw = lines[0] || _BST_WELCOME_DEFAULTS[0];
+  const count = (b.memberCount || (b.members || []).length || 1) + 1;
+  el.innerHTML = parseMD(_bstWelcomeFill(escapeHTML(raw), 'NewMember', b.name || 'this bastion', count));
+}
+function _bstWelcomeFill(tpl, user, bastion, count) {
+  return String(tpl)
+    .replace(/\{user\}/g, '**' + user + '**')
+    .replace(/\{bastion\}/g, '**' + bastion + '**')
+    .replace(/\{count\}/g, String(count));
+}
+// Called by both join paths. `b` is the LOCAL copy the joiner just built, which
+// is why the sticker + lines have to ride along in the bastion sync — a joiner
+// who never sees the owner's settings still has to post the owner's greeting.
+async function _bstPostWelcome(b, gid, memberCount) {
+  try {
+    const w = _bstWelcome(b);
+    if (!w.on) return;
+    const pool = (w.custom ? w.lines : _BST_WELCOME_DEFAULTS).map(t => (t || '').trim()).filter(Boolean);
+    const tpl = pool.length ? pool[Math.floor(Math.random() * pool.length)] : _BST_WELCOME_DEFAULTS[0];
+    const name = CU.displayName || CU.username;
+    const msg = _bstWelcomeFill(tpl, name, b.name || 'this bastion', memberCount || 1);
+    const stick = _bstWelcomeSticker(b);
+    // The Say hello button rides in the message body as one token, so it is
+    // part of the stored message and every viewer gets it — including someone
+    // who scrolls back to it a week later.
+    const token = stick.src
+      ? `\n[FTZWELCOME:${stick.src}|${(stick.name || '').replace(/[|\]]/g, '')}|${(stick.bastionId || '').replace(/[|\]]/g, '')}]`
+      : '';
+    const chName = w.channel || (b.channels || []).find(ch => !ch.type || ch.type === 'text')?.name || 'general';
+    await FortizedSocial.sendBastionChannelMessage(gid, chName, '__system__', msg + token);
+  } catch (e) { console.warn('[Bastion] Welcome msg failed:', e?.message); }
+}
+// ⚠️ IT SENDS AS YOU, NOT AS THE SYSTEM. The whole point of the button is that
+// the newcomer sees a real person wave back, so it posts through the ordinary
+// channel send with the current user as the author.
+async function _ftzSayHello(btn) {
+  if (!btn || btn.disabled) return;
+  const src = btn.dataset.stickerSrc || '';
+  if (!src) return;
+  btn.disabled = true;
+  const token = (btn.dataset.stickerName || btn.dataset.stickerBastion)
+    ? `[FTZSTICKER:${src}|${btn.dataset.stickerBastion || ''}|${btn.dataset.stickerName || ''}]`
+    : `[FTZSTICKER:${src}]`;
+  const inp = document.getElementById('ch-input');
+  if (inp) {
+    const prev = inp.value.trim();
+    inp.value = prev ? prev + ' ' + token : token;
+    try { await handleChatSend('ch', curChannel); } catch (_) {}
+  }
+  setTimeout(() => { btn.disabled = false; }, 1200);
 }
 
 function _bsetCopyVanity() {
@@ -23642,12 +24035,17 @@ async function saveBastionOverview() {
 // ── Bastion Welcome Message ──
 async function saveBastionWelcome() {
   const b = CU.bastions[curBastion]; if (!b) return;
-  b.welcomeEnabled = document.getElementById('welcome-toggle')?.classList.contains('on') ?? true;
-  b.welcomeMessage = document.getElementById('welcome-msg-input')?.value?.trim() || '**{user}** joined the bastion. Welcome!';
-  b.welcomeChannel = document.getElementById('welcome-channel-select')?.value || 'general';
+  const w = _bstWelcomeStash(); if (!w) return;
+  w.lines = (w.lines || []).map(t => (t || '').trim()).filter(Boolean).slice(0, 3);
+  if (w.custom && !w.lines.length) { toast('Write at least one welcome, or switch back to ours', 'error'); return; }
+  // ⚠️ THE THREE LEGACY FIELDS ARE DROPPED ON SAVE. They are read once by
+  // _bstWelcome for a bastion configured before this shipped; leaving them in
+  // place afterwards means two sources of truth riding along in every sync.
+  delete b.welcomeEnabled; delete b.welcomeMessage; delete b.welcomeChannel;
+  _bstAudit(b, 'settings_edit', 'the welcome message');
   await saveUser();
   _syncBastionToGlobal(curBastion);
-  toast('Welcome settings saved!', 'success');
+  toast('Welcome settings saved', 'success');
 }
 // ── Bastion Rules ──
 function addBastionRule() {
@@ -23672,33 +24070,6 @@ async function saveBastionRules() {
   await saveUser();
   _syncBastionToGlobal(curBastion);
   toast('Rules saved!', 'success');
-}
-// ── Bastion Announcements ──
-async function sendBastionAnnouncement() {
-  const b = CU.bastions?.[curBastion]; if (!b) return;
-  const bastionId = b.globalId || b.name;
-  const channel = document.getElementById('announce-channel')?.value || 'general';
-  const msg = document.getElementById('announce-msg')?.value?.trim();
-  // It is a .toggle now, not a checkbox — a checkbox has no .checked here.
-  const mentionAll = document.getElementById('announce-mention-all')?.classList.contains('on');
-  if (!msg) { toast('Write a message first', 'error'); return; }
-  const prefix = mentionAll ? '**@everyone** · ' : '**Announcement** · ';
-  try {
-    await FortizedSocial.sendBastionChannelMessage(bastionId, channel, '__system__', prefix + msg);
-    document.getElementById('announce-msg').value = '';
-    toast('Announcement sent to #' + channel, 'success');
-  } catch (e) { console.error('[Announce] Send failed:', e); toast('Failed to send announcement. Please try again.', 'error'); }
-}
-// ── Bastion Starboard ──
-async function saveBastionStarboard() {
-  const b = CU.bastions[curBastion]; if (!b) return;
-  b.starboardEnabled = document.getElementById('star-toggle')?.classList.contains('on') ?? false;
-  b.starboardThreshold = parseInt(document.getElementById('star-threshold-input')?.value) || 3;
-  b.starboardEmoji = document.getElementById('star-emoji-val')?.value || '⭐';
-  b.starboardChannel = document.getElementById('star-channel-select')?.value || '';
-  await saveUser();
-  _syncBastionToGlobal(curBastion);
-  toast('Starboard settings saved!', 'success');
 }
 async function setBastionVis(isPublic) {
   const b = CU.bastions[curBastion];
@@ -23853,6 +24224,7 @@ async function deleteChannel(chIdx) {
   showCustomConfirm('Delete this channel? All messages will be lost.', async () => {
     const b = CU?.bastions?.[curBastion];
     if (!b?.channels?.[chIdx]) return;
+    _bstAudit(b, 'channel_delete', '#' + (b.channels[chIdx].name || ''));
     b.channels.splice(chIdx, 1);
     await saveUser();
     _syncBastionToGlobal(curBastion);
@@ -23876,6 +24248,35 @@ async function addKeyword() {
   b.automod.keywords.push(inp.value.trim()); inp.value='';
   await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('automod');
 }
+// The allow-list is stored as bare hosts, so what gets typed is normalised
+// before it lands: a pasted full URL becomes its domain, and a leading "www."
+// is dropped because the matcher ignores it anyway.
+function _ftzNormDomain(v) {
+  let s = String(v || '').trim().toLowerCase();
+  if (!s) return '';
+  s = s.replace(/^[a-z]+:\/\//, '').split('/')[0].split('?')[0].split('#')[0];
+  s = s.split('@').pop().split(':')[0].replace(/^www\./, '');
+  return /^[a-z0-9.-]+\.[a-z]{2,}$/.test(s) ? s : '';
+}
+async function addAllowedLink() {
+  const inp = document.getElementById('new-allow'); if (!inp) return;
+  const d = _ftzNormDomain(inp.value);
+  if (!d) { toast('That does not look like a domain', 'error'); return; }
+  const b = CU?.bastions?.[curBastion]; if (!b) return;
+  b.automod = b.automod || {};
+  b.automod.allowedLinks = b.automod.allowedLinks || [];
+  if (_ftzLinkAllowed(d, b.automod.allowedLinks)) { toast('That one already gets through', 'info'); inp.value = ''; return; }
+  b.automod.allowedLinks.push(d);
+  inp.value = '';
+  await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('automod');
+}
+async function removeAllowedLink(i) {
+  const b = CU?.bastions?.[curBastion];
+  if (!b?.automod?.allowedLinks) return;
+  b.automod.allowedLinks.splice(i, 1);
+  if (!b.automod.allowedLinks.length) delete b.automod.allowedLinks;
+  await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('automod');
+}
 async function removeKeyword(i) {
   showCustomConfirm('Remove this keyword?', async () => {
     const b = CU?.bastions?.[curBastion];
@@ -23893,6 +24294,7 @@ async function saveAutoMod() {
   if (!b) { if(btn){btn.classList.remove('btn-loading');btn.disabled=false;} return; }
   b.automod = b.automod || {};
   b.automod.mentionLimit = ml;
+  _bstAudit(b, 'settings_edit', 'AutoMod');
   await saveUser(); _syncBastionToGlobal(curBastion);
   if(btn){btn.classList.remove('btn-loading');btn.disabled=false;}
   toast('AutoMod saved!', 'success');
@@ -23908,6 +24310,7 @@ async function generateInvite() {
   if(expiryHours)invite.expires=new Date(Date.now()+expiryHours*3600000).toISOString();
   if(maxUses)invite.maxUses=maxUses;
   b.invites = [...(b.invites||[]), invite];
+  _bstAudit(b, 'invite_create', '', maxUses ? maxUses + ' uses' : 'unlimited uses');
   // Ensure bastion has a globalId before generating invite links
   if (!b.globalId) {
     b.globalId = CU.username + '_' + Date.now();
@@ -23942,6 +24345,7 @@ function copyInvite(code) {
 async function revokeInvite(i) {
   const b = CU?.bastions?.[curBastion];
   if (!b?.invites) return;
+  _bstAudit(b, 'invite_revoke', (b.invites[i]||{}).code || '');
   b.invites.splice(i,1);
   await saveUser(); renderBSettingsMain('invites'); toast('Invite revoked','info');
 }
@@ -23956,14 +24360,11 @@ async function loadBastionMembersList() {
   el.innerHTML = members.map(u=>{
     const uRoles = _bstRolesFor(b, u);
     const roleTags = uRoles.map(r=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);border:1px solid ${r.color}33;background:${r.color}15;">${_bstRoleIconHTML(r, 11, b)}<span style="${_bstRoleNameStyle(r)}">${escapeHTML(r.name)}</span></span>`).join(' ');
-    const repScore = getReputation(b.globalId||b.name, u);
-    const repTier = getRepTier(repScore);
-    const repBadge = repScore > 0 ? `<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);border:1px solid ${repTier.color}33;color:${repTier.color};background:${repTier.color}15;">${repTier.label}</span>` : '';
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:7px;">
       <div style="flex-shrink:0;">${buildAvatarHTML(null,u,36)}</div>
       <div style="flex:1;min-width:0;">
         <div style="font-weight:600;">${escapeHTML(u)} ${u===b.owner?'<span style="font-size:10px;color:var(--accent);">[Owner]</span>':''}</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">${roleTags||'<span style="font-size:11px;color:var(--muted);">No roles</span>'} ${repBadge}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">${roleTags||'<span style="font-size:11px;color:var(--muted);">No roles</span>'}</div>
       </div>
       ${isOwner?`
         <button class="btn-g" style="font-size:12px;padding:5px 10px;" onclick="openAssignRoleUI('${escapeHTML(u)}')">🎭 Roles</button>
@@ -23978,6 +24379,8 @@ async function kickMember(username) {
       await FortizedSocial.removeBastionMember(b.globalId||b.name,username);
       // Clean local memberRoles so member list updates immediately
       if(b.memberRoles) delete b.memberRoles[username];
+      _bstAudit(b, 'member_kick', username);
+      await saveUser();
       toast(`${username} kicked`,'info');
       loadBastionMembersList();
       renderMemberList();
@@ -23988,6 +24391,7 @@ async function unbanMember(i) {
   const b = CU?.bastions?.[curBastion];
   if (!b) return;
   b.bans = b.bans || [];
+  _bstAudit(b, 'member_unban', (b.bans[i]||{}).username || '');
   b.bans.splice(i,1);
   await saveUser(); renderBSettingsMain('bans'); toast('Member unbanned','success');
 }
@@ -24005,6 +24409,7 @@ async function banMemberByName() {
   b.bans=b.bans||[];
   if(b.bans.find(ban=>ban.username===username)){toast('Already banned','error');return;}
   b.bans.push({username,reason,date:new Date().toISOString()});
+  _bstAudit(b, 'member_ban', username, reason);
   try{await FortizedSocial.removeBastionMember(b.globalId||b.name,username);}catch{}
   if(b.memberRoles) delete b.memberRoles[username];
   await saveUser();
@@ -24128,45 +24533,6 @@ async function applyTax(price, context) {
 // Back-compat wrapper — existing callers pass full price, no seller (shop purchases)
 async function distributeOnyxRevenue(cost, context) {
   return applyTax(cost, context || {});
-}
-async function boostBastion(level, cost) {
-  if((CU.onyx||0)<cost){toast('Not enough Onyx!','error');return;}
-  const t = _boostTierName(level);
-  showCustomConfirm(`Take this bastion to ${t ? t.rune + ' · ' + t.name : 'level ' + level} for ${cost} Onyx?`, async ()=>{
-    const b = CU?.bastions?.[curBastion];
-    if (!b) return;
-    CU.onyx=(CU.onyx||0)-cost;
-    _fsLogTx('boost', -cost, 'Bastion boost · ' + (t ? t.name : 'level ' + level));
-    // ⚠️ WRITE THE COUNT, NOT JUST THE LEVEL.  Everything that draws a boost —
-    // the pill, the bar, the badge — reads `boosts`; a bastion that only ever
-    // wrote `boostLevel` had its count INFERRED from the level, which is the
-    // floor, not the truth.  Now the number is real and the level is derived
-    // from it, so the two can never disagree.
-    const before = _bastionBoosts(b);
-    const after  = Math.max(before, _boostsForLevel(level));
-    b.boosts     = after;
-    b.boostLevel = _levelForBoosts(after);
-    // What THIS person paid for, on their own row — the profile badge reads it.
-    CU.boostsGiven = (+CU.boostsGiven || 0) + Math.max(0, after - before);
-    await saveUser(); updateOnyxDisplay(); openBoostModal();
-    distributeOnyxRevenue(cost);
-    // ⚠️ Read-modify-write the GLOBAL row rather than calling
-    // _syncBastionToGlobal: that copies the caller's whole local bastion object
-    // over the shared one, and a booster is very often NOT the owner — their
-    // copy is a member's stale snapshot, so syncing it would clobber the real
-    // bastion with old channels and settings.  Only the two boost fields move.
-    // A boost is a rare, deliberate purchase, so one small read + one small
-    // write is affordable here in a way a per-message write never would be.
-    try {
-      const bid = b.globalId;
-      if (bid) {
-        const g = await FortizedSocial.getGlobalBastion(bid);
-        if (g) { g.boosts = after; g.boostLevel = b.boostLevel; await FortizedSocial.saveGlobalBastion(bid, g); }
-      }
-    } catch (e) { console.warn('[Boost] global sync failed:', e?.message); }
-    const nt = _boostTierName(b.boostLevel);
-    toast(nt ? `This bastion is now ${nt.rune} · ${nt.name}` : 'Boosted!', 'success');
-  });
 }
 async function confirmLeaveBastion() {
   const b=CU.bastions[curBastion];
@@ -24640,6 +25006,8 @@ async function _bstRoleSave() {
     // somebody else already tuned. Only a deliberate drag restamps priorities.
     else b.roles.push(d);
   }
+  _bstAudit(b, _bstRoleDraftIdx === -2 ? 'settings_edit' : (_bstRoleDraftIdx >= 0 ? 'role_edit' : 'role_create'),
+            _bstRoleDraftIdx === -2 ? 'the base permissions' : (d.name || ''));
   await saveUser();
   _syncBastionToGlobal(curBastion);
   FortizedSocial.socketEmit('bastion:update', { bastionId: b.globalId, field: field });
@@ -24655,6 +25023,7 @@ function _bstRoleDelete() {
   if (!b || !d || _bstRoleDraftIdx < 0) return;
   const id = d.id, idx = _bstRoleDraftIdx;
   showCustomConfirm(`Delete the "${d.name}" role? Everyone holding it keeps their other roles.`, async () => {
+    _bstAudit(b, 'role_delete', d.name || '');
     b.roles.splice(idx, 1);
     // ⚠️ A deleted role leaves two kinds of debris, and the resolver reads both:
     // the id sitting in every member's memberRoles list, and the per-channel
@@ -25082,6 +25451,7 @@ async function _bstChSave() {
   ch.nsfw = !!d.nsfw;
   ch.focusMode = !!d.focusMode;
   if (Object.keys(ov).length) ch.overrides = ov; else delete ch.overrides;
+  _bstAudit(b, 'channel_edit', '#' + name);
 
   await saveUser();
   _syncBastionToGlobal(curBastion);
@@ -25106,6 +25476,7 @@ function _bstChDelete() {
   showCustomConfirm(`Delete #${ch.name}? Everything posted in it goes with it.`, async () => {
     const b2 = CU && CU.bastions && CU.bastions[curBastion];
     if (!b2 || !(b2.channels || [])[idx]) return;
+    _bstAudit(b2, 'channel_delete', '#' + (b2.channels[idx].name || ''));
     b2.channels.splice(idx, 1);
     _bstChDraft = null; _bstChIdx = -1;
     await saveUser();
@@ -32669,6 +33040,7 @@ async function _loadStaffPage(tab, _isAutoRefresh) {
         .replace(/\[FTZFILE:[^\]]+\]/g, '')
         .replace(/\[FTZGIF:[^\]]+\]/g, '')
         .replace(/\[FTZSTICKER:[^\]]+\]/g, '')
+        .replace(/\[FTZWELCOME:[^\]]+\]/g, '')
         .trim();
     };
     const _isPending = (r) => r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned';
@@ -36097,7 +36469,7 @@ function _listenBastionUpdates() {
       try {
         const fresh = await FortizedSocial.getGlobalBastion(gid);
         if (!fresh) continue;
-        const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','categories','roles','everyone','memberRoles','members','public','joinMode','discoverable','applicationQuestions','applications','memberInvites','vanity','category','tags','automod','boostLevel','customEmojis','stickers','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
+        const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','categories','roles','everyone','memberRoles','members','public','joinMode','discoverable','applicationQuestions','applications','memberInvites','vanity','category','tags','automod','boostLevel','boosts','welcome','welcomeSticker','community','auditLog','customEmojis','stickers','invites','memberCount','owner','overview','verified'];
         let changed = false;
         let membersChanged = false;
         syncFields.forEach(f => {
@@ -38010,7 +38382,7 @@ async function joinBastionById(bastionId, hasInvite, viaCode) {
   if(already){toast('Already joined!','info');openBastion((CU.bastions||[]).findIndex(ub=> gid && ub.globalId===gid));return;}
   if(!hasInvite && b.public===false){toast('This bastion is invite-only.','error');return;}
   if(!hasInvite && (b.applicationQuestions||[]).length){showBastionApplicationForm(b);return;}
-  const localB={name:b.name,emblem:b.emblem||'🏰',icon:b.icon||null,banner:b.banner||null,tagline:b.tagline||'',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,public:b.public,memberRoles:b.memberRoles||{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[],moodDisabled:b.moodDisabled||false,moodLocked:b.moodLocked||false,lockedMood:b.lockedMood||'',customMood:b.customMood||null,memberCount:b.memberCount||1};
+  const localB={name:b.name,emblem:b.emblem||'🏰',icon:b.icon||null,banner:b.banner||null,tagline:b.tagline||'',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,public:b.public,memberRoles:b.memberRoles||{},automod:b.automod||{},boostLevel:b.boostLevel||0,boosts:b.boosts||0,categories:b.categories||[],everyone:b.everyone||null,welcome:b.welcome||null,welcomeSticker:b.welcomeSticker||null,customEmojis:b.customEmojis||[],stickers:b.stickers||[],invites:b.invites||[],memberCount:b.memberCount||1};
   CU.bastions=[...(CU.bastions||[]).filter(ub=>ub.globalId!==gid),localB];
   await saveUser(true);
   await FortizedSocial.addBastionMember(gid,CU.username, viaCode ? 'invite:'+viaCode : (hasInvite ? 'invite' : 'discover'));
@@ -38018,13 +38390,7 @@ async function joinBastionById(bastionId, hasInvite, viaCode) {
   renderRailBastions();
   toast('Joined '+b.name+'!','success');
   openBastion(CU.bastions.length-1);
-  if (localB.welcomeEnabled !== false) {
-    const wName = CU.displayName||CU.username;
-    const wTemplate = localB.welcomeMessage || '**{user}** joined the bastion. Welcome!';
-    const wMsg = wTemplate.replace(/\{user\}/g, wName).replace(/\{bastion\}/g, b.name||'Bastion').replace(/\{count\}/g, '');
-    const wChName = localB.welcomeChannel || (b.channels||[]).find(ch=>ch.type==='text')?.name || 'general';
-    try { await FortizedSocial.sendBastionChannelMessage(gid, wChName, '__system__', wMsg); } catch(e) { _dbg('[Bastion] Welcome msg failed:', e?.message); }
-  }
+  await _bstPostWelcome(localB, gid, b.memberCount || 1);
 }
 
 // ════════════════════════════════════════════
@@ -38119,6 +38485,7 @@ async function addCategoryPrompt() {
     b.categories = b.categories || [];
     const id = 'cat-' + Date.now().toString(36);
     b.categories.push({ id, name: name.trim().toUpperCase() });
+    _bstAudit(b, 'category_create', name.trim().toUpperCase());
     await saveUser();
     renderBSettingsMain('channels');
     toast('Category "'+name+'" created','success');
@@ -38138,7 +38505,9 @@ function renameCategory(catId) {
   if (!cat) return;
   showCustomInput('Rename Category', 'New name:', async (name) => {
     if (!name?.trim()) return;
+    const _wasCat = cat.name;
     cat.name = name.trim();
+    _bstAudit(b, 'category_edit', cat.name, 'was ' + _wasCat);
     await saveUser();
     _syncBastionToGlobal(curBastion);
     renderBSettingsMain('channels');
@@ -40554,6 +40923,20 @@ function parseMD(s) {
     const safe = escapeHTML(url);
     const gifId = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16) || ('gif-' + Math.random().toString(36).slice(2,8));
     return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy">${_gifCollectBtnHTML(url)}</div>`;
+  });
+  // 0a0. The Say hello button that rides under a welcome message. It has to be
+  //      part of the stored message rather than something the renderer decides,
+  //      or somebody scrolling back a week later would find a bare greeting.
+  //      ⚠️ MUST run before the sticker pass — it carries a sticker URL and the
+  //      sticker regex would otherwise never see it, but the reverse would strip
+  //      the url out of this token.
+  s = s.replace(/\[FTZWELCOME:([^\]]+)\]/g, (_, body) => {
+    const parts = String(body).split('|');
+    const src = escapeHTML(parts[0] || '');
+    const nm = escapeHTML(parts[1] || '');
+    const bid = escapeHTML(parts[2] || '');
+    if (!src) return '';
+    return `<button class="bwl-say" type="button" data-sticker-src="${src}" data-sticker-name="${nm}" data-sticker-bastion="${bid}" onclick="_ftzSayHello(this)"><img src="${src}" alt="" onerror="this.style.display='none'">Say hello!</button>`;
   });
   // 0a. Sticker token from sticker picker — click shows a tooltip (like emoji),
   //     not the media lightbox. Stickers behave as "big emojis".
@@ -51878,7 +52261,7 @@ function _fsRenderShop(el) {
 }
 
 // ── Type-specific "in use" previews (popup right panel) ──
-const _FS_EMO = '/fortized%20emojis/';
+const _FS_EMO = '/Fortized%20Emojis/';
 function _fsPvAppearance(item) {
   const deco = _fsActiveDeco();
   return `<div class="fs-pv-chat" style="background:${item.previewBg || item.gradient}">
@@ -53230,7 +53613,7 @@ function _fsNotEnoughOnyx(cost, opts) {
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card fs-nef" role="dialog" aria-label="Not enough Onyx">
       <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('fs-nef-modal')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
-      <div class="fs-nef-art"><img src="/fortized emojis/ohno.png" alt="" draggable="false"
+      <div class="fs-nef-art"><img src="/Fortized Emojis/ohno.png" alt="" draggable="false"
         onerror="this.closest('.fs-nef-art')?.remove()"></div>
       <div class="ftz-ac-hero ftz-ac-hero--noicon">
         <div class="ftz-ac-title">${escapeHTML(o.title || 'Not enough Onyx')}</div>
@@ -57028,7 +57411,7 @@ function getUserBadges(user) {
   //    read off the TOTAL they have given across every bastion, so it is a
   //    record of what this person has put in, not of one place they happened
   //    to pick.  Only real, recorded boosts count: `boostsGiven` is written by
-  //    boostBastion and by nothing else.
+  //    the boosts card and by nothing else.
   const given = +user.boostsGiven || 0;
   if (given >= 1) {
     const bt = _boostTierName(_levelForBoosts(given)) || _FTZ_BOOST_NAMES[0];
@@ -57535,7 +57918,7 @@ function _showRateLimitPopup() {
   overlay.innerHTML = `
     <div class="ftz-confirm-card ftz-ac-card fs-rl" role="dialog" aria-label="Slow down">
       <button class="ftz-close-btn ftz-ac-x" aria-label="Close" onclick="document.getElementById('rate-limit-popup')?.remove()"><svg viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg></button>
-      <div class="fs-rl-art"><img src="/fortized%20emojis/knight_angry.png" alt="" draggable="false" onerror="this.closest('.fs-rl-art')?.remove()"></div>
+      <div class="fs-rl-art"><img src="/Fortized%20Emojis/knight_angry.png" alt="" draggable="false" onerror="this.closest('.fs-rl-art')?.remove()"></div>
       <div class="ftz-ac-hero ftz-ac-hero--noicon">
         <div class="ftz-ac-title">Whoa, easy there!</div>
         <div class="ftz-ac-sub">You’re sending messages too quickly. Take a breath and the guard will stand down.</div>
@@ -63642,135 +64025,6 @@ async function _eyedropTo(targetId) {
 
 
 // ════════════════════════════════════════════
-// BASTION MOOD SYSTEM
-// ════════════════════════════════════════════
-const BASTION_MOODS = {
-  strategic: {emoji:'🟢',label:'Strategic',tint:'rgba(62,207,110,.08)',particle:'#3ecf6e'},
-  chaotic:   {emoji:'🔥',label:'Chaotic',tint:'rgba(255, 0, 51,.08)',particle:'#ff0033'},
-  celebrating:{emoji:'🎉',label:'Celebrating',tint:'rgba(255,249,62,.08)',particle:'#fff93e'},
-  focused:   {emoji:'📚',label:'Focused',tint:'rgba(96,165,250,.08)',particle:'#60a5fa'},
-  chill:     {emoji:'😌',label:'Chill',tint:'rgba(167,139,250,.08)',particle:'#a78bfa'},
-  hype:      {emoji:'⚡',label:'Hype',tint:'rgba(251,191,36,.08)',particle:'#fbbf24'}
-};
-
-function calculateBastionMood(b) {
-  if (!b) return 'strategic';
-  if (b.moodLocked && b.lockedMood) return b.lockedMood;
-  if (b.moodDisabled) return null;
-  // Simulate mood from bastion state
-  const chs = b.channels || [];
-  const hasParty = chs.some(c => c.name && c.name.includes('party'));
-  const hasStudy = chs.some(c => c.name && (c.name.includes('study') || c.name.includes('notes') || c.name.includes('lecture')));
-  const hasPoll = chs.some(c => c.type === 'poll');
-  const hasEvent = chs.some(c => c.type === 'event');
-  const hour = new Date().getHours();
-  const memberCount = b.memberCount || 1;
-  // Time-of-day factor
-  if (hour >= 22 || hour < 6) return 'chill';
-  if (hasEvent && hour >= 18) return 'celebrating';
-  if (hasParty && memberCount > 5) return 'chaotic';
-  if (hasStudy) return 'focused';
-  if (hasPoll) return 'strategic';
-  if (memberCount > 10) return 'hype';
-  return 'strategic';
-}
-
-function renderMoodBar(b) {
-  if (!b) return '';
-  const moodKey = calculateBastionMood(b);
-  if (!moodKey) return '';
-  const mood = BASTION_MOODS[moodKey] || BASTION_MOODS.strategic;
-  const customMood = b.customMood && b.boostLevel >= 2 ? b.customMood : null;
-  const displayEmoji = customMood ? customMood.emoji : mood.emoji;
-  const displayLabel = customMood ? customMood.label : mood.label;
-  const tint = mood.tint;
-  const particleColor = mood.particle;
-  const lockIcon = b.moodLocked ? '<span class="mood-lock">🔒</span>' : '';
-  // Generate subtle particles
-  let particles = '';
-  for (let i = 0; i < 6; i++) {
-    const left = 8 + Math.random() * 84;
-    const delay = Math.random() * 7;
-    const dur = 6 + Math.random() * 5;
-    particles += `<div class="mood-particle" style="left:${left}%;bottom:0;background:${particleColor};animation-delay:${delay}s;animation-duration:${dur}s;"></div>`;
-  }
-  return `<div class="bastion-mood-bar" style="background:linear-gradient(90deg,${tint},${tint}ee);border:1.5px solid ${particleColor}25;box-shadow:0 4px 16px ${particleColor}15;backdrop-filter:none;" title="Bastion Mood: ${displayLabel}">
-    <div class="mood-particles">${particles}</div>
-    <span class="mood-emoji" style="font-size:18px;margin-right:8px;">${displayEmoji}</span>
-    <span class="mood-label" style="font-weight:700;letter-spacing:.02em;flex:1;">${displayLabel}</span>
-    ${lockIcon}
-    <span style="font-size:11px;color:rgba(255,255,255,.5);margin-left:8px;">Bastion Atmosphere</span>
-  </div>`;
-}
-
-// ════════════════════════════════════════════
-// BASTION REPUTATION SYSTEM
-// ════════════════════════════════════════════
-function getReputation(bastionId, username) {
-  const key = 'ftz_rep_' + (bastionId || 'unknown');
-  const data = JSON.parse(localStorage.getItem(key) || '{}');
-  return data[username] || 0;
-}
-
-function addReputation(bastionId, username, amount) {
-  const key = 'ftz_rep_' + (bastionId || 'unknown');
-  const data = JSON.parse(localStorage.getItem(key) || '{}');
-  data[username] = (data[username] || 0) + amount;
-  localStorage.setItem(key, JSON.stringify(data));
-}
-
-function getRepTier(score) {
-  if (score >= 2000) return {label:'Legendary',pct:'Top 1%',color:'#fbbf24'};
-  if (score >= 1000) return {label:'Veteran',pct:'Top 5%',color:'#f59e0b'};
-  if (score >= 500)  return {label:'Elite',pct:'Top 10%',color:'#60a5fa'};
-  if (score >= 200)  return {label:'Trusted',pct:'Top 25%',color:'#a78bfa'};
-  if (score >= 50)   return {label:'Active',pct:'Top 50%',color:'#3ecf6e'};
-  return {label:'New',pct:'—',color:'var(--muted)'};
-}
-
-function renderRepShield(bastionId, username) {
-  const rep = getReputation(bastionId, username);
-  if (rep < 10) return '';
-  const tier = getRepTier(rep);
-  return `<span class="rep-shield" style="color:${tier.color};border-color:${tier.color}33;background:${tier.color}12;">
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-    ${rep}
-    <span class="rep-tooltip">Reputation: ${rep}<br>${tier.label} · ${tier.pct} Contributor</span>
-  </span>`;
-}
-
-// Award rep on reactions
-function awardReactionRep(bastionId, targetUser) {
-  if (targetUser === CU?.username) return;
-  addReputation(bastionId, targetUser, 2);
-}
-
-// Award rep on boost
-function awardBoostRep(bastionId, username) {
-  addReputation(bastionId, username, 25);
-}
-
-// Award rep for poll participation
-function awardPollRep(bastionId, username) {
-  addReputation(bastionId, username, 5);
-}
-
-// Award rep for message (small amount, capped)
-function awardMessageRep(bastionId, username) {
-  const key = 'ftz_rep_msg_' + bastionId + '_' + username + '_' + new Date().toDateString();
-  const count = parseInt(localStorage.getItem(key) || '0');
-  if (count >= 30) return; // cap at 30 message rep per day
-  localStorage.setItem(key, count + 1);
-  addReputation(bastionId, username, 1);
-}
-
-// Admin: reset reputation for a bastion
-function resetBastionReputation(bastionId) {
-  localStorage.removeItem('ftz_rep_' + (bastionId || 'unknown'));
-  toast('Reputation reset for this season', 'success');
-}
-
-// ════════════════════════════════════════════
 // FOCUS MODE CHANNELS
 // ════════════════════════════════════════════
 function isChannelFocusMode(b, chIdx) {
@@ -63789,49 +64043,6 @@ function toggleChannelFocusMode(chIdx) {
 }
 
 // ════════════════════════════════════════════
-
-// Mood settings handlers
-function toggleMoodDisabled(val) {
-  const b = CU?.bastions?.[curBastion]; if (!b) return;
-  b.moodDisabled = val;
-  saveUser();
-  _syncBastionToGlobal(curBastion);
-  renderBastionSidebar(document.getElementById('sidebar-scroll'));
-  toast(val ? 'Mood disabled' : 'Mood re-enabled', 'success');
-}
-function toggleMoodLocked(val) {
-  const b = CU?.bastions?.[curBastion]; if (!b) return;
-  b.moodLocked = val;
-  if (val && !b.lockedMood) b.lockedMood = 'strategic';
-  saveUser();
-  _syncBastionToGlobal(curBastion);
-  const opts = document.getElementById('mood-lock-options');
-  if (opts) opts.style.display = val ? '' : 'none';
-  renderBastionSidebar(document.getElementById('sidebar-scroll'));
-  toast(val ? 'Mood locked' : 'Mood unlocked', 'success');
-}
-function setLockedMood(key) {
-  const b = CU?.bastions?.[curBastion]; if (!b) return;
-  b.lockedMood = key;
-  b.moodLocked = true;
-  document.querySelectorAll('.bmd-pick').forEach(el => el.classList.remove('on'));
-  saveUser();
-  _syncBastionToGlobal(curBastion);
-  renderBSettingsMain('mood');
-  renderBastionSidebar(document.getElementById('sidebar-scroll'));
-}
-function saveCustomMood() {
-  const b = CU?.bastions?.[curBastion]; if (!b) return;
-  const emoji = document.getElementById('custom-mood-emoji')?.value?.trim();
-  const label = document.getElementById('custom-mood-label')?.value?.trim();
-  if (!emoji || !label) { toast('Enter both emoji and name', 'error'); return; }
-  b.customMood = {emoji, label};
-  saveUser();
-  _syncBastionToGlobal(curBastion);
-  renderBastionSidebar(document.getElementById('sidebar-scroll'));
-  toast('Custom mood saved!', 'success');
-}
-
 
 async function buyAppearance(themeId, cost) {
   const bal = CU?.onyx||0;
@@ -66295,6 +66506,15 @@ function _checkSlowMode() {
   const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
   const bid = b?.globalId||b?.name; const chName = ch?.name||'general';
   if (!bid) return true;
+  // ⚠️ SLOW MODE IS FOR THE ROOM, NOT FOR THE PEOPLE RUNNING IT. The owner and
+  // anyone carrying a role with Manage bastion or Manage messages skip it — a
+  // moderator trying to calm a channel down cannot be the one throttled while
+  // doing it. Checked against the resolver, not against a hardcoded name.
+  try {
+    if (b && (_bstIsAdmin(b, CU?.username)
+        || _bstCan(b, CU?.username, 'manage_messages', ch)
+        || _bstCan(b, CU?.username, 'manage_channels', ch))) return true;
+  } catch (_) {}
   const cooldown = _getSlowMode(bid, chName);
   if (!cooldown) return true;
   const key = bid + '_' + chName;

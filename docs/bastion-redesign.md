@@ -345,6 +345,61 @@ Each phase ships and is verifiable alone. I would not do this in one push.
 | 5 | Creation flow + overview | Reuses `.gs-*` wholesale |
 | 6 | Invite card + invite management | Smallest; half already landed |
 | 7 | Member list visual pass | Last on purpose — no data model behind it |
+| 8 | **Identity confusion — the bug hunt** | A correctness phase, not a design one. Do it before 7: the member list is where the symptom shows, and repainting it first would only hide the fault |
+| 9 | **One chat system for channels and DMs** | Largest and last, because it touches the hottest code in the app and every phase above narrows what still differs |
+
+### 3.10 Identity confusion — display names, usernames, banners (phase 8)
+
+The user's words: *"it confuses members & users displaynames, usernames
+banners, mixes all together, its crazy"*. This is a **bug class, not a polish
+item**, and it needs a real root-cause pass rather than patching each surface
+where it shows.
+
+The shape of the fault, as far as it is understood:
+
+- **A member is not a user.** `b.members` holds names; the person behind the
+  name lives in the `users` table. Every bastion surface has to bridge that gap,
+  and each one does it differently — some read `_profileCache`, some
+  `_pfpCache`, some re-resolve through `getUserByName`, some just print the
+  stored string. Where two of those disagree, one member wears another's name.
+- **Display name vs username vs member nickname** are three different strings
+  and the surfaces do not agree on which one they are showing.
+- **`banner` is the heaviest column in the table** and is deliberately kept OUT
+  of `_USER_LIST_COLS` and every bulk read (standing egress rule). So a bulk
+  path has no banner at all, and anything that falls back to a *cached* banner
+  can serve the previously-cached person's — which is the most visible half of
+  what the user is seeing.
+
+Where to look, in order: `renderMemberList`'s avatar and name fast-paths (it is
+virtualised, and a fast-path that reuses an existing node is exactly where an
+identity can stick), `_ftzStyledNameHTML` / `_dmNameStyleAttr`, the realtime
+`profile:update` handler, and every cache keyed by something other than the
+username.
+
+**Rule for the fix:** one resolver, one key. A surface asks for a person by
+username and gets back a single object; nothing composes identity out of two
+caches. And it must not add reads — the caches exist because of the egress
+quota.
+
+### 3.11 One chat system for channels and DMs (phase 9)
+
+The user's words: *"bastions are a mess they are different than DM chats (i
+want all the chat areas to use the same system)"*.
+
+Today a bastion channel and a DM are two parallel implementations of the same
+screen: `loadBastionChannel` vs `loadDMMessages`, `sendChannel` vs `sendDM`,
+separate realtime listeners, separate open-and-scroll paths, separate topbars.
+Every chat fix so far has had to be made two or three times, and the ones that
+were only made once are the bugs.
+
+The target is **one surface with a source**: a chat component that takes a
+conversation (channel, DM, group chat) and does not care which it got. Sending,
+receiving, the auto-scroll chase, the sending state, deletes, separators,
+attachments and the picker stack are written once.
+
+⚠️ **This is the hottest code in the app** and the auto-scroll work alone took
+a full session to get right. It is last deliberately. It is also the phase most
+likely to want splitting: read path first, then send, then realtime.
 
 ---
 

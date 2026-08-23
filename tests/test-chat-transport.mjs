@@ -30,6 +30,8 @@ function extract(decl) {
 
 const WANT = ['function _chatMsgId()', 'function _convDM(peer)', 'function _convGC(gcId)',
   'function _convChannel(idx)', 'function _convFor(context, chIdx)',
+  'function _chatKind(ctx)', 'function _currentChatKind()', 'function _isBastionChat(ctx)',
+  'function _canModerateChat(ctx)',
   'async function sendMessage(conv)', 'async function sendDM()',
   'async function sendGCMessage()', 'async function sendChannelMsg(idx)'];
 const code = WANT.map(extract).join('\n\n');
@@ -55,6 +57,7 @@ const env = {
   isSuperAdmin: () => S.CU?.username === 'staw',
   isUserBlocked: n => env.blockedList?.includes(n),
   _bstCan: (b, u, perm, ch) => env.canSend !== false,
+  hasPerm: () => env.canModerate === true,
   autoModCheck: (t, b) => env.bastionAutomodBlocks === true && (L.toasts.push(['Links are disabled in this bastion','error']), true),
 
   toast: (m, t) => L.toasts.push([m, t]),
@@ -99,6 +102,7 @@ const names = Object.keys(env);
 const run = new Function(...names,
   'var ' + MUTABLE.join(', ') + ';\n' + code +
   '\n; return { sendDM, sendGCMessage, sendChannelMsg,' +
+  '  _chatKind, _currentChatKind, _isBastionChat, _canModerateChat,' +
   '  _set: s => { ' + MUTABLE.map(m => m + ' = s.' + m + ';').join(' ') + ' },' +
   '  _get: () => ({ ' + MUTABLE.join(', ') + ' }) };'
 )(...names.map(n => env[n]));
@@ -230,6 +234,37 @@ check('empty draft sends nothing', L.appended.length === 0 && L.persisted.length
 base(); env.bastionAutomodBlocks = true;
 await go('sendChannelMsg', 0);
 check('channel: bastion automod blocks', L.persisted.length === 0 && L.appended.length === 0, '');
+
+// 14 · Phase 1b: one spelling for the surface kind, one moderation question.
+base();
+run._set(S);
+check('kind: every legacy spelling of a channel normalises to ch',
+  ['ch', 'channel', 'bastion'].every(k => run._chatKind(k) === 'ch')
+  && run._chatKind('dm') === 'dm' && run._chatKind('gc') === 'gc',
+  ['ch','channel','bastion','dm','gc'].map(k => k + '->' + run._chatKind(k)).join(' '));
+
+check('kind: a Conversation resolves the same as its legacy string',
+  run._chatKind({ kind: 'channel' }) === 'ch' && run._chatKind({ kind: 'dm' }) === 'dm', '');
+
+check('bastion chat: only a channel has roles and badges',
+  run._isBastionChat('ch') && run._isBastionChat('channel')
+  && !run._isBastionChat('dm') && !run._isBastionChat('gc'), '');
+
+// ⚠️ manage_messages is per-bastion, so a moderator in one bastion must not be
+// able to moderate a DM or a group chat.
+base(); env.canModerate = true; run._set(S);
+check('moderation: a moderator may moderate a channel', run._canModerateChat('ch') === true, '');
+check('moderation: NOT a DM, however much power they hold',
+  run._canModerateChat('dm') === false && run._canModerateChat('gc') === false, '');
+base(); env.canModerate = false; run._set(S);
+check('moderation: a plain member may not moderate a channel', run._canModerateChat('ch') === false, '');
+
+base(); S.curDM = 'leafen'; run._set(S);
+check('current kind: a DM reads as dm', run._currentChatKind() === 'dm', run._currentChatKind());
+base(); S.curGC = 'gc7'; run._set(S);
+check('current kind: a group chat reads as gc', run._currentChatKind() === 'gc', run._currentChatKind());
+base(); run._set(S);
+check('current kind: neither open reads as ch', run._currentChatKind() === 'ch', run._currentChatKind());
 
 // ── Report ────────────────────────────────────────────────────────────────
 let pass = 0;

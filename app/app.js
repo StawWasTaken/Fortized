@@ -9991,6 +9991,39 @@ function _convChannel(idx) {
   };
 }
 
+/* ── What a surface IS, and what it lets you do — rework phase 1b ──────────
+   The renderer asked `context === 'ch' || context === 'channel'` in nine
+   places to mean three different things: does this surface have a role
+   ladder · may the viewer moderate here · does a new-member badge belong
+   beside this name. Three questions, one hand-rolled expression, repeated.
+
+   ⚠️ The 'channel' spelling was never passed by anything. Every renderer call
+   site in the app passes 'dm', 'gc' or 'ch' and nothing else, so half of each
+   of those nine checks was unreachable — and the half that ran taught the next
+   person that there are two spellings, which is how a tenth site gets written
+   testing only one of them.
+
+   These take a legacy context string OR a Conversation, so a caller that has
+   the real object can hand it over and a caller that only has the string the
+   markup carries keeps working. */
+function _chatKind(ctx) {
+  if (ctx && typeof ctx === 'object') ctx = ctx.kind;
+  // 'channel' and 'bastion' are vestigial spellings of 'ch' that older call
+  // sites defended against one at a time. They are aliased HERE, once.
+  return (ctx === 'channel' || ctx === 'bastion') ? 'ch' : ctx;
+}
+// Which surface is open right now? Three places derived this with the same
+// hand-written ternary; a fourth would eventually have got it subtly wrong.
+function _currentChatKind() {
+  if (curDM) return 'dm';
+  if (typeof curGC !== 'undefined' && curGC) return 'gc';
+  return 'ch';
+}
+function _isBastionChat(ctx) { return _chatKind(ctx) === 'ch'; }
+// ⚠️ manage_messages is a per-BASTION permission, so a DM or a group chat can
+// never answer yes here however much power the viewer holds elsewhere.
+function _canModerateChat(ctx) { return _isBastionChat(ctx) && hasPerm('manage_messages'); }
+
 // Resolve a conversation from the legacy context string the composer and its
 // onclick attributes still speak. This is the seam between the old surfaces
 // and the one transport; it disappears when phase 1c gives them one composer.
@@ -12707,7 +12740,7 @@ function _fortgifiedDisarm() {
   document.body.classList.remove('ftz-picking-msg');
 }
 function _fortgifiedRunFromPanel(mode) {
-  const context = curDM ? 'dm' : (typeof curGC !== 'undefined' && curGC) ? 'gc' : 'ch';
+  const context = _currentChatKind();
   if (context === 'ch' && (curBastion === null || curChannel === null)) { toast('Open a chat first', 'error'); return; }
   _fortgifiedDisarm();
   const label = mode === 'video' ? 'a video' : 'an image';
@@ -12749,7 +12782,7 @@ async function _fortgifiedPost(context, text, replyTo, triggeredBy) {
   const appendLocal = (containerId, msg) => {
     const el = document.getElementById(containerId);
     if (!el) return;
-    appendMessage(el, msg, context === 'gc' ? 'gc' : context === 'dm' ? 'dm' : 'ch', null);
+    appendMessage(el, msg, _chatKind(context), null);
     scrollBottom(containerId, true);
   };
   if (context === 'dm' && curDM) {
@@ -13133,6 +13166,7 @@ function _renderMsgBatch(container, msgs, context, state) {
 // (chronologically older relative to what they've already seen) doesn't
 // appear to "push" them up.
 function renderMessages(container, msgs, context) {
+  context = _chatKind(context);   // Conversation or legacy string, see appendMessage
   // Abort any prior trickle for this container.
   if (container._trickleCtrl) {
     container._trickleCtrl.aborted = true;
@@ -13790,7 +13824,7 @@ function _ftzNewMemberWave(display) {
 
 function getMsgRoleTag(fromUser, context) {
   // Only show role tags in bastion channels, not DMs or GC
-  if (context !== 'ch' && context !== 'channel') return '';
+  if (!_isBastionChat(context)) return '';
   if (curBastion === null) return '';
   const b = CU?.bastions?.[curBastion];
   if (!b) return '';
@@ -13805,7 +13839,7 @@ function getMsgRoleTag(fromUser, context) {
   return `<span class="role-tag" style="background:${col}22;border:1px solid ${col}44;">${_bstRoleIconHTML(pr, 12, b)}<span style="${_bstRoleNameStyle(pr)}">${escapeHTML(pr.name)}</span></span>`;
 }
 function getMsgRoleColor(fromUser, context) {
-  if (context !== 'ch' && context !== 'channel') return '';
+  if (!_isBastionChat(context)) return '';
   if (curBastion === null) return '';
   const b = CU?.bastions?.[curBastion];
   if (!b) return '';
@@ -14189,6 +14223,10 @@ function _appendLiveMessage(container, msg, context) {
 // caller — optimistic sends, socket receives, bot posts — gets a date/gap
 // separator inserted automatically so it appears INSTANTLY, no refresh needed.
 function appendMessage(container, msg, context, prevAuthor, skipSep) {
+  // Take a Conversation or the legacy string. Normalising here means every
+  // interpolation below emits one spelling into the markup, so the string that
+  // comes back through an onclick is always one this renderer understands.
+  context = _chatKind(context);
   // If prevAuthor not provided, infer from last message in container
   if (prevAuthor === null && container) prevAuthor = _getLastAuthor(container);
   if (!msg || !container) return;
@@ -14222,7 +14260,7 @@ function appendMessage(container, msg, context, prevAuthor, skipSep) {
     row.dataset.text=msg.text||'';
     row.dataset.from='__system__';
     row.dataset.timestamp=msg.timestamp||''; // needed for date-divider compare
-    const canDeleteSystem = (context==='ch'||context==='channel') && hasPerm('manage_messages');
+    const canDeleteSystem = _canModerateChat(context);
     const ev = _inferSystemEvent(msg);
     row.dataset.systemEvent = ev.key;
     // Prefer an explicit iconHTML blob on the event (e.g. bot uses the
@@ -14364,7 +14402,7 @@ function appendMessage(container, msg, context, prevAuthor, skipSep) {
         ${fwdHTML}
         <div class="msg-header">
           <span class="msg-author" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;${roleColor?'color:'+roleColor+';':''}" data-author="${safeFrom}">${safeFrom}</span>
-          ${(context === 'ch' || context === 'channel') ? _newMemberBadgeHTML(msg.from) : ''}
+          ${_isBastionChat(context) ? _newMemberBadgeHTML(msg.from) : ''}
           ${getMsgRoleTag(msg.from, context)}
           <span class="msg-timestamp${_msgTimeLiveClass(msg.timestamp)}" data-ts="${escapeHTML(String(msg.timestamp||''))}" data-tip="${escapeHTML(fullTime)}">·  ${time}</span>
         </div>
@@ -14423,7 +14461,7 @@ function appendMessage(container, msg, context, prevAuthor, skipSep) {
           // restored on mouse-out.
           authorEl.dataset.dnFont = 'font-family:' + _getDisplayFontCSS(u.displayFont) + ';font-weight:' + _getDisplayFontWeight(u.displayFont) + ';';
         }
-        const isBastion = (context === 'ch' || context === 'channel');
+        const isBastion = _isBastionChat(context);
         if (isBastion) {
           // Bastion: no effects ever. Role colour if any; else default text.
           if (roleColor) authorEl.style.color = roleColor;
@@ -14556,9 +14594,9 @@ function _refreshVisibleMsgActs() {
     const from = row.dataset.from || '';
     const text = (row.dataset.text || '').replace(/'/g, ' ').slice(0,100);
     // Determine context
-    const context = curDM ? 'dm' : (typeof curGC !== 'undefined' && curGC) ? 'gc' : 'ch';
+    const context = _currentChatKind();
     const isOwn = from === CU?.username;
-    const isBastionAdmin = (context==='ch' || context==='channel') && hasPerm('manage_messages');
+    const isBastionAdmin = _canModerateChat(context);
     el.innerHTML = _buildMsgActsInner(msgId, from, text, context, isOwn, isBastionAdmin);
   });
 }
@@ -14619,7 +14657,7 @@ function _markRepliesDeleted(msgId) {
 
 function buildMsgActions(msg, context, id) {
   const isOwn=String(msg.from||"").toLowerCase()===String(CU?.username||"").toLowerCase();
-  const isBastionAdmin = (context==='ch' || context==='channel') && hasPerm('manage_messages');
+  const isBastionAdmin = _canModerateChat(context);
   // The user who triggered a bot message may delete it, even though it's not
   // "their" message (from is the bot).
   const canDel = isOwn || isBastionAdmin || _iTriggeredMsg(msg);
@@ -14631,7 +14669,7 @@ function buildMsgActions(msg, context, id) {
 
 function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastionAdmin, canDel) {
   if (canDel === undefined) canDel = isOwn || isBastionAdmin;
-  const inBastion = (context==='ch'||context==='channel');
+  const inBastion = _isBastionChat(context);
   const canPin = inBastion ? (hasPerm('manage_messages') || CU?.bastions?.[curBastion]?.owner === CU?.username) : (curDM || curGC);
 
   // Failed-send mode — short-circuit to Retry + Delete only.
@@ -14681,7 +14719,7 @@ function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastio
 function _showMsgMoreMenu(e, msgId, from, text, context, isOwn, isBastionAdmin, canDel) {
   e.stopPropagation();
   if (canDel === undefined) canDel = isOwn || isBastionAdmin;
-  const inBastion = (context==='ch'||context==='channel');
+  const inBastion = _isBastionChat(context);
   const canPin = inBastion ? (hasPerm('manage_messages') || CU?.bastions?.[curBastion]?.owner === CU?.username) : (curDM || curGC);
   // Failed-send mode — short-circuit to Retry + Delete only.
   const failedRow = document.querySelector('.msg-row[data-msgid="'+CSS.escape(msgId)+'"]');
@@ -31763,7 +31801,7 @@ function handleContextMenu(e) {
   const isSidebarBlank = isSidebar && !target.closest('.rail-btn') && !target.closest('.rail-bastion') && !target.closest('.userbar') && !target.closest('.sidebar-logo') && !target.closest('.onyx-pill');
   const isChatArea = target.closest('.msg-list') || target.closest('.chat-main') || target.closest('#chat-area');
   const isSystemMsg = msgRow && msgRow.classList.contains('msg-system');
-  const context = curDM ? 'dm' : curGC ? 'gc' : 'ch';
+  const context = _currentChatKind();
 
   // ── 1) User context menu (clicking on author name) ──
   if (isAuthor && !isSystemMsg) {
@@ -49449,7 +49487,7 @@ function _unpinIfPresent(msgId, ctx, _curDM, _curGC, _curBastion, _curChannel) {
   let key = null;
   if (ctx === 'dm' && _curDM) key = 'ftz_pins_dm_' + _curDM;
   else if (ctx === 'gc' && _curGC) key = 'ftz_pins_gc_' + _curGC;
-  else if (ctx === 'ch' || ctx === 'channel' || ctx === 'bastion') {
+  else if (_isBastionChat(ctx)) {
     const b = CU?.bastions?.[_curBastion];
     key = 'ftz_pins_ch_' + (b?.globalId || _curBastion) + '_' + _curChannel;
   }

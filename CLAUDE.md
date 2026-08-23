@@ -1,12 +1,108 @@
 # Fortized — working notes for Claude
 
-## 🚧 THE REWORK — plan approved, phase 0 shipped
+## 🚧 THE REWORK — phases 0 and 1a/1b/1e shipped
 Full plan: **`docs/rework-plan.md`** (15 phases). The user approved it and said
-*"go on start with the first step."* **Phase 1 (the chat system) is next.**
-Every phase gets a short agreed sub-plan first, and is gated by the six
+*"go on start with the first step"*, then *"go on — it must be as complete as
+discord or guilded."* **Phase 1c (one composer) is next**, then 1d (one message
+row). Every phase gets a short agreed sub-plan first, and is gated by the six
 Definition-of-Done questions in §0: it saves · it loads · it propagates · it has
 all four states (loading / empty / error / no-permission, **with the guard at the
 MUTATION**) · it is wired outward · it is reachable.
+
+### ✅ PHASE 1a/1b/1e — one transport, one surface question, one mention resolver
+`node tests/test-chat-transport.mjs` — **52 checks**. It EXTRACTS the real
+functions out of `app.js` by declaration string, so renaming one fails the test
+rather than quietly testing a stale copy. Run it with the pre-commit trio.
+⚠️ **`new Function` passes arguments BY VALUE**, so the mutable chat globals
+(`CU`, `curDM`, `curGC`, `curBastion`, `curChannel`, `replyingTo`,
+`_outlineMode`) are declared INSIDE the generated scope and pushed in via
+`_set()`. Inject them as parameters and they freeze at `null`, every scenario
+silently runs against nothing, and the suite passes on air.
+
+- **`1a` — one `Conversation` + one `sendMessage(conv)`.** `_convDM` / `_convGC`
+  / `_convChannel` each describe a surface (`guard`, `persist`, `emit`,
+  `queued`, `mentionCtx`, `automod`, `afterSend`); `sendDM` / `sendGCMessage` /
+  `sendChannelMsg` are now three-line wrappers. **The old bodies are DELETED,
+  not left behind a flag** — dead copies are how the divergence came back last
+  time; git history holds them. Collapsing them surfaced four real defects:
+  - **The spam rate limit and `runAutomod` never ran in a bastion channel.**
+  - **Attaching a file in a GROUP CHAT sent the caption and silently dropped
+    the file** — four call sites (embed token, GIF, sticker, the composer's own
+    `sendCall` + Enter key) bypassed `handleChatSend` entirely.
+  - **A failed send still paid the quest** in two of the three surfaces.
+  - `send_messages` was checked one caller above the mutation.
+- **`1b` — one spelling, one question.** ⚠️ **`'channel'` was never passed by
+  anything**, so nine `context==='ch'||context==='channel'` checks were half
+  unreachable. Now `_chatKind` (accepts a Conversation OR the legacy string),
+  `_isBastionChat`, `_canModerateChat`, `_currentChatKind`.
+- **`1e` — mentions.** Four places answered "who does this ping" and all four
+  disagreed. `_mentionScan(text, b)` → `{users, roles, everyone, here}` and
+  `_mentionsMe(text, b)` are now the only answer.
+  - 🐞 **`_notifyMentionsInText` opened with `if (u==='everyone'||u==='here')
+    continue;`** — so `@everyone`, `@here` and every role mention notified
+    nobody, ever, while the `@here` chip read **"Notifying N online"**. That
+    count came from `_getOnlineMemberCount`, which returned `b.memberCount` —
+    the whole roster. Two untruths in one helper; **it is deleted.**
+  - 🐞 **The unread mention badge was `(msg.text||'').includes('@'+CU.username)`
+    — a case-SENSITIVE SUBSTRING test.** `@staw` lit up inside `@stawwastaken`,
+    `@Staw` lit nothing, and `@everyone`/`@here`/a role you hold never lit it.
+    Three notification-sound sites repeated it verbatim. All four now ask
+    `_mentionsMe`.
+  - 🐞 **`mention_everyone` had never been read by anything** — a registered
+    permission granted by six role templates and authorable in the role editor.
+    Now enforced **at the mutation** inside `sendMessage`. A role marked *"Let
+    anyone mention it"* (`mentionable`) is open to all, exactly as the toggle
+    promises; every other role and both mass mentions need the permission.
+    ⚠️ **`mentionable` defaults to `false`**, so in an existing bastion a role
+    mention now needs the permission until an owner ticks the box. That is the
+    toggle finally meaning what it says, and it is a live behaviour change.
+  - ⚠️ **@everyone DELIBERATELY SENDS NO NOTIFICATIONS.**
+    `FortizedSocial.notifyMention` is one relationship read + one notification
+    write + a socket emit **per recipient**; fanning `@everyone` across a
+    500-member bastion is ~1,000 round trips on the hottest write path in the
+    app, on a project already over quota. Direct `@user` notifies (still capped
+    at 5); `@everyone` / `@here` / roles light the badge and play the mention
+    sound **on each recipient's own client**, which costs nothing because every
+    client already receives the message. **All the copy says only that.**
+  - Multi-word role names now work: `@Head Moderator` no longer reads as a
+    mention of a member called `Head`, and a role called `Mod` cannot eat
+    `@Mod Team` (longest name first, in BOTH `_mentionScan` and `parseMD`).
+    ⚠️ In `parseMD` the text is already HTML-escaped, so the role name must be
+    `escapeHTML`'d before it is regex-escaped or it will never match.
+  - `@everyone`/`@here` now need a word boundary; the old bare `/@everyone/g`
+    drew a chip inside `@everyonelse`.
+  - **Clicking a mention opens the PERSON** (`showMiniProfilePreview`). It
+    called `_scrollToUserMsg` — jump to their last message — which is why the
+    one pill that names a human was the one pill that would not open them.
+    That helper is deleted too; the system-message mention already did the
+    expected thing.
+  - The autocomplete only offers what the mutation accepts (no mass options
+    without the permission, no un-mentionable roles), counts members without
+    crashing on a null role list, and **`_getSuggestableUsers` now matches
+    `_isMentionableHere`** — it used to offer every friend plus only those
+    bastion members who happened to hold a role, so a friend outside the
+    bastion was suggested and then rendered as flat grey text.
+  - 🐞 **`insert:'!'+cmd.name||cmd.trigger`** — `+` binds tighter than `||`, so
+    a command with no `name` inserted the literal `!undefined`. The `||` never
+    ran at all.
+  - Its twelve OS emoji are `_faIcon` calls now (bullhorn · bolt · medal ·
+    hashtag · microphone · file-lines · chart-line · chevron-down · pen ·
+    robot · circle-info · clock — every path already in the registry).
+- ⚠️ **`tools/check-icons.mjs` HAD A THIRD FAKE GREEN.** It only ever matched an
+  emoji sitting alone between two tags, so `icon:'📢'` in a data table — an
+  emoji whose entire job is to be an icon — counted as zero. **Twelve were
+  removed and the number did not move by one.** The guard now catches that
+  shape too (emoji-picker data excluded, where the emoji IS the content), and
+  the honest count is **171, not 114**. It went UP because the guard got
+  better. *A checker that reports zero is the one to distrust first.*
+- CSS baseline **unchanged at 10,713 parsed rules** (verified by reparse over a
+  local server — only existing declarations were edited, no block appended).
+  Token baseline re-stamped **3,226 → 3,225**.
+- ⚠️ **LIVE-VERIFY:** send in all three surfaces incl. attachments in a GROUP
+  CHAT; a channel message that trips the rate limit and automod; `@everyone`
+  with and without the permission; a multi-word role mention rendering as a
+  chip; the mention badge NOT lighting for `@stawwastaken`; clicking a mention
+  opening the profile; the autocomplete's icons and its `!command` insert.
 
 ### ✅ PHASE 0 — the design system, made real
 The point was to stop "the design doesn't match" being an argument and make it a

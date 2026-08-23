@@ -9966,6 +9966,11 @@ function _convChannel(idx) {
     kind: 'channel',
     id: idx,
     legacyCtx: 'ch',
+    // The role ladder this surface answers to. A DM and a group chat leave
+    // this null, which is what makes '@Moderators' plain text there rather
+    // than a ping nobody can act on.
+    bastion: b,
+    channel: ch,
     containerId: 'ch-msgs-' + idx,
     inputId: 'ch-input',
     pendingKey: 'bastion:' + bid + ':' + ch.name,
@@ -10024,6 +10029,98 @@ function _isBastionChat(ctx) { return _chatKind(ctx) === 'ch'; }
 // never answer yes here however much power the viewer holds elsewhere.
 function _canModerateChat(ctx) { return _isBastionChat(ctx) && hasPerm('manage_messages'); }
 
+/* ── Who does a message ping — rework phase 1e ─────────────────────────────
+   Four places answered this question and all four gave a different answer:
+
+   · parseMD drew the chips. Its @here chip literally read "Notifying N
+     online" — a sentence about something that has never happened.
+   · _notifyMentionsInText did the notifying, and opened with
+     `if (u === 'everyone' || u === 'here') continue;`. So @everyone, @here
+     and every role mention notified nobody, ever.
+   · The background channel listener decided the red mention badge with
+     `(msg.text||'').includes('@' + CU.username)` — a case-SENSITIVE
+     SUBSTRING test. '@staw' therefore lit up inside '@stawwastaken',
+     '@Staw' lit nothing at all, and @everyone/@here/a role you hold never
+     lit it either.
+   · Three notification-sound sites repeated that same substring test.
+
+   And `mention_everyone` has been a registered permission (line ~1914),
+   granted by six role templates, and authorable in the role editor, that
+   nothing in the app has ever read.
+
+   ⚠️ WHY @everyone DOES NOT SEND NOTIFICATIONS, and that is deliberate:
+   FortizedSocial.notifyMention is one relationship read + one notification
+   write + a socket emit PER RECIPIENT. Fanning @everyone across a
+   500-member bastion would be ~1,000 round trips on the hottest write path
+   in the app, on a project already over its egress quota. So a direct
+   @user notifies (still capped at 5 a message), while @everyone, @here and
+   role mentions light the red mention badge and play the mention sound on
+   each recipient's OWN client — which costs nothing, because every client
+   already receives the message. The copy says only that. */
+function _reEscape(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+// The one scan. Returns { users:[lowercase names], roles:[role objects],
+// everyone, here }. `b` is the bastion, where there is one; without it a
+// role can't be recognised and the text is read as users only.
+function _mentionScan(text, b) {
+  const out = { users: [], roles: [], everyone: false, here: false };
+  if (!text) return out;
+  let s = String(text);
+  if (s.indexOf('@') === -1) return out;
+
+  // Mass mentions first — they outrank a role that happens to be called
+  // "here", the same order parseMD draws them in.
+  s = s.replace(/(^|[^A-Za-z0-9_])@everyone(?![A-Za-z0-9_])/gi, (_m, p) => { out.everyone = true; return p; });
+  s = s.replace(/(^|[^A-Za-z0-9_])@here(?![A-Za-z0-9_])/gi, (_m, p) => { out.here = true; return p; });
+
+  // Then roles, longest name first. '@Head Moderator' must not be read as a
+  // mention of a member called 'Head', and a role called 'Mod' must not eat
+  // '@Mod Team'. A matched name is struck out so the user pass cannot read
+  // it twice — the same precedence parseMD gives a role chip.
+  const named = ((b && b.roles) || []).filter(r => r && r.name)
+    .slice().sort((x, y) => String(y.name).length - String(x.name).length);
+  for (const r of named) {
+    const pat = new RegExp('(^|[^A-Za-z0-9_])@' + _reEscape(r.name) + '(?![A-Za-z0-9_])', 'gi');
+    const stripped = s.replace(pat, '$1');
+    if (stripped !== s) {
+      s = stripped;
+      if (!out.roles.some(x => x.id === r.id)) out.roles.push(r);
+    }
+  }
+
+  const seen = new Set();
+  const re = /(^|[^A-Za-z0-9_])@([A-Za-z0-9_]{2,32})/g;
+  let m;
+  while ((m = re.exec(s))) {
+    const u = m[2].toLowerCase();
+    if (seen.has(u)) continue;
+    seen.add(u);
+    out.users.push(u);
+  }
+  return out;
+}
+
+// Does this message ping ME? Every unread badge and every mention sound
+// asks through here now, so they can never drift apart again.
+// ⚠️ Callers are responsible for skipping their OWN messages — a mention
+// of yourself in your own message is not a notification.
+function _mentionsMe(text, b) {
+  const me = String(CU?.username || '').toLowerCase();
+  if (!me || !text) return false;
+  const sc = _mentionScan(text, b);
+  if (sc.everyone || sc.here) return true;
+  if (sc.users.includes(me)) return true;
+  if (sc.roles.length && b) {
+    const mine = _bstRolesOf(b, CU.username).map(r => r.id);
+    if (sc.roles.some(r => mine.includes(r.id))) return true;
+  }
+  return false;
+}
+
+// The bastion a background listener is talking about. The listeners fire for
+// bastions that are NOT open, so curBastion is the wrong answer there.
+function _bastionAt(bIdx) { return CU?.bastions?.[bIdx] || null; }
+
 // Resolve a conversation from the legacy context string the composer and its
 // onclick attributes still speak. This is the seam between the old surfaces
 // and the one transport; it disappears when phase 1c gives them one composer.
@@ -10074,6 +10171,24 @@ async function sendMessage(conv) {
   // 6 · The bastion's own automod, where there is a bastion.
   if (conv.automod && conv.automod(text)) return;
 
+  // 6b · Mass and role mentions, checked AT THE MUTATION. mention_everyone
+  // has been a real, template-granted, editor-authorable permission all
+  // along and nothing has ever read it; the autocomplete hiding an option
+  // is a courtesy, not a guard.
+  // A role marked "Let anyone mention it" is open to everyone, exactly as
+  // the toggle promises. Everything else needs the permission.
+  if (conv.bastion) {
+    const sc = _mentionScan(text, conv.bastion);
+    const mass = sc.everyone || sc.here;
+    const gated = sc.roles.filter(r => !r.mentionable);
+    if ((mass || gated.length) && !_bstCan(conv.bastion, CU.username, 'mention_everyone', conv.channel)) {
+      toast(mass
+        ? 'You do not have permission to mention everyone here.'
+        : 'That role is not open to mentions.', 'error');
+      return;
+    }
+  }
+
   // 7 · Commit to the composer. A reply staged in another chat must not bleed
   // through, so it only counts when its chatKey still matches this surface.
   clearChatInput(inp);
@@ -10122,7 +10237,7 @@ async function sendMessage(conv) {
       // old paths bumped it before the send, so a failure still paid out.
       _trackSendMsgQuest();
       const mctx = conv.mentionCtx();
-      if (mctx) _notifyMentionsInText(text, mctx);
+      if (mctx) _notifyMentionsInText(text, mctx, conv.bastion);
     } catch (e) {
       console.error('[sendMessage:' + conv.kind + ']', e?.message);
       // Losing connectivity mid-flight is not a failure the user should see:
@@ -10776,18 +10891,16 @@ function _attachGCLiveEdits(gcId) {
 // their own 'dm' notification. Capped at 5 mentions per message; the
 // module side re-checks account existence and "did they block the
 // sender" before writing anything.
-function _notifyMentionsInText(text, ctx) {
+// ⚠️ DIRECT @user MENTIONS ONLY. @everyone, @here and roles are read by
+// _mentionScan and deliberately not fanned out here — see the phase 1e
+// note above _reEscape for the egress arithmetic behind that.
+function _notifyMentionsInText(text, ctx, b) {
   try {
     if (!text || text.indexOf('@') === -1) return;
     if (typeof FortizedSocial === 'undefined' || !FortizedSocial.notifyMention) return;
-    const seen = new Set();
-    const re = /(^|[^A-Za-z0-9_])@([A-Za-z0-9_]{2,32})/g;
-    let m, count = 0;
-    while ((m = re.exec(text)) && count < 5) {
-      const u = m[2].toLowerCase();
-      if (u === 'everyone' || u === 'here') continue;
-      if (seen.has(u) || u === (CU?.username || '')) continue;
-      seen.add(u); count++;
+    const me = String(CU?.username || '').toLowerCase();
+    const users = _mentionScan(text, b).users.filter(u => u !== me).slice(0, 5);
+    for (const u of users) {
       Promise.resolve(FortizedSocial.notifyMention(CU.username, u, { preview: String(text).slice(0, 80), ...(ctx || {}) })).catch(() => {});
     }
   } catch (_) {}
@@ -11008,8 +11121,7 @@ function _startBgChannelListeners(bIdx) {
       // Only track unread if this is NOT the active channel, and NOT from us
       if (curBastion === bIdx && curChannel === chIdx) return;
       if (msg.from === CU?.username) return;
-      const isMention = CU?.username ? (msg.text || '').includes('@' + CU.username) : false;
-      markChannelUnread(bIdx, chIdx, isMention);
+      markChannelUnread(bIdx, chIdx, _mentionsMe(msg.text, _bastionAt(bIdx)));
     });
     if (unsub) _bgChListeners.push(unsub);
   });
@@ -12076,7 +12188,7 @@ async function loadChannelMessages(idx) {
         // the bottom, else _notifyNewMsg shows the "New Messages" pill.
         if (msg.from === CU.username) scrollBottom('ch-msgs-'+idx, true);
         else _notifyNewMsg('ch-msgs-'+idx);
-        if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('bastion',b.globalId||b.name) && (!el._loadedAt || Date.now() - el._loadedAt > 1000)){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
+        if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('bastion',b.globalId||b.name) && (!el._loadedAt || Date.now() - el._loadedAt > 1000)){playNotifSound(_mentionsMe(msg.text, b)?'mention':'message');}
       }
     });
     // Start polling to enable real-time message sync across sessions.
@@ -12156,8 +12268,7 @@ async function _loadAnnouncementRoom(wrap, b, ch, idx) {
     _loadAnnAvatar(msg.from, mid);
     // Notification sound (parity with DM/GC/channel) — respect mute/block
     if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from) && !isConvoMuted('bastion', b.globalId||b.name)) {
-      const isMention = (msg.text||'').includes('@'+CU.username);
-      playNotifSound(isMention ? 'mention' : 'message');
+      playNotifSound(_mentionsMe(msg.text, b) ? 'mention' : 'message');
     }
   });
 }
@@ -19135,7 +19246,7 @@ function initFortizedUXResilience() {
                   appendMessage(msgsEl, msg, 'ch', lastAuthor);
                   if (msg.from === CU.username) scrollBottom('ch-msgs-' + curChannel, true);
                   else _notifyNewMsg('ch-msgs-' + curChannel);
-                  if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from)) { const isMention = (msg.text||'').includes('@'+CU.username); playNotifSound(isMention ? 'mention' : 'message'); }
+                  if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from) && !isUserMutedLocal(msg.from)) { playNotifSound(_mentionsMe(msg.text, _bastionAt(curBastion)) ? 'mention' : 'message'); }
                 }
               }
             }
@@ -42184,17 +42295,42 @@ function parseMD(s) {
   });
 
   // ── LAYER 2: Mentions (only in plain text, not inside HTML) ──
+  // Order here matches _mentionScan exactly — mass, then roles, then users —
+  // so what gets DRAWN and what gets COUNTED can never disagree.
+  // ⚠️ Both mass chips need a word boundary. Without one '@everyonelse' drew
+  // an @everyone chip with a stray tail beside it.
   // @everyone
-  s = s.replace(/@everyone/g, function(m) {
-    const h = '<span class="mention mention-everyone" onmouseenter="_showMentionBadge(this,\'Mass Mention\')" onmouseleave="_hideMentionBadge(this)">@everyone<span class="mention-badge">Mass Mention</span></span>';
-    _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00';
+  s = s.replace(/(^|[^A-Za-z0-9_])@everyone(?![A-Za-z0-9_])/g, function(_m, p1) {
+    // Says who it addresses, not what it sends. The old label read
+    // "Notifying N online" over a mention that notified nobody.
+    const h = '<span class="mention mention-everyone" onmouseenter="_showMentionBadge(this,\'Everyone in this bastion\')" onmouseleave="_hideMentionBadge(this)">@everyone<span class="mention-badge">Everyone in this bastion</span></span>';
+    _mdSlots.push(h); return p1 + '\x00MD'+(_mdSlots.length-1)+'\x00';
   });
   // @here
-  s = s.replace(/@here/g, function() {
-    const onlineCount = _getOnlineMemberCount();
-    const h = '<span class="mention mention-here" onmouseenter="_showMentionBadge(this,\'Notifying '+onlineCount+' online\')" onmouseleave="_hideMentionBadge(this)">@here<span class="mention-badge">Notifying '+onlineCount+' online</span></span>';
-    _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00';
+  s = s.replace(/(^|[^A-Za-z0-9_])@here(?![A-Za-z0-9_])/g, function(_m, p1) {
+    const h = '<span class="mention mention-here" onmouseenter="_showMentionBadge(this,\'Everyone here right now\')" onmouseleave="_hideMentionBadge(this)">@here<span class="mention-badge">Everyone here right now</span></span>';
+    _mdSlots.push(h); return p1 + '\x00MD'+(_mdSlots.length-1)+'\x00';
   });
+  // Roles whose name carries a space. The @([\w]+) pass below can never see
+  // them, so '@Head Moderator' rendered as flat grey text while the
+  // autocomplete cheerfully inserted it. Longest name first, so a role
+  // called 'Mod' cannot eat '@Mod Team'.
+  if (curBastion !== null) {
+    const _mb = CU?.bastions?.[curBastion];
+    const _multiRoles = ((_mb && _mb.roles) || [])
+      .filter(r => r && r.name && /\s/.test(r.name))
+      .slice().sort((x, y) => String(y.name).length - String(x.name).length);
+    for (const r of _multiRoles) {
+      // ⚠️ `s` is already HTML-escaped at this point, so the role name has to
+      // be escaped the SAME way before it can match, then regex-escaped.
+      const safe = escapeHTML(r.name);
+      const col = r.color || '#60a5fa';
+      const chip = '<span class="mention mention-role" style="background:'+col+'18;color:'+col+';" onmouseenter="_showRolePreview(event,this,\''+safe+'\')" onmouseleave="_hidePreview()">@'+safe+'</span>';
+      s = s.replace(new RegExp('(^|[^A-Za-z0-9_])@' + _reEscape(safe) + '(?![A-Za-z0-9_])', 'g'), function(_m, p1) {
+        _mdSlots.push(chip); return p1 + '\x00MD'+(_mdSlots.length-1)+'\x00';
+      });
+    }
+  }
   // @user and @role mentions
   s = s.replace(/@([\w]+)/g, function(match, name) {
     if (name === 'everyone' || name === 'here') return match;
@@ -42229,7 +42365,13 @@ function parseMD(s) {
     }
     const styleAttr = ' style="background:'+mentionColour+'22;color:'+mentionColour+';"';
     const cls = isSelf ? 'mention mention-user mention-self' : 'mention mention-user';
-    h = '<span class="'+cls+'"'+styleAttr+' onmouseenter="_showUserMentionPreview(event,this,\''+escapeHTML(name)+'\')" onmouseleave="_hidePreview()" onclick="_scrollToUserMsg(\''+escapeHTML(name)+'\')">@'+escapeHTML(name)+'</span>';
+    // ⚠️ Clicking a mention opens the PERSON. It used to call
+    // _scrollToUserMsg, which jumped to their last message instead — so the
+    // one pill in the app that names a human was the one pill that would not
+    // open them, while the system-message mention (see appendMessage) already
+    // did the expected thing. stopPropagation so the click does not also
+    // reach the message row underneath.
+    h = '<span class="'+cls+'"'+styleAttr+' onmouseenter="_showUserMentionPreview(event,this,\''+escapeHTML(name)+'\')" onmouseleave="_hidePreview()" onclick="event.stopPropagation();showMiniProfilePreview(\''+escapeHTML(name)+'\',this)">@'+escapeHTML(name)+'</span>';
     _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00';
   });
   // #room mentions — only match standalone #word, not inside placeholders
@@ -42334,11 +42476,11 @@ function _hideMentionBadge(el) {
   if (badge) badge.style.opacity = '0';
 }
 
-function _getOnlineMemberCount() {
-  if (curBastion === null) return '?';
-  const b = CU?.bastions?.[curBastion];
-  return b?.memberCount || 1;
-}
+// ⚠️ _getOnlineMemberCount is DELETED, not left dead. It returned
+// b.memberCount — the whole roster — under a name that said "online", and
+// its one caller printed that as "Notifying N online" on a mention that
+// notified nobody. Two untruths in one helper; leaving it defined only
+// invites a third caller.
 
 // ════════════════════════════════════════════
 // MENTION HOVER PREVIEWS
@@ -42504,13 +42646,10 @@ function _hidePreview() {
   document.getElementById('mention-preview-panel')?.remove();
 }
 
-function _scrollToUserMsg(username) {
-  // Find the last message from this user in the visible chat
-  const msgs = document.querySelectorAll('.msg-row');
-  let last = null;
-  msgs.forEach(m => { if (m.dataset.from === username) last = m; });
-  if (last) { last.scrollIntoView({behavior:'smooth',block:'center'}); last.style.background = 'rgba(96,165,250,.08)'; setTimeout(() => last.style.background = '', 1500); }
-}
+// ⚠️ _scrollToUserMsg is DELETED. Its one caller — the @user mention chip —
+// now opens the person's profile like every other name in the app. Left
+// defined, it is a ready-made second answer to "what does clicking a name
+// do", and this phase exists to leave exactly one.
 
 // ════════════════════════════════════════════
 // STATUS INDICATOR AS DOT
@@ -59287,22 +59426,31 @@ function _handleSmartSuggestion(ta) {
     // (parseBioMD strips @everyone/@here/@role at render anyway)
     // so we hide them from the autocomplete too — surfacing
     // un-rendered suggestions would just confuse people.
-    const isDM = ta.id === 'dm-input' || ta.id === 'gc-input';
+    const isPrivate = ta.id === 'dm-input' || ta.id === 'gc-input';
     const isBio = ta.id === 'bio-input';
-    const allowMassAndRoles = !isDM && !isBio;
-    if (allowMassAndRoles) {
-      // @everyone and @here
-      if ('everyone'.startsWith(query)) _sugResults.push({type:'special',label:'everyone',desc:'Notify all members',icon:'📢',insert:'@everyone'});
-      if ('here'.startsWith(query)) _sugResults.push({type:'special',label:'here',desc:'Notify online members',icon:'📍',insert:'@here'});
-      // Roles
-      if (curBastion !== null) {
-        const b = CU?.bastions?.[curBastion];
-        (b?.roles||[]).forEach(r => {
-          if (r.name.toLowerCase().startsWith(query) || r.name.toLowerCase().includes(query)) {
-            _sugResults.push({type:'role',label:r.name,desc:`${(Object.entries(b.memberRoles||{}).filter(([_,rids])=>rids.includes(r.id)).length)||0} members`,icon:'🎖',color:r.color||'#60a5fa',insert:'@'+r.name});
-          }
-        });
+    const allowMassAndRoles = !isPrivate && !isBio;
+    if (allowMassAndRoles && curBastion !== null) {
+      const b = CU?.bastions?.[curBastion];
+      const ch = b?.channels?.[curChannel];
+      // ⚠️ Only offer what the mutation will actually accept. sendMessage
+      // refuses a mass mention without mention_everyone, and a list that
+      // suggests it anyway is a button that exists to say no.
+      const canMass = !!b && _bstCan(b, CU.username, 'mention_everyone', ch);
+      if (canMass) {
+        // The copy describes the audience. It does not promise a push
+        // notification, because these light the mention badge rather than
+        // writing one notification row per member.
+        if ('everyone'.startsWith(query)) _sugResults.push({type:'special',label:'everyone',desc:'Everyone in this bastion',icon:_faIcon('bullhorn',14),insert:'@everyone'});
+        if ('here'.startsWith(query)) _sugResults.push({type:'special',label:'here',desc:'Everyone here right now',icon:_faIcon('bolt',14),insert:'@here'});
       }
+      (b?.roles||[]).forEach(r => {
+        if (!r || !r.name) return;
+        if (!r.mentionable && !canMass) return;
+        if (r.name.toLowerCase().startsWith(query) || r.name.toLowerCase().includes(query)) {
+          const held = Object.values(b.memberRoles||{}).filter(rids => (rids||[]).includes(r.id)).length;
+          _sugResults.push({type:'role',label:r.name,desc:held === 1 ? '1 member' : held + ' members',icon:_faIcon('medal',14),color:r.color||'#60a5fa',insert:'@'+r.name});
+        }
+      });
     }
     // Users — from member list or friends
     const users = _getSuggestableUsers();
@@ -59323,14 +59471,15 @@ function _handleSmartSuggestion(ta) {
       (b?.channels||[]).forEach(ch => {
         if (ch.name.toLowerCase().startsWith(query) || ch.name.toLowerCase().includes(query)) {
           const typeLabel = {text:'Text Channel',voice:'Party Channel',forum:'Wall Channel',announcement:'Announcement Channel',poll:'Poll Channel'}[ch.type]||'Channel';
-          _sugResults.push({type:'room',label:ch.name,desc:typeLabel,icon:ch.type==='voice'?'🎉':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':'#',insert:'#'+ch.name});
+          const glyph = {voice:'microphone',forum:'file-lines',announcement:'bullhorn',poll:'chart-line'}[ch.type] || 'hashtag';
+          _sugResults.push({type:'room',label:ch.name,desc:typeLabel,icon:_faIcon(glyph,14),insert:'#'+ch.name});
         }
       });
       // Categories
       (b?.categories||[]).forEach(cat => {
         if (cat.name.toLowerCase().startsWith(query) || cat.name.toLowerCase().includes(query)) {
           const roomCount = (b.channels||[]).filter(ch=>ch.categoryId===cat.id).length;
-          _sugResults.push({type:'category',label:cat.name,desc:`Category · ${roomCount} rooms`,icon:'📁',insert:'#'+cat.name});
+          _sugResults.push({type:'category',label:cat.name,desc:`Category · ${roomCount === 1 ? '1 room' : roomCount + ' rooms'}`,icon:_faIcon('chevron-down',14),insert:'#'+cat.name});
         }
       });
     }
@@ -59341,10 +59490,11 @@ function _handleSmartSuggestion(ta) {
     // in autocomplete would teach a syntax that does nothing.
     if (ta.id === 'bio-input') { _hideSuggestPanel(); return false; }
     // Format suggestions
+    const _pen = _faIcon('pen',14);
     const formats = [
-      {label:'Title1',desc:'Large heading: /Your Title/',icon:'📝',insert:'/'},
-      {label:'Title2',desc:'Medium heading: //Your Title//',icon:'📝',insert:'//'},
-      {label:'Subtitle',desc:'Small uppercase: ///Your Text///',icon:'📝',insert:'///'},
+      {label:'Title1',desc:'Large heading: /Your Title/',icon:_pen,insert:'/'},
+      {label:'Title2',desc:'Medium heading: //Your Title//',icon:_pen,insert:'//'},
+      {label:'Subtitle',desc:'Small uppercase: ///Your Text///',icon:_pen,insert:'///'},
     ];
     formats.forEach(f => {
       if (f.label.toLowerCase().startsWith(query) || f.label.toLowerCase().includes(query)) {
@@ -59361,11 +59511,16 @@ function _handleSmartSuggestion(ta) {
       const commands = [];
       bots.forEach(bot => {
         (bot.commands||[]).forEach(cmd => {
-          commands.push({label:cmd.name||cmd.trigger,desc:(bot.name||'Bot')+' — '+(cmd.description||cmd.response||'').slice(0,60),icon:'🤖',insert:'!'+cmd.name||cmd.trigger});
+          // ⚠️ This read `'!'+cmd.name||cmd.trigger` — + binds tighter than ||,
+          // so a command with no `name` inserted the literal '!undefined'
+          // instead of falling back to its trigger. The || never ran at all.
+          const called = cmd.name || cmd.trigger;
+          if (!called) return;
+          commands.push({label:called,desc:(bot.name||'Bot')+' · '+(cmd.description||cmd.response||'').slice(0,60),icon:_faIcon('robot',14),insert:'!'+called});
         });
       });
       // Add built-in commands
-      [{label:'help',desc:'Show available commands',icon:'❓'},{label:'ping',desc:'Check bot response time',icon:'🏓'},{label:'info',desc:'Show bot information',icon:'ℹ️'}].forEach(c => {
+      [{label:'help',desc:'Show available commands',icon:_faIcon('circle-info',14)},{label:'ping',desc:'Check bot response time',icon:_faIcon('clock',14)},{label:'info',desc:'Show bot information',icon:_faIcon('circle-info',14)}].forEach(c => {
         if (c.label.startsWith(query)) commands.push({...c, type:'command', insert:'!'+c.label});
       });
       commands.forEach(c => {
@@ -59381,18 +59536,31 @@ function _handleSmartSuggestion(ta) {
   return true;
 }
 
+// The people THIS surface can actually mention.
+// ⚠️ Must agree with _isMentionableHere, which decides whether the chip
+// renders at all. It previously offered every friend plus only those
+// bastion members who happened to hold a role — so a friend outside the
+// bastion was suggested and then drew as flat grey text, and a member with
+// no roles could not be found at all.
+// Reads in-memory rosters only. Never getUsers(), which scans the whole
+// users table.
 function _getSuggestableUsers() {
   const users = new Set();
-  // Current bastion members
+  const add = n => { if (n) users.add(n); };
   if (curBastion !== null) {
     const b = CU?.bastions?.[curBastion];
-    if (b?.owner) users.add(b.owner);
-    Object.keys(b?.memberRoles||{}).forEach(u => users.add(u));
+    add(b?.owner);
+    (b?.members || []).forEach(add);
+    Object.keys(b?.memberRoles || {}).forEach(add);
+  } else if (typeof curGC !== 'undefined' && curGC) {
+    const gc = (CU?.groupChats || []).find(g => g && String(g.id) === String(curGC));
+    (gc?.members || []).forEach(add);
+  } else if (curDM) {
+    add(curDM);
+  } else {
+    (CU?.friends || []).forEach(add);
   }
-  // Friends
-  (CU?.friends||[]).forEach(f => users.add(f));
-  // Self
-  if (CU?.username) users.add(CU.username);
+  add(CU?.username);
   return [...users];
 }
 
@@ -59427,7 +59595,9 @@ function _renderSuggestPanel(ta) {
 
     let badgeHTML = '';
     if (r.type === 'role' && r.color) badgeHTML = `<span class="sp-badge" style="background:${r.color}18;color:${r.color};border:1px solid ${r.color}44;">Role</span>`;
-    else if (r.type === 'special') badgeHTML = `<span class="sp-badge" style="background:rgba(255,249,62,.1);color:var(--accent);border:1px solid rgba(255,249,62,.2);">Special</span>`;
+    // "Special" named nothing. This badge marks the two mentions that reach
+    // the whole room rather than one person, so it says that.
+    else if (r.type === 'special') badgeHTML = `<span class="sp-badge" style="background:color-mix(in srgb, var(--accent) 12%, transparent);color:var(--accent);border:1px solid color-mix(in srgb, var(--accent) 24%, transparent);">Everyone</span>`;
 
     row.innerHTML = `${iconHTML}<div style="flex:1;min-width:0;"><div class="sp-label">${escapeHTML(r.label)}</div><div class="sp-sub">${escapeHTML(r.desc||'')}</div></div>${badgeHTML}`;
     panel.appendChild(row);

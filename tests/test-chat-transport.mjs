@@ -32,6 +32,9 @@ const WANT = ['function _chatMsgId()', 'function _convDM(peer)', 'function _conv
   'function _convChannel(idx)', 'function _convFor(context, chIdx)',
   'function _chatKind(ctx)', 'function _currentChatKind()', 'function _isBastionChat(ctx)',
   'function _canModerateChat(ctx)',
+  'function _reEscape(s)', 'function _mentionScan(text, b)', 'function _mentionsMe(text, b)',
+  'function _bastionAt(bIdx)', 'function _bstRolesOf(b, user)',
+  'function _notifyMentionsInText(text, ctx, b)',
   'async function sendMessage(conv)', 'async function sendDM()',
   'async function sendGCMessage()', 'async function sendChannelMsg(idx)'];
 const code = WANT.map(extract).join('\n\n');
@@ -56,7 +59,10 @@ const env = {
   isFortizedOfficialAccount: n => n === 'fortized',
   isSuperAdmin: () => S.CU?.username === 'staw',
   isUserBlocked: n => env.blockedList?.includes(n),
-  _bstCan: (b, u, perm, ch) => env.canSend !== false,
+  // mention_everyone is asked separately from send_messages, so the two are
+  // controlled separately here — a member who may post is not thereby a
+  // member who may ping the whole bastion.
+  _bstCan: (b, u, perm, ch) => perm === 'mention_everyone' ? env.canMassMention === true : env.canSend !== false,
   hasPerm: () => env.canModerate === true,
   autoModCheck: (t, b) => env.bastionAutomodBlocks === true && (L.toasts.push(['Links are disabled in this bastion','error']), true),
 
@@ -87,13 +93,13 @@ const env = {
   _isOnlineForSend: () => env.online !== false,
   _sendWithAutoRetry: fn => fn(),
   _trackSendMsgQuest: () => { L.quest++; },
-  _notifyMentionsInText: (t, ctx) => L.mentions.push(ctx),
   _processBotCommands: (t) => L.bots.push(t),
 
   FortizedSocial: {
     sendDMMessage: (...a) => { if (env.sendThrows) throw new Error('boom'); L.persisted.push(['dm', ...a]); return null; },
     sendBastionChannelMessage: (...a) => { if (env.sendThrows) throw new Error('boom'); L.persisted.push(['ch', ...a]); return null; },
     socketEmit: (ev, p) => L.emitted.push(p),
+    notifyMention: (from, to, ctx) => { L.mentions.push({ from, to, ctx }); },
   },
   firebase: { database: () => ({ ref: p => ({ set: v => { if (env.sendThrows) throw new Error('boom'); L.persisted.push(['gc', p, v]); } }) }) },
 };
@@ -103,6 +109,7 @@ const run = new Function(...names,
   'var ' + MUTABLE.join(', ') + ';\n' + code +
   '\n; return { sendDM, sendGCMessage, sendChannelMsg,' +
   '  _chatKind, _currentChatKind, _isBastionChat, _canModerateChat,' +
+  '  _mentionScan, _mentionsMe,' +
   '  _set: s => { ' + MUTABLE.map(m => m + ' = s.' + m + ';').join(' ') + ' },' +
   '  _get: () => ({ ' + MUTABLE.join(', ') + ' }) };'
 )(...names.map(n => env[n]));
@@ -119,7 +126,7 @@ function base() {
     replyingTo: null, _outlineMode: false,
   };
   Object.assign(env, {
-    draft: 'hello there', chatKey: null, blockedList: [], canSend: true,
+    draft: 'hello there', chatKey: null, blockedList: [], canSend: true, canMassMention: false,
     bastionAutomodBlocks: false, safety: null, automod: {}, online: true, sendThrows: false,
   });
 }
@@ -162,11 +169,13 @@ check('successful send counts once', L.quest === 1, `quest=${L.quest}`);
 // 5 · Mentions: GC and channel notify, a DM deliberately does not.
 base(); env.draft = 'hey @leafen';
 await go('sendChannelMsg', 0);
-check('channel: mentions notify with bastion context', L.mentions[0]?.channel === 'general', JSON.stringify(L.mentions));
+check('channel: mentions notify with bastion context',
+  L.mentions[0]?.to === 'leafen' && L.mentions[0]?.ctx?.channel === 'general', JSON.stringify(L.mentions));
 
 base(); S.curGC = 'gc7'; env.draft = 'hey @leafen';
 await go('sendGCMessage');
-check('gc: mentions notify with gc context', L.mentions[0]?.gc === 'gc7', JSON.stringify(L.mentions));
+check('gc: mentions notify with gc context',
+  L.mentions[0]?.to === 'leafen' && L.mentions[0]?.ctx?.gc === 'gc7', JSON.stringify(L.mentions));
 
 base(); S.curDM = 'leafen'; env.draft = 'hey @someoneelse';
 await go('sendDM');
@@ -265,6 +274,92 @@ base(); S.curGC = 'gc7'; run._set(S);
 check('current kind: a group chat reads as gc', run._currentChatKind() === 'gc', run._currentChatKind());
 base(); run._set(S);
 check('current kind: neither open reads as ch', run._currentChatKind() === 'ch', run._currentChatKind());
+
+// 15 · Phase 1e: one mention resolver.
+// A bastion with a role ladder, so roles and role-holders can be told apart.
+const RB = {
+  name: 'Keep', globalId: 'g1', channels: [{ name: 'general' }],
+  roles: [
+    { id: 'r1', name: 'Mod', color: '#f00' },
+    { id: 'r2', name: 'Mod Team', color: '#0f0', mentionable: true },
+    { id: 'r3', name: 'Head Moderator', color: '#00f' },
+  ],
+  memberRoles: { staw: ['r2'] },
+};
+const scan = (t, b) => { run._set(S); return run._mentionScan(t, b); };
+const mine = (t, b) => { run._set(S); return run._mentionsMe(t, b); };
+
+base();
+check('scan: @everyone and @here are recognised',
+  scan('hey @everyone and @here').everyone === true && scan('hey @everyone and @here').here === true, '');
+
+// ⚠️ The old parseMD matched a bare /@everyone/ with no boundary at all.
+check('scan: @everyonelse is NOT a mass mention',
+  scan('@everyonelse').everyone === false && scan('an@everyone').everyone === false,
+  JSON.stringify(scan('@everyonelse')));
+
+check('scan: usernames come back lowercased and deduped',
+  scan('@Leafen @leafen @joyster').users.join() === 'leafen,joyster',
+  JSON.stringify(scan('@Leafen @leafen @joyster').users));
+
+// The headline defect: a role called 'Mod' must not swallow '@Mod Team', and
+// '@Head Moderator' must not read as a mention of a member called 'Head'.
+check('scan: the longest role name wins',
+  scan('ping @Mod Team now', RB).roles.map(r => r.id).join() === 'r2',
+  JSON.stringify(scan('ping @Mod Team now', RB).roles.map(r => r.name)));
+check('scan: a multi-word role is not read as a user',
+  scan('@Head Moderator help', RB).roles.map(r => r.id).join() === 'r3'
+  && scan('@Head Moderator help', RB).users.length === 0,
+  JSON.stringify(scan('@Head Moderator help', RB)));
+check('scan: a role name outranks a same-named user',
+  scan('@Mod please', RB).roles.map(r => r.id).join() === 'r1'
+  && scan('@Mod please', RB).users.length === 0, '');
+check('scan: with no bastion a role name is only a user',
+  scan('@Mod please').users.join() === 'mod' && scan('@Mod please').roles.length === 0, '');
+
+// _mentionsMe — the four substring tests it replaces.
+base();
+check('mentionsMe: @staw inside @stawwastaken does NOT ping staw',
+  mine('hello @stawwastaken', RB) === false, 'the case-sensitive substring bug is back');
+check('mentionsMe: case does not matter', mine('hey @STAW', RB) === true, '');
+check('mentionsMe: a plain other name does not ping', mine('hey @leafen', RB) === false, '');
+check('mentionsMe: @everyone and @here ping everybody',
+  mine('@everyone', RB) === true && mine('@here', RB) === true, '');
+check('mentionsMe: a role I hold pings me', mine('@Mod Team up', RB) === true, '');
+check('mentionsMe: a role I do NOT hold does not', mine('@Head Moderator up', RB) === false, '');
+
+// The permission, enforced at the mutation.
+base(); S.CU.bastions = [RB]; env.draft = 'listen up @everyone';
+await go('sendChannelMsg', 0);
+check('mass mention without mention_everyone is refused at the mutation',
+  L.persisted.length === 0 && /permission/.test(L.toasts[0]?.[0] || ''), JSON.stringify(L.toasts));
+
+base(); S.CU.bastions = [RB]; env.draft = 'listen up @everyone'; env.canMassMention = true;
+await go('sendChannelMsg', 0);
+check('mass mention with the permission goes through', L.persisted.length === 1, JSON.stringify(L.toasts));
+
+base(); S.CU.bastions = [RB]; env.draft = 'ping @Head Moderator';
+await go('sendChannelMsg', 0);
+check('a role that is not open to mentions is refused',
+  L.persisted.length === 0 && /not open to mentions/.test(L.toasts[0]?.[0] || ''), JSON.stringify(L.toasts));
+
+base(); S.CU.bastions = [RB]; env.draft = 'ping @Mod Team';
+await go('sendChannelMsg', 0);
+check('a role marked "let anyone mention it" needs no permission', L.persisted.length === 1, JSON.stringify(L.toasts));
+
+// ⚠️ The egress rule: a mass mention must not fan out one write per member.
+base(); S.CU.bastions = [RB]; env.draft = 'hi @everyone'; env.canMassMention = true;
+await go('sendChannelMsg', 0);
+check('@everyone writes NO per-member notifications', L.mentions.length === 0, JSON.stringify(L.mentions));
+
+base(); env.draft = '@a1 @b2 @c3 @d4 @e5 @f6 @g7';
+await go('sendChannelMsg', 0);
+check('direct mentions stay capped at 5 a message', L.mentions.length === 5, String(L.mentions.length));
+
+base(); env.draft = 'me: @staw and @leafen';
+await go('sendChannelMsg', 0);
+check('mentioning yourself notifies nobody but the other person',
+  L.mentions.length === 1 && L.mentions[0].to === 'leafen', JSON.stringify(L.mentions));
 
 // ── Report ────────────────────────────────────────────────────────────────
 let pass = 0;

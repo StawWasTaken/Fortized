@@ -323,12 +323,15 @@ textarea::-webkit-scrollbar-thumb,[contenteditable]::-webkit-scrollbar-thumb,sel
 [data-spoiler-mode="always"] .ftz-spoiler-media::before,[data-spoiler-mode="always"] .ftz-spoiler-media__tag{opacity:0;}
 /* ── Smart Suggestion Panel ──── */
 .suggest-panel{position:fixed;background:var(--glass-heavy);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);border:1px solid var(--glass-border);border-radius:12px;padding:6px;z-index:9500;box-shadow:0 12px 40px rgba(0,0,0,.7);min-width:240px;max-width:360px;max-height:300px;overflow-y:auto;animation:ctxIn .12s cubic-bezier(.22,1,.36,1);}
-.suggest-panel .sp-header{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:2px 8px 5px;}
+.suggest-panel .sp-header{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:2px 8px 5px;}
 .suggest-panel .sp-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .1s;}
-.suggest-panel .sp-item:hover,.suggest-panel .sp-item.selected{background:rgba(255,249,62,.1);}
-.suggest-panel .sp-item .sp-icon{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
-.suggest-panel .sp-item .sp-label{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.7);}
-.suggest-panel .sp-item .sp-sub{font-size:10px;color:rgba(255,255,255,.3);}
+.suggest-panel .sp-item:hover,.suggest-panel .sp-item.selected{background:color-mix(in srgb, var(--accent) 12%, transparent);}
+/* The glyphs inside are inline SVGs painted with fill:currentColor, so this
+   colour is what draws them — a bare .sp-icon left them inheriting whatever
+   the panel happened to sit on. */
+.suggest-panel .sp-item .sp-icon{width:26px;height:26px;border-radius:50%;background:color-mix(in srgb, var(--text) 8%, transparent);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.suggest-panel .sp-item .sp-label{font-size:12.5px;font-weight:600;color:var(--text);}
+.suggest-panel .sp-item .sp-sub{font-size:10px;color:var(--muted);}
 .suggest-panel .sp-item .sp-badge{font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:auto;flex-shrink:0;}
 /* ── Message Outline Mode ──── */
 .msg-outline{background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px 20px;margin:4px 0;}

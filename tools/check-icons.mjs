@@ -98,6 +98,19 @@ for (const [f, text] of Object.entries(src)) {
       const g = m[1] || m[2] || '';
       if (EMOJI.test(g)) emojiHits.push({ file: f, line: i + 1, glyph: g, ctx: ln.trim().slice(0, 110) });
     }
+    // ⚠️ SHAPE 2, added after phase 1e: an emoji assigned to a field literally
+    // named `icon` or `glyph`. The rule above only ever saw emoji sitting
+    // alone between two tags, so a whole class of violation — a data table of
+    // rows each carrying `icon:'📢'`, which is then rendered INTO an icon slot
+    // — was reported as zero. Twelve of them were fixed in the mention
+    // autocomplete and this guard's count did not move by one.
+    // A checker that reports zero is the one to distrust first.
+    // Emoji-picker data is excluded: there the emoji IS the content, not a
+    // stand-in for an icon.
+    if (/emojis\s*:/.test(ln)) return;
+    for (const m of ln.matchAll(/\b(?:icon|glyph)\s*:\s*['"`]([^'"`]{1,5})['"`]/g)) {
+      if (EMOJI.test(m[1])) emojiHits.push({ file: f, line: i + 1, glyph: m[1], ctx: ln.trim().slice(0, 110) });
+    }
   });
 }
 

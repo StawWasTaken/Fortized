@@ -3955,9 +3955,7 @@ async function _sendEmbedTokenNow(inputId, context, token) {
   if (wasCE) { inp.innerHTML = ''; inp.textContent = token; }
   else { inp.value = token; }
   try {
-    if (context === 'dm') await sendDM();
-    else if (context === 'gc') await sendGCMessage();
-    else await handleChatSend('ch', (typeof curChannel !== 'undefined' ? curChannel : 0));
+    await handleChatSend(context, context === 'ch' ? (typeof curChannel !== 'undefined' ? curChannel : 0) : undefined);
   } catch (e) { console.warn('[embed-token send]', e); }
   setTimeout(() => {
     if (wasCE) inp.innerHTML = savedHTML || '';
@@ -9866,133 +9864,255 @@ function _recentAutomodContext(containerEl, limit = 20) {
   return out;
 }
 
-async function sendDM() {
-  _stopTypingBroadcast();
-  const inp=document.getElementById('dm-input');
-  if (!inp||!curDM) return;
-  // Guard: official Fortized accounts are broadcast-only — only superadmins
-  // can chat back. The chatbar is normally replaced with a lock notice for
-  // everyone else, but enforce here too in case the input was reached
-  // through some other path.
-  if (isFortizedOfficialAccount(curDM) && !isSuperAdmin()) {
-    toast('This chat is reserved for official Fortized notifications.', 'info');
-    return;
-  }
-  // Guard: blocks sever DMs in both directions. The composer is already
-  // replaced by a lock notice, but enforce here too in case the input
-  // was reached through another path (drafts, forward, greeting chips).
-  if (isUserBlocked(curDM)) {
-    toast('You blocked this user. Unblock them to send messages.', 'info');
-    return;
-  }
-  if (window._dmBlockedPeer === curDM) {
-    toast("You can't send messages to this user.", 'info');
-    return;
-  }
-  // Guard: automod chat suspension. Blocks the user from sending in every
-  // channel/DM until the cooldown elapses.
-  if (isViewerChatSuspended()) {
-    const _left = Math.ceil((CU.chatSuspendedUntil - Date.now()) / 60000);
-    toast('Your chat is suspended for safety reasons. Try again in ' + _left + ' min.', 'error');
-    return;
-  }
-  let text=preprocessMessageText(_readChatInput(inp));
-  if (!text && !window._pendingAttachment) return;
-  
-  // Get recent messages for context (tail only — see _recentAutomodContext)
-  const dmMsgsEl = document.getElementById('dm-msgs');
-  const recentMsgs = _recentAutomodContext(dmMsgsEl);
+/* ═══════════════════════════════════════════════════════════════════════════
+   ONE CHAT TRANSPORT — rework phase 1a
+   ───────────────────────────────────────────────────────────────────────────
+   There were three send paths — sendDM, sendGCMessage, sendChannelMsg — each
+   with its own guards, its own message shape and its own idea of what happens
+   after the row is written. That divergence was never cosmetic. It meant:
 
-  // Run automod check
-  const automod = runAutomod(text, recentMsgs);
-  if (automod.isRephrased) {
-    text = automod.rephrased;
-    // Show toast that message was rephrased
-    toast('🔄 Message rephrased for safety', 'info');
-  } else if (automod.warning) {
-    toast(automod.warning, 'warning');
-  }
-  
-  // Add rephrased + threat flags to message if needed. Both ride
-  // along on the message row so they survive a refresh and the
-  // recipient sees the (rephrased) tag / threat-warning card.
-  const msgFlags = [];
-  if (automod.isRephrased) msgFlags.push('rephrased');
-  if (automod.threat?.isThreat) msgFlags.push('threat');
-  
-  if (!text && !window._pendingAttachment) return;
-  // Safety pre-check. WHOA_EASY is the spam-rate-limit code — that's
-  // a hard block (Discord-style): pop the card on the sender's side
-  // and bail before the message ever leaves the input. Other safety
-  // warnings keep their old "warn and pass" behavior.
-  if (text) {
-    const sw = contentSafetyCheck(text);
-    if (sw === 'WHOA_EASY') { _showRateLimitPopup(); return; }
-    if (sw) showContentWarning(sw);
-  }
-  // Remove any old friend-gate bar if present
-  document.getElementById('dm-not-friends-bar')?.remove();
-  if (!text) return;
-  clearChatInput(inp);
-  // Reply scoping: a reply staged in another chat must not bleed through
-  // here. Drop it if the chatKey doesn't match the current DM.
-  const rep = (replyingTo && replyingTo.chatKey === _getCurrentChatKey()) ? replyingTo : null;
-  cancelReply('dm');
-  _removeNewMsgBar('dm-msgs');
-  const isOutline = _outlineMode;
-  _outlineMode = false;
-  // Pre-generate the canonical id we use everywhere — optimistic UI,
-  // Socket.IO emit, AND Supabase row. That way receivers see the same id
-  // on every channel and there's no second render when polling later
-  // picks up the persisted row.
-  const canonicalId = Date.now().toString(36) + Math.random().toString(36).slice(2);
-  const msg={id:canonicalId,from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline,flags:msgFlags.length ? msgFlags : undefined};
-  const msgsEl = document.getElementById('dm-msgs');
-  if (msgsEl) {
-    const lastRows = msgsEl.querySelectorAll('.msg-row');
-    const lastAuthor = lastRows.length ? lastRows[lastRows.length-1].dataset.from : null;
-    appendMessage(msgsEl, msg, 'dm', lastAuthor);
-    scrollBottom('dm-msgs', true);
-    const _optimRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
-    _registerPendingSend('dm:'+[CU.username, curDM].sort().join('__'), CU.username, text, _optimRow, canonicalId);
-  }
-  // Offline path: if we know we're not online, stash the message in the
-  // persistent send queue so it drains automatically when connectivity
-  // returns — no toast, no failure state, just a subtle sticky bar.
-  if (!_isOnlineForSend()) {
-    _enqueueOfflineMessage({ kind: 'dm', id: canonicalId, target: curDM, text, replyTo: rep, flags: msgFlags });
+     · The spam rate limit (contentSafetyCheck → WHOA_EASY) ran in DMs and in
+       group chats and NOT in bastion channels — the one surface with an
+       audience, i.e. the one where flooding actually costs somebody something.
+     · runAutomod, which rephrases a message and flags a threat, ran in DMs and
+       group chats and NOT in bastion channels. No channel message has ever
+       carried a `rephrased` or a `threat` flag, so the (rephrased) tag and the
+       threat card could not appear there at all.
+     · _trackSendMsgQuest ran BEFORE the send in two paths and after it in the
+       third, so in two of three surfaces a message that failed to send still
+       counted toward the quest.
+     · The 'send_messages' permission check lived in handleChatSend, one caller
+       up, so anything that reached sendChannelMsg another way skipped it. The
+       standing rule is that the guard runs at the MUTATION.
+     · A group chat had no outline mode and wrote a redundant `time` field.
+
+   A Conversation says WHERE a message is going; sendMessage() is the single
+   pipeline that gets it there. The three old entry points survive as thin
+   wrappers, so every call site — onclick handlers, the Enter key,
+   handleChatSend, the draft restore — keeps working untouched.
+
+   ⚠️ Everything that differs between surfaces is a FIELD on the conversation,
+   never a branch inside sendMessage. The moment a `if (conv.kind === …)`
+   appears in the pipeline, the divergence is growing back.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+// The canonical id, shared by the optimistic row, the Socket.IO emit and the
+// persisted row, so a receiver never renders one message twice.
+// ⚠️ Deliberately the SAME shape the firebase shim's keyless push() generates
+// (firebase-compat-shim.js ~1302): a group chat message is still stored under
+// that key and the offline drain rebuilds its path from the id.
+function _chatMsgId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function _convDM(peer) {
+  const me = CU?.username || '';
+  return {
+    kind: 'dm',
+    id: peer,
+    legacyCtx: 'dm',
+    containerId: 'dm-msgs',
+    inputId: 'dm-input',
+    pendingKey: 'dm:' + [me, peer].sort().join('__'),
+    stopTyping: () => _stopTypingBroadcast(),
+    guard() {
+      // Official Fortized accounts are broadcast-only. The composer is
+      // normally replaced by a lock notice; this is the check that counts.
+      if (isFortizedOfficialAccount(peer) && !isSuperAdmin())
+        return { msg: 'This chat is reserved for official Fortized notifications.', tone: 'info' };
+      if (isUserBlocked(peer))
+        return { msg: 'You blocked this user. Unblock them to send messages.', tone: 'info' };
+      if (window._dmBlockedPeer === peer)
+        return { msg: "You can't send messages to this user.", tone: 'info' };
+      return null;
+    },
+    persist: (msg, opts) => FortizedSocial.sendDMMessage(me, peer, msg.text, opts),
+    emit: (msg) => FortizedSocial.socketEmit('message:send', { type: 'dm', id1: me, id2: peer, message: msg }),
+    queued: (msg) => ({ kind: 'dm', id: msg.id, target: peer, text: msg.text, replyTo: msg.replyTo, flags: msg.flags }),
+    // ⚠️ A DM does NOT notify mentions, and that is a decision, not an
+    // oversight inherited from the old path. @mentioning a third party inside
+    // a private conversation would ping somebody about a thread they cannot
+    // open, and tell them who is talking about them where they cannot look.
+    mentionCtx: () => null,
+  };
+}
+
+function _convGC(gcId) {
+  return {
+    kind: 'gc',
+    id: gcId,
+    legacyCtx: 'gc',
+    containerId: 'gc-msgs',
+    inputId: 'gc-input',
+    pendingKey: 'gc:' + gcId,
+    stopTyping: () => _stopGCTypingBroadcast(),
+    guard: () => null,
+    // Written by explicit key rather than .push() — the shim's keyless push
+    // mints exactly this id shape anyway, so this is the same write with one
+    // fewer round trip and one fewer id generator to keep in step.
+    persist: (msg) => firebase.database().ref('groupChats/' + gcId + '/messages/' + msg.id).set(msg),
+    emit: (msg) => FortizedSocial.socketEmit('message:send', { type: 'gc', id1: gcId, message: msg }),
+    queued: (msg) => ({ kind: 'gc', id: msg.id, target: gcId, text: msg.text, replyTo: msg.replyTo, flags: msg.flags }),
+    mentionCtx: () => ({ gc: gcId }),
+  };
+}
+
+function _convChannel(idx) {
+  const b = CU?.bastions?.[curBastion];
+  const ch = b?.channels?.[idx];
+  if (!b || !ch) return null;
+  const bid = b.globalId || b.name;
+  return {
+    kind: 'channel',
+    id: idx,
+    legacyCtx: 'ch',
+    containerId: 'ch-msgs-' + idx,
+    inputId: 'ch-input',
+    pendingKey: 'bastion:' + bid + ':' + ch.name,
+    stopTyping: () => _stopChannelTypingBroadcast(),
+    // The permission check now sits at the mutation, where it belongs, rather
+    // than one caller up in handleChatSend.
+    guard: () => _bstCan(b, CU.username, 'send_messages', ch)
+      ? null
+      : { msg: 'You do not have permission to post in this channel.', tone: 'error' },
+    // The bastion's OWN automod (blocked links, mention limit, keywords) is
+    // the one rule that is genuinely per-surface: there is no bastion behind
+    // a DM to configure it.
+    automod: (text) => autoModCheck(text, b),
+    persist: (msg, opts) => FortizedSocial.sendBastionChannelMessage(bid, ch.name, CU.username, msg.text, opts),
+    emit: (msg) => FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: bid, id2: ch.name, message: msg }),
+    queued: (msg) => ({ kind: 'ch', id: msg.id, bastion: bid, channel: ch.name, text: msg.text, replyTo: msg.replyTo, flags: msg.flags }),
+    mentionCtx: () => ({ bastion: bid, bastionName: b.name, channel: ch.name }),
+    // Bot commands fire whether or not the send reached the server, which is
+    // what the old path did: an offline `!roll` still answers locally.
+    afterSend: (text) => {
+      if (text.startsWith('!')) _processBotCommands(text, b, ch, idx, document.getElementById('ch-msgs-' + idx));
+    },
+  };
+}
+
+// Resolve a conversation from the legacy context string the composer and its
+// onclick attributes still speak. This is the seam between the old surfaces
+// and the one transport; it disappears when phase 1c gives them one composer.
+function _convFor(context, chIdx) {
+  if (context === 'dm') return curDM ? _convDM(curDM) : null;
+  if (context === 'gc') return curGC ? _convGC(curGC) : null;
+  const idx = (chIdx !== undefined && chIdx !== null) ? chIdx : curChannel;
+  return (idx !== null && idx !== undefined) ? _convChannel(idx) : null;
+}
+
+// The one pipeline. Every message in the app goes through here.
+async function sendMessage(conv) {
+  if (!conv) return;
+
+  // 1 · Chat suspension. Applies to every surface, checked before any work.
+  if (isViewerChatSuspended()) {
+    const left = Math.ceil((CU.chatSuspendedUntil - Date.now()) / 60000);
+    toast('Your chat is suspended for safety reasons. Try again in ' + left + ' min.', 'error');
     return;
   }
-  // Discord-style delivery: the sender sees an optimistic translucent row,
-  // but everyone else only receives the message after persistence succeeds.
-  // The socket event is the server fan-out hint, not the source of truth.
-  try {
-    const sendOpts = { id: canonicalId };
-    if (msgFlags.length) sendOpts.flags = msgFlags;
-    if (rep) sendOpts.replyTo = rep;
-    // Silent-retry twice with 20 s per attempt before showing failed —
-    // brief network hiccups no longer flash the red state.
-    const savedMsg = await _sendWithAutoRetry(
-      () => FortizedSocial.sendDMMessage(CU.username, curDM, text, sendOpts),
-      2, 20000
-    );
-    const committedMsg = savedMsg || msg;
-    FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: curDM, message: committedMsg });
-    _confirmOptimisticSend('dm:'+[CU.username, curDM].sort().join('__'), committedMsg);
-    _trackSendMsgQuest();
-  } catch (e) {
-    console.error('[sendDM Error]', e.message);
-    // If the send failed because we lost connectivity mid-flight, drop
-    // into the offline queue instead of showing the failure state. The
-    // user probably didn't notice the network hiccup.
-    if (!_isOnlineForSend()) {
-      _enqueueOfflineMessage({ kind: 'dm', id: canonicalId, target: curDM, text, replyTo: rep, flags: msgFlags });
-      return;
-    }
-    _markMessageFailed(msgsEl, msg.id, { kind: 'dm', target: curDM, text, replyTo: rep });
-    toast('Message failed to send — tap to retry', 'error');
+
+  // 2 · The surface's own guard, at the mutation.
+  const blocked = conv.guard();
+  if (blocked) { toast(blocked.msg, blocked.tone || 'info'); return; }
+
+  // 3 · The draft. handleChatSend has already appended any attachment tokens
+  // to the input, so an attachment-only message arrives here as real text.
+  const inp = document.getElementById(conv.inputId);
+  if (!inp) return;
+  let text = preprocessMessageText(_readChatInput(inp));
+  if (!text) return;
+
+  // 4 · Spam rate limit. WHOA_EASY is a hard block: pop the card and bail
+  // before the message leaves the input. Other warnings warn and pass.
+  const safety = contentSafetyCheck(text);
+  if (safety === 'WHOA_EASY') { _showRateLimitPopup(); return; }
+  if (safety) showContentWarning(safety);
+
+  // 5 · Automod. Rephrasing and the threat flag ride along on the row, so
+  // they survive a refresh and the recipient sees the (rephrased) tag.
+  const automod = runAutomod(text, _recentAutomodContext(document.getElementById(conv.containerId)));
+  if (automod.isRephrased) { text = automod.rephrased; toast('Message rephrased for safety', 'info'); }
+  else if (automod.warning) toast(automod.warning, 'warning');
+  const flags = [];
+  if (automod.isRephrased) flags.push('rephrased');
+  if (automod.threat?.isThreat) flags.push('threat');
+
+  // 6 · The bastion's own automod, where there is a bastion.
+  if (conv.automod && conv.automod(text)) return;
+
+  // 7 · Commit to the composer. A reply staged in another chat must not bleed
+  // through, so it only counts when its chatKey still matches this surface.
+  clearChatInput(inp);
+  conv.stopTyping();
+  const rep = (replyingTo && replyingTo.chatKey === _getCurrentChatKey()) ? replyingTo : null;
+  cancelReply(conv.legacyCtx);
+  _removeNewMsgBar(conv.containerId);
+  const outline = _outlineMode;
+  _outlineMode = false;
+
+  const msg = {
+    id: _chatMsgId(),
+    from: CU.username,
+    text,
+    timestamp: new Date().toISOString(),
+    ...(rep ? { replyTo: rep } : {}),
+    ...(outline ? { outline: true } : {}),
+    ...(flags.length ? { flags } : {}),
+  };
+
+  // 8 · The optimistic row.
+  const msgsEl = document.getElementById(conv.containerId);
+  if (msgsEl) {
+    const rows = msgsEl.querySelectorAll('.msg-row');
+    appendMessage(msgsEl, msg, conv.legacyCtx, rows.length ? rows[rows.length - 1].dataset.from : null);
+    scrollBottom(conv.containerId, true);
+    _registerPendingSend(conv.pendingKey, CU.username, text,
+      msgsEl.querySelector('[data-msgid="' + CSS.escape(msg.id) + '"]'), msg.id);
   }
+
+  // 9 · Delivery. The sender sees the translucent row immediately; everyone
+  // else only receives it once persistence succeeds. The socket event is the
+  // fan-out hint, not the source of truth.
+  if (!_isOnlineForSend()) {
+    _enqueueOfflineMessage(conv.queued(msg));
+  } else {
+    try {
+      const opts = { id: msg.id };
+      if (rep) opts.replyTo = rep;
+      if (flags.length) opts.flags = flags;
+      const saved = await _sendWithAutoRetry(() => conv.persist(msg, opts), 2, 20000);
+      const committed = saved || msg;
+      conv.emit(committed);
+      _confirmOptimisticSend(conv.pendingKey, committed);
+      // ⚠️ The quest counts a message that ACTUALLY LANDED. Two of the three
+      // old paths bumped it before the send, so a failure still paid out.
+      _trackSendMsgQuest();
+      const mctx = conv.mentionCtx();
+      if (mctx) _notifyMentionsInText(text, mctx);
+    } catch (e) {
+      console.error('[sendMessage:' + conv.kind + ']', e?.message);
+      // Losing connectivity mid-flight is not a failure the user should see:
+      // drop into the offline queue instead of the red state.
+      if (!_isOnlineForSend()) _enqueueOfflineMessage(conv.queued(msg));
+      else {
+        _markMessageFailed(msgsEl, msg.id, conv.queued(msg));
+        toast('Message failed to send. Tap to retry.', 'error');
+      }
+    }
+  }
+
+  conv.afterSend?.(text, msg);
 }
+
+// ── The three entry points, now thin ──────────────────────────────────────
+// Kept by name because they are wired into onclick attributes, the Enter key
+// handler, handleChatSend and the draft restore.
+async function sendDM() {
+  if (!curDM) return;
+  return sendMessage(_convDM(curDM));
+}
+
 
 // Race a send against a hard timeout so hung server requests fail visibly
 // instead of leaving the optimistic row stuck in "sending..." forever.
@@ -10641,87 +10761,8 @@ function _notifyMentionsInText(text, ctx) {
 }
 
 async function sendGCMessage() {
-  if (isViewerChatSuspended()) {
-    const _left = Math.ceil((CU.chatSuspendedUntil - Date.now()) / 60000);
-    toast('Your chat is suspended for safety reasons. Try again in ' + _left + ' min.', 'error');
-    return;
-  }
-  const inp = document.getElementById('gc-input');
-  if (!inp || !curGC) return;
-  let text = preprocessMessageText(_readChatInput(inp));
-  if (!text && !window._pendingAttachment) return;
-  
-  // Get context for automod (tail only — see _recentAutomodContext)
-  const gcMsgsEl = document.getElementById('gc-msgs');
-  const recentMsgs = _recentAutomodContext(gcMsgsEl);
-
-  // Spam rate-limit — hard block on the sender's side BEFORE we
-  // pay the cost of sending. Same Discord-style modal as DMs.
-  {
-    const sw = contentSafetyCheck(text);
-    if (sw === 'WHOA_EASY') { _showRateLimitPopup(); return; }
-    if (sw) showContentWarning(sw);
-  }
-  // Run automod check
-  const automod = runAutomod(text, recentMsgs);
-  if (automod.isRephrased) {
-    text = automod.rephrased;
-    toast('🔄 Message rephrased for safety', 'info');
-  } else if (automod.warning) {
-    toast(automod.warning, 'warning');
-  }
-
-  const msgFlags = [];
-  if (automod.isRephrased) msgFlags.push('rephrased');
-  if (automod.threat?.isThreat) msgFlags.push('threat');
-
-  clearChatInput(inp);
-  _stopGCTypingBroadcast();
-  // Scoped reply — drop if user staged it in another chat.
-  const rep = (replyingTo && replyingTo.chatKey === _getCurrentChatKey()) ? replyingTo : null;
-  cancelReply('gc');
-
-  const now = new Date();
-  const msgRef = firebase.database().ref('groupChats/'+curGC+'/messages').push();
-  const msg = {
-    id: msgRef.key,
-    from: CU.username,
-    text,
-    time: now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),
-    timestamp: now.toISOString(),
-    ...(rep ? {replyTo: rep} : {}),
-    ...(msgFlags.length ? {flags: msgFlags} : {}),
-  };
-  _removeNewMsgBar('gc-msgs');
-  // Optimistic render — show message immediately for sender
-  if (gcMsgsEl) {
-    const lastRows = gcMsgsEl.querySelectorAll('.msg-row');
-    const lastAuthor = lastRows.length ? lastRows[lastRows.length-1].dataset.from : null;
-    appendMessage(gcMsgsEl, msg, 'gc', lastAuthor);
-    scrollBottom('gc-msgs', true);
-    const _optimRow = gcMsgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
-    _registerPendingSend('gc:'+curGC, CU.username, text, _optimRow, msg.id);
-  }
-  _trackSendMsgQuest();
-  // Offline path: same treatment as sendDM — queue and drain later.
-  if (!_isOnlineForSend()) {
-    _enqueueOfflineMessage({ kind: 'gc', id: msg.id, target: curGC, text, replyTo: rep, flags: msgFlags });
-    return;
-  }
-  try {
-    // Silent-retry twice — same reliability rationale as DM/channel sends.
-    await _sendWithAutoRetry(() => msgRef.set(msg), 2, 20000);
-    FortizedSocial.socketEmit('message:send', { type: 'gc', id1: curGC, message: msg });
-    _confirmOptimisticSend('gc:'+curGC, msg);
-    _notifyMentionsInText(text, { gc: curGC });
-  } catch {
-    if (!_isOnlineForSend()) {
-      _enqueueOfflineMessage({ kind: 'gc', id: msg.id, target: curGC, text, replyTo: rep, flags: msgFlags });
-      return;
-    }
-    _markMessageFailed(gcMsgsEl, msg.id, { kind: 'gc', target: curGC, text, replyTo: rep });
-    toast('Message failed to send — tap to retry','error');
-  }
+  if (!curGC) return;
+  return sendMessage(_convGC(curGC));
 }
 
 // ── GC Typing ──────────────────────────────────────
@@ -12238,73 +12279,7 @@ function autoModCheck(text, bastion) {
 // Track recently sent texts to suppress Firebase real-time echo
 const _sentEcho = new Set();
 async function sendChannelMsg(idx) {
-  if (isViewerChatSuspended()) {
-    const _left = Math.ceil((CU.chatSuspendedUntil - Date.now()) / 60000);
-    toast('Your chat is suspended for safety reasons. Try again in ' + _left + ' min.', 'error');
-    return;
-  }
-  const inp=document.getElementById('ch-input');
-  if (!inp) return;
-  let text=preprocessMessageText(_readChatInput(inp));
-  if (!text) return;
-  const b=CU.bastions?.[curBastion];
-  const ch=b?.channels?.[idx];
-  if (!ch) return;
-  if (autoModCheck(text,b)) return;
-  clearChatInput(inp);
-  _stopChannelTypingBroadcast();
-  // Scoped reply — drop if user staged it in another chat.
-  const rep = (replyingTo && replyingTo.chatKey === _getCurrentChatKey()) ? replyingTo : null;
-  cancelReply('ch');
-  _removeNewMsgBar('ch-msgs-'+idx);
-  const isOutline = _outlineMode;
-  _outlineMode = false;
-  // Canonical id shared by optimistic UI + Socket.IO emit + Supabase row.
-  const canonicalId = Date.now().toString(36) + Math.random().toString(36).slice(2);
-  const msg={id:canonicalId,from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
-  const msgsEl = document.getElementById('ch-msgs-'+idx);
-  if (msgsEl) {
-    const lastRows = msgsEl.querySelectorAll('.msg-row');
-    const lastAuthor = lastRows.length ? lastRows[lastRows.length-1].dataset.from : null;
-    appendMessage(msgsEl, msg, 'ch', lastAuthor);
-    scrollBottom('ch-msgs-'+idx, true);
-    const _optimRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
-    _registerPendingSend('bastion:'+(b.globalId||b.name)+':'+ch.name, CU.username, text, _optimRow, msg.id);
-  }
-  _trackSendMsgQuest();
-  // Offline path: queue for later drain instead of emitting to a dead
-  // socket / hitting a failing Supabase request.
-  if (!_isOnlineForSend()) {
-    _enqueueOfflineMessage({ kind: 'ch', id: canonicalId, bastion: b.globalId||b.name, channel: ch.name, text, replyTo: rep });
-  } else {
-    // Discord-style delivery: keep the local optimistic row translucent,
-    // then fan out only after the canonical row is committed.
-    try {
-      const sendOpts = { id: canonicalId };
-      if (rep) sendOpts.replyTo = rep;
-      const savedMsg = await _sendWithAutoRetry(
-        () => FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text, sendOpts),
-        2, 20000
-      );
-      const committedMsg = savedMsg || msg;
-      FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: committedMsg });
-      _confirmOptimisticSend('bastion:'+(b.globalId||b.name)+':'+ch.name, committedMsg);
-      _notifyMentionsInText(text, { bastion: b.globalId || b.name, bastionName: b.name, channel: ch.name });
-    } catch (e) {
-      console.error('[sendChannelMsg Error]', e?.message);
-      if (!_isOnlineForSend()) {
-        _enqueueOfflineMessage({ kind: 'ch', id: canonicalId, bastion: b.globalId||b.name, channel: ch.name, text, replyTo: rep });
-      } else {
-        _markMessageFailed(msgsEl, msg.id, { kind: 'ch', bastion: b.globalId||b.name, channel: ch.name, text, replyTo: rep });
-        toast('Message failed to send — tap to retry', 'error');
-      }
-    }
-  }
-  // Bot command handling — trigger deployed bots with ! prefix
-  if (text.startsWith('!')) {
-    const msgsEl=document.getElementById('ch-msgs-'+idx);
-    _processBotCommands(text, b, ch, idx, msgsEl);
-  }
+  return sendMessage(_convChannel(idx));
 }
 
 function _processBotCommands(text, bastion, channel, chIdx, msgsEl) {
@@ -39992,10 +39967,10 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
       </div>`;
   }
   const sendCall = context==='dm' ? "handleChatSend('dm')"
-    : context==='gc' ? "sendGCMessage()"
+    : context==='gc' ? "handleChatSend('gc')"
     : `handleChatSend('ch',${chIdx??'curChannel'})`;
   const keydown = context==='dm' ? "if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();if(event.altKey){_outlineMode=true;}handleChatSend('dm');}"
-    : context==='gc' ? "if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();if(event.altKey){_outlineMode=true;}sendGCMessage();}"
+    : context==='gc' ? "if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();if(event.altKey){_outlineMode=true;}handleChatSend('gc');}"
     : `if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();if(event.altKey){_outlineMode=true;}handleChatSend('ch',${chIdx??'curChannel'});}`;
 
   const emojiCtx = inputId==='dm-input'?'dm':inputId==='gc-input'?'gc':'ch';
@@ -46901,7 +46876,7 @@ function sendGifDirectly(id, inputId, url) {
     inp.focus();
     // Auto-send immediately
     if (inputId === 'dm-input') handleChatSend('dm');
-    else if (inputId === 'gc-input') sendGCMessage();
+    else if (inputId === 'gc-input') handleChatSend('gc');
     else if (inputId === 'ch-input') handleChatSend('ch', curChannel);
   }
 }
@@ -47091,7 +47066,7 @@ function _sendSticker(url, name, bastionId) {
     inp.focus();
     // Auto-send sticker
     if (_stickerInput === 'dm-input') handleChatSend('dm');
-    else if (_stickerInput === 'gc-input') sendGCMessage();
+    else if (_stickerInput === 'gc-input') handleChatSend('gc');
     else if (_stickerInput === 'ch-input') handleChatSend('ch', curChannel);
   }
 }
@@ -47535,30 +47510,31 @@ function _clearAttachment(idx){
 // HANDLE CHAT SEND (with file attachment support)
 // ═══════════════════════════════════════════════════════════
 async function handleChatSend(context, chIdx) {
-  // Automod chat suspension applies to every chat the user can normally
-  // post in (DMs, group chats, bastion channels). Fail fast before any
-  // upload / optimistic rendering.
+  // Where is this going? Everything below reads the answer off the
+  // conversation rather than re-deriving it from three ternaries.
+  // ⚠️ The old upload card built its container id from `curChannel` even when
+  // the caller passed an explicit chIdx, so a send into a channel other than
+  // the open one drew its progress card in the wrong place.
+  const conv = _convFor(context, chIdx);
+  if (!conv) return;
+
+  // Fail fast, before we pay for an upload, on the two things that would
+  // refuse the message anyway. Both are checked again at the mutation inside
+  // sendMessage — hiding a control is not refusing an action, and a draft
+  // restore or an Enter key on a stale surface arrives without touching it.
   if (isViewerChatSuspended()) {
-    const _left = Math.ceil((CU.chatSuspendedUntil - Date.now()) / 60000);
-    toast('Your chat is suspended for safety reasons. Try again in ' + _left + ' min.', 'error');
+    const left = Math.ceil((CU.chatSuspendedUntil - Date.now()) / 60000);
+    toast('Your chat is suspended for safety reasons. Try again in ' + left + ' min.', 'error');
     return;
   }
-  // The composer is hidden when you may not post, but hiding a control is not
-  // refusing an action: a draft restore, an Enter key on a stale surface or a
-  // console call all arrive here without touching it.
-  if (context==='ch') {
-    const _b=CU.bastions?.[curBastion];
-    const _ch=_b?.channels?.[chIdx!==undefined?chIdx:curChannel];
-    if (_b && _ch && !_bstCan(_b, CU.username, 'send_messages', _ch)) {
-      toast('You do not have permission to post in this channel.','error');
-      return;
-    }
-  }
+  const blocked = conv.guard();
+  if (blocked) { toast(blocked.msg, blocked.tone || 'info'); return; }
+
   const _atts = _pendAtts().slice(); // snapshot (up to 10)
   if (_atts.length) {
     // Live upload-progress card in the chat while the files go up.
-    const _upContainerId = context==='dm'?'dm-msgs':context==='gc'?'gc-msgs':('ch-msgs-'+curChannel);
-    const _upInputId = context==='dm'?'dm-input':context==='gc'?'gc-input':'ch-input';
+    const _upContainerId = conv.containerId;
+    const _upInputId = conv.inputId;
     const _upInpEl = document.getElementById(_upInputId);
     const _upCaption = _upInpEl ? ((typeof _upInpEl.value === 'string' ? _upInpEl.value : (_upInpEl.textContent||''))).trim() : '';
     const _upCard = _showUploadProgress(_upContainerId, _atts.length, _atts.reduce((s,a)=>s+(a.size||0),0), _upCaption);
@@ -47599,7 +47575,7 @@ async function handleChatSend(context, chIdx) {
     }
     if (_upCard) _upCard.done();
     const token = tokens.join(' ');
-    const inp = document.getElementById(context==='dm'?'dm-input':context==='gc'?'gc-input':'ch-input');
+    const inp = document.getElementById(conv.inputId);
     if (inp) {
       // The chat input is a contenteditable div with a `.value` shim that
       // `_initRichInput` installs. If the shim hasn't been wired yet (race
@@ -47616,10 +47592,7 @@ async function handleChatSend(context, chIdx) {
     }
     _clearAttachment();
   }
-  if (context==='dm') sendDM();
-  else if (context==='gc') sendGCMessage();
-  else if (chIdx!=null) sendChannelMsg(chIdx);
-  else if (curChannel!=null) sendChannelMsg(curChannel);
+  return sendMessage(conv);
 }
 
 // ═══════════════════════════════════════════════════════════
